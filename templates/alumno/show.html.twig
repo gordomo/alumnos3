@@ -1,0 +1,114 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Alumnos{% endblock %}
+
+{% block body %}
+    <h1>Alumnos</h1>
+
+    <table class="table">
+        <tbody>
+            <tr>
+                <th>Id</th>
+                <td>{{ alumno.id }}</td>
+            </tr>
+            <tr>
+                <th>Telefono_fijo</th>
+                <td>{{ alumno.telefonoFijo }}</td>
+            </tr>
+            <tr>
+                <th>Nombre</th>
+                <td>{{ alumno.nombre }}</td>
+            </tr>
+            <tr>
+                <th>Apellido</th>
+                <td>{{ alumno.apellido }}</td>
+            </tr>
+            <tr>
+                <th>F_nac</th>
+                <td>{{ alumno.fNac ? alumno.fNac|date('Y-m-d') : '' }}</td>
+            </tr>
+            <tr>
+                <th>Email</th>
+                <td>{{ alumno.email }}</td>
+            </tr>
+            <tr>
+                <th>L_nac</th>
+                <td>{{ alumno.lNac }}</td>
+            </tr>
+            <tr>
+                <th>Dni</th>
+                <td>{{ alumno.dni }}</td>
+            </tr>
+            <tr>
+                <th>Celular</th>
+                <td>{{ alumno.celular }}</td>
+            </tr>
+            <tr>
+                <th>Contacto_emergencia</th>
+                <td>{{ alumno.contactoEmergencia }}</td>
+            </tr>
+            <tr>
+                <th>N_tutor</th>
+                <td>{{ alumno.nTutor }}</td>
+            </tr>
+            <tr>
+                <th>T_tutor</th>
+                <td>{{ alumno.tTutor }}</td>
+            </tr>
+            <tr>
+                <th>Corre_tutor</th>
+                <td>{{ alumno.correTutor }}</td>
+            </tr>
+            <tr>
+                <th>Dni_tutor</th>
+                <td>{{ alumno.dniTutor }}</td>
+            </tr>
+            <tr>
+                <th>Escuela</th>
+                <td>{{ alumno.escuela }}</td>
+            </tr>
+            <tr>
+                <th>Extras</th>
+                <td>{{ alumno.extras }}</td>
+            </tr>
+            <tr>
+                <th>G_sanguineo</th>
+                <td>{{ alumno.gSanguineo }}</td>
+            </tr>
+            <tr>
+                <th>Enfermedad</th>
+                <td>{{ alumno.enfermedad }}</td>
+            </tr>
+            <tr>
+                <th>Alergico</th>
+                <td>{{ alumno.alergico }}</td>
+            </tr>
+            <tr>
+                <th>Medicacion</th>
+                <td>{{ alumno.medicacion }}</td>
+            </tr>
+            <tr>
+                <th>Curso</th>
+                <td>{{ alumno.curso }}</td>
+            </tr>
+            <tr>
+                <th>Hermanos</th>
+                <td>
+                    {% for key, hermano in hermanos %}
+                        {{ hermano.nombre }} {{ hermano.apellido }} {% if hermanos | length  > 1 and key+1  < hermanos | length %}, {% endif %}
+                    {% endfor %}
+                </td>
+            </tr>
+            <tr>
+                <th>Como_conociste</th>
+                <td>{{ alumno.comoConociste }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_alumno_index') }}" class="btn btn-primary">Volver</a>
+
+    <a href="{{ path('app_alumno_edit', {'id': alumno.id}) }}" class="btn btn-success"><i class="bi bi-pencil"></i></a>
+
+    {{ include('alumno/_delete_form.html.twig') }}
+{% endblock %}

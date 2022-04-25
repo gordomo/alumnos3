@@ -1,0 +1,32 @@
+{{ form_start(form) }}
+<div class="form-group">
+    <div class="row g-3">
+        <div class="col-md-6">
+            {{ form_label(form.email, 'Email') }}
+            {{ form_widget(form.email) }}
+        </div>
+        <div class="col-md-6">
+            {{ form_label(form.password, 'Password') }}
+            {{ form_widget(form.password) }}
+        </div>
+    </div>
+    <fieldset class="row mb-3">
+        {{ form_label(form.roles, 'Roles') }}
+        <div class="col-sm-10">
+            {% for child in form.roles.children %}
+                <div class="group-15">
+                    <div class="custom-control custom-checkbox custom-checkbox-primary">
+                        {{ form_widget(child, {'attr': {'class': 'custom-control-input'}}) }}
+                        <label class="custom-control-label" for="{{ child.vars.id }}" >{{ child.vars.label }}</label>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </fieldset>
+    <div class="row" style="text-align: right;">
+        <div class="col">
+            <button class="btn btn-success">{{ button_label|default('Save') }}</button>
+        </div>
+    </div>
+</div>
+{{ form_end(form) }}

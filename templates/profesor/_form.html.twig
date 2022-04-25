@@ -1,0 +1,29 @@
+{{ form_start(form) }}
+<div class="form-group">
+    <div class="row g-3">
+        <div class="col-md-3">
+            {{ form_label(form.nombre, 'Nombre') }}
+            {{ form_widget(form.nombre) }}
+        </div>
+        <div class="col-md-3">
+            {{ form_label(form.apellido, 'Apellido') }}
+            {{ form_widget(form.apellido) }}
+        </div>
+    </div>
+    <div class="row g-3">
+        <div class="col-md-3">
+            {{ form_label(form.dni, 'DNI') }}
+            {{ form_widget(form.dni) }}
+        </div>
+        <div class="col-md-3">
+            {{ form_label(form.email, 'Email') }}
+            {{ form_widget(form.email) }}
+        </div>
+    </div>
+    <div class="row g-3">
+        <div class="col-md-6" style="text-align: right;">
+            <button class="btn btn-success">{{ button_label|default('Save') }}</button>
+        </div>
+    </div>
+</div>
+{{ form_end(form) }}

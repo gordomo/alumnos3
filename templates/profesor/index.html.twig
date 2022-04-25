@@ -1,0 +1,39 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Profesor index{% endblock %}
+
+{% block body %}
+    <h1>Profesor index</h1>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Apellido</th>
+                <th>Dni</th>
+                <th>Email</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for profesor in profesors %}
+            <tr>
+                <td>{{ profesor.nombre }}</td>
+                <td>{{ profesor.apellido }}</td>
+                <td>{{ profesor.dni }}</td>
+                <td>{{ profesor.email }}</td>
+                <td>
+                    <a href="{{ path('app_profesor_show', {'id': profesor.id}) }}"><i class="bi bi-eye"></i></a>
+                    <a href="{{ path('app_profesor_edit', {'id': profesor.id}) }}"><i class="bi bi-pencil"></i></a>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="6">No se encontraron registros</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_profesor_new') }}"class="btn btn-success">Nuevo Profesor</a>
+{% endblock %}

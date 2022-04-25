@@ -1,0 +1,17 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Edit Alumno{% endblock %}
+
+{% block body %}
+    <div class="editForms">
+        <h1>Editar Alumno</h1>
+        <div class="row">
+            {{ include('alumno/_form.html.twig', {'button_label': 'Guardar'}) }}
+            {{ include('alumno/_delete_form.html.twig') }}
+        </div>
+        <br><br>
+        <div class="row botones">
+            <a class="btn btn-primary" href="{{ path('app_alumno_index') }}">Volver</a>
+        </div>
+    </div>
+{% endblock %}

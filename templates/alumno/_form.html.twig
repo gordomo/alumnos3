@@ -1,0 +1,130 @@
+{{ form_start(form) }}
+<div class="form-group">
+    <div class="row g-3">
+        <div class="col-md-3">
+            {{ form_label(form.nombre, 'Nombre') }}
+            {{ form_widget(form.nombre) }}
+        </div>
+        <div class="col-md-3">
+            {{ form_label(form.apellido, 'Apellido') }}
+            {{ form_widget(form.apellido) }}
+        </div>
+        <div class="col-md-3">
+            {{ form_label(form.f_nac, 'Fecha de Nacimiento') }}
+            {{ form_widget(form.f_nac) }}
+        </div>
+        <div class="col-md-3">
+            {{ form_label(form.l_nac, 'Lugar de Nacimiento') }}
+            {{ form_widget(form.l_nac) }}
+        </div>
+    </div>
+</div>
+<div class="form-group">
+    <div class="row g-3">
+        <div class="col-md-3">
+            {{ form_label(form.telefono_fijo, 'Teléfono fijo') }}
+            {{ form_widget(form.telefono_fijo) }}
+        </div>
+        <div class="col-md-3">
+            {{ form_label(form.email, 'Email') }}
+            {{ form_widget(form.email) }}
+        </div>
+        <div class="col-md-3">
+            {{ form_label(form.dni, 'DNI') }}
+            {{ form_widget(form.dni) }}
+        </div>
+        <div class="col-md-3">
+            {{ form_label(form.celular, 'Celular') }}
+            {{ form_widget(form.celular) }}
+        </div>
+    </div>
+</div>
+<div class="form-group">
+    <div class="row g-3">
+        <div class="col-md-3">
+            {{ form_label(form.n_tutor, 'Nombre Tutor') }}
+            {{ form_widget(form.n_tutor) }}
+        </div>
+        <div class="col-md-3">
+            {{ form_label(form.t_tutor, 'Teléfono Tutor') }}
+            {{ form_widget(form.t_tutor) }}
+        </div>
+        <div class="col-md-3">
+            {{ form_label(form.contacto_emergencia, 'Contacto de Emergencia') }}
+            {{ form_widget(form.contacto_emergencia) }}
+        </div>
+        <div class="col-md-3">
+            {{ form_label(form.corre_tutor, 'Email Tutor') }}
+            {{ form_widget(form.corre_tutor) }}
+        </div>
+    </div>
+</div>
+<div class="form-group">
+    <div class="row g-3">
+        <div class="col-md-3">
+            {{ form_label(form.dni_tutor, 'DNI Tutor') }}
+            {{ form_widget(form.dni_tutor) }}
+        </div>
+        <div class="col-md-3">
+            {{ form_label(form.escuela, 'Escuela') }}
+            {{ form_widget(form.escuela) }}
+        </div>
+        <div class="col-md-3">
+            {{ form_label(form.extras, 'Extras') }}
+            {{ form_widget(form.extras) }}
+        </div>
+        <div class="col-md-3">
+            {{ form_label(form.g_sanguineo, 'Grupo Sanguineo') }}
+            {{ form_widget(form.g_sanguineo) }}
+        </div>
+    </div>
+</div>
+<div class="form-group">
+    <div class="row g-3">
+        <div class="col-md-3">
+            {{ form_label(form.enfermedad, 'Enfermedad') }}
+            {{ form_widget(form.enfermedad) }}
+        </div>
+        <div class="col-md-3">
+            {{ form_label(form.alergico, 'Alergico') }}
+            {{ form_widget(form.alergico) }}
+        </div>
+        <div class="col-md-3">
+            {{ form_label(form.medicacion, 'Medicacion') }}
+            {{ form_widget(form.medicacion) }}
+        </div>
+        <div class="col-md-3">
+            {{ form_label(form.curso, 'Curso') }}
+            {{ form_widget(form.curso) }}
+        </div>
+    </div>
+</div>
+<div class="form-group">
+    <div class="row g-3">
+        <div class="col-md-3">
+            {{ form_label(form.como_conociste, 'Como nos Conociste') }}
+            {{ form_widget(form.como_conociste) }}
+        </div>
+        <div class="col-md-3">
+            {{ form_label(form.hermanos, 'Hermanos') }}
+            <div class="col-sm-10">
+                {% for child in form.hermanos.children %}
+                    <div class="group-15">
+                        <div class="custom-control custom-checkbox custom-checkbox-primary">
+                            {%  if child.vars.value in hermanos %}
+                                {{ form_widget(child, {'attr': {'class': 'custom-control-input', 'checked': 'true'}}) }}
+                            {% else %}
+                                {{ form_widget(child, {'attr': {'class': 'custom-control-input'}}) }}
+                            {% endif %}
+                            <label class="custom-control-label" for="{{ child.vars.id }}" >{{ child.vars.label }}</label>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="col-md-6" style="text-align: right;">
+            <button class="btn btn-success">{{ button_label|default('Save') }}</button>
+        </div>
+    </div>
+</div>
+{{ form_end(form) }}

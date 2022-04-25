@@ -1,0 +1,48 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Alumno index{% endblock %}
+
+{% block body %}
+    <h1>Alumno index</h1>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Apellido</th>
+                <th>Email</th>
+                <th>Celular</th>
+                <th>Contacto_emergencia</th>
+                <th>N_tutor</th>
+                <th>T_tutor</th>
+                <th>Curso</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for alumno in alumnos %}
+            <tr>
+                <td>{{ alumno.nombre }}</td>
+                <td>{{ alumno.apellido }}</td>
+                <td>{{ alumno.email }}</td>
+                <td>{{ alumno.celular }}</td>
+                <td>{{ alumno.contactoEmergencia }}</td>
+                <td>{{ alumno.nTutor }}</td>
+                <td>{{ alumno.tTutor }}</td>
+                <td>{{ alumno.curso }}</td>
+                <td>
+                    <a href="{{ path('app_alumno_show', {'id': alumno.id}) }}"><i class="bi bi-eye"></i></a>
+                    <a href="{{ path('app_alumno_edit', {'id': alumno.id}) }}"><i class="bi bi-pencil"></i></a>
+                    {{ include('alumno/_delete_form.html.twig') }}
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="23">No se encontraron registros</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_alumno_new') }}" class="btn btn-success">Nuevo Alumno</a>
+{% endblock %}
