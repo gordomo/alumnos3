@@ -1,0 +1,17 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Edit Curso{% endblock %}
+
+{% block body %}
+    <div class="editForms">
+        <h1>Editar Curso</h1>
+        <div class="row">
+            {{ include('curso/_form.html.twig', {'button_label': 'Guardar'}) }}
+            {{ include('curso/_delete_form.html.twig') }}
+        </div>
+        <br><br>
+        <div class="row botones">
+            <a class="btn btn-primary" href="{{ path('app_curso_index') }}">Volver</a>
+        </div>
+    </div>
+{% endblock %}

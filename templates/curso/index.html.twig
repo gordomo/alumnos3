@@ -1,0 +1,47 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Curso index{% endblock %}
+
+{% block body %}
+    <h1>Cursos</h1>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Horario</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for curso in cursos %}
+            <tr>
+                <td>{{ curso.nombre }}</td>
+                <td>
+                    {% for dia, horas in curso.horario %}
+                        {% if dia == 0 %} Lunes de {{ horas[0] }}hs a  {{ horas[1] }}hs<br>{% endif%}
+                        {% if dia == 1 %} Martes de {{ horas[0] }}hs a  {{ horas[1] }}hs<br>{% endif%}
+                        {% if dia == 2 %} Miercoles de {{ horas[0] }}hs a  {{ horas[1] }}hs<br>{% endif%}
+                        {% if dia == 3 %} Jueves de {{ horas[0] }}hs a  {{ horas[1] }}hs<br>{% endif%}
+                        {% if dia == 4 %} Viernes de {{ horas[0] }}hs a  {{ horas[1] }}hs<br>{% endif%}
+                        {% if dia == 5 %} Sábado de {{ horas[0] }}hs a  {{ horas[1] }}hs<br>{% endif%}
+                        {% if dia == 6 %} Domingo de {{ horas[0] }}hs a  {{ horas[1] }}hs<br>{% endif%}
+                    {% endfor %}
+                </td>
+                <td>
+                    <a href="{{ path('app_curso_edit', {'id': curso.id}) }}"><i class="bi bi-pencil"></i></a>
+                </td>
+                <td>
+                    {{ include('curso/_delete_form.html.twig') }}
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="3">No se encontraron registros</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_curso_new') }}" class="btn btn-success">Nuevo Curso</a>
+{% endblock %}

@@ -3,11 +3,15 @@
 {% block title %}Edit Profesor{% endblock %}
 
 {% block body %}
-    <h1>Edit Profesor</h1>
-
-    {{ include('profesor/_form.html.twig', {'button_label': 'Update'}) }}
-
-    <a href="{{ path('app_profesor_index') }}">back to list</a>
-
-    {{ include('profesor/_delete_form.html.twig') }}
+    <div class="editForms">
+        <h1>Editar Profesor</h1>
+        <div class="row">
+            {{ include('profesor/_form.html.twig', {'button_label': 'Guardar'}) }}
+            {{ include('profesor/_delete_form.html.twig') }}
+        </div>
+        <br><br>
+        <div class="row botones">
+            <a class="btn btn-primary" href="{{ path('app_profesor_index') }}">Volver</a>
+        </div>
+    </div>
 {% endblock %}

@@ -9,8 +9,25 @@
             {{ form_label(form.apellido, 'Apellido') }}
             {{ form_widget(form.apellido) }}
         </div>
+        <div class="col-md-3">
+            {{ form_label(form.tel, 'Teléfono') }}
+            {{ form_widget(form.tel) }}
+        </div>
     </div>
     <div class="row g-3">
+        <div class="col-md-3">
+            {{ form_label(form.curso, 'Cursos') }}
+            <div class="col-sm-10">
+                {% for child in form.curso.children %}
+                    <div class="group-15">
+                        <div class="custom-control custom-checkbox custom-checkbox-primary">
+                           {{ form_widget(child, {'attr': {'class': 'custom-control-input'}}) }}
+                           <label class="custom-control-label" for="{{ child.vars.id }}" >{{ child.vars.label }}</label>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
         <div class="col-md-3">
             {{ form_label(form.dni, 'DNI') }}
             {{ form_widget(form.dni) }}
@@ -19,9 +36,10 @@
             {{ form_label(form.email, 'Email') }}
             {{ form_widget(form.email) }}
         </div>
+
     </div>
     <div class="row g-3">
-        <div class="col-md-6" style="text-align: right;">
+        <div class="col-md-9" style="text-align: right;">
             <button class="btn btn-success">{{ button_label|default('Save') }}</button>
         </div>
     </div>

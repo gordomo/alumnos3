@@ -2,7 +2,10 @@
 
 namespace App\Form;
 
+use App\Entity\Curso;
 use App\Entity\Profesor;
+use Doctrine\ORM\EntityRepository;
+use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Component\Form\Extension\Core\Type\NumberType;
@@ -19,6 +22,18 @@ class ProfesorType extends AbstractType
             ->add('apellido', TextType::class)
             ->add('dni', NumberType::class)
             ->add('email', EmailType::class)
+            ->add('tel', NumberType::class)
+            ->add('curso', EntityType::class, [
+                'class' => Curso::class,
+                'choice_label' => 'nombre',
+                'query_builder' => function (EntityRepository $er) {
+                    $curso = $er->createQueryBuilder('c');
+                    return $curso;
+                },
+                'multiple' => true,
+                'expanded' => true,
+                'label' => 'Cursos',
+            ])
         ;
     }
 

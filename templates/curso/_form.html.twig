@@ -1,0 +1,49 @@
+{{ form_start(form) }}
+<div class="form-group">
+    <div class="row g-3">
+        <div class="col-md-6">
+            {{ form_label(form.nombre, 'Nombre') }}
+            {{ form_widget(form.nombre) }}
+        </div>
+    </div>
+    <div class="row g-3">
+        <div class="col-md-12">
+            {{ form_label(form.dias, 'Días') }}
+            <div class="col-sm-12">
+                {% for child in form.dias.children %}
+                    <div class="group-15">
+                        <div class="custom-control custom-checkbox custom-checkbox-primary row">
+                            <div class="col-1">
+                                {% if child.vars.value in curso.horario|keys %}
+                                    {% set desde = curso.horario[child.vars.value][0] %}
+                                    {% set hasta = curso.horario[child.vars.value][1] %}
+                                    {{ form_widget(child, {'attr': {'class': 'custom-control-input', 'checked': 'true'}}) }}
+                                {% else %}
+                                    {% set desde = '' %}
+                                    {% set hasta = '' %}
+                                    {{ form_widget(child, {'attr': {'class': 'custom-control-input'}}) }}
+                                {% endif %}
+                            </div>
+                            <div class="col-3">
+                                <label class="custom-control-label" for="{{ child.vars.id }}" >{{ child.vars.label }}</label>
+                            </div>
+                            <div class="col-4">
+                                De: <input type="text" id="{{ child.vars.id }}-desde" name="desde[]" value="{{ desde }}">
+                            </div>
+                            <div class="col-4">
+                                A: <input type="text" id="{{ child.vars.id }}-hasta" name="hasta[]" value="{{ hasta }}">
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+    <div class="row g-3">
+        <div class="col-md-10" style="text-align: right;">
+            <button class="btn btn-success">{{ button_label|default('Save') }}</button>
+        </div>
+    </div>
+</div>
+{{ form_end(form) }}

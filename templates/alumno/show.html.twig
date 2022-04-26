@@ -103,12 +103,17 @@
                 <th>Como_conociste</th>
                 <td>{{ alumno.comoConociste }}</td>
             </tr>
+        <tr>
+            <td colspan="2">
+                <a href="{{ path('app_alumno_index') }}" class="btn btn-primary">Volver</a>
+                <a href="{{ path('app_alumno_edit', {'id': alumno.id}) }}" class="btn btn-success"><i class="bi bi-pencil"></i></a>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                {{ include('alumno/_delete_form.html.twig') }}
+            </td>
+        </tr>
         </tbody>
     </table>
-
-    <a href="{{ path('app_alumno_index') }}" class="btn btn-primary">Volver</a>
-
-    <a href="{{ path('app_alumno_edit', {'id': alumno.id}) }}" class="btn btn-success"><i class="bi bi-pencil"></i></a>
-
-    {{ include('alumno/_delete_form.html.twig') }}
 {% endblock %}

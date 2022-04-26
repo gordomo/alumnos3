@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\ProfesorRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -36,6 +38,21 @@ class Profesor
      * @ORM\Column(type="text")
      */
     private $email;
+
+    /**
+     * @ORM\Column(type="text", nullable=true)
+     */
+    private $tel;
+
+    /**
+     * @ORM\ManyToMany(targetEntity=Curso::class, inversedBy="profesores")
+     */
+    private $curso;
+
+    public function __construct()
+    {
+        $this->curso = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -86,6 +103,42 @@ class Profesor
     public function setEmail(string $email): self
     {
         $this->email = $email;
+
+        return $this;
+    }
+
+    public function getTel(): ?string
+    {
+        return $this->tel;
+    }
+
+    public function setTel(?string $tel): self
+    {
+        $this->tel = $tel;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Curso>
+     */
+    public function getCurso(): Collection
+    {
+        return $this->curso;
+    }
+
+    public function addCurso(Curso $curso): self
+    {
+        if (!$this->curso->contains($curso)) {
+            $this->curso[] = $curso;
+        }
+
+        return $this;
+    }
+
+    public function removeCurso(Curso $curso): self
+    {
+        $this->curso->removeElement($curso);
 
         return $this;
     }
