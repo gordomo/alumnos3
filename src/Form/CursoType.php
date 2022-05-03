@@ -16,7 +16,7 @@ class CursoType extends AbstractType
     {
         $builder
             ->add('nombre', TextType::class, ['attr' => ['class' => 'form-control']])
-            ->add('precio', NumberType::class, ['attr' => ['class' => 'form-control']])
+            ->add('precio', TextType::class, ['attr' => ['class' => 'form-control']])
             ->add('dias', ChoiceType::class, ['attr' => ['class' => 'form-control'], 'required' => true, 'choices'  => [
                 'Lunes' => 0,
                 'Martes' => 1,
