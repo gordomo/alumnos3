@@ -4,10 +4,16 @@
         <div class="col-md-6">
             {{ form_label(form.nombre, 'Nombre') }}
             {{ form_widget(form.nombre) }}
+            <small class="form-error">
+                {{ form_errors(form.nombre) }}
+            </small>
         </div>
         <div class="col-md-6">
             {{ form_label(form.precio, 'Precio') }}
             {{ form_widget(form.precio) }}
+            <small class="form-error">
+                {{ form_errors(form.precio) }}
+            </small>
         </div>
     </div>
     <div class="row g-3">
@@ -41,6 +47,9 @@
                     </div>
                 {% endfor %}
             </div>
+            <small class="form-error">
+                {{ form_errors(form.dias) }}
+            </small>
         </div>
 
     </div>

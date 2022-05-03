@@ -4,18 +4,30 @@
         <div class="col-md-3">
             {{ form_label(form.nombre, 'Nombre') }}
             {{ form_widget(form.nombre) }}
+            <small class="form-error">
+                {{ form_errors(form.nombre) }}
+            </small>
         </div>
         <div class="col-md-3">
             {{ form_label(form.apellido, 'Apellido') }}
             {{ form_widget(form.apellido) }}
+            <small class="form-error">
+                {{ form_errors(form.apellido) }}
+            </small>
         </div>
         <div class="col-md-3">
             {{ form_label(form.f_nac, 'Fecha de Nacimiento') }}
             {{ form_widget(form.f_nac) }}
+            <small class="form-error">
+                {{ form_errors(form.f_nac) }}
+            </small>
         </div>
         <div class="col-md-3">
             {{ form_label(form.l_nac, 'Lugar de Nacimiento') }}
             {{ form_widget(form.l_nac) }}
+            <small class="form-error">
+                {{ form_errors(form.l_nac) }}
+            </small>
         </div>
     </div>
 </div>
@@ -24,18 +36,30 @@
         <div class="col-md-3">
             {{ form_label(form.telefono_fijo, 'Teléfono fijo') }}
             {{ form_widget(form.telefono_fijo) }}
+            <small class="form-error">
+                {{ form_errors(form.telefono_fijo) }}
+            </small>
         </div>
         <div class="col-md-3">
             {{ form_label(form.email, 'Email') }}
             {{ form_widget(form.email) }}
+            <small class="form-error">
+                {{ form_errors(form.email) }}
+            </small>
         </div>
         <div class="col-md-3">
             {{ form_label(form.dni, 'DNI') }}
             {{ form_widget(form.dni) }}
+            <small class="form-error">
+                {{ form_errors(form.dni) }}
+            </small>
         </div>
         <div class="col-md-3">
             {{ form_label(form.celular, 'Celular') }}
             {{ form_widget(form.celular) }}
+            <small class="form-error">
+                {{ form_errors(form.celular) }}
+            </small>
         </div>
     </div>
 </div>
@@ -44,18 +68,30 @@
         <div class="col-md-3">
             {{ form_label(form.n_tutor, 'Nombre Tutor') }}
             {{ form_widget(form.n_tutor) }}
+            <small class="form-error">
+                {{ form_errors(form.n_tutor) }}
+            </small>
         </div>
         <div class="col-md-3">
             {{ form_label(form.t_tutor, 'Teléfono Tutor') }}
             {{ form_widget(form.t_tutor) }}
+            <small class="form-error">
+                {{ form_errors(form.t_tutor) }}
+            </small>
         </div>
         <div class="col-md-3">
             {{ form_label(form.contacto_emergencia, 'Contacto de Emergencia') }}
             {{ form_widget(form.contacto_emergencia) }}
+            <small class="form-error">
+                {{ form_errors(form.contacto_emergencia) }}
+            </small>
         </div>
         <div class="col-md-3">
             {{ form_label(form.corre_tutor, 'Email Tutor') }}
             {{ form_widget(form.corre_tutor) }}
+            <small class="form-error">
+                {{ form_errors(form.corre_tutor) }}
+            </small>
         </div>
     </div>
 </div>
@@ -64,18 +100,30 @@
         <div class="col-md-3">
             {{ form_label(form.dni_tutor, 'DNI Tutor') }}
             {{ form_widget(form.dni_tutor) }}
+            <small class="form-error">
+                {{ form_errors(form.dni_tutor) }}
+            </small>
         </div>
         <div class="col-md-3">
             {{ form_label(form.escuela, 'Escuela') }}
             {{ form_widget(form.escuela) }}
+            <small class="form-error">
+                {{ form_errors(form.escuela) }}
+            </small>
         </div>
         <div class="col-md-3">
             {{ form_label(form.extras, 'Extras') }}
             {{ form_widget(form.extras) }}
+            <small class="form-error">
+                {{ form_errors(form.extras) }}
+            </small>
         </div>
         <div class="col-md-3">
             {{ form_label(form.g_sanguineo, 'Grupo Sanguineo') }}
             {{ form_widget(form.g_sanguineo) }}
+            <small class="form-error">
+                {{ form_errors(form.g_sanguineo) }}
+            </small>
         </div>
     </div>
 </div>
@@ -84,18 +132,30 @@
         <div class="col-md-3">
             {{ form_label(form.enfermedad, 'Enfermedad') }}
             {{ form_widget(form.enfermedad) }}
+            <small class="form-error">
+                {{ form_errors(form.enfermedad) }}
+            </small>
         </div>
         <div class="col-md-3">
             {{ form_label(form.alergico, 'Alergico') }}
             {{ form_widget(form.alergico) }}
+            <small class="form-error">
+                {{ form_errors(form.alergico) }}
+            </small>
         </div>
         <div class="col-md-3">
             {{ form_label(form.medicacion, 'Medicacion') }}
             {{ form_widget(form.medicacion) }}
+            <small class="form-error">
+                {{ form_errors(form.medicacion) }}
+            </small>
         </div>
         <div class="col-md-3">
             {{ form_label(form.curso, 'Curso') }}
             {{ form_widget(form.curso) }}
+            <small class="form-error">
+                {{ form_errors(form.curso) }}
+            </small>
         </div>
     </div>
 </div>
@@ -104,10 +164,16 @@
         <div class="col-md-3">
             {{ form_label(form.como_conociste, 'Como nos Conociste') }}
             {{ form_widget(form.como_conociste) }}
+            <small class="form-error">
+                {{ form_errors(form.como_conociste) }}
+            </small>
         </div>
         <div class="col-md-9">
             {{ form_label(form.hermanos, 'Hermanos') }}
             {{ form_widget(form.hermanos) }}
+            <small class="form-error">
+                {{ form_errors(form.hermanos) }}
+            </small>
         </div>
     </div>
 </div>

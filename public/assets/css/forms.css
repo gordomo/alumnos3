@@ -4,3 +4,13 @@
 .form-group .row {
     margin-top: 15px;
 }
+
+.form-error {
+    color: red;
+}
+
+.form-error ul {
+    list-style-type: none;
+    padding: 0px 5px;
+    margin: 0;
+}
