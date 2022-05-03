@@ -29,7 +29,11 @@
                 <td>{{ alumno.contactoEmergencia }}</td>
                 <td>{{ alumno.nTutor }}</td>
                 <td>{{ alumno.tTutor }}</td>
-                <td>{{ alumno.curso }}</td>
+                <td>
+                    {% for curso in alumno.curso %}
+                        {{ curso.nombre }}
+                    {% endfor %}
+                </td>
                 <td>
                     <a href="{{ path('app_alumno_show', {'id': alumno.id}) }}"><i class="bi bi-eye"></i></a>
                     <a href="{{ path('app_alumno_edit', {'id': alumno.id}) }}"><i class="bi bi-pencil"></i></a>

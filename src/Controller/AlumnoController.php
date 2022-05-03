@@ -72,6 +72,7 @@ class AlumnoController extends AbstractController
      */
     public function edit(Request $request, Alumno $alumno, AlumnoRepository $alumnoRepository): Response
     {
+
         $form = $this->createForm(AlumnoType::class, $alumno);
         $form->handleRequest($request);
 

@@ -115,7 +115,7 @@ class Alumno
     private $medicacion;
 
     /**
-     * @ORM\Column(type="text", nullable=true)
+     * @ORM\ManyToMany(targetEntity=Curso::class, inversedBy="profesores")
      */
     private $curso;
 
@@ -128,6 +128,11 @@ class Alumno
      * @ORM\Column(type="json", nullable=true)
      */
     private $hermanos = [];
+
+    public function __construct()
+    {
+        $this->curso = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -362,14 +367,26 @@ class Alumno
         return $this;
     }
 
-    public function getCurso(): ?string
+    /**
+     * @return Collection<int, Curso>
+     */
+    public function getCurso(): Collection
     {
         return $this->curso;
     }
 
-    public function setCurso(?string $curso): self
+    public function addCurso(Curso $curso): self
     {
-        $this->curso = $curso;
+        if (!$this->curso->contains($curso)) {
+            $this->curso[] = $curso;
+        }
+
+        return $this;
+    }
+
+    public function removeCurso(Curso $curso): self
+    {
+        $this->curso->removeElement($curso);
 
         return $this;
     }

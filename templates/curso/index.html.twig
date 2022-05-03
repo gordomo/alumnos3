@@ -9,6 +9,7 @@
         <thead>
             <tr>
                 <th>Nombre</th>
+                <th>Precio</th>
                 <th>Horario</th>
                 <th>Acciones</th>
             </tr>
@@ -17,6 +18,7 @@
         {% for curso in cursos %}
             <tr>
                 <td>{{ curso.nombre }}</td>
+                <td>${{ curso.precio }}</td>
                 <td>
                     {% for dia, horas in curso.horario %}
                         {% if dia == 0 %} Lunes de {{ horas[0] }}hs a  {{ horas[1] }}hs<br>{% endif%}

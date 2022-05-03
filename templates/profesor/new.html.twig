@@ -9,8 +9,10 @@
             {{ include('profesor/_form.html.twig', {'button_label': 'Guardar'}) }}
         </div>
         <br><br>
-        <div class="row">
-            <a class="btn btn-primary" href="{{ path('app_profesor_index') }}">Volver</a>
+        <div class="row botones">
+            <div class="col-md-12">
+                <a class="btn btn-primary" href="{{ path('app_profesor_index') }}">Volver</a>
+            </div>
         </div>
     </div>
 {% endblock %}

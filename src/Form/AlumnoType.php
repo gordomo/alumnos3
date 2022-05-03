@@ -3,6 +3,7 @@
 namespace App\Form;
 
 use App\Entity\Alumno;
+use App\Entity\Curso;
 use Doctrine\ORM\EntityRepository;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
@@ -20,44 +21,43 @@ class AlumnoType extends AbstractType
     {
         $this->alumno = $options['data'];
         $builder
-            ->add('telefono_fijo', NumberType::class)
-            ->add('nombre', TextType::class)
-            ->add('apellido', TextType::class)
-            ->add('f_nac', DateType::class, ['widget' => 'single_text', 'html5' => true])
-            ->add('email', TextType::class)
-            ->add('l_nac', TextType::class)
-            ->add('dni', NumberType::class)
-            ->add('celular', NumberType::class)
-            ->add('contacto_emergencia', TextType::class)
-            ->add('n_tutor', TextType::class)
-            ->add('t_tutor', NumberType::class)
-            ->add('corre_tutor', TextType::class)
-            ->add('dni_tutor', NumberType::class)
-            ->add('escuela', TextType::class)
-            ->add('extras', TextType::class)
-            ->add('g_sanguineo', TextType::class)
-            ->add('enfermedad', TextType::class)
-            ->add('alergico', TextType::class)
-            ->add('medicacion', TextType::class)
-            ->add('curso', ChoiceType::class, ['choices' => [
-                "TODDLERS (4/5 años)" => "TODDLERS",
-                "FIRST CONTACT (6 años)" => "FIRST CONTACT",
-                "FIRST KIDS (7 años)" => "FIRST KIDS",
-                "SECOND KIDS (8/9 años)" => "SECOND KIDS",
-                "THIRD KIDS (10 años)" => "THIRD KIDS",
-                "FOURTH KIDS (11 años)" => "FOURTH KIDS",
-                "FIRST TEENS (12 años)" => "FIRST TEENS",
-                "TEENS (13/14 años )" => "TEENS",
-                "ADULTS ELEMENTARY (Adultos)" => "ADULTS ELEMENTARY",
-                "ADULTS INTERMEDIATE (Adultos)" => "ADULTS INTERMEDIATE",
-                ]
+            ->add('telefono_fijo', NumberType::class, ['attr' => ['class' => 'form-control']])
+            ->add('nombre', TextType::class, ['attr' => ['class' => 'form-control']])
+            ->add('apellido', TextType::class, ['attr' => ['class' => 'form-control']])
+            ->add('f_nac', DateType::class, ['widget' => 'single_text', 'html5' => true, 'attr' => ['class' => 'form-control']])
+            ->add('email', TextType::class, ['attr' => ['class' => 'form-control']])
+            ->add('l_nac', TextType::class, ['attr' => ['class' => 'form-control']])
+            ->add('dni', NumberType::class, ['attr' => ['class' => 'form-control']])
+            ->add('celular', NumberType::class, ['attr' => ['class' => 'form-control']])
+            ->add('contacto_emergencia', TextType::class, ['attr' => ['class' => 'form-control']])
+            ->add('n_tutor', TextType::class, ['attr' => ['class' => 'form-control']])
+            ->add('t_tutor', NumberType::class, ['attr' => ['class' => 'form-control']])
+            ->add('corre_tutor', TextType::class, ['attr' => ['class' => 'form-control']])
+            ->add('dni_tutor', NumberType::class, ['attr' => ['class' => 'form-control']])
+            ->add('escuela', TextType::class, ['attr' => ['class' => 'form-control']])
+            ->add('extras', TextType::class, ['attr' => ['class' => 'form-control']])
+            ->add('g_sanguineo', TextType::class, ['attr' => ['class' => 'form-control']])
+            ->add('enfermedad', TextType::class, ['attr' => ['class' => 'form-control']])
+            ->add('alergico', TextType::class, ['attr' => ['class' => 'form-control']])
+            ->add('medicacion', TextType::class, ['attr' => ['class' => 'form-control']])
+            ->add('curso', EntityType::class, [
+                'class' => Curso::class,
+                'choice_label' => 'nombre',
+                'query_builder' => function (EntityRepository $er) {
+                    $curso = $er->createQueryBuilder('c');
+                    return $curso;
+                },
+                'multiple' => true,
+                'expanded' => false,
+                'label' => 'Cursos',
+                'attr' => ['class' => 'form-control']
             ])
-            ->add('como_conociste', ChoiceType::class, ['choices' => [
+            ->add('como_conociste', ChoiceType::class, ['attr' => ['class' => 'form-control'], 'choices' => [
                 "Por Familia" => "Familia",
                 "Por Amigos" => "Amigos",
                 "Por Facebook" => "Facebook",
                 "Por Instagram" => "Instagram",
-                "Otra" => "Otra",
+                "Otra" => "Otra"
 
             ]])
             ->add('hermanos', EntityType::class, [
@@ -72,8 +72,10 @@ class AlumnoType extends AbstractType
                 },
                 "mapped" => false,
                 'multiple' => true,
-                'expanded' => true,
+                'expanded' => false,
                 'label' => 'Hermanos',
+                'required' => false,
+                'attr' => ['class' => 'form-control']
             ])
         ;
     }

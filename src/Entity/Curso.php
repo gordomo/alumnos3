@@ -30,13 +30,24 @@ class Curso
     private $horario = [];
 
     /**
+     * @ORM\Column(type="text")
+     */
+    private $precio;
+
+    /**
      * @ORM\ManyToMany(targetEntity=Profesor::class, mappedBy="curso")
      */
     private $profesores;
 
+    /**
+     * @ORM\ManyToMany(targetEntity=Alumno::class, mappedBy="curso")
+     */
+    private $alumnos;
+
     public function __construct()
     {
         $this->profesores = new ArrayCollection();
+        $this->alumnos = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -52,6 +63,18 @@ class Curso
     public function setNombre(string $nombre): self
     {
         $this->nombre = $nombre;
+
+        return $this;
+    }
+
+    public function getPrecio(): ?string
+    {
+        return $this->precio;
+    }
+
+    public function setPrecio(string $precio): self
+    {
+        $this->precio = $precio;
 
         return $this;
     }
@@ -90,6 +113,33 @@ class Curso
     {
         if ($this->profesores->removeElement($profesore)) {
             $profesore->removeCurso($this);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Profesor>
+     */
+    public function getAlumnos(): Collection
+    {
+        return $this->alumnos;
+    }
+
+    public function addAlumno(Profesor $alumno): self
+    {
+        if (!$this->alumnos->contains($alumno)) {
+            $this->alumnos[] = $alumno;
+            $alumno->addCurso($this);
+        }
+
+        return $this;
+    }
+
+    public function removeAlumno(Profesor $alumno): self
+    {
+        if ($this->alumnos->removeElement($alumno)) {
+            $alumno->removeCurso($this);
         }
 
         return $this;
