@@ -18,20 +18,21 @@ class ProfesorType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
-            ->add('nombre', TextType::class)
-            ->add('apellido', TextType::class)
-            ->add('dni', NumberType::class)
-            ->add('email', EmailType::class)
-            ->add('tel', NumberType::class)
+            ->add('nombre', TextType::class, ['attr' => ['class' => 'form-control']])
+            ->add('apellido', TextType::class, ['attr' => ['class' => 'form-control']])
+            ->add('dni', NumberType::class, ['attr' => ['class' => 'form-control']])
+            ->add('email', EmailType::class, ['attr' => ['class' => 'form-control']])
+            ->add('tel', NumberType::class, ['attr' => ['class' => 'form-control']])
             ->add('curso', EntityType::class, [
                 'class' => Curso::class,
+                'attr' => ['class' => 'form-control'],
                 'choice_label' => 'nombre',
                 'query_builder' => function (EntityRepository $er) {
                     $curso = $er->createQueryBuilder('c');
                     return $curso;
                 },
                 'multiple' => true,
-                'expanded' => true,
+                'expanded' => false,
                 'label' => 'Cursos',
             ])
         ;
