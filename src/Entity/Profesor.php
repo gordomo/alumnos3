@@ -49,9 +49,15 @@ class Profesor
      */
     private $curso;
 
+    /**
+     * @ORM\OneToMany(targetEntity=AsistenciaProfesores::class, mappedBy="profesor", orphanRemoval=true)
+     */
+    private $asistenciaProfesores;
+
     public function __construct()
     {
         $this->curso = new ArrayCollection();
+        $this->asistenciaProfesores = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -139,6 +145,36 @@ class Profesor
     public function removeCurso(Curso $curso): self
     {
         $this->curso->removeElement($curso);
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, AsistenciaProfesores>
+     */
+    public function getAsistenciaProfesores(): Collection
+    {
+        return $this->asistenciaProfesores;
+    }
+
+    public function addAsistenciaProfesore(AsistenciaProfesores $asistenciaProfesore): self
+    {
+        if (!$this->asistenciaProfesores->contains($asistenciaProfesore)) {
+            $this->asistenciaProfesores[] = $asistenciaProfesore;
+            $asistenciaProfesore->setProfesor($this);
+        }
+
+        return $this;
+    }
+
+    public function removeAsistenciaProfesore(AsistenciaProfesores $asistenciaProfesore): self
+    {
+        if ($this->asistenciaProfesores->removeElement($asistenciaProfesore)) {
+            // set the owning side to null (unless already changed)
+            if ($asistenciaProfesore->getProfesor() === $this) {
+                $asistenciaProfesore->setProfesor(null);
+            }
+        }
 
         return $this;
     }

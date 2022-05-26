@@ -34,6 +34,7 @@ class ProfesorType extends AbstractType
                 'multiple' => true,
                 'expanded' => false,
                 'label' => 'Cursos',
+                'required' => false,
             ])
         ;
     }

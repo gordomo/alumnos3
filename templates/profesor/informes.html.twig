@@ -1,0 +1,24 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Informes{% endblock %}
+
+
+    {% block panelTitle %}
+        Sistema de Administración de Dream Ingles
+    {% endblock %}
+    {% block body %}
+        <br>
+        <h1>Informes</h1>
+        <br>
+        <div class="row">
+            <div class="col-md-6">
+                <label for="filtroFechas">Desde</label>
+                <input type="text" id="filtroFechas" name="desde" value="{{ desde }}"/>
+            </div>
+            <div class="col-md-6">
+                <label for="filtroFechas">Hasta</label>
+                <input type="text" id="filtroFechas" name="hasta" value="{{ hasta }}"/>
+            </div>
+        </div>
+        <br>
+    {% endblock %}

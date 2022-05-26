@@ -4,3 +4,24 @@
 .btn-borrar {
     padding: 0.05rem 0.75rem;
 }
+
+.dropdown-item {
+    cursor: pointer;
+}
+.dropdown-header {
+    cursor: default;
+}
+.btn-profes {
+    text-align: left;
+}
+.btn-profes.dropdown-toggle::after {
+    margin-top: 10px;
+    float: right;
+}
+.sidebar-dropdown-ul {
+    display: block;
+}
+.sidebar-dropdown-ul .dropdown-toggle::after {
+    float: right;
+    margin-top: 10px;
+}

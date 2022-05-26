@@ -1,0 +1,89 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Asistencias{% endblock %}
+
+
+    {% block panelTitle %}
+        Sistema de Administración de Dream Ingles
+    {% endblock %}
+    {% block body %}
+        <br>
+        <h1>Calendario</h1>
+        <br>
+        <div class="row">
+            <div class="col-md-12">
+                <label for="filtroFechas">Semana del:</label>
+                <input type="text" id="filtroFechas" name="daterange" value="{{ firstday }}"/>
+            </div>
+        </div>
+        <br>
+        <table class="table">
+            <thead>
+            <tr>
+                <th>cursos</th>
+                {% for fechas in rango %}
+                    <th>{{ fechas }}</th>
+                {% endfor %}
+            </tr>
+            </thead>
+            <tbody>
+            {% for curso in cursos %}
+                <tr>
+                    <td>{{ curso.nombre }}</td>
+                    {% for key, fecha in rango %}
+                        <td>
+                            {% if curso.horario[key] is defined %}
+                                {% for profe in curso.profesores %}
+                                    {% set btnClass = 'btn-success' %}
+                                    <div class="dropdown">
+                                        {% if asistencias[curso.id][fecha][profe.id] is defined %}
+                                            {% if not asistencias[curso.id][fecha][profe.id].presente %}
+                                                {% set btnClass = 'btn-danger' %}
+                                                {% set reemplazante = asistencias[curso.id][fecha][profe.id].reemplazante %}
+                                            {% endif %}
+                                        {% endif %}
+                                        <button class="btn {{ btnClass }} btn-sm dropdown-toggle btn-profes" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                                            {{ profe.apellido }}
+                                            {% if  reemplazante is defined %}
+                                                <br>{{ reemplazante }}
+                                            {% endif %}
+                                        </button>
+                                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                                            <li><h6 class="dropdown-header">Reemplazó:</h6></li>
+                                            {% for profeInner in todosLosProfes %}
+                                                {% if profeInner.id != profe.id %}
+                                                    <li >
+                                                        <a href="{{ path('falta_profe', {'id': profe.id, 'remplazo': profeInner.id, 'fecha': fecha, 'curso': curso.id}) }}" class="dropdown-item">{{ profeInner.apellido }}</a>
+                                                    </li>
+                                                {% endif %}
+                                            {% endfor %}
+
+                                        </ul>
+                                    </div>
+                                    <br>
+                                {% endfor %}
+                            {% endif %}
+                        </td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+
+        <script>
+            $(function() {
+                $('input[name="daterange"]').daterangepicker({
+                    opens: 'left',
+                    singleDatePicker: true,
+                    locale: {
+                        format: 'YYYY/MM/DD'
+                    }
+                }, function(start, end, label) {
+                    location.href = "{{ path('asistencias') }}?desde=" + start.format('YYYY/MM/DD');
+                });
+            });
+        </script>
+
+
+    {% endblock %}
+

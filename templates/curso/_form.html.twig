@@ -18,7 +18,14 @@
     </div>
     <div class="row g-3">
         <div class="col-md-12">
-            {{ form_label(form.dias, 'Días') }}
+            <div class="row">
+                <div class="col-1">
+                    {{ form_label(form.dias, 'Días') }}
+                </div>
+                <div class="col-11" style="text-align: right;padding: 0 35px;">
+                    Horarios con formato hh:mm
+                </div>
+            </div>
             <div class="col-sm-12">
                 {% for child in form.dias.children %}
                     <div class="group-15">
@@ -38,10 +45,10 @@
                                 <label class="custom-control-label" for="{{ child.vars.id }}" >{{ child.vars.label }}</label>
                             </div>
                             <div class="col-4">
-                                De: <input type="text" id="{{ child.vars.id }}-desde" name="desde[]" value="{{ desde }}">
+                                De: <input type="text" id="{{ child.vars.id }}-desde" name="desde[]" value="{{ desde }}" pattern="(?:[01]|2(?![4-9])){1}\d{1}:[0-5]{1}\d{1}">
                             </div>
                             <div class="col-4">
-                                A: <input type="text" id="{{ child.vars.id }}-hasta" name="hasta[]" value="{{ hasta }}">
+                                A: <input type="text" id="{{ child.vars.id }}-hasta" name="hasta[]" value="{{ hasta }}" pattern="(?:[01]|2(?![4-9])){1}\d{1}:[0-5]{1}\d{1}">
                             </div>
                         </div>
                     </div>
