@@ -65,22 +65,37 @@ class ProfesorController extends AbstractController
      */
     public function informes(Request $request, CursoRepository $cursoRepository, ProfesorRepository $profesorRepository, AsistenciaProfesoresRepository $asistenciaProfesoresRepository): Response
     {
+        $ds = new \DateTime('first day of this month');
+        $ls = new \DateTime('last day of this month');
 
-        $desde = $request->get('desde', date("Y/m/d"));
-        $hasta = $request->get('hasta', date("Y/m/d"));
+        $desde = $request->get('desde', $ds->format("Y/m/d"));
+        $hasta = $request->get('hasta', $ls->format("Y/m/d"));
 
         $cursos = $cursoRepository->findAll();
         $profesores = $profesorRepository->findAll();
 
         $asistencias = $asistenciaProfesoresRepository->findByFecha(new \DateTime($desde), new \DateTime($hasta));
+        $asisArray = [];
+        $reemplazantes = [];
 
-
-
+        foreach ($asistencias as $asistencia) {
+            $reemplazante = $asistencia->getProfesorRemplazante() ? $profesorRepository->find($asistencia->getProfesorRemplazante())->getApellido() : 'Sin Reemplazo';
+            $asisArray[$asistencia->getProfesor()->getApellido()][$asistencia->getFecha()->format("Y/m/d")] = [
+                'profesorRemplazante' => $reemplazante,
+                'curso' => $cursoRepository->find($asistencia->getCurso())->getNombre(),
+            ];
+            if ($reemplazante !== 'Sin Reemplazo') {
+                $reemplazantes[$asistencia->getFecha()->format("Y/m/d")] = $reemplazante;
+            }
+        }
         return $this->render('profesor/informes.html.twig',[
             'cursos' => $cursos,
             'todosLosProfes' => $profesores,
+            'asistencias' => $asisArray,
             'desde' => $desde,
-            'hasta' => $hasta
+            'hasta' => $hasta,
+            'rango' => $this->createDateRangeArray($desde, $hasta),
+            'reemplazantes' => $reemplazantes
         ]);
 
     }
@@ -141,13 +156,14 @@ class ProfesorController extends AbstractController
     {
 
         $profeRemplazante = $profesorRepository->find($remplazo);
+
         $fecha = $request->get('fecha');
         $curso = $request->get('curso');
 
         $asistenciasGuarda = $asistenciaProfesoresRepository->findBy(['profesor' => $profesor, 'fecha' => new \DateTime($fecha)]);
 
         if (!empty($asistenciasGuarda[0])) {
-            $asistenciasGuarda[0]->setProfesorRemplazante($profeRemplazante->getId());
+            $asistenciasGuarda[0]->setProfesorRemplazante($profeRemplazante ? $profeRemplazante->getId() : 0);
             $asistenciaProfesoresRepository->add($asistenciasGuarda[0]);
         } else {
             $asistenciaNueva = new AsistenciaProfesores();
@@ -155,12 +171,12 @@ class ProfesorController extends AbstractController
             $asistenciaNueva->setProfesor($profesor);
             $asistenciaNueva->setPresente(false);
             $asistenciaNueva->setCurso($curso);
-            $asistenciaNueva->setProfesorRemplazante($profeRemplazante->getId());
+            $asistenciaNueva->setProfesorRemplazante($profeRemplazante ? $profeRemplazante->getId() : 0);
 
             $asistenciaProfesoresRepository->add($asistenciaNueva);
         }
 
-        return $this->redirectToRoute('asistencias', [], Response::HTTP_SEE_OTHER);
+        return $this->redirectToRoute('asistencias', ['desde' => $fecha], Response::HTTP_SEE_OTHER);
     }
 
     /**

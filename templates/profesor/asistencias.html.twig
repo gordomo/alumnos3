@@ -45,11 +45,14 @@
                                         <button class="btn {{ btnClass }} btn-sm dropdown-toggle btn-profes" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
                                             {{ profe.apellido }}
                                             {% if  reemplazante is defined %}
-                                                <br>{{ reemplazante }}
+                                                <br><i style="color: yellow;">{{ reemplazante }}</i>
                                             {% endif %}
                                         </button>
                                         <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
                                             <li><h6 class="dropdown-header">Reemplazó:</h6></li>
+                                            <li >
+                                                <a href="{{ path('falta_profe', {'id': profe.id, 'remplazo': 0, 'fecha': fecha, 'curso': curso.id}) }}" class="dropdown-item">sin reemplazo</a>
+                                            </li>
                                             {% for profeInner in todosLosProfes %}
                                                 {% if profeInner.id != profe.id %}
                                                     <li >

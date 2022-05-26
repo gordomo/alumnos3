@@ -12,13 +12,62 @@
         <br>
         <div class="row">
             <div class="col-md-6">
-                <label for="filtroFechas">Desde</label>
-                <input type="text" id="filtroFechas" name="desde" value="{{ desde }}"/>
-            </div>
-            <div class="col-md-6">
-                <label for="filtroFechas">Hasta</label>
-                <input type="text" id="filtroFechas" name="hasta" value="{{ hasta }}"/>
+                <label for="filtroFechas">Desde/Hasta</label>
+                <input type="text" id="filtroFechas" name="daterange" value="{{ desde }}"/>
             </div>
         </div>
         <br>
+        <table class="table table-striped table-responsive">
+            <thead>
+                <tr>
+                    <th scope="col">Profes</th>
+                    {% for fechas in rango %}
+                        <th scope="col" class="border-start text-center">{{ fechas }}</th>
+                    {% endfor %}
+                    <th scope="col">Total Faltas</th>
+                    <th scope="col">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for profe, asistencia in asistencias %}
+                    {% set totalFaltas = 0 %}
+                <tr scope="row">
+                    <th>
+                        {{ profe }}
+                    </th>
+                    {% for fechas in rango %}
+                    <td class="border-start text-center">
+                        {% if asistencia[fechas] is defined %}
+                            <b style="color: red">X</b>
+                            {% if reemplazantes[fechas] is defined %}
+                                <i>{{ reemplazantes[fechas] }}</i>
+                            {% else %}
+                                <i>S. R.</i>
+                            {% endif %}
+                            {% set totalFaltas = totalFaltas + 1 %}
+                        {% endif %}
+                    </td>
+                    {% endfor %}
+                    <td>
+                        {{ totalFaltas }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <script>
+            $(function() {
+                $('input[name="daterange"]').daterangepicker({
+                    opens: 'left',
+                    startDate: '{{ desde }}',
+                    endDate: '{{ hasta }}',
+                    locale: {
+                        format: 'YYYY/MM/DD'
+                    }
+                }, function(start, end, label) {
+                    location.href = "{{ path('informes') }}?desde=" + start.format('YYYY/MM/DD') + "&hasta=" + end.format('YYYY/MM/DD');
+                });
+            });
+        </script>
     {% endblock %}
