@@ -17,18 +17,18 @@ class CursoType extends AbstractType
         $builder
             ->add('nombre', TextType::class, ['attr' => ['class' => 'form-control']])
             ->add('precio', TextType::class, ['attr' => ['class' => 'form-control']])
+            ->add('duracion', NumberType::class, ['html5' => true, 'attr' => ['class' => 'form-control']])
             ->add('dias', ChoiceType::class, ['attr' => ['class' => 'form-control'], 'required' => true, 'choices'  => [
-                'Lunes' => 0,
-                'Martes' => 1,
-                'Miercoles' => 2,
-                'Jueves' => 3,
-                'Viernes' => 4,
-                'Sábado' => 5,
-                'Domingo' => 6,
+                'Lunes' => 'Lunes',
+                'Martes' => 'Martes',
+                'Miercoles' => 'Miercoles',
+                'Jueves' => 'Jueves',
+                'Viernes' => 'Viernes',
+                'Sábado' => 'Sábado',
+                'Domingo' => 'Domingo',
             ],
                 'multiple'=>true,
-                'expanded'=>true,
-                'mapped'=> false
+                'expanded'=>false,
             ])
         ;
     }

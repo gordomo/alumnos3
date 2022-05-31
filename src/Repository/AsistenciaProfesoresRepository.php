@@ -49,7 +49,7 @@ class AsistenciaProfesoresRepository extends ServiceEntityRepository
     //  * @return AsistenciaProfesores[] Returns an array of AsistenciaProfesores objects
     //  */
 
-    public function findByFecha($from, $to)
+    public function findByFechas($from, $to)
     {
         return $this->createQueryBuilder('a')
             ->andWhere('a.fecha >= :from')
@@ -60,6 +60,19 @@ class AsistenciaProfesoresRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult()
         ;
+    }
+
+    public function findByFechaProfe($date, $profe)
+    {
+        return $this->createQueryBuilder('a')
+            ->andWhere('a.fecha = :date')
+            ->setParameter('date', $date)
+            ->andWhere('a.profesor = :profe')
+            ->setParameter('profe', $profe)
+            ->orderBy('a.id', 'ASC')
+            ->getQuery()
+            ->getResult()
+            ;
     }
 
 

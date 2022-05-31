@@ -31,8 +31,23 @@
                 <tr>
                     <td>{{ curso.nombre }}</td>
                     {% for key, fecha in rango %}
+                        {% if (key == 0) %}
+                            {% set key = 'Lunes' %}
+                        {% elseif (key == 1) %}
+                            {% set key = 'Martes' %}
+                        {% elseif (key == 2) %}
+                            {% set key = 'Miercoles' %}
+                        {% elseif (key == 3) %}
+                            {% set key = 'Jueves' %}
+                        {% elseif (key == 4) %}
+                            {% set key = 'Viernes' %}
+                        {% elseif (key == 5) %}
+                            {% set key = 'Sábado' %}
+                        {% elseif (key == 6) %}
+                            {% set key = 'Domingo' %}
+                        {% endif %}
                         <td>
-                            {% if curso.horario[key] is defined %}
+                            {% if key in curso.dias %}
                                 {% for profe in curso.profesores %}
                                     {% set btnClass = 'btn-success' %}
                                     <div class="dropdown">

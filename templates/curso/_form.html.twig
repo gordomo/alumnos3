@@ -17,45 +17,18 @@
         </div>
     </div>
     <div class="row g-3">
-        <div class="col-md-12">
-            <div class="row">
-                <div class="col-1">
-                    {{ form_label(form.dias, 'Días') }}
-                </div>
-                <div class="col-11" style="text-align: right;padding: 0 35px;">
-                    Horarios con formato hh:mm
-                </div>
-            </div>
-            <div class="col-sm-12">
-                {% for child in form.dias.children %}
-                    <div class="group-15">
-                        <div class="custom-control custom-checkbox custom-checkbox-primary row">
-                            <div class="col-1">
-                                {% if child.vars.value in curso.horario|keys %}
-                                    {% set desde = curso.horario[child.vars.value][0] %}
-                                    {% set hasta = curso.horario[child.vars.value][1] %}
-                                    {{ form_widget(child, {'attr': {'class': 'custom-control-input', 'checked': 'true'}}) }}
-                                {% else %}
-                                    {% set desde = '' %}
-                                    {% set hasta = '' %}
-                                    {{ form_widget(child, {'attr': {'class': 'custom-control-input'}}) }}
-                                {% endif %}
-                            </div>
-                            <div class="col-3">
-                                <label class="custom-control-label" for="{{ child.vars.id }}" >{{ child.vars.label }}</label>
-                            </div>
-                            <div class="col-4">
-                                De: <input type="text" id="{{ child.vars.id }}-desde" name="desde[]" value="{{ desde }}" pattern="(?:[01]|2(?![4-9])){1}\d{1}:[0-5]{1}\d{1}">
-                            </div>
-                            <div class="col-4">
-                                A: <input type="text" id="{{ child.vars.id }}-hasta" name="hasta[]" value="{{ hasta }}" pattern="(?:[01]|2(?![4-9])){1}\d{1}:[0-5]{1}\d{1}">
-                            </div>
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
+        <div class="col-md-6">
+            <i>Mantenga Ctrl precionado <br>para seleccionar múltiples días</i>
+            {{ form_widget(form.dias) }}
             <small class="form-error">
                 {{ form_errors(form.dias) }}
+            </small>
+        </div>
+        <div class="col-md-6">
+            {{ form_label(form.duracion, 'Duracion') }}
+            {{ form_widget(form.duracion) }}
+            <small class="form-error">
+                {{ form_errors(form.duracion) }}
             </small>
         </div>
 

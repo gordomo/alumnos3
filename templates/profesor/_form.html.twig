@@ -1,44 +1,52 @@
 {{ form_start(form) }}
 <div class="form-group">
     <div class="row g-3">
-        <div class="col-md-3">
+        <div class="col-md-4">
             {{ form_label(form.nombre, 'Nombre') }}
             {{ form_widget(form.nombre) }}
             <small class="form-error">
                 {{ form_errors(form.nombre) }}
             </small>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-4">
             {{ form_label(form.apellido, 'Apellido') }}
             {{ form_widget(form.apellido) }}
             <small class="form-error">
                 {{ form_errors(form.apellido) }}
             </small>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-4">
             {{ form_label(form.tel, 'Teléfono') }}
             {{ form_widget(form.tel) }}
             <small class="form-error">
                 {{ form_errors(form.tel) }}
             </small>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-4">
             {{ form_label(form.dni, 'DNI') }}
             {{ form_widget(form.dni) }}
             <small class="form-error">
                 {{ form_errors(form.dni) }}
             </small>
         </div>
-    </div>
-    <div class="row g-3">
-        <div class="col-md-3">
+        <div class="col-md-4">
             {{ form_label(form.email, 'Email') }}
             {{ form_widget(form.email) }}
             <small class="form-error">
                 {{ form_errors(form.email) }}
             </small>
         </div>
-        <div class="col-md-9">
+        <div class="col-md-4">
+            {{ form_label(form.precioHora, 'Precio/Hora') }}
+            {{ form_widget(form.precioHora) }}
+            <small class="form-error">
+                {{ form_errors(form.precioHora) }}
+            </small>
+        </div>
+    </div>
+    <div class="row g-3">
+
+        <div class="col-md-12">
             {{ form_label(form.curso, 'Cursos') }}
             {{ form_widget(form.curso) }}
             <small class="form-error">

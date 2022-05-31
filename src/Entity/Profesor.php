@@ -42,6 +42,11 @@ class Profesor
     /**
      * @ORM\Column(type="text", nullable=true)
      */
+    private $precioHora;
+
+    /**
+     * @ORM\Column(type="text", nullable=true)
+     */
     private $tel;
 
     /**
@@ -177,5 +182,21 @@ class Profesor
         }
 
         return $this;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getPrecioHora()
+    {
+        return $this->precioHora ? $this->precioHora : "0" ;
+    }
+
+    /**
+     * @param mixed $precioHora
+     */
+    public function setPrecioHora($precioHora): void
+    {
+        $this->precioHora = $precioHora;
     }
 }

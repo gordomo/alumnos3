@@ -12,6 +12,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use App\Helpers;
 
 /**
  * @Route("/admin/profesor")
@@ -33,7 +34,6 @@ class ProfesorController extends AbstractController
      */
     public function asistencias(Request $request, CursoRepository $cursoRepository, ProfesorRepository $profesorRepository, AsistenciaProfesoresRepository $asistenciaProfesoresRepository): Response
     {
-
         $desde = $request->get('desde', date("Y/m/d"));
 
         $day = date('N', strtotime($desde));
@@ -74,20 +74,31 @@ class ProfesorController extends AbstractController
         $cursos = $cursoRepository->findAll();
         $profesores = $profesorRepository->findAll();
 
-        $asistencias = $asistenciaProfesoresRepository->findByFecha(new \DateTime($desde), new \DateTime($hasta));
+        $rango = $this->createDateRangeArray($desde, $hasta);
+
         $asisArray = [];
         $reemplazantes = [];
 
-        foreach ($asistencias as $asistencia) {
-            $reemplazante = $asistencia->getProfesorRemplazante() ? $profesorRepository->find($asistencia->getProfesorRemplazante())->getApellido() : 'Sin Reemplazo';
-            $asisArray[$asistencia->getProfesor()->getApellido()][$asistencia->getFecha()->format("Y/m/d")] = [
-                'profesorRemplazante' => $reemplazante,
-                'curso' => $cursoRepository->find($asistencia->getCurso())->getNombre(),
-            ];
-            if ($reemplazante !== 'Sin Reemplazo') {
-                $reemplazantes[$asistencia->getFecha()->format("Y/m/d")] = $reemplazante;
+        foreach ($rango as $fecha) {
+            $date = new \DateTime($fecha);
+            $day_of_week = Helpers\Fechas::getDiaDeLaSemana(intval($date->format('w')));
+
+            $cursosDelDia = $cursoRepository->findByDia($day_of_week);
+
+            foreach ($cursosDelDia as $curso) {
+                $profe = $curso->getProfesores()->getValues();
+                $falta = $asistenciaProfesoresRepository->findByFechaProfe(new \DateTime($fecha), $profe);
+                $faltaArr = [];
+
+                if(!empty($falta)) {
+                    $reemplazante = $profesorRepository->find($falta[0]->getProfesorRemplazante());
+                    $faltaArr = ["remplazante" => $reemplazante ? $reemplazante->getApellido() : 'Sin Reemplazo', "curso" => $curso->getNombre()];
+                }
+                $asisArray[$profe[0]->getApellido()][$fecha] = $faltaArr;
+                $asisArray[$profe[0]->getApellido()]['precioHora'] = $profe[0]->getPrecioHora();
             }
         }
+
         return $this->render('profesor/informes.html.twig',[
             'cursos' => $cursos,
             'todosLosProfes' => $profesores,

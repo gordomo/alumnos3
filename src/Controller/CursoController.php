@@ -9,6 +9,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use App\Helpers;
 
 /**
  * @Route("/admin/curso")
@@ -35,17 +36,6 @@ class CursoController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $desdeArray = $request->request->get('desde') ?? [];
-            $hastaArray = $request->request->get('hasta') ?? [];
-            $dias = $request->get('curso')['dias'] ?? [];
-            $horarios = [];
-
-            foreach ($dias as $dia) {
-                $horarios[$dia] = [$desdeArray[$dia],  $hastaArray[$dia]];
-            }
-
-            $curso->setHorario($horarios);
-
             $cursoRepository->add($curso);
             return $this->redirectToRoute('app_curso_index', [], Response::HTTP_SEE_OTHER);
         }
@@ -75,16 +65,6 @@ class CursoController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $desdeArray = $request->request->get('desde') ?? [];
-            $hastaArray = $request->request->get('hasta') ?? [];
-            $dias = $request->request->get('curso')['dias'] ?? [];
-            $horarios = [];
-
-            foreach ($dias as $dia) {
-                $horarios[$dia] = [$desdeArray[$dia],  $hastaArray[$dia]];
-            }
-
-            $curso->setHorario($horarios);
             $cursoRepository->add($curso);
             return $this->redirectToRoute('app_curso_index', [], Response::HTTP_SEE_OTHER);
         }

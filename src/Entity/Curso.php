@@ -27,7 +27,28 @@ class Curso
     /**
      * @ORM\Column(type="json")
      */
-    private $horario = [];
+    private $dias = [];
+
+    /**
+     * @ORM\Column(type="integer")
+     */
+    private $duracion;
+
+    /**
+     * @return mixed
+     */
+    public function getDuracion()
+    {
+        return $this->duracion;
+    }
+
+    /**
+     * @param mixed $duracion
+     */
+    public function setDuracion($duracion): void
+    {
+        $this->duracion = $duracion;
+    }
 
     /**
      * @ORM\Column(type="text")
@@ -79,14 +100,14 @@ class Curso
         return $this;
     }
 
-    public function getHorario(): ?array
+    public function getDias(): ?array
     {
-        return $this->horario;
+        return $this->dias;
     }
 
-    public function setHorario(array $horario): self
+    public function setDias(array $dias): self
     {
-        $this->horario = $horario;
+        $this->dias = $dias;
 
         return $this;
     }

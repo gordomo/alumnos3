@@ -10,7 +10,8 @@
             <tr>
                 <th>Nombre</th>
                 <th>Precio</th>
-                <th>Horario</th>
+                <th>Días</th>
+                <th>Duración</th>
                 <th>Acciones</th>
             </tr>
         </thead>
@@ -20,15 +21,15 @@
                 <td>{{ curso.nombre }}</td>
                 <td>${{ curso.precio }}</td>
                 <td>
-                    {% for dia, horas in curso.horario %}
-                        {% if dia == 0 %} Lunes de {{ horas[0] }}hs a  {{ horas[1] }}hs<br>{% endif%}
-                        {% if dia == 1 %} Martes de {{ horas[0] }}hs a  {{ horas[1] }}hs<br>{% endif%}
-                        {% if dia == 2 %} Miercoles de {{ horas[0] }}hs a  {{ horas[1] }}hs<br>{% endif%}
-                        {% if dia == 3 %} Jueves de {{ horas[0] }}hs a  {{ horas[1] }}hs<br>{% endif%}
-                        {% if dia == 4 %} Viernes de {{ horas[0] }}hs a  {{ horas[1] }}hs<br>{% endif%}
-                        {% if dia == 5 %} Sábado de {{ horas[0] }}hs a  {{ horas[1] }}hs<br>{% endif%}
-                        {% if dia == 6 %} Domingo de {{ horas[0] }}hs a  {{ horas[1] }}hs<br>{% endif%}
+                    {% for key in curso.dias %}
+                        {{ key }}
+                        {% if curso.dias | length > 1 %}
+                            <br>
+                        {% endif %}
                     {% endfor %}
+                </td>
+                <td>
+                    {{ curso.duracion }}hs
                 </td>
                 <td>
                     <a href="{{ path('app_curso_edit', {'id': curso.id}) }}"><i class="bi bi-pencil"></i></a>

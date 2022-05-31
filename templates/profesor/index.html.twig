@@ -14,6 +14,7 @@
                 <th>Email</th>
                 <th>Telefono</th>
                 <th>Cursos</th>
+                <th>Precio/Hora</th>
                 <th>Acciones</th>
             </tr>
         </thead>
@@ -29,6 +30,9 @@
                     {% for curso in profesor.curso %}
                         <a href="{{ path('app_curso_edit', {'id': curso.id}) }}">{{ curso.nombre }}</a><br>
                     {% endfor %}
+                </td>
+                <td>
+                    ${{ profesor.precioHora }}
                 </td>
                 <td>
                     <a href="{{ path('app_profesor_show', {'id': profesor.id}) }}"><i class="bi bi-eye"></i></a>
