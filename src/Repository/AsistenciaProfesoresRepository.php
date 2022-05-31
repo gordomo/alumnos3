@@ -67,7 +67,7 @@ class AsistenciaProfesoresRepository extends ServiceEntityRepository
         return $this->createQueryBuilder('a')
             ->andWhere('a.fecha = :date')
             ->setParameter('date', $date)
-            ->andWhere('a.profesor = :profe')
+            ->andWhere('a.profesor IN (:profe)')
             ->setParameter('profe', $profe)
             ->orderBy('a.id', 'ASC')
             ->getQuery()
