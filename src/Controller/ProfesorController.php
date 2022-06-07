@@ -85,17 +85,29 @@ class ProfesorController extends AbstractController
 
             $cursosDelDia = $cursoRepository->findByDia($day_of_week);
 
-            foreach ($cursosDelDia as $curso) {
-                $profe = $curso->getProfesores()->getValues();
-                $falta = $asistenciaProfesoresRepository->findByFechaProfe(new \DateTime($fecha), $profe);
-                $faltaArr = [];
+            $faltas = $asistenciaProfesoresRepository->findBy(['fecha' => new \DateTime($fecha)]);
+            $faltaArr = [];
 
-                if(!empty($falta)) {
-                    $reemplazante = $profesorRepository->find($falta[0]->getProfesorRemplazante());
-                    $faltaArr = ["remplazante" => $reemplazante ? $reemplazante->getApellido() : 'Sin Reemplazo', "curso" => $curso->getNombre()];
+            foreach ($cursosDelDia as $cursoHoy) {
+                $profeCurso = $cursoHoy->getProfesores();
+                foreach ($profeCurso as $profe) {
+                    $asisArray[$profe->getApellido()][$fecha][] = ['falta' => false, 'horas' => $cursoHoy->getDuracion()];
                 }
-                $asisArray[$profe[0]->getApellido()][$fecha] = $faltaArr;
-                $asisArray[$profe[0]->getApellido()]['precioHora'] = $profe[0]->getPrecioHora();
+            }
+
+
+            foreach ($faltas as $falta) {
+                $reemplazante = $profesorRepository->find($falta->getProfesorRemplazante());
+                $curso = $cursoRepository->find($falta->getCurso());
+                $faltaArr[] = ["falta" => true, "remplazante" => $reemplazante ? $reemplazante->getApellido() : 'Sin Reemplazo', "curso" => $curso->getNombre(), 'horas' => $curso->getDuracion()];
+
+                if ($reemplazante) {
+                    $reemplazantes[$reemplazante->getApellido()][$fecha][$falta->getId()] = ["reemplazoA" =>"Reemplazó a " . $falta->getProfesor()->getApellido() . " en "  . $cursoRepository->find($falta->getCurso())->getNombre(), 'horas' => $curso->getDuracion()];
+                    $reemplazantes[$reemplazante->getApellido()]['precioHora'] = $falta->getProfesor()->getPrecioHora();
+                }
+
+                $asisArray[$falta->getProfesor()->getApellido()][$fecha] = $faltaArr;
+                $asisArray[$falta->getProfesor()->getApellido()]['precioHora'] = $falta->getProfesor()->getPrecioHora();
             }
         }
 
@@ -171,7 +183,7 @@ class ProfesorController extends AbstractController
         $fecha = $request->get('fecha');
         $curso = $request->get('curso');
 
-        $asistenciasGuarda = $asistenciaProfesoresRepository->findBy(['profesor' => $profesor, 'fecha' => new \DateTime($fecha)]);
+        $asistenciasGuarda = $asistenciaProfesoresRepository->findBy(['profesor' => $profesor, 'fecha' => new \DateTime($fecha), 'curso' => $curso]);
 
         if (!empty($asistenciasGuarda[0])) {
             $asistenciasGuarda[0]->setProfesorRemplazante($profeRemplazante ? $profeRemplazante->getId() : 0);

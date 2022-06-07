@@ -25,44 +25,85 @@
                         <th scope="col" class="border-start text-center">{{ fechas }}</th>
                     {% endfor %}
                     <th scope="col">Total Faltas</th>
-                    <th scope="col">Total Asistencias</th>
+                    <th scope="col">Total Horas</th>
                     <th scope="col">$</th>
                 </tr>
             </thead>
             <tbody>
                 {% for profe, asistencia in asistencias %}
                     {% set totalFaltas = 0 %}
-                <tr scope="row">
-                    <th>
-                        {{ profe }}
-                    </th>
-                    {% for fechas in rango %}
-                    <td class="border-start text-center" id="{{ profe }}-{{ fechas }}" style="padding: 0;">
-                        {% if asistencia[fechas] is defined %}
-                            {% if asistencia[fechas] | length > 0  %}
-                                <i style="font-size: 25px; color: red" class="bi bi-x"></i>
-                                {% if asistencia[fechas]['remplazante'] is defined %}
-                                    <i>{{ asistencia[fechas]['remplazante'] }}</i>
-                                {% else %}
-                                    <i>S. R.</i>
+                    {% set totalHoras = 0 %}
+                    {% if profe != 'reemplazantes' %}
+                        <tr scope="row">
+                            <th>
+                                {{ profe }}
+                            </th>
+                            {% for fechas in rango %}
+                                <td class="border-start text-center" id="{{ profe }}-{{ fechas }}" style="padding: 0;">
+                                    {% if asistencia[fechas] is defined %}
+                                        {% if asistencia[fechas] | length > 0  %}
+                                            {% for asis in asistencia[fechas] %}
+                                                {% if asis['falta'] %}
+                                                    <i style="font-size: 25px; color: red" class="bi bi-x"></i>
+
+                                                    {% if asis['remplazante'] is defined %}
+                                                        <i>{{ asis['remplazante'] }}</i>
+                                                    {% else %}
+                                                        <i>S. R.</i>
+                                                    {% endif %}
+
+                                                    {% set totalFaltas = totalFaltas + asis['horas'] %}
+                                                    {% if asistencia[fechas] | length > 1  %}
+                                                        <br>
+                                                    {% endif %}
+                                                {% else %}
+                                                    <i style="font-size: 25px; color: green" class="bi bi-check"></i>
+                                                    {% set totalHoras = totalHoras + asis['horas'] %}
+                                                {% endif %}
+                                            {% endfor %}
+                                        {% endif %}
+                                    {% endif %}
+                                </td>
+                            {% endfor %}
+                            <td>
+                                {{ totalFaltas }}
+                            </td>
+                            <td>
+                                {{ totalHoras }}
+                            </td>
+                            <td>
+                                ${{ totalHoras * asistencia['precioHora'] }}
+                            </td>
+                        </tr>
+                    {% endif %}
+                {% endfor %}
+                {% for profe, asistencia in reemplazantes %}
+                    {% set totalHoras = 0 %}
+                    <tr scope="row">
+                        <th>
+                            {{ profe }}
+                        </th>
+                        {% for fechas in rango %}
+                            <td class="border-start text-center" style="padding: 0;">
+                                {% if asistencia[fechas] is defined %}
+                                    {% for asis in asistencia[fechas] %}
+                                        <i style="font-size: 25px; color: green" class="bi bi-check"></i> {{ asis['reemplazoA'] }}
+                                        {% set totalHoras = totalHoras + asis['horas'] %}
+                                        {% if asistencia[fechas] | length > 1  %}
+                                            <br>
+                                        {% endif %}
+                                    {% endfor %}
                                 {% endif %}
-                                {% set totalFaltas = totalFaltas + 1 %}
-                            {% else %}
-                                <i style="font-size: 25px; color: green" class="bi bi-check"></i>
-                            {% endif %}
-                        {% endif %}
-                    </td>
-                    {% endfor %}
-                    <td>
-                        {{ totalFaltas }}
-                    </td>
-                    <td>
-                        {{ asistencia | length - totalFaltas }}
-                    </td>
-                    <td>
-                        ${{ (asistencia | length - totalFaltas) * asistencia['precioHora'] }}
-                    </td>
-                </tr>
+                            </td>
+                        {% endfor %}
+                        <td></td>
+                        <td>
+                            {{ totalHoras }}
+                        </td>
+                        <td>
+                            ${{ totalHoras * asistencia['precioHora'] }}
+                        </td>
+                    </tr>
                 {% endfor %}
             </tbody>
         </table>
