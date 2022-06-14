@@ -48,29 +48,30 @@ class ProfesorRepository extends ServiceEntityRepository
     // /**
     //  * @return Profesor[] Returns an array of Profesor objects
     //  */
-    /*
-    public function findByExampleField($value)
+    public function countProfesors($value)
     {
-        return $this->createQueryBuilder('p')
-            ->andWhere('p.exampleField = :val')
-            ->setParameter('val', $value)
-            ->orderBy('p.id', 'ASC')
-            ->setMaxResults(10)
-            ->getQuery()
-            ->getResult()
-        ;
-    }
-    */
+        $query =  $this->createQueryBuilder('p')->select('count(p.id)');
+            if ($value) {
+                $query->andWhere('p.apellido like :val')->setParameter('val', '%'.$value.'%');
+            }
 
-    /*
-    public function findOneBySomeField($value): ?Profesor
-    {
-        return $this->createQueryBuilder('p')
-            ->andWhere('p.exampleField = :val')
-            ->setParameter('val', $value)
-            ->getQuery()
-            ->getOneOrNullResult()
-        ;
+        return $query->orderBy('p.id', 'ASC')->getQuery()->getOneOrNullResult();
     }
-    */
+
+
+    public function findByApellido($value, $limit, $offset)
+    {
+        $query =  $this->createQueryBuilder('p');
+        if ($value) {
+            $query->andWhere('p.apellido like :val')->setParameter('val', '%'.$value.'%');
+        }
+        if ($limit) {
+            $query->setMaxResults($limit);
+        }
+        if ($offset) {
+            $query->setFirstResult($offset);
+        }
+
+        return $query->orderBy('p.apellido', 'ASC')->getQuery()->getResult();
+    }
 }

@@ -53,7 +53,7 @@ class CursoRepository extends ServiceEntityRepository
     {
         return $this->createQueryBuilder('c')
             ->andWhere('c.dias like :val')
-            ->setParameter('val', '%"'.$value.'%')
+            ->setParameter('val', '%'.$value.'%')
             ->orderBy('c.id', 'ASC')
             ->getQuery()
             ->getResult()

@@ -25,23 +25,24 @@ class ProfesorController extends AbstractController
     public function index(Request $request, ProfesorRepository $profesorRepository): Response
     {
         $limit = $request->get('limit', 10);
-        $page = $request->get('page', 0);
-        $offset = $page < 1 ? 0 : (($page * $limit) + 1);
+        $currentPage = $request->get('currentPage', 0);
+        $offset = $currentPage == 0 ? 0 : (($currentPage * $limit) + 1);
         $busqueda = $request->get('busqueda', 0);
 
-        $criteria = [];
-        if ($busqueda) {
-            $criteria = ['nombre' => $busqueda];
-        }
+        $profesors = $profesorRepository->findByApellido($busqueda, $limit, $offset);
 
-        $profesors = $profesorRepository->findBy($criteria,  ['apellido' => 'ASC'], $limit, $offset);
+        $total = $profesorRepository->countProfesors($busqueda);
+        $total = !empty($total[1]) ? $total[1] : 0;
 
-        $numeroDePaginas = intval(ceil(count($profesors) / $limit));
+        $numeroDePaginas = intval(ceil($total / $limit));
+
 
         return $this->render('profesor/index.html.twig', [
             'profesors' => $profesors,
             'busqueda' => $busqueda,
             'numeroDePaginas' => $numeroDePaginas,
+            'currentPage' => $currentPage,
+            'total' => $total
         ]);
     }
 
