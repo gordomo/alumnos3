@@ -47,6 +47,27 @@ class Profesor
     /**
      * @ORM\Column(type="text", nullable=true)
      */
+    private $viatico;
+
+    /**
+     * @return mixed
+     */
+    public function getViatico()
+    {
+        return $this->viatico;
+    }
+
+    /**
+     * @param mixed $viatico
+     */
+    public function setViatico($viatico): void
+    {
+        $this->viatico = $viatico;
+    }
+
+    /**
+     * @ORM\Column(type="text", nullable=true)
+     */
     private $tel;
 
     /**

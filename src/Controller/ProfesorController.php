@@ -22,10 +22,26 @@ class ProfesorController extends AbstractController
     /**
      * @Route("/", name="app_profesor_index", methods={"GET"})
      */
-    public function index(ProfesorRepository $profesorRepository): Response
+    public function index(Request $request, ProfesorRepository $profesorRepository): Response
     {
+        $limit = $request->get('limit', 10);
+        $page = $request->get('page', 0);
+        $offset = $page < 1 ? 0 : (($page * $limit) + 1);
+        $busqueda = $request->get('busqueda', 0);
+
+        $criteria = [];
+        if ($busqueda) {
+            $criteria = ['nombre' => $busqueda];
+        }
+
+        $profesors = $profesorRepository->findBy($criteria,  ['apellido' => 'ASC'], $limit, $offset);
+
+        $numeroDePaginas = intval(ceil(count($profesors) / $limit));
+
         return $this->render('profesor/index.html.twig', [
-            'profesors' => $profesorRepository->findAll(),
+            'profesors' => $profesors,
+            'busqueda' => $busqueda,
+            'numeroDePaginas' => $numeroDePaginas,
         ]);
     }
 
@@ -92,6 +108,7 @@ class ProfesorController extends AbstractController
                 $profeCurso = $cursoHoy->getProfesores();
                 foreach ($profeCurso as $profe) {
                     $asisArray[$profe->getApellido()][$fecha][] = ['falta' => false, 'horas' => $cursoHoy->getDuracion()];
+                    $asisArray[$profe->getApellido()]['precioHora'] = $profe->getPrecioHora();
                 }
             }
 
@@ -107,7 +124,6 @@ class ProfesorController extends AbstractController
                 }
 
                 $asisArray[$falta->getProfesor()->getApellido()][$fecha] = $faltaArr;
-                $asisArray[$falta->getProfesor()->getApellido()]['precioHora'] = $falta->getProfesor()->getPrecioHora();
             }
         }
 
@@ -185,18 +201,22 @@ class ProfesorController extends AbstractController
 
         $asistenciasGuarda = $asistenciaProfesoresRepository->findBy(['profesor' => $profesor, 'fecha' => new \DateTime($fecha), 'curso' => $curso]);
 
-        if (!empty($asistenciasGuarda[0])) {
-            $asistenciasGuarda[0]->setProfesorRemplazante($profeRemplazante ? $profeRemplazante->getId() : 0);
-            $asistenciaProfesoresRepository->add($asistenciasGuarda[0]);
+        if ( $remplazo === "-1" ) {
+            $asistenciaProfesoresRepository->remove($asistenciasGuarda[0]);
         } else {
-            $asistenciaNueva = new AsistenciaProfesores();
-            $asistenciaNueva->setFecha(new \DateTime($fecha));
-            $asistenciaNueva->setProfesor($profesor);
-            $asistenciaNueva->setPresente(false);
-            $asistenciaNueva->setCurso($curso);
-            $asistenciaNueva->setProfesorRemplazante($profeRemplazante ? $profeRemplazante->getId() : 0);
+            if (!empty($asistenciasGuarda[0])) {
+                $asistenciasGuarda[0]->setProfesorRemplazante($profeRemplazante ? $profeRemplazante->getId() : 0);
+                $asistenciaProfesoresRepository->add($asistenciasGuarda[0]);
+            } else {
+                $asistenciaNueva = new AsistenciaProfesores();
+                $asistenciaNueva->setFecha(new \DateTime($fecha));
+                $asistenciaNueva->setProfesor($profesor);
+                $asistenciaNueva->setPresente(false);
+                $asistenciaNueva->setCurso($curso);
+                $asistenciaNueva->setProfesorRemplazante($profeRemplazante ? $profeRemplazante->getId() : 0);
 
-            $asistenciaProfesoresRepository->add($asistenciaNueva);
+                $asistenciaProfesoresRepository->add($asistenciaNueva);
+            }
         }
 
         return $this->redirectToRoute('asistencias', ['desde' => $fecha], Response::HTTP_SEE_OTHER);
@@ -229,7 +249,7 @@ class ProfesorController extends AbstractController
 
         if ($iDateTo >= $iDateFrom) {
             array_push($aryRange, date('Y/m/d', $iDateFrom)); // first entry
-            while ($iDateFrom<$iDateTo) {
+            while ($iDateFrom < $iDateTo) {
                 $iDateFrom += 86400; // add 24 hours
                 array_push($aryRange, date('Y/m/d', $iDateFrom));
             }

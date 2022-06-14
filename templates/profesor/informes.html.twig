@@ -72,7 +72,9 @@
                                 {{ totalHoras }}
                             </td>
                             <td>
-                                ${{ totalHoras * asistencia['precioHora'] }}
+                                {% if asistencia['precioHora'] is defined %}
+                                    ${{ totalHoras * asistencia['precioHora'] }}
+                                {% endif %}
                             </td>
                         </tr>
                     {% endif %}
