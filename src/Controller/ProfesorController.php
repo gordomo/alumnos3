@@ -9,6 +9,7 @@ use App\Repository\AsistenciaProfesoresRepository;
 use App\Repository\CursoRepository;
 use App\Repository\ProfesorRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -117,11 +118,12 @@ class ProfesorController extends AbstractController
             foreach ($faltas as $falta) {
                 $reemplazante = $profesorRepository->find($falta->getProfesorRemplazante());
                 $curso = $cursoRepository->find($falta->getCurso());
-                $faltaArr[] = ["falta" => true, "remplazante" => $reemplazante ? $reemplazante->getApellido() : 'Sin Reemplazo', "curso" => $curso->getNombre(), 'horas' => $curso->getDuracion()];
+                $nombreCurso = (!empty($curso)) ? $curso->getNombre() : 'El curso fue eliminado';
+                $faltaArr[] = ["falta" => true, "remplazante" => $reemplazante ? $reemplazante->getApellido() : 'Sin Reemplazo', "curso" => $nombreCurso, 'horas' => $curso->getDuracion()];
 
                 if ($reemplazante) {
                     $reemplazantes[$reemplazante->getApellido()][$fecha][$falta->getId()] = ["reemplazoA" =>"Reemplazó a " . $falta->getProfesor()->getApellido() . " en "  . $cursoRepository->find($falta->getCurso())->getNombre(), 'horas' => $curso->getDuracion()];
-                    $reemplazantes[$reemplazante->getApellido()]['precioHora'] = $falta->getProfesor()->getPrecioHora();
+                    $reemplazantes[$reemplazante->getApellido()]['precioHora'] = $reemplazante->getPrecioHora();
                 }
 
                 $asisArray[$falta->getProfesor()->getApellido()][$fecha] = $faltaArr;
@@ -150,6 +152,15 @@ class ProfesorController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            foreach($profesor->getCurso() as $curso) {
+                if(count($curso->getProfesores()->getValues()) > 0) {
+                    return $this->renderForm('profesor/new.html.twig', [
+                        'profesor' => $profesor,
+                        'form' => $form,
+                        'error_curso' => 'el curso ya tiene un profesor asignado'
+                    ]);
+                }
+            }
             $profesorRepository->add($profesor);
             return $this->redirectToRoute('app_profesor_index', [], Response::HTTP_SEE_OTHER);
         }
@@ -157,16 +168,6 @@ class ProfesorController extends AbstractController
         return $this->renderForm('profesor/new.html.twig', [
             'profesor' => $profesor,
             'form' => $form,
-        ]);
-    }
-
-    /**
-     * @Route("/{id}", name="app_profesor_show", methods={"GET"})
-     */
-    public function show(Profesor $profesor): Response
-    {
-        return $this->render('profesor/show.html.twig', [
-            'profesor' => $profesor,
         ]);
     }
 
@@ -179,6 +180,19 @@ class ProfesorController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+
+            foreach($profesor->getCurso() as $curso) {
+                foreach ($curso->getProfesores() as $profe) {
+                    if ($profe->getId() != $profesor->getId()) {
+                        return $this->renderForm('profesor/new.html.twig', [
+                            'profesor' => $profesor,
+                            'form' => $form,
+                            'error_curso' => 'el curso ya tiene un profesor asignado'
+                        ]);
+                    }
+                }
+            }
+
             $profesorRepository->add($profesor);
             return $this->redirectToRoute('app_profesor_index', [], Response::HTTP_SEE_OTHER);
         }
@@ -186,6 +200,16 @@ class ProfesorController extends AbstractController
         return $this->renderForm('profesor/edit.html.twig', [
             'profesor' => $profesor,
             'form' => $form,
+        ]);
+    }
+
+    /**
+     * @Route("/{id}", name="app_profesor_show", methods={"GET"})
+     */
+    public function show(Profesor $profesor): Response
+    {
+        return $this->render('profesor/show.html.twig', [
+            'profesor' => $profesor,
         ]);
     }
 
