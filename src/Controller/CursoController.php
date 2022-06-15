@@ -22,7 +22,8 @@ class CursoController extends AbstractController
     public function index(CursoRepository $cursoRepository): Response
     {
         return $this->render('curso/index.html.twig', [
-            'cursos' => $cursoRepository->findAll(),
+            'cursos' => $cursoRepository->findBy(['disabled' => false]),
+            'cursosDesabilitados' => $cursoRepository->findBy(['disabled' => true]),
         ]);
     }
 
@@ -83,6 +84,16 @@ class CursoController extends AbstractController
         if ($this->isCsrfTokenValid('delete'.$curso->getId(), $request->request->get('_token'))) {
             $cursoRepository->remove($curso);
         }
+
+        return $this->redirectToRoute('app_curso_index', [], Response::HTTP_SEE_OTHER);
+    }
+
+    /**
+     * @Route("/habilitar/{id}", name="app_curso_habilitar", methods={"GET"})
+     */
+    public function habilitar(Request $request, Curso $curso, CursoRepository $cursoRepository): Response
+    {
+        $cursoRepository->habilitar($curso);
 
         return $this->redirectToRoute('app_curso_index', [], Response::HTTP_SEE_OTHER);
     }

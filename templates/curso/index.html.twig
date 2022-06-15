@@ -5,46 +5,99 @@
 {% block body %}
     <h1>Cursos</h1>
 
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Nombre</th>
-                <th>Precio</th>
-                <th>Días</th>
-                <th>Duración</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-        {% for curso in cursos %}
-            <tr>
-                <td>{{ curso.nombre }}</td>
-                <td>${{ curso.precio }}</td>
-                <td>
-                    {% for key in curso.dias %}
-                        {{ key }}
-                        {% if curso.dias | length > 1 %}
-                            <br>
-                        {% endif %}
-                    {% endfor %}
-                </td>
-                <td>
-                    {{ curso.duracion }}hs
-                </td>
-                <td>
-                    <a href="{{ path('app_curso_edit', {'id': curso.id}) }}"><i class="bi bi-pencil"></i></a>
-                </td>
-                <td>
-                    {{ include('curso/_delete_form.html.twig') }}
-                </td>
-            </tr>
-        {% else %}
-            <tr>
-                <td colspan="3">No se encontraron registros</td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+    <ul class="nav nav-tabs" id="myTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button" role="tab" aria-controls="home" aria-selected="true">Activos</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="false">Desabilitados</button>
+        </li>
+    </ul>
+    <div class="tab-content" id="myTabContent">
+        <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Precio</th>
+                    <th>Días</th>
+                    <th>Duración</th>
+                    <th>Acciones</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for curso in cursos %}
+                    <tr>
+                        <td>{{ curso.nombre }}</td>
+                        <td>${{ curso.precio }}</td>
+                        <td>
+                            {% for key in curso.dias %}
+                                {{ key }}
+                                {% if curso.dias | length > 1 %}
+                                    <br>
+                                {% endif %}
+                            {% endfor %}
+                        </td>
+                        <td>
+                            {{ curso.duracion }}hs
+                        </td>
+                        <td>
+                            <a href="{{ path('app_curso_edit', {'id': curso.id}) }}"><i class="bi bi-pencil"></i></a>
+                        </td>
+                        <td>
+                            {{ include('curso/_delete_form.html.twig') }}
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="3">No se encontraron registros</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            <a href="{{ path('app_curso_new') }}" class="btn btn-success">Nuevo Curso</a>
+        </div>
+        <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Precio</th>
+                    <th>Días</th>
+                    <th>Duración</th>
+                    <th>Acciones</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for curso in cursosDesabilitados %}
+                    <tr>
+                        <td>{{ curso.nombre }}</td>
+                        <td>${{ curso.precio }}</td>
+                        <td>
+                            {% for key in curso.dias %}
+                                {{ key }}
+                                {% if curso.dias | length > 1 %}
+                                    <br>
+                                {% endif %}
+                            {% endfor %}
+                        </td>
+                        <td>
+                            {{ curso.duracion }}hs
+                        </td>
+                        <td>
+                            <a class="btn btn-success" href="{{ path('app_curso_habilitar', {id: curso.id}) }}">Habilitar</a>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="3">No se encontraron registros</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 
-    <a href="{{ path('app_curso_new') }}" class="btn btn-success">Nuevo Curso</a>
+
+
 {% endblock %}

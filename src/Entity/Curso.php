@@ -35,6 +35,27 @@ class Curso
     private $duracion;
 
     /**
+     * @ORM\Column(type="boolean")
+     */
+    private $disabled = false;
+
+    /**
+     * @return mixed
+     */
+    public function getDisabled()
+    {
+        return $this->disabled;
+    }
+
+    /**
+     * @param mixed $disabled
+     */
+    public function setDisabled($disabled): void
+    {
+        $this->disabled = $disabled;
+    }
+
+    /**
      * @return mixed
      */
     public function getDuracion()

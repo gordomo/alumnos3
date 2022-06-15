@@ -109,7 +109,7 @@ class ProfesorController extends AbstractController
             foreach ($cursosDelDia as $cursoHoy) {
                 $profeCurso = $cursoHoy->getProfesores();
                 foreach ($profeCurso as $profe) {
-                    $asisArray[$profe->getApellido()][$fecha][] = ['falta' => false, 'horas' => $cursoHoy->getDuracion()];
+                    $asisArray[$profe->getApellido()][$fecha][] = ['falta' => false, 'horas' => $cursoHoy->getDuracion(), 'curso' => $cursoHoy->getNombre()];
                     $asisArray[$profe->getApellido()]['precioHora'] = $profe->getPrecioHora();
                 }
             }
@@ -122,11 +122,27 @@ class ProfesorController extends AbstractController
                 $faltaArr[] = ["falta" => true, "remplazante" => $reemplazante ? $reemplazante->getApellido() : 'Sin Reemplazo', "curso" => $nombreCurso, 'horas' => $curso->getDuracion()];
 
                 if ($reemplazante) {
-                    $reemplazantes[$reemplazante->getApellido()][$fecha][$falta->getId()] = ["reemplazoA" =>"Reemplazó a " . $falta->getProfesor()->getApellido() . " en "  . $cursoRepository->find($falta->getCurso())->getNombre(), 'horas' => $curso->getDuracion()];
+                    $reemplazantes[$reemplazante->getApellido()][$fecha][]['reemplazo'] = ["reemplazoA" =>"Reemplazó a " . $falta->getProfesor()->getApellido() . " en "  . $cursoRepository->find($falta->getCurso())->getNombre(), 'horas' => $curso->getDuracion()];
                     $reemplazantes[$reemplazante->getApellido()]['precioHora'] = $reemplazante->getPrecioHora();
                 }
 
                 $asisArray[$falta->getProfesor()->getApellido()][$fecha] = $faltaArr;
+            }
+        }
+
+        foreach ($reemplazantes as $key => $reemp) {
+            if ( isset($asisArray[$key]) ) {
+                foreach ($reemp as $otherKey => $otherReemp) {
+                    if (isset($asisArray[$key][$otherKey])) {
+                        if (is_array($asisArray[$key][$otherKey])) {
+                            foreach ($otherReemp as $otherReempInner) {
+                                array_push($asisArray[$key][$otherKey], $otherReempInner);
+                            }
+                        }
+                    } else {
+                        $asisArray[$key][$otherKey] = $otherReemp;
+                    }
+                }
             }
         }
 

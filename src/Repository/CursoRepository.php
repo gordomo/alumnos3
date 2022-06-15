@@ -39,7 +39,19 @@ class CursoRepository extends ServiceEntityRepository
      */
     public function remove(Curso $entity, bool $flush = true): void
     {
-        $this->_em->remove($entity);
+        $entity->setDisabled(true);
+        $this->_em->persist($entity);
+        /*$this->_em->remove($entity);*/
+        if ($flush) {
+            $this->_em->flush();
+        }
+    }
+
+    public function habilitar(Curso $entity, bool $flush = true): void
+    {
+        $entity->setDisabled(false);
+        $this->_em->persist($entity);
+        /*$this->_em->remove($entity);*/
         if ($flush) {
             $this->_em->flush();
         }
