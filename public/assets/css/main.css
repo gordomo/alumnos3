@@ -29,3 +29,12 @@
 .border-left-1 {
 
 }
+.activo {
+    background-color: #dbffdf;
+}
+.inactivo {
+    background-color: #ffdbdb;
+}
+.excel {
+    display: none;
+}

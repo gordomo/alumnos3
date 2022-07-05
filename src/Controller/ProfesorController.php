@@ -203,7 +203,7 @@ class ProfesorController extends AbstractController
                         return $this->renderForm('profesor/new.html.twig', [
                             'profesor' => $profesor,
                             'form' => $form,
-                            'error_curso' => 'el curso ya tiene un profesor asignado'
+                            'error_curso' => 'el curso: ' . $curso->getNombre() . ', ya tiene un profesor asignado'
                         ]);
                     }
                 }

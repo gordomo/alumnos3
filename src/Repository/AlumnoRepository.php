@@ -45,6 +45,50 @@ class AlumnoRepository extends ServiceEntityRepository
         }
     }
 
+    public function flush()
+    {
+        $this->_em->flush();
+    }
+
+    // /**
+    //  * @return Alumno[] Returns an array of Alumno objects
+    //  */
+    public function countAlumnos($value, $activo)
+    {
+        $query =  $this->createQueryBuilder('p')->select('count(p.id)');
+        if ($value) {
+            $query->andWhere('p.apellido like :val')->setParameter('val', '%'.$value.'%');
+        }
+        if ($activo !== 'todos') {
+            $query->andWhere('p.activo = :activo')->setParameter('activo', $activo);
+        }
+
+        return $query->orderBy('p.id', 'ASC')->getQuery()->getOneOrNullResult();
+    }
+
+    // /**
+    //  * @return Alumno[] Returns an array of Alumno objects
+    //  */
+
+    public function findByApellido($value, $limit, $offset, $activo = null)
+    {
+        $query =  $this->createQueryBuilder('p');
+        if ($value) {
+            $query->andWhere('p.apellido like :val')->setParameter('val', '%'.$value.'%');
+        }
+        if ($activo !== 'todos') {
+            $query->andWhere('p.activo = :activo')->setParameter('activo', $activo);
+        }
+        if ($limit) {
+            $query->setMaxResults($limit);
+        }
+        if ($offset) {
+            $query->setFirstResult($offset);
+        }
+
+        return $query->orderBy('p.apellido', 'ASC')->getQuery()->getResult();
+    }
+
     // /**
     //  * @return Alumno[] Returns an array of Alumno objects
     //  */

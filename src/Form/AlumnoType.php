@@ -5,6 +5,7 @@ namespace App\Form;
 use App\Entity\Alumno;
 use App\Entity\Curso;
 use Doctrine\ORM\EntityRepository;
+use PhpOffice\PhpSpreadsheet\Calculation\TextData\Text;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
@@ -32,14 +33,19 @@ class AlumnoType extends AbstractType
             ->add('celular', NumberType::class, ['attr' => ['class' => 'form-control']])
             ->add('contacto_emergencia', TextType::class, ['attr' => ['class' => 'form-control']])
             ->add('n_tutor', TextType::class, ['attr' => ['class' => 'form-control']])
-            ->add('t_tutor', NumberType::class, ['attr' => ['class' => 'form-control']])
+            ->add('t_tutor', TextType::class, ['attr' => ['class' => 'form-control']])
             ->add('corre_tutor', EmailType::class, ['attr' => ['class' => 'form-control']])
-            ->add('dni_tutor', NumberType::class, ['attr' => ['class' => 'form-control']])
+            ->add('dni_tutor', TextType::class, ['attr' => ['class' => 'form-control']])
             ->add('escuela', TextType::class, ['attr' => ['class' => 'form-control']])
             ->add('extras', TextType::class, ['attr' => ['class' => 'form-control']])
             ->add('g_sanguineo', TextType::class, ['attr' => ['class' => 'form-control']])
             ->add('enfermedad', TextType::class, ['attr' => ['class' => 'form-control']])
             ->add('alergico', TextType::class, ['attr' => ['class' => 'form-control']])
+            ->add('activo', ChoiceType::class, ['attr' => ['class' => 'form-control'], 'choices'  => [
+                'Si' => 1,
+                'No' => 0,
+                ]
+            ])
             ->add('medicacion', TextType::class, ['attr' => ['class' => 'form-control']])
             ->add('curso', EntityType::class, [
                 'class' => Curso::class,
@@ -51,7 +57,7 @@ class AlumnoType extends AbstractType
                 'multiple' => true,
                 'expanded' => false,
                 'label' => 'Cursos',
-                'attr' => ['class' => 'form-control']
+                'attr' => ['class' => 'form-control predictivo']
             ])
             ->add('como_conociste', ChoiceType::class, ['attr' => ['class' => 'form-control'], 'choices' => [
                 "Por Familia" => "Familia",
@@ -76,7 +82,7 @@ class AlumnoType extends AbstractType
                 'expanded' => false,
                 'label' => 'Hermanos',
                 'required' => false,
-                'attr' => ['class' => 'form-control']
+                'attr' => ['class' => 'form-control predictivo']
             ])
         ;
     }

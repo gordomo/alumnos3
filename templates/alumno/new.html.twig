@@ -16,3 +16,9 @@
         </div>
     </div>
 {% endblock %}
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        $('.predictivo').chosen()
+    </script>
+{% endblock %}

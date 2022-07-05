@@ -35,7 +35,7 @@ class Alumno
     private $apellido;
 
     /**
-     * @ORM\Column(type="date")
+     * @ORM\Column(type="date", nullable=true)
      */
     private $f_nac;
 
@@ -50,7 +50,7 @@ class Alumno
     private $l_nac;
 
     /**
-     * @ORM\Column(type="text")
+     * @ORM\Column(type="text", unique=true, length=10)
      */
     private $dni;
 
@@ -128,6 +128,11 @@ class Alumno
      * @ORM\Column(type="json", nullable=true)
      */
     private $hermanos = [];
+
+    /**
+     * @ORM\Column(type="boolean", nullable=true)
+     */
+    private $activo;
 
     public function __construct()
     {
@@ -415,5 +420,21 @@ class Alumno
     public function getNombreApellido(): ?string
     {
         return $this->getNombre() . ' ' . $this->getApellido();
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getActivo()
+    {
+        return $this->activo;
+    }
+
+    /**
+     * @param mixed $activo
+     */
+    public function setActivo($activo): void
+    {
+        $this->activo = $activo;
     }
 }

@@ -18,10 +18,31 @@ class AlumnoController extends AbstractController
     /**
      * @Route("/", name="app_alumno_index", methods={"GET"})
      */
-    public function index(AlumnoRepository $alumnoRepository): Response
+    public function index(Request $request, AlumnoRepository $alumnoRepository): Response
     {
+        $limit = $request->get('limit', 10);
+        $currentPage = $request->get('currentPage', 0);
+        $offset = $currentPage == 0 ? 0 : (($currentPage * $limit) + 1);
+        $busqueda = $request->get('busqueda', 0);
+        $activo = $request->get('activo', 'todos');
+        $totalAgregados = $request->get('totalAgregados', '');
+        $alumnosQueNoGuardadamos = $request->get('alumnosQueNoGuardadamos', []);
+
+        $alumnos = $alumnoRepository->findByApellido($busqueda, $limit, $offset, $activo);
+        $total = $alumnoRepository->countAlumnos($busqueda, $activo);
+        $total = !empty($total[1]) ? $total[1] : 0;
+
+        $numeroDePaginas = intval(ceil($total / $limit));
+
         return $this->render('alumno/index.html.twig', [
-            'alumnos' => $alumnoRepository->findAll(),
+            'alumnos' => $alumnos,
+            'busqueda' => $busqueda,
+            'numeroDePaginas' => $numeroDePaginas,
+            'currentPage' => $currentPage,
+            'total' => $total,
+            'activo' => $activo,
+            'totalAgregados' => $totalAgregados,
+            'alumnosQueNoGuardadamos' => $alumnosQueNoGuardadamos
         ]);
     }
 

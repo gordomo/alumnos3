@@ -34,7 +34,7 @@ class ProfesorType extends AbstractType
                     return $curso;
                 },
                 'multiple' => true,
-                'expanded' => false,
+                'expanded' => true,
                 'label' => 'Cursos',
                 'required' => false,
             ])
