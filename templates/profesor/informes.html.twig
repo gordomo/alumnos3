@@ -80,23 +80,25 @@
                 {% endfor %}
             </tbody>
         </table>
-
-        <script>
-            $(function() {
-                $('input[name="daterange"]').daterangepicker({
-                    opens: 'left',
-                    startDate: '{{ desde }}',
-                    endDate: '{{ hasta }}',
-                    locale: {
-                        format: 'YYYY/MM/DD'
-                    }
-                }, function(start, end, label) {
-                    location.href = "{{ path('informes') }}?desde=" + start.format('YYYY/MM/DD') + "&hasta=" + end.format('YYYY/MM/DD');
-                });
-            });
-
-            $(document).ready(function(){
-                $("[data-toggle=tooltip]").tooltip({ placement: 'right'});
-            });
-        </script>
     {% endblock %}
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        $(function() {
+            $('input[name="daterange"]').daterangepicker({
+                opens: 'left',
+                startDate: '{{ desde }}',
+                endDate: '{{ hasta }}',
+                locale: {
+                    format: 'YYYY/MM/DD'
+                }
+            }, function(start, end, label) {
+                location.href = "{{ path('informes') }}?desde=" + start.format('YYYY/MM/DD') + "&hasta=" + end.format('YYYY/MM/DD');
+            });
+        });
+
+        $(document).ready(function(){
+            $("[data-toggle=tooltip]").tooltip({ placement: 'right'});
+        });
+    </script>
+{% endblock %}
