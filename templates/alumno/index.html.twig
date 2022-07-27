@@ -63,9 +63,7 @@
                 <th>Apellido</th>
                 <th>Email</th>
                 <th>Celular</th>
-                <th>Contacto_emergencia</th>
-                <th>N_tutor</th>
-                <th>T_tutor</th>
+                <th>Contacto Emergencia</th>
                 <th>Curso</th>
                 <th>Acciones</th>
             </tr>
@@ -78,8 +76,6 @@
                 <td>{{ alumno.email }}</td>
                 <td>{{ alumno.celular }}</td>
                 <td>{{ alumno.contactoEmergencia }}</td>
-                <td>{{ alumno.nTutor }}</td>
-                <td>{{ alumno.tTutor }}</td>
                 <td>
                     {% for curso in alumno.curso %}
                         {{ curso.nombre }}

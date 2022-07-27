@@ -39,7 +39,23 @@
                             {% endfor %}
                         </td>
                         <td>
-                            {{ curso.duracion }}hs
+                            {% if curso.duracion == 1 %}
+                                1:00hs
+                            {% elseif curso.duracion == 1.25 %}
+                                1:15hs
+                            {% elseif curso.duracion == 1.5 %}
+                                1:30hs
+                            {% elseif curso.duracion == 1.75 %}
+                                1:45hs
+                            {% elseif curso.duracion == 2 %}
+                                2:00hs
+                            {% elseif curso.duracion == 2.25 %}
+                                2:15hs
+                            {% elseif curso.duracion == 2.5 %}
+                                2:30hs
+                            {% elseif curso.duracion == 2.75 %}
+                                2:45hs
+                            {% endif %}
                         </td>
                         <td>
                             <a href="{{ path('app_curso_edit', {'id': curso.id}) }}"><i class="bi bi-pencil"></i></a>

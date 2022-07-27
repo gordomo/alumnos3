@@ -30,8 +30,8 @@ class ExcelController extends AbstractController
 
         $fileFolder = __DIR__ . '/../../public/uploads/excels/';  //choose the folder in which the uploaded file will be stored
 
-        $filePathName = md5(uniqid()) . $file->getClientOriginalName();
-        // apply md5 function to generate an unique identifier for the file and concat it with the file extension
+        $filePathName = $file->getClientOriginalName();
+
         try {
             $file->move($fileFolder, $filePathName);
         } catch (FileException $e) {
@@ -118,8 +118,9 @@ class ExcelController extends AbstractController
             } else {
                 $alumnosQueNoGuardadamos[] = ['nombre' => $nombre, 'apellido' => $apellido, 'email' => $email, 'dni' => $dni];
             }
-
         }
+
+        if(file_exists($fileFolder . $filePathName)) unlink($fileFolder . $filePathName);
 
         return $this->redirectToRoute('app_alumno_index', ['totalAgregados' => $totalAgregados, 'alumnosQueNoGuardadamos' => $alumnosQueNoGuardadamos], Response::HTTP_SEE_OTHER);
 
