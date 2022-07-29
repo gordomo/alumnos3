@@ -44,6 +44,14 @@
                         </div>
                     {% endif %}
                 </li>
+                <li class="nav-item">
+                    <select class="form-select" aria-label="Cursos" name="cursoSelected" id="filtroCursos">
+                        <option value="0">curso</option>
+                        {% for curso in cursos %}
+                            <option {% if cursoSelected == curso.id %} selected {% endif %} value="{{ curso.id }}">{{ curso.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </li>
             </ul>
         </div>
         {% if alumnosQueNoGuardadamos | length > 0 %}
@@ -56,7 +64,7 @@
         {% endif %}
     </div>
 
-    <table class="table">
+    <table class="table table-striped">
         <thead>
             <tr>
                 <th>Nombre</th>
@@ -129,6 +137,12 @@
                 e.preventDefault();
                 $('.importar').hide();
                 $('.excel').show();
+            }
+        );
+
+        $('#filtroCursos').change(
+            () => {
+                location.href = "{{ path('app_alumno_index', {'activo': activo}) }}&cursoSelected=" + $('#filtroCursos').val();
             }
         );
     </script>

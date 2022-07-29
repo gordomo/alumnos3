@@ -20,12 +20,7 @@ class CursoType extends AbstractType
             ->add('duracion', ChoiceType::class,  ['attr' => ['class' => 'form-control'], 'required' => true, 'choices'  => [
                 '1:00 hs' => 1,
                 '1:15 hs ' => 1.25,
-                '1:30 hs' => 1.5,
-                '1:45 hs' => 1.75,
                 '2:00hs' => 2,
-                '2:15hs' => 2.25,
-                '2:30hs' => 2.5,
-                '2:45hs' => 2.75,
             ]
             ])
             ->add('dias', ChoiceType::class, ['attr' => ['class' => 'form-control'], 'required' => true, 'choices'  => [

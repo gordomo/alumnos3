@@ -23,14 +23,14 @@ class AlumnoType extends AbstractType
     {
         $this->alumno = $options['data'];
         $builder
-            ->add('telefono_fijo', NumberType::class, ['attr' => ['class' => 'form-control']])
+            ->add('telefono_fijo', TextType::class, ['attr' => ['class' => 'form-control']])
             ->add('nombre', TextType::class, ['attr' => ['class' => 'form-control']])
             ->add('apellido', TextType::class, ['attr' => ['class' => 'form-control']])
             ->add('f_nac', DateType::class, ['widget' => 'single_text', 'html5' => true, 'attr' => ['class' => 'form-control']])
             ->add('email', EmailType::class, ['attr' => ['class' => 'form-control']])
             ->add('l_nac', TextType::class, ['attr' => ['class' => 'form-control']])
-            ->add('dni', NumberType::class, ['attr' => ['class' => 'form-control']])
-            ->add('celular', NumberType::class, ['attr' => ['class' => 'form-control']])
+            ->add('dni', TextType::class, ['attr' => ['class' => 'form-control']])
+            ->add('celular', TextType::class, ['attr' => ['class' => 'form-control']])
             ->add('contacto_emergencia', TextType::class, ['attr' => ['class' => 'form-control']])
             ->add('n_tutor', TextType::class, ['attr' => ['class' => 'form-control']])
             ->add('t_tutor', TextType::class, ['attr' => ['class' => 'form-control']])

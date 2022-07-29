@@ -68,7 +68,18 @@
                                 {{ totalFaltas }}
                             </td>
                             <td>
-                                {{ totalHoras }}
+                                {% set totalRedondeadas = totalHoras | split('.') %}
+                                {% if totalRedondeadas[1] is defined %}
+                                    {% if totalRedondeadas[1] == 25 %}
+                                        {{ totalRedondeadas[0] }}:15hs
+                                    {% elseif totalRedondeadas[1] == 5 %}
+                                        {{ totalRedondeadas[0] }}:30hs
+                                    {% elseif totalRedondeadas[1] == 75 %}
+                                        {{ totalRedondeadas[0] }}:45hs
+                                    {% endif %}
+                                {% else %}
+                                    {{ totalRedondeadas[0] }}:00hs
+                                {% endif %}
                             </td>
                             <td>
                                 {% if asistencia['precioHora'] is defined %}

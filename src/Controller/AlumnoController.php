@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Alumno;
 use App\Form\AlumnoType;
 use App\Repository\AlumnoRepository;
+use App\Repository\CursoRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -18,18 +19,23 @@ class AlumnoController extends AbstractController
     /**
      * @Route("/", name="app_alumno_index", methods={"GET"})
      */
-    public function index(Request $request, AlumnoRepository $alumnoRepository): Response
+    public function index(Request $request, AlumnoRepository $alumnoRepository, CursoRepository $cursoRepository): Response
     {
-        $limit = $request->get('limit', 10);
+        $limit = $request->get('limit', 20);
         $currentPage = $request->get('currentPage', 0);
         $offset = $currentPage == 0 ? 0 : (($currentPage * $limit) + 1);
         $busqueda = $request->get('busqueda', 0);
         $activo = $request->get('activo', 'todos');
+        $cursoSelected = $request->get('cursoSelected', '0');
         $totalAgregados = $request->get('totalAgregados', '');
         $alumnosQueNoGuardadamos = $request->get('alumnosQueNoGuardadamos', []);
 
-        $alumnos = $alumnoRepository->findByApellido($busqueda, $limit, $offset, $activo);
-        $total = $alumnoRepository->countAlumnos($busqueda, $activo);
+        if ($cursoSelected != 0) {
+            $limit = 10000000000000000;
+        }
+
+        $alumnos = $alumnoRepository->findByApellido($busqueda, $limit, $offset, $activo, $cursoSelected);
+        $total = $alumnoRepository->countAlumnos($busqueda, $activo, $cursoSelected);
         $total = !empty($total[1]) ? $total[1] : 0;
 
         $numeroDePaginas = intval(ceil($total / $limit));
@@ -42,7 +48,9 @@ class AlumnoController extends AbstractController
             'total' => $total,
             'activo' => $activo,
             'totalAgregados' => $totalAgregados,
-            'alumnosQueNoGuardadamos' => $alumnosQueNoGuardadamos
+            'alumnosQueNoGuardadamos' => $alumnosQueNoGuardadamos,
+            'cursos' => $cursoRepository->findAll(),
+            'cursoSelected' => $cursoSelected
         ]);
     }
 

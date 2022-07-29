@@ -53,7 +53,7 @@ class AlumnoRepository extends ServiceEntityRepository
     // /**
     //  * @return Alumno[] Returns an array of Alumno objects
     //  */
-    public function countAlumnos($value, $activo)
+    public function countAlumnos($value, $activo, $cursoSelected = 0)
     {
         $query =  $this->createQueryBuilder('p')->select('count(p.id)');
         if ($value) {
@@ -61,6 +61,13 @@ class AlumnoRepository extends ServiceEntityRepository
         }
         if ($activo !== 'todos') {
             $query->andWhere('p.activo = :activo')->setParameter('activo', $activo);
+        }
+        if ($cursoSelected != 0) {
+            $query->join('p.curso',
+                'curso',
+                \Doctrine\ORM\Query\Expr\Join::WITH,
+                'curso = :cursoSelected')
+                ->setParameter('cursoSelected', $cursoSelected);
         }
 
         return $query->orderBy('p.id', 'ASC')->getQuery()->getOneOrNullResult();
@@ -70,7 +77,7 @@ class AlumnoRepository extends ServiceEntityRepository
     //  * @return Alumno[] Returns an array of Alumno objects
     //  */
 
-    public function findByApellido($value, $limit, $offset, $activo = null)
+    public function findByApellido($value, $limit, $offset, $activo = null, $cursoSelected = 0)
     {
         $query =  $this->createQueryBuilder('p');
         if ($value) {
@@ -78,6 +85,13 @@ class AlumnoRepository extends ServiceEntityRepository
         }
         if ($activo !== 'todos') {
             $query->andWhere('p.activo = :activo')->setParameter('activo', $activo);
+        }
+        if ($cursoSelected != 0) {
+            $query->join('p.curso',
+                'curso',
+                \Doctrine\ORM\Query\Expr\Join::WITH,
+                'curso = :cursoSelected')
+                ->setParameter('cursoSelected', $cursoSelected);
         }
         if ($limit) {
             $query->setMaxResults($limit);
