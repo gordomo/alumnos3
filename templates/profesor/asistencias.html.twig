@@ -90,7 +90,8 @@
             {% endfor %}
             </tbody>
         </table>
-
+{% block javascripts %}
+    {{ parent() }}
         <script>
             $(function() {
                 $('input[name="daterange"]').daterangepicker({
@@ -104,7 +105,7 @@
                 });
             });
         </script>
-
+{% endblock %}
 
     {% endblock %}
 
