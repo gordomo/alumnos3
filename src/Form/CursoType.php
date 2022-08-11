@@ -23,7 +23,7 @@ class CursoType extends AbstractType
                 '2:00hs' => 2,
             ]
             ])
-            ->add('dias', ChoiceType::class, ['attr' => ['class' => 'form-control'], 'required' => true, 'choices'  => [
+            ->add('dias', ChoiceType::class, ['attr' => ['class' => 'form-control predictivo'], 'required' => true, 'choices'  => [
                 'Lunes' => 'Lunes',
                 'Martes' => 'Martes',
                 'Miercoles' => 'Miercoles',

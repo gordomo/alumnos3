@@ -101,12 +101,13 @@ class AlumnoController extends AbstractController
      */
     public function edit(Request $request, Alumno $alumno, AlumnoRepository $alumnoRepository): Response
     {
-
         $form = $this->createForm(AlumnoType::class, $alumno);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
             $alumnoRepository->add($alumno);
+            $this->setearHermandad($request, $alumno, $alumnoRepository);
+
             return $this->redirectToRoute('app_alumno_index', [], Response::HTTP_SEE_OTHER);
         }
 
@@ -130,9 +131,35 @@ class AlumnoController extends AbstractController
         return $this->redirectToRoute('app_alumno_index', [], Response::HTTP_SEE_OTHER);
     }
 
-    private function setearHermandad($request, $alumno, $alumnoRepository) {
+    private function setearHermandad($request, Alumno $alumno, $alumnoRepository) {
         $hermanosForm = $request->request->get('alumno')['hermanos'] ?? [];
+
+        $hermanosActuales = $alumno->getHermanos();
+
+        $todosLosHermanosActualesDelAlumno = [];
+        foreach ($hermanosActuales as $hermanoActual) {
+            $hermanoActualObj = $alumnoRepository->find($hermanoActual);
+            $todosLosHermanosActualesDelAlumno[] = $hermanoActualObj;
+            $otrosHermanosActuales = $hermanoActualObj->getHermanos();
+
+            foreach ($otrosHermanosActuales as $otroHermanoActual) {
+                $todosLosHermanosActualesDelAlumno[] = $otroHermanoActual;
+                $otroHermanoActualDelAlumno = $alumnoRepository->find($otroHermanoActual);
+                $otrosHermanosActualesMas = $otroHermanoActualDelAlumno->getHermanos();
+                if(in_array($alumno->getId(), $otrosHermanosActualesMas)) {
+                    $key = array_search($alumno->getId(), $otrosHermanosActualesMas);
+                    unset($otrosHermanosActualesMas[$key]);
+                    $otroHermanoActualDelAlumno->setHermanos($otrosHermanosActualesMas);
+                    $alumnoRepository->add($otroHermanoActualDelAlumno);
+                }
+            }
+        }
+
+        $alumno->setHermanos([]);
+        $alumnoRepository->add($alumno);
+
         $todosLosHermanosDelAlumno = [];
+
         foreach ($hermanosForm as $hermano) {
             $todosLosHermanosDelAlumno[] = $hermano;
             $hermanoDelAlumno = $alumnoRepository->find($hermano);

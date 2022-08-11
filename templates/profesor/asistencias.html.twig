@@ -90,22 +90,21 @@
             {% endfor %}
             </tbody>
         </table>
+    {% endblock %}
 {% block javascripts %}
     {{ parent() }}
-        <script>
-            $(function() {
-                $('input[name="daterange"]').daterangepicker({
-                    opens: 'left',
-                    singleDatePicker: true,
-                    locale: {
-                        format: 'YYYY/MM/DD'
-                    }
-                }, function(start, end, label) {
-                    location.href = "{{ path('asistencias') }}?desde=" + start.format('YYYY/MM/DD');
-                });
+    <script>
+        $(function() {
+            $('input[name="daterange"]').daterangepicker({
+                opens: 'left',
+                singleDatePicker: true,
+                locale: {
+                    format: 'YYYY/MM/DD'
+                }
+            }, function(start, end, label) {
+                location.href = "{{ path('asistencias') }}?desde=" + start.format('YYYY/MM/DD');
             });
-        </script>
+        });
+    </script>
 {% endblock %}
-
-    {% endblock %}
 

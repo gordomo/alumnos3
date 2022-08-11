@@ -18,7 +18,7 @@
     </div>
     <div class="row g-3">
         <div class="col-md-6">
-            <i>Mantenga Ctrl precionado <br>para seleccionar múltiples días</i>
+            {{ form_label(form.dias, 'Dias') }}
             {{ form_widget(form.dias) }}
             <small class="form-error">
                 {{ form_errors(form.dias) }}

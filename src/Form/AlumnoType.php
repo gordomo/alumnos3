@@ -56,17 +56,10 @@ class AlumnoType extends AbstractType
                 },
                 'multiple' => true,
                 'expanded' => false,
+                'required' => false,
                 'label' => 'Cursos',
                 'attr' => ['class' => 'form-control predictivo']
             ])
-            ->add('como_conociste', ChoiceType::class, ['attr' => ['class' => 'form-control'], 'choices' => [
-                "Por Familia" => "Familia",
-                "Por Amigos" => "Amigos",
-                "Por Facebook" => "Facebook",
-                "Por Instagram" => "Instagram",
-                "Otra" => "Otra"
-
-            ]])
             ->add('hermanos', EntityType::class, [
                 'class' => Alumno::class,
                 'choice_label' => 'NombreApellido',
@@ -77,13 +70,21 @@ class AlumnoType extends AbstractType
                     }
                     return $hermanos;
                 },
-                "mapped" => false,
+                'mapped' => false,
                 'multiple' => true,
                 'expanded' => false,
-                'label' => 'Hermanos',
                 'required' => false,
+                'label' => 'Hermanos',
                 'attr' => ['class' => 'form-control predictivo']
             ])
+            ->add('como_conociste', ChoiceType::class, ['attr' => ['class' => 'form-control'], 'choices' => [
+                "Por Familia" => "Familia",
+                "Por Amigos" => "Amigos",
+                "Por Facebook" => "Facebook",
+                "Por Instagram" => "Instagram",
+                "Otra" => "Otra"
+
+            ]])
         ;
     }
 
