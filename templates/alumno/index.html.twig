@@ -91,7 +91,7 @@
                     {#<a href="{{ path('app_alumno_show', {'id': alumno.id}) }}"><i class="bi bi-eye"></i></a>#}
                     <a href="{{ path('app_alumno_edit', {'id': alumno.id}) }}"><i class="bi bi-pencil"></i></a>
                     <a href="{{ path('app_alumnos_pagos_new', {'alumno': alumno.id}) }}"><i class="bi bi-currency-dollar"></i></a>
-                    {{ alumno.debeMes ? '<i class="bi bi-bell-fill" style="color: red"></i>' : '' }}
+                    {{ alumno.debeMes and alumno.activo ? '<i class="bi bi-bell-fill" style="color: red"></i>' : '' }}
                 </td>
             </tr>
         {% else %}
