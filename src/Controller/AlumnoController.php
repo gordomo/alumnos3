@@ -17,14 +17,14 @@ use Symfony\Component\Routing\Annotation\Route;
 class AlumnoController extends AbstractController
 {
     /**
-     * @Route("/", name="app_alumno_index", methods={"GET"})
+     * @Route("/", name="app_alumno_index", methods={"GET", "POST"})
      */
     public function index(Request $request, AlumnoRepository $alumnoRepository, CursoRepository $cursoRepository): Response
     {
         $limit = $request->get('limit', 20);
         $currentPage = $request->get('currentPage', 0);
         $offset = $currentPage == 0 ? 0 : (($currentPage * $limit) + 1);
-        $busqueda = $request->get('busqueda', 0);
+        $busqueda = $request->get('busqueda', '');
         $activo = $request->get('activo', 'todos');
         $cursoSelected = $request->get('cursoSelected', '0');
         $totalAgregados = $request->get('totalAgregados', '');

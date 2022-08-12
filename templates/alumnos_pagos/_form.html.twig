@@ -1,0 +1,53 @@
+{{ form_start(form) }}
+<div class="form-group">
+    <div class="row g-3">
+        <div class="col-md-6">
+            {{ form_label(form.fecha, 'Fecha') }}
+            {{ form_widget(form.fecha) }}
+            <small class="form-error">
+                {{ form_errors(form.fecha) }}
+            </small>
+        </div>
+        <div class="col-md-6">
+            {{ form_label(form.mes, 'Mes') }}
+            {{ form_widget(form.mes) }}
+            <small class="form-error">
+                {{ form_errors(form.mes) }}
+            </small>
+        </div>
+    </div>
+    <div class="row g-3">
+        <div class="col-md-6">
+            {{ form_label(form.ano, 'Año') }}
+            {{ form_widget(form.ano) }}
+            <small class="form-error">
+                {{ form_errors(form.ano) }}
+            </small>
+        </div>
+        <div class="col-md-6">
+            {{ form_label(form.monto, 'Monto') }}
+            {{ form_widget(form.monto) }}
+            <small class="form-error">
+                {{ form_errors(form.monto) }}<br>
+            </small>
+            {% if bonificacionHermanos %}
+                <small class="form-success">
+                    Precio binificado 20% por hermanos<br>
+                </small>
+            {% endif %}
+            {% if recargo %}
+                <small class="form-error">
+                    Precio con recargo 10% por pago fuera de fecha<br>
+                </small>
+            {% endif %}
+        </div>
+    </div>
+</div>
+<div class="form-group">
+    <div class="row g-3">
+        <div class="col-md-12" style="text-align: right;">
+            <button class="btn btn-success">{{ button_label|default('Save') }}</button>
+        </div>
+    </div>
+</div>
+{{ form_end(form) }}

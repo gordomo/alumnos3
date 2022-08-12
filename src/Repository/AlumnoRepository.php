@@ -81,7 +81,11 @@ class AlumnoRepository extends ServiceEntityRepository
     {
         $query =  $this->createQueryBuilder('p');
         if ($value) {
-            $query->andWhere('p.apellido like :val')->setParameter('val', '%'.$value.'%');
+            $valores = explode(' ', $value);
+            foreach ($valores as $value) {
+                $query->orWhere('p.apellido like :val')->setParameter('val', '%'.$value.'%');
+                $query->orWhere('p.nombre like :val')->setParameter('val', '%'.$value.'%');
+            }
         }
         if ($activo !== 'todos') {
             $query->andWhere('p.activo = :activo')->setParameter('activo', $activo);

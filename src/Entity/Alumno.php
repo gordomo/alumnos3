@@ -134,9 +134,15 @@ class Alumno
      */
     private $activo;
 
+    /**
+     * @ORM\OneToMany(targetEntity=AlumnosPagos::class, mappedBy="alumno", orphanRemoval=true)
+     */
+    private $pagos;
+
     public function __construct()
     {
         $this->curso = new ArrayCollection();
+        $this->pagos = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -436,5 +442,63 @@ class Alumno
     public function setActivo($activo): void
     {
         $this->activo = $activo;
+    }
+
+    /**
+     * @return Collection<int, AlumnosPagos>
+     */
+    public function getPagos(): Collection
+    {
+        return $this->pagos;
+    }
+
+    public function addPago(AlumnosPagos $pago): self
+    {
+        if (!$this->pagos->contains($pago)) {
+            $this->pagos[] = $pago;
+            $pago->setAlumno($this);
+        }
+
+        return $this;
+    }
+
+    public function removePago(AlumnosPagos $pago): self
+    {
+        if ($this->pagos->removeElement($pago)) {
+            // set the owning side to null (unless already changed)
+            if ($pago->getAlumno() === $this) {
+                $pago->setAlumno(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function getDebeMes() {
+        $return = true;
+        $pagos = $this->getPagos();
+        $array = $pagos->getValues();
+
+        if (!empty($array)) {
+            $ultima = end($array);
+            $mes = $ultima->getMes();
+            $ano = $ultima->getAno();
+            $hoy = new \DateTime('now');
+
+            $hoyMes = $hoy->format('m');
+            $hoyAno = $hoy->format('Y');
+
+            if ($hoyMes[0] == 0) {
+                $hoyMes = $hoyMes[1];
+            }
+
+            if (intval($ano . $mes) >= intval($hoyAno . $hoyMes) ) {
+                $return = false;
+            }
+
+        }
+
+        return $return;
+
     }
 }

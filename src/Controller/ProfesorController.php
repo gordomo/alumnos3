@@ -58,7 +58,7 @@ class ProfesorController extends AbstractController
         $firstday = date('Y/m/d', strtotime('-'.($day-1).' days', strtotime($desde)));
         $lastday = date('Y/m/d', strtotime('+'.(7-$day).' days', strtotime($desde)));
 
-        $cursos = $cursoRepository->findAll();
+        $cursos = $cursoRepository->findBy(['disabled' => false]);
         $profesores = $profesorRepository->findAll();
 
         $asistencias = $asistenciaProfesoresRepository->findAll();

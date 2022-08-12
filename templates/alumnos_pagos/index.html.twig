@@ -1,0 +1,39 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}AlumnosPagos index{% endblock %}
+
+{% block body %}
+    <h1>Pagos {{ alumno }}</h1>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Fecha</th>
+                <th>Monto</th>
+                <th>Mes</th>
+                <th>Año</th>
+                <th>actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for alumnos_pago in alumnos_pagos %}
+            <tr>
+                <td>{{ alumnos_pago.fecha ? alumnos_pago.fecha|date('Y-m-d') : '' }}</td>
+                <td>{{ alumnos_pago.monto }}</td>
+                <td>{{ alumnos_pago.mes }}</td>
+                <td>{{ alumnos_pago.ano }}</td>
+                <td>
+                    <a href="{{ path('app_alumnos_pagos_show', {'id': alumnos_pago.id}) }}">show</a>
+                    <a href="{{ path('app_alumnos_pagos_edit', {'id': alumnos_pago.id}) }}">edit</a>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="3">no records found</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <a class="btn btn-primary" href="{{ path('app_alumno_index') }}">Volver</a>
+    {#<a href="{{ path('app_alumnos_pagos_new') }}">Create new</a>#}
+{% endblock %}

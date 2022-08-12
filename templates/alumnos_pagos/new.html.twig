@@ -1,0 +1,20 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Nuevo Pago{% endblock %}
+
+{% block body %}
+
+    <div class="editForms">
+        <h1>Nuevo Pago de {{ alumno }}</h1>
+        <div class="row">
+            {{ include('alumnos_pagos/_form.html.twig', {'button_label': 'Guardar'}) }}
+        </div>
+        <br><br>
+        <div class="row botones">
+            <div class="col-md-12">
+                <a class="btn btn-primary" href="{{ path('app_alumno_index') }}">Volver</a>
+                <a class="btn btn-secondary" href="{{ path('app_alumnos_pagos_index', {'alumno': alumnoId}) }}">Ver pagos</a>
+            </div>
+        </div>
+    </div>
+{% endblock %}

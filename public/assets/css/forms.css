@@ -8,6 +8,9 @@
 .form-error {
     color: red;
 }
+.form-success {
+    color: green;
+}
 
 .form-error ul {
     list-style-type: none;
