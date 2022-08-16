@@ -49,6 +49,10 @@ class AlumnosPagosController extends AbstractController
         //$alumno->getDebeMes();
         $hoy = new \DateTime();
         $alumnosPago->setAlumno($alumno);
+        if (!empty($alumno->getCurso())) {
+            $alumnosPago->setCurso($alumno->getCurso()[0]);
+        }
+
         $alumnosPago->setFecha($hoy);
         $alumnosPago->setAno($hoy->format('Y'));
         $mes = $hoy->format('m');
@@ -118,6 +122,8 @@ class AlumnosPagosController extends AbstractController
         return $this->renderForm('alumnos_pagos/edit.html.twig', [
             'alumnos_pago' => $alumnosPago,
             'form' => $form,
+            'bonificacionHermanos' => false,
+            'recargo' => false,
         ]);
     }
 

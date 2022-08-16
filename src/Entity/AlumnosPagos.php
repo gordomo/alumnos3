@@ -44,6 +44,11 @@ class AlumnosPagos
     private $ano;
 
     /**
+     * @ORM\ManyToOne(targetEntity=Curso::class, inversedBy="alumnosPagos")
+     */
+    private $curso;
+
+    /**
      * @return mixed
      */
     public function getAno()
@@ -112,6 +117,18 @@ class AlumnosPagos
     public function setMonto(float $monto): self
     {
         $this->monto = $monto;
+
+        return $this;
+    }
+
+    public function getCurso(): ?Curso
+    {
+        return $this->curso;
+    }
+
+    public function setCurso(?Curso $curso): self
+    {
+        $this->curso = $curso;
 
         return $this;
     }

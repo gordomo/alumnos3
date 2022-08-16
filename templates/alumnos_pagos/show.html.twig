@@ -1,26 +1,64 @@
-{% extends 'base.html.twig' %}
-
-{% block title %}AlumnosPagos{% endblock %}
-
-{% block body %}
-    <h1>AlumnosPagos</h1>
-
-    <table class="table">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Example 1</title>
+    <link rel="stylesheet" href="{{ asset('assets/css/invoice.css') }}" media="all" />
+</head>
+<body>
+<header class="clearfix">
+    <div id="logo">
+        <img src="{{ asset('assets/img/logo.png') }}">
+    </div>
+    <h1>Recibo</h1>
+    <div id="company" class="clearfix">
+        <div>Dream Ingles</div>
+        <div>Moreno 1526.<br /> Fighiera. Santa Fe.</div>
+        <div>(3402) 658432</div>
+    </div>
+    <div id="project">
+        <div><span>Alumno:</span> {{ alumnos_pago.alumno.nombreApellido }}</div>
+        <div><span>email:</span> <a href="mailto:john@example.com">{{ alumnos_pago.alumno.email }}</a></div>
+        <div><span>Fecha:</span> {{ 'now' | date('d-m-y') }}</div>
+        <div><span>Pago:</span> {{ alumnos_pago.fecha | date('d-m-y') }}</div>
+    </div>
+</header>
+<main>
+    <table>
+        <thead>
+        <tr>
+            <th class="service">Curso</th>
+            <th class="desc">Descripción</th>
+            <th>Precio</th>
+            <th>TOTAL</th>
+        </tr>
+        </thead>
         <tbody>
-            <tr>
-                <th>Id</th>
-                <td>{{ alumnos_pago.id }}</td>
-            </tr>
-            <tr>
-                <th>Fecha</th>
-                <td>{{ alumnos_pago.fecha ? alumnos_pago.fecha|date('Y-m-d') : '' }}</td>
-            </tr>
+        <tr>
+            <td class="service">{{ alumnos_pago.curso.nombre }}</td>
+            <td class="desc">Pago cuota</td>
+            <td class="unit">${{ alumnos_pago.monto }}</td>
+            <td class="unit">${{ alumnos_pago.monto }}</td>
+        </tr>
+        <tr>
+            <td colspan="3" class="grand total">TOTAL</td>
+            <td class="grand total">${{ alumnos_pago.monto }}</td>
+        </tr>
         </tbody>
     </table>
-
-    <a href="{{ path('app_alumnos_pagos_index') }}">back to list</a>
-
-    <a href="{{ path('app_alumnos_pagos_edit', {'id': alumnos_pago.id}) }}">edit</a>
-
-    {{ include('alumnos_pagos/_delete_form.html.twig') }}
-{% endblock %}
+    <div id="notices">
+        <div>Nota:</div>
+        <div class="notice">Se cobra un recargo del 20% por pagar después del 20 de cada mes.</div>
+    </div>
+</main>
+<footer>
+    Esta recibo fue creado por computadora. Es válido si se acompaña de la firma correspondiente
+</footer>
+</body>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function(){
+            //window.print();
+        })
+    </script>
+</html>

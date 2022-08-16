@@ -42,10 +42,15 @@
             {% endif %}
         </div>
     </div>
-</div>
-<div class="form-group">
     <div class="row g-3">
-        <div class="col-md-12" style="text-align: right;">
+        <div class="col-md-6">
+            {{ form_label(form.curso, 'Curso') }}
+            {{ form_widget(form.curso) }}
+            <small class="form-error">
+                {{ form_errors(form.curso) }}
+            </small>
+        </div>
+        <div class="col-md-6" style="text-align: right;">
             <button class="btn btn-success">{{ button_label|default('Save') }}</button>
         </div>
     </div>

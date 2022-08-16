@@ -5,6 +5,7 @@ namespace App\Form;
 use App\Entity\Alumno;
 use App\Entity\AlumnosPagos;
 
+use App\Entity\Curso;
 use Doctrine\ORM\EntityRepository;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
@@ -37,6 +38,19 @@ class AlumnosPagosType extends AbstractType
                 'Noviembre' => 11,
                 'Diciembre' => 12,
             ]])
+            ->add('curso', EntityType::class, [
+                'class' => Curso::class,
+                'choice_label' => 'nombre',
+                'query_builder' => function (EntityRepository $er) {
+                    $curso = $er->createQueryBuilder('c');
+                    return $curso;
+                },
+                'multiple' => false,
+                'expanded' => false,
+                'required' => false,
+                'label' => 'Cursos',
+                'attr' => ['class' => 'form-control predictivo']
+            ])
         ;
     }
 

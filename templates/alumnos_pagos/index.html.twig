@@ -23,8 +23,12 @@
                 <td>{{ alumnos_pago.mes }}</td>
                 <td>{{ alumnos_pago.ano }}</td>
                 <td>
-                    <a href="{{ path('app_alumnos_pagos_show', {'id': alumnos_pago.id}) }}">show</a>
-                    <a href="{{ path('app_alumnos_pagos_edit', {'id': alumnos_pago.id}) }}">edit</a>
+                    <a class="btn" target="_blank" href="{{ path('app_alumnos_pagos_show', {'id': alumnos_pago.id}) }}">
+                        <i class="bi bi-printer"></i>
+                    </a>
+                    <a class="btn" href="{{ path('app_alumnos_pagos_edit', {'id': alumnos_pago.id}) }}">
+                        <i class="bi bi-pencil"></i>
+                    </a>
                 </td>
             </tr>
         {% else %}

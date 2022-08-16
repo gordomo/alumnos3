@@ -115,7 +115,7 @@ class Alumno
     private $medicacion;
 
     /**
-     * @ORM\ManyToMany(targetEntity=Curso::class, inversedBy="profesores")
+     * @ORM\ManyToMany(targetEntity=Curso::class, inversedBy="alumnos")
      */
     private $curso;
 
