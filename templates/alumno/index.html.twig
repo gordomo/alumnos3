@@ -9,7 +9,7 @@
         <div class="col-6">
             <form method="post" action="{{ path('app_alumno_index', {'activo': activo }) }}">
                 <div class="input-group mb-3">
-                    <input name="busqueda" type="text" class="form-control" placeholder="Buscar por apellido" value="{{ busqueda }}" aria-label="Recipient's username" aria-describedby="button-addon2">
+                    <input name="busqueda" type="text" class="form-control" placeholder="Buscar por Nombre y Apellido" value="{{ busqueda }}" aria-label="Recipient's username" aria-describedby="button-addon2">
                     <button class="btn btn-outline-secondary" type="submit" id="button-addon2"><i class="bi bi-search"></i></button>
                 </div>
             </form>
@@ -25,7 +25,7 @@
                 <li class="nav-item">
                     <a class="nav-link {% if activo == '0' %} active {% endif %}" href="{{ path('app_alumno_index', {'activo': 0}) }}">Inactivos</a>
                 </li>
-                <li class="nav-item">
+                {#<li class="nav-item">
                     <a class="btn btn-warning importar" href="#">
                         Importar
                         <i class="bi bi-file-earmark-spreadsheet"></i>
@@ -43,10 +43,10 @@
                             Se agregaron {{ totalAgregados }} alumnos correctamente
                         </div>
                     {% endif %}
-                </li>
-                <li class="nav-item">
+                </li>#}
+                <li class="nav-item" style="margin-left: 10px;">
                     <select class="form-select" aria-label="Cursos" name="cursoSelected" id="filtroCursos">
-                        <option value="0">curso</option>
+                        <option value="0">Filtrar por Cursos</option>
                         {% for curso in cursos %}
                             <option {% if cursoSelected == curso.id %} selected {% endif %} value="{{ curso.id }}">{{ curso.nombre }}</option>
                         {% endfor %}
@@ -90,7 +90,9 @@
                 <td>
                     {#<a href="{{ path('app_alumno_show', {'id': alumno.id}) }}"><i class="bi bi-eye"></i></a>#}
                     <a href="{{ path('app_alumno_edit', {'id': alumno.id}) }}"><i class="bi bi-pencil"></i></a>
-                    <a href="{{ path('app_alumnos_pagos_new', {'alumno': alumno.id}) }}"><i class="bi bi-currency-dollar"></i></a>
+                    {% if (alumno.activo) %}
+                        <a href="{{ path('app_alumnos_pagos_new', {'alumno': alumno.id}) }}"><i class="bi bi-currency-dollar"></i></a>
+                    {% endif %
                     {{ alumno.debeMes and alumno.activo ? '<i class="bi bi-bell-fill" style="color: red"></i>' : '' }}
                 </td>
             </tr>
