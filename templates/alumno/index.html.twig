@@ -92,7 +92,7 @@
                     <a href="{{ path('app_alumno_edit', {'id': alumno.id}) }}"><i class="bi bi-pencil"></i></a>
                     {% if (alumno.activo) %}
                         <a href="{{ path('app_alumnos_pagos_new', {'alumno': alumno.id}) }}"><i class="bi bi-currency-dollar"></i></a>
-                    {% endif %
+                    {% endif %}
                     {{ alumno.debeMes and alumno.activo ? '<i class="bi bi-bell-fill" style="color: red"></i>' : '' }}
                 </td>
             </tr>
