@@ -33,7 +33,8 @@ class AlumnosPagosController extends AbstractController
 
         return $this->render('alumnos_pagos/index.html.twig', [
             'alumnos_pagos' => $pagos,
-            'alumno' => $nombreApellido
+            'alumno' => $nombreApellido,
+            'alumnoId' => $alumnoId
         ]);
     }
 
