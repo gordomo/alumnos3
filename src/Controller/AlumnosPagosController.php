@@ -47,7 +47,7 @@ class AlumnosPagosController extends AbstractController
         $alumnoId = $request->get('alumno', 0);
         $alumno = $alumnoRepository->find($alumnoId);
 
-        //$alumno->getDebeMes();
+        //dd($alumno->getDebeMes());
         $hoy = new \DateTime();
         $alumnosPago->setAlumno($alumno);
         if (!empty($alumno->getCurso())) {
@@ -114,10 +114,10 @@ class AlumnosPagosController extends AbstractController
     {
         $form = $this->createForm(AlumnosPagosType::class, $alumnosPago);
         $form->handleRequest($request);
-
+        $alumnoId = $alumnosPago->getAlumno()->getId();
         if ($form->isSubmitted() && $form->isValid()) {
             $alumnosPagosRepository->add($alumnosPago);
-            return $this->redirectToRoute('app_alumnos_pagos_index', [], Response::HTTP_SEE_OTHER);
+            return $this->redirectToRoute('app_alumnos_pagos_index', ['alumno' => $alumnoId], Response::HTTP_SEE_OTHER);
         }
 
         return $this->renderForm('alumnos_pagos/edit.html.twig', [
@@ -133,10 +133,11 @@ class AlumnosPagosController extends AbstractController
      */
     public function delete(Request $request, AlumnosPagos $alumnosPago, AlumnosPagosRepository $alumnosPagosRepository): Response
     {
+        $alumnoId = $alumnosPago->getAlumno()->getId();
         if ($this->isCsrfTokenValid('delete'.$alumnosPago->getId(), $request->request->get('_token'))) {
             $alumnosPagosRepository->remove($alumnosPago);
         }
 
-        return $this->redirectToRoute('app_alumnos_pagos_index', [], Response::HTTP_SEE_OTHER);
+        return $this->redirectToRoute('app_alumnos_pagos_index', ['alumno' => $alumnoId], Response::HTTP_SEE_OTHER);
     }
 }
