@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\CursoRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -172,6 +173,13 @@ class Curso
     public function getAlumnos(): Collection
     {
         return $this->alumnos;
+    }
+
+    public function getAlumnosActivos() {
+        //$criteria = Criteria::create()->where(Criteria::expr()->in("activo", 1));
+        $criteria = Criteria::create()->where(Criteria::expr()->eq("activo", true));
+
+        return $this->getAlumnos()->matching($criteria);
     }
 
     public function addAlumno(Profesor $alumno): self

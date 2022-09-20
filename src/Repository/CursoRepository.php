@@ -72,6 +72,17 @@ class CursoRepository extends ServiceEntityRepository
         ;
     }
 
+    public function findCursosConAlumnos($value)
+    {
+        $query = $this->_em->createQuery(
+            'SELECT c, a
+            FROM App\Entity\Curso c
+            INNER JOIN c.alumnos a
+            WHERE a.id IN (:ids)'
+        )->setParameter('ids', $value);
+
+        return $query->getResult();
+    }
 
     /*
     public function findOneBySomeField($value): ?Curso

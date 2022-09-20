@@ -107,6 +107,20 @@ class AlumnoRepository extends ServiceEntityRepository
         return $query->orderBy('p.apellido', 'ASC')->getQuery()->getResult();
     }
 
+    public function getIdByApellido($value)
+    {
+        $query =  $this->createQueryBuilder('p');
+        if ($value) {
+            $valores = explode(' ', $value);
+            foreach ($valores as $value) {
+                $query->orWhere('p.apellido like :val')->setParameter('val', '%'.$value.'%');
+                $query->orWhere('p.nombre like :val')->setParameter('val', '%'.$value.'%');
+            }
+        }
+
+        return $query->select('p.id')->getQuery()->getResult();
+    }
+
     // /**
     //  * @return Alumno[] Returns an array of Alumno objects
     //  */

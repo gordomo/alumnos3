@@ -48,19 +48,22 @@ class AlumnosPagosRepository extends ServiceEntityRepository
     // /**
     //  * @return AlumnosPagos[] Returns an array of AlumnosPagos objects
     //  */
-    /*
-    public function findByExampleField($value)
+
+    public function findLast50($value)
     {
-        return $this->createQueryBuilder('a')
-            ->andWhere('a.exampleField = :val')
-            ->setParameter('val', $value)
-            ->orderBy('a.id', 'ASC')
-            ->setMaxResults(10)
+        $query = $this->createQueryBuilder('a');
+             if ($value) {
+                 $query->orWhere('a.alumno IN (:val)')->setParameter('val', $value);
+             }
+
+        return $query
+            ->orderBy('a.ano, a.mes', 'DESC')
+            ->setMaxResults(500)
             ->getQuery()
             ->getResult()
         ;
     }
-    */
+
 
     /*
     public function findOneBySomeField($value): ?AlumnosPagos
