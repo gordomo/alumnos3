@@ -19,8 +19,10 @@ class DashboardController extends AbstractController
     {
         $busqueda = $request->get('busqueda', '');
         $action = $request->get('action', '');
-        $desde = $request->get('desde', '');
-        $hasta = $request->get('hasta', '');
+        $firstDay = new \DateTime();
+        $desde = $request->get('desde', $firstDay->format('Y-01-01'));
+        $lastDay = new \DateTime();
+        $hasta = $request->get('hasta', $lastDay->format('Y-12-31'));
         $max = $request->get('registros', 50);
 
         $alumnosIds = [];
