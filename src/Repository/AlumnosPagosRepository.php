@@ -49,19 +49,37 @@ class AlumnosPagosRepository extends ServiceEntityRepository
     //  * @return AlumnosPagos[] Returns an array of AlumnosPagos objects
     //  */
 
-    public function findLast50($value)
+    public function findLastPagos($value, $desde, $hasta, $max = 50)
     {
         $query = $this->createQueryBuilder('a');
              if ($value) {
                  $query->orWhere('a.alumno IN (:val)')->setParameter('val', $value);
              }
+        if ($desde and $hasta) {
+            $desde = new \DateTime($desde);
+            $hasta = new \DateTime($hasta);
+            $query->orWhere('a.fecha BETWEEN :desde and :hasta')->setParameters(['desde' => $desde, 'hasta' => $hasta]);
+        }
+        if ($max != '') {
+            $query->setMaxResults($max);
+        }
 
         return $query
             ->orderBy('a.ano, a.mes', 'DESC')
-            ->setMaxResults(500)
             ->getQuery()
             ->getResult()
         ;
+    }
+
+    public function findPagosAtiempo()
+    {
+        $query = $this->createQueryBuilder('a');
+        return $query->where('DAY(a.fecha) < 21')->getQuery()->getResult();
+    }
+    public function findPagosFueraDeTiempo()
+    {
+        $query = $this->createQueryBuilder('a');
+        return $query->where('DAY(a.fecha) >= 21')->getQuery()->getResult();
     }
 
 

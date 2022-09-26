@@ -502,9 +502,11 @@ class Alumno
                 $hoyMes = $hoyMes[1];
             }
 
-            if (intval($ultimoAnoPago . $ultimoMesPago) >= intval($hoyAno . ($hoyMes - 1)) and $hoyDia < 21) {
+            if (intval($ultimoAnoPago . $ultimoMesPago) >= intval($hoyAno . ($hoyMes))) {
                 $return = false;
             }
+
+            if ($hoyDia < 21) $return = false;
 
         }
 

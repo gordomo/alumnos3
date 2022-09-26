@@ -25,6 +25,9 @@
                 <li class="nav-item">
                     <a class="nav-link {% if activo == '0' %} active {% endif %}" href="{{ path('app_alumno_index', {'activo': 0}) }}">Inactivos</a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link"  href="{{ path('dashboard_index', {'action': 'profile'}) }}">Pagos</a>
+                </li>
                 {#<li class="nav-item">
                     <a class="btn btn-warning importar" href="#">
                         Importar

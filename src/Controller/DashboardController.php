@@ -19,11 +19,15 @@ class DashboardController extends AbstractController
     {
         $busqueda = $request->get('busqueda', '');
         $action = $request->get('action', '');
+        $desde = $request->get('desde', '');
+        $hasta = $request->get('hasta', '');
+        $max = $request->get('registros', 50);
+
         $alumnosIds = [];
         $deudores = [];
 
         if($busqueda) {
-            $alumnos = $alumnoRepository->findByApellido($busqueda, 0, 0, 'todos');
+            $alumnos = $alumnoRepository->findByApellido($busqueda, 0, 0, 1);
             foreach ($alumnos as $alumno) {
                 $alumnosIds[] = $alumno->getId();
             }
@@ -37,7 +41,10 @@ class DashboardController extends AbstractController
             }
         }
 
-        $alumnos_pagos = $alumnosPagosRepository->findLast50($alumnosIds);
+        $alumnos_pagos = $alumnosPagosRepository->findLastPagos($alumnosIds, $desde, $hasta, $max);
+
+        $pagaronATiempo = $alumnosPagosRepository->findPagosAtiempo();
+        $pagaronFueraDeTiempo = $alumnosPagosRepository->findPagosFueraDeTiempo();
 
         $cursos = $cursoRepository->findCursosConAlumnos($alumnos);
 
@@ -47,6 +54,11 @@ class DashboardController extends AbstractController
             'action' => $action,
             'deudores' => $deudores,
             'cursos' => $cursos,
+            'desde' => $desde,
+            'hasta' => $hasta,
+            'max' => $max,
+            'atiempo' => count($pagaronATiempo),
+            'fueraDeTiempo' => count($pagaronFueraDeTiempo),
         ]);
 
     }
