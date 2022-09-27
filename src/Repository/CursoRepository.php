@@ -78,7 +78,8 @@ class CursoRepository extends ServiceEntityRepository
             'SELECT c, a
             FROM App\Entity\Curso c
             INNER JOIN c.alumnos a
-            WHERE a.id IN (:ids)'
+            WHERE a.id IN (:ids)
+            order by c.id'
         )->setParameter('ids', $value);
 
         return $query->getResult();
