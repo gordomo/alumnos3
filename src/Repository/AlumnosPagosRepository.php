@@ -52,14 +52,17 @@ class AlumnosPagosRepository extends ServiceEntityRepository
     public function findLastPagos($value, $desde, $hasta, $max = 50)
     {
         $query = $this->createQueryBuilder('a');
-             if ($value) {
-                 $query->orWhere('a.alumno IN (:val)')->setParameter('val', $value);
-             }
+
         if ($desde and $hasta) {
             $desde = new \DateTime($desde);
             $hasta = new \DateTime($hasta);
-            $query->orWhere('a.fecha BETWEEN :desde and :hasta')->setParameters(['desde' => $desde, 'hasta' => $hasta]);
+            $query->andWhere('a.fecha BETWEEN :desde and :hasta')->setParameters(['desde' => $desde, 'hasta' => $hasta]);
         }
+
+        if ($value) {
+            $query->andWhere('a.alumno IN (:val)')->setParameter('val', $value);
+        }
+
         if ($max != '') {
             $query->setMaxResults($max);
         }

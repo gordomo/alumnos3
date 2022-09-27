@@ -4,7 +4,7 @@
 
 
     {% block panelTitle %}
-        Sistema de Administración de Dream Ingles
+        Estadísticas de Dream Ingles
     {% endblock %}
     {% block body %}
     <div class="mt-4">
@@ -36,7 +36,7 @@
             </div>
             <div class="col-2">
                 <div class="input-group mb-3 pt-1">
-                    <a class="btn btn-success" href="{{ path('dashboard_index', {'action': 'pagos', 'busqueda': ''}) }}">todos</a>
+                    <a class="btn btn-success" id="todos">todos</a>
                 </div>
             </div>
         </div>
@@ -160,6 +160,12 @@
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script>
         $(document).ready(function(){
+
+            $("#todos").click(() => {
+                let action = $(".nav-tabs").find('.active').attr('aria-controls')
+                location.href="{{ path('dashboard_index', {'busqueda': ''}) }}" + "&action=" + action;
+
+            });
 
             const ctx = document.getElementById('myChart');
             const myChart = new Chart(ctx, {
