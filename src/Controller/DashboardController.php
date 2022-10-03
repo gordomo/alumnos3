@@ -37,6 +37,8 @@ class DashboardController extends AbstractController
             $alumnos = $alumnoRepository->findBy(['activo' => 1]);
         }
 
+        $inactivos = $alumnoRepository->findBy(['activo' => 0]);
+
         foreach ($alumnos as $alumno) {
             if($alumno->getDebeMes()) {
                 $deudores[] = $alumno;
@@ -61,6 +63,8 @@ class DashboardController extends AbstractController
             'max' => $max,
             'atiempo' => count($pagaronATiempo),
             'fueraDeTiempo' => count($pagaronFueraDeTiempo),
+            'activos' => count($alumnos),
+            'inactivos' => count($inactivos)
         ]);
 
     }

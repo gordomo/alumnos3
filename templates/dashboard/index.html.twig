@@ -26,9 +26,9 @@
                 </ul>
             </div>
             <div class="col-4 pt-1">
-                <form method="get" action="{{ path('dashboard_index') }}">
+                <form method="get" action="{{ path('dashboard_index') }}" id="buscar">
                     <div class="input-group ">
-                        <input name="action" type="hidden" class="form-control" value="pagos">
+                        <input id="buscarAction" name="action" type="hidden" class="form-control" value="{{ action }}">
                         <input name="busqueda" type="text" class="form-control" placeholder="Buscar por Nombre y Apellido" value="{{ busqueda }}" aria-label="Recipient's username" aria-describedby="button-addon2">
                         <button class="btn btn-outline-secondary" type="submit" id="button-addon2"><i class="bi bi-search"></i></button>
                     </div>
@@ -36,7 +36,7 @@
             </div>
             <div class="col-2">
                 <div class="input-group mb-3 pt-1">
-                    <a class="btn btn-success" id="todos">todos</a>
+                    <a class="btn btn-success" id="todos">Todos</a>
                 </div>
             </div>
         </div>
@@ -147,6 +147,9 @@
                     <div class="col-4">
                         <canvas id="myChart" width="50%" height="50%"></canvas>
                     </div>
+                    <div class="col-4">
+                        <canvas id="myChart2" width="50%" height="50%"></canvas>
+                    </div>
                 </div>
 
             </div>
@@ -160,6 +163,15 @@
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script>
         $(document).ready(function(){
+
+            let form = document.getElementById('buscar');
+            form.addEventListener("submit", (e) => {
+                e.preventDefault();
+                let action = $(".nav-tabs").find('.active').attr('aria-controls')
+                $('#buscarAction').val(action);
+                e.currentTarget.submit();
+            });
+
 
             $("#todos").click(() => {
                 let action = $(".nav-tabs").find('.active').attr('aria-controls')
@@ -196,10 +208,40 @@
                 },
             });
 
+            const ctx2 = document.getElementById('myChart2');
+            const myChart2 = new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    datasets: [{
+                        label: ['Activos'],
+                        data: [{{ activos }}],
+                        backgroundColor: [
+                            'rgba(75, 192, 192, 0.2)',
+                        ],
+                        borderColor: [
+                            'rgb(75, 192, 192)',
+                        ],
+                        borderWidth: 1
+                    }, {
+                        label: ['Inactivo'],
+                        data: [{{ inactivos }}],
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.2)',
+                        ],
+                        borderColor: [
+                            'rgb(255, 99, 132)',
+                        ],
+                        borderWidth: 1
+                    }],
+                    labels: ['Alumnos']
+                },
+            });
+
             $('#{{ action }}-tab').click()
 
             $('#registros').change( () => {
-                location.href = "{{ path('dashboard_index') }}?desde={{ desde }}" + "&hasta={{ hasta }}" + "&busqueda={{ busqueda }}" + "&action=pagos&registros="+$('#registros').val();
+                let action = $(".nav-tabs").find('.active').attr('aria-controls')
+                location.href = "{{ path('dashboard_index') }}?desde={{ desde }}" + "&hasta={{ hasta }}" + "&busqueda={{ busqueda }}" + "&action="+action+"&registros="+$('#registros').val();
             } );
 
             $('input[name="daterange"]').daterangepicker({
@@ -209,7 +251,8 @@
                     format: 'YYYY/MM/DD'
                 }
             }, function(start, end, label) {
-                location.href = "{{ path('dashboard_index') }}?desde=" + start.format('YYYY/MM/DD') + "&hasta=" + end.format('YYYY/MM/DD') + "&busqueda={{ busqueda }}" + "&action=pagos&registros="+$('#registros').val();
+                let action = $(".nav-tabs").find('.active').attr('aria-controls')
+                location.href = "{{ path('dashboard_index') }}?desde=" + start.format('YYYY/MM/DD') + "&hasta=" + end.format('YYYY/MM/DD') + "&busqueda={{ busqueda }}" + "&action="+action+"&registros="+$('#registros').val();
                });
         })
 
