@@ -475,42 +475,40 @@ class Alumno
     }
 
     public function getDebeMes() {
-        $return = true;
+
         $pagos = $this->getPagos();
         $array = $pagos->getValues();
 
         if ( !empty($array) ) {
             $hoy = new \DateTime('now');
-
-            $hoyMes = $hoy->format('m');
-            $hoyAno = $hoy->format('Y');
             $hoyDia = $hoy->format('d');
 
-            usort($array, function($a, $b)
-            {
+            usort($array, function($a, $b) {
                 if (intval($a->getAno() . $a->getMes())  == intval($b->getAno() . $b->getMes()))
                     return (0);
                 return ((intval($a->getAno() . $a->getMes()) < intval($b->getAno() . $b->getMes()) ? -1 : 1));
             });
 
             $ultima = end($array);
-
             $ultimoMesPago = $ultima->getMes();
             $ultimoAnoPago = $ultima->getAno();
 
-            if ($hoyMes[0] == 0) {
-                $hoyMes = $hoyMes[1];
+            $ultimoPagoDate = new \DateTime("$ultimoAnoPago-$ultimoMesPago-01");
+
+            $interval = $hoy->diff($ultimoPagoDate);
+
+            if ($interval->format('%m') > 1) {
+                return true;
             }
 
-            if (intval($ultimoAnoPago . $ultimoMesPago) >= intval($hoyAno . ($hoyMes))) {
-                $return = false;
+            if ($interval->format('%m') == 1 && $hoyDia > 20) {
+                return true;
             }
 
-            if ($hoyDia < 21) $return = false;
-
+            return false;
         }
 
-        return $return;
+        return true;
 
     }
 }
