@@ -511,4 +511,22 @@ class Alumno
         return true;
 
     }
+
+    public function getUltimoPago(): ?AlumnosPagos
+    {
+        $pagos = $this->getPagos();
+        
+        if ($pagos->isEmpty()) {
+            return null; // Si no hay pagos, retorna null
+        }
+
+        // Ordenar pagos por fecha descendente para obtener el último
+        $pagosArray = $pagos->getValues();
+        
+        usort($pagosArray, function (AlumnosPagos $a, AlumnosPagos $b) {
+            return $b->getFecha() <=> $a->getFecha(); // Orden descendente
+        });
+
+        return $pagosArray[0]; // Retorna el primer elemento (último pago por fecha)
+    }
 }

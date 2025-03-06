@@ -10,6 +10,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Knp\Component\Pager\PaginatorInterface;
 
 /**
  * @Route("/admin/alumno")
@@ -19,11 +20,10 @@ class AlumnoController extends AbstractController
     /**
      * @Route("/", name="app_alumno_index", methods={"GET", "POST"})
      */
-    public function index(Request $request, AlumnoRepository $alumnoRepository, CursoRepository $cursoRepository): Response
+    public function index(Request $request, AlumnoRepository $alumnoRepository, CursoRepository $cursoRepository, PaginatorInterface $paginator): Response
     {
         $limit = $request->get('limit', 20);
-        $currentPage = $request->get('currentPage', 0);
-        $offset = $currentPage == 0 ? 0 : (($currentPage * $limit) + 1);
+        $currentPage = $request->get('page', 1);
         $busqueda = $request->get('busqueda', '');
         $activo = $request->get('activo', 'todos');
         $cursoSelected = $request->get('cursoSelected', '0');
@@ -34,18 +34,18 @@ class AlumnoController extends AbstractController
             $limit = 10000000000000000;
         }
 
-        $alumnos = $alumnoRepository->findByApellido($busqueda, $limit, $offset, $activo, $cursoSelected);
-        $total = $alumnoRepository->countAlumnos($busqueda, $activo, $cursoSelected);
-        $total = !empty($total[1]) ? $total[1] : 0;
+        $alumnos = $alumnoRepository->getAlumnoByNombreEstadoYcursoQuery($busqueda, $activo, $cursoSelected);
 
-        $numeroDePaginas = intval(ceil($total / $limit));
+        $alumnosPagination = $paginator->paginate(
+            $alumnos, 
+            $currentPage, 
+            $limit
+        );
 
         return $this->render('alumno/index.html.twig', [
-            'alumnos' => $alumnos,
+            'alumnos' => $alumnosPagination,
             'busqueda' => $busqueda,
-            'numeroDePaginas' => $numeroDePaginas,
-            'currentPage' => $currentPage,
-            'total' => $total,
+            'total' => $alumnosPagination->getTotalItemCount(),
             'activo' => $activo,
             'totalAgregados' => $totalAgregados,
             'alumnosQueNoGuardadamos' => $alumnosQueNoGuardadamos,

@@ -126,7 +126,13 @@ class ProfesorController extends AbstractController
                     $reemplazantes[$reemplazante->getApellido()]['precioHora'] = $reemplazante->getPrecioHora();
                 }
 
-                $asisArray[$falta->getProfesor()->getApellido()][$fecha] = $faltaArr;
+                foreach ( $asisArray[$falta->getProfesor()->getApellido()][$fecha] as $clave => $asistencias ) {
+                    foreach ( $faltaArr as $faltaIndividual ) {
+                        if ($asistencias['curso'] == $faltaIndividual['curso']) {
+                            $asisArray[$falta->getProfesor()->getApellido()][$fecha][$clave] = $faltaIndividual;
+                        }
+                    }
+                }
             }
         }
 

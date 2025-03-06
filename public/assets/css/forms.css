@@ -17,3 +17,33 @@
     padding: 0px 5px;
     margin: 0;
 }
+
+.form-horizontal .form-label {
+    margin-bottom: 0.5rem;
+}
+
+.form-horizontal .form-control {
+    margin-bottom: 1rem;
+}
+
+.form-check {
+    margin-bottom: 0.5rem;
+}
+.container.mt-4 {
+    padding-top: 40px;
+    padding-bottom: 40px;
+}
+
+.card.shadow-sm {
+    border-radius: 0.5rem;
+}
+
+.form-error {
+    font-size: 0.9rem;
+    margin-top: 0.2rem;
+}
+.form-label.required::after {
+    content: " *";
+    color: red;
+    margin-left: 0.25rem;
+}

@@ -37,15 +37,12 @@
                                     {% if asistencia[fechas] is defined %}
                                         {% if asistencia[fechas] | length > 0  %}
                                             {% for asis in asistencia[fechas] %}
-                                                {% if asis['falta'] is defined and asis['falta']%}
+                                                    {% if asis['falta'] is defined and asis['falta']%}
                                                         <i style="font-size: 25px; color: red"
                                                            class="bi bi-x"
                                                            data-toggle="tooltip"
                                                            title="{% if asis['remplazante'] is defined %} Fue reemplazado por {{ asis['remplazante'] }} {% else %} Sin Reemplazo  {% endif %} en {{ asis['curso'] }}"></i>
                                                         {% set totalFaltas = totalFaltas + asis['horas'] %}
-                                                        {% if asistencia[fechas] | length > 1  %}
-                                                            <br>
-                                                        {% endif %}
                                                     {% elseif asis["reemplazo"] is defined %}
                                                         <i style="font-size: 25px; color: green" class="bi bi-check" data-toggle="tooltip" title="{{ asis["reemplazo"]['reemplazoA'] }}"></i>
                                                         {% set totalHoras = totalHoras + asis['reemplazo']['horas'] %}

@@ -1,106 +1,124 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Dashboard index{% endblock %}
+{% block title %}Dashboard Index{% endblock %}
 
+{% block panelTitle %}
+    Estadísticas de Dream Ingles
+{% endblock %}
 
-    {% block panelTitle %}
-        Estadísticas de Dream Ingles
-    {% endblock %}
-    {% block body %}
-    <div class="mt-4">
-        <div class="mt-3 mb-1 row">
-            <div class="col-6">
-                <ul class="nav nav-tabs" id="myTab" role="tablist">
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button" role="tab" aria-controls="home" aria-selected="true">Deudas</button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="pagos-tab" data-bs-toggle="tab" data-bs-target="#pagos" type="button" role="tab" aria-controls="pagos" aria-selected="false">Últimos Pagos</button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="cursos-tab" data-bs-toggle="tab" data-bs-target="#cursos" type="button" role="tab" aria-controls="cursos" aria-selected="false">Cursos</button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="porcentajes-tab" data-bs-toggle="tab" data-bs-target="#porcentajes" type="button" role="tab" aria-controls="porcentajes" aria-selected="false">Porcentajes</button>
-                    </li>
-                </ul>
-            </div>
-            <div class="col-4 pt-1">
-                <form method="get" action="{{ path('dashboard_index') }}" id="buscar">
-                    <div class="input-group ">
-                        <input id="buscarAction" name="action" type="hidden" class="form-control" value="{{ action }}">
-                        <input name="busqueda" type="text" class="form-control" placeholder="Buscar por Nombre y Apellido" value="{{ busqueda }}" aria-label="Recipient's username" aria-describedby="button-addon2">
-                        <button class="btn btn-outline-secondary" type="submit" id="button-addon2"><i class="bi bi-search"></i></button>
-                    </div>
-                </form>
-            </div>
-            <div class="col-2">
-                <div class="input-group mb-3 pt-1">
-                    <a class="btn btn-success" id="todos">Todos</a>
-                </div>
-            </div>
+{% block body %}
+<div class="container-fluid mt-4">
+    <div class="row mb-3">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <ul class="nav nav-tabs flex-grow-1" id="myTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button" role="tab" aria-controls="home" aria-selected="true">
+                        <i class="bi bi-house-door"></i> Deudas
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="pagos-tab" data-bs-toggle="tab" data-bs-target="#pagos" type="button" role="tab" aria-controls="pagos" aria-selected="false">
+                        <i class="bi bi-cash"></i> Últimos Pagos
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="cursos-tab" data-bs-toggle="tab" data-bs-target="#cursos" type="button" role="tab" aria-controls="cursos" aria-selected="false">
+                        <i class="bi bi-book"></i> Cursos
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="porcentajes-tab" data-bs-toggle="tab" data-bs-target="#porcentajes" type="button" role="tab" aria-controls="porcentajes" aria-selected="false">
+                        <i class="bi bi-percent"></i> Porcentajes
+                    </button>
+                </li>
+            </ul>
+            <form method="get" action="{{ path('dashboard_index') }}" id="buscar" class="d-flex ms-2">
+                <input id="buscarAction" name="action" type="hidden" class="form-control" value="{{ action }}">
+                <input name="busqueda" type="text" class="form-control me-2" placeholder="Buscar" value="{{ busqueda }}" aria-label="Buscar">
+                <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i></button>
+            </form>
+            <a class="btn btn-success ms-2" id="todos">Todos</a>
         </div>
-        <div class="tab-content" id="myTabContent">
-            <div class="tab-pane fade collapse show active" id="home" role="tabpanel" aria-labelledby="home-tab">
-                <table class="table h-50 table-striped table-hover">
-                    <thead>
-                    <tr class="cabecera">
+    </div>
+
+    <div class="tab-content" id="myTabContent">
+        <!-- Deudas -->
+        <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="">
+                    <tr>
                         <th>Nombre y Apellido</th>
+                        <th>Última fecha de pago</th>
                         <th>Acciones</th>
                     </tr>
                     </thead>
                     <tbody>
-                    {% for deudor in deudores %}
-                        <tr>
-                            <td>{{ deudor.nombre }} {{ deudor.apellido }}</td>
-                            <td>
-                                <a class="btn btn-primary" href="{{ path('app_alumnos_pagos_index', {'alumno': deudor.id}) }}">Ver pagos</a>
-                                <a class="btn btn-secondary" href="{{ path('app_alumnos_pagos_new', {'alumno': deudor.id}) }}">Ingresar pago</a>
-                            </td>
-                        </tr>
-                    {% else %}
-                        <tr>
-                            <td colspan="3">no records found</td>
-                        </tr>
-                    {% endfor %}
+                        {% if totalDeudores > 0 %}
+                            <p class="mt-3">En total, {{ totalDeudores }} alumnos tienen deudas.</p>
+                        {% endif %}
+                    
+                        {% for deudor in deudores %}
+                            <tr>
+                                <td>{{ deudor.alumno.nombre }} {{ deudor.alumno.apellido }}</td>
+                                <td>{{ deudor.ultimo_pago }}</td>
+                                <td>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        <a class="btn btn-outline-primary btn-sm" href="{{ path('app_alumnos_pagos_index', {'alumno': deudor.alumno.id}) }}">Ver pagos</a>
+                                        <a class="btn btn-outline-secondary btn-sm" href="{{ path('app_alumnos_pagos_new', {'alumno': deudor.alumno.id}) }}">Ingresar pago</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="3" class="text-center">No se encontraron deudores.</td>
+                            </tr>
+                        {% endfor %}
                     </tbody>
                 </table>
             </div>
-            <div class="tab-pane fade collapse" id="pagos" role="tabpanel" aria-labelledby="pagos-tab">
-                <table class="table h-50">
-                    <thead>
+            <div class="pagination justify-content-center">
+                {{ knp_pagination_render(paginationAlumnos) }}
+            </div>
+        </div>
+
+        <!-- Últimos Pagos -->
+        <div class="tab-pane fade" id="pagos" role="tabpanel" aria-labelledby="pagos-tab">
+            <table class="table table-striped table-hover">
+                <thead class="">
                     <tr>
-                        <td colspan="3">
+                        <td colspan="5">
                             <form action="{{ path('dashboard_index', {'action': 'pagos'}) }}" >
-                            <div class="row">
-                                <div class="col">
-                                    <label for="filtroFechas">Desde/Hasta:</label>
-                                    <input class="form-control" type="text" id="filtroFechas" name="daterange"/>&nbsp;&nbsp;&nbsp;
+                                <div class="row g-3">
+                                    <div class="col">
+                                        <label for="filtroFechas">Desde/Hasta:</label>
+                                        <input class="form-control" type="text" id="filtroFechas" name="daterange"/>
+                                    </div>
+                                    <div class="col">
+                                        <label for="registros">Registros por página:</label>
+                                        <select class="form-control" id="registros">
+                                            <option {% if max == 10 %} selected {% endif %} value="10">10</option>
+                                            <option {% if max == 20 %} selected {% endif %} value="20">20</option>
+                                            <option {% if max == 50 %} selected {% endif %} value="50">50</option>
+                                            <option {% if max == 100 %} selected {% endif %} value="100">100</option>
+                                        </select>
+                                    </div>
                                 </div>
-                                <div class="col">
-                                    <label for="filtroFechas">Registros por página:</label>
-                                    <select class="form-control" id="registros" >
-                                        <option {% if max == 50 %} selected {% endif%} value="50">50</option>
-                                        <option {% if max == 100 %} selected {% endif%} value="100">100</option>
-                                        <option {% if max == '' %} selected {% endif%} value="">Todos</option>
-                                    </select>
-                                </div>
-                            </div>
                             </form>
                         </td>
                     </tr>
-                    <tr class="cabecera">
+                    <tr>
                         <th>Fecha</th>
                         <th>Monto</th>
                         <th>Mes</th>
                         <th>Año</th>
                         <th>Alumno</th>
                     </tr>
-                    </thead>
-                    <tbody>
+                </thead>
+                <tbody>
                     {% for alumnos_pago in alumnos_pagos %}
                         <tr>
-                            <td>{{ alumnos_pago.fecha ? alumnos_pago.fecha|date('Y-m-d') : '' }}</td>
+                            <td>{{ alumnos_pago.fecha ? alumnos_pago.fecha|date('d/m/Y') : '' }}</td>
                             <td>{{ alumnos_pago.monto }}</td>
                             <td>{{ alumnos_pago.mes }}</td>
                             <td>{{ alumnos_pago.ano }}</td>
@@ -108,78 +126,87 @@
                         </tr>
                     {% else %}
                         <tr>
-                            <td colspan="3">no records found</td>
+                            <td colspan="5" class="text-center">No records found</td>
                         </tr>
                     {% endfor %}
-                    </tbody>
-                </table>
+                </tbody>
+            </table>
+            <div class="pagination justify-content-center">
+                {{ knp_pagination_render(alumnos_pagos) }}
             </div>
-            <div class="tab-pane fade collapse" id="cursos" role="tabpanel" aria-labelledby="cursos-tab">
-                <table class="table h-50 table-striped table-hover">
-                    <thead>
-                        <tr class="cabecera">
+        </div>
+
+        <!-- Cursos -->
+        <div class="tab-pane fade" id="cursos" role="tabpanel" aria-labelledby="cursos-tab">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="">
+                        <tr>
                             <th>Nombre</th>
                             <th>Alumnos Activos</th>
                         </tr>
                     </thead>
                     <tbody>
-                    {% for curso in cursos %}
-                        <tr>
-                            <td>{{ curso.nombre }}</td>
-                            <td>
-                                <a href="{{ path('app_alumno_index', {'activo': 1}) }}&cursoSelected={{ curso.id }}">
-                                    {{ curso.alumnosActivos | length }}
-                                </a>
-                                {#<a class="btn btn-primary" href="{{ path('app_alumnos_pagos_index', {'alumno': deudor.id}) }}">Ingresar pago</a>
-                                <a class="btn btn-secondary" href="{{ path('app_alumnos_pagos_new', {'alumno': deudor.id}) }}">Ver pagos</a>#}
-                            </td>
-                        </tr>
-                    {% else %}
-                        <tr>
-                            <td colspan="3">no records found</td>
-                        </tr>
-                    {% endfor %}
+                        {% for curso in cursos %}
+                            <tr>
+                                <td>{{ curso.nombre }}</td>
+                                <td>
+                                    <a href="{{ path('app_alumno_index', {'activo': 1}) }}&cursoSelected={{ curso.id }}">
+                                        {{ curso.alumnosActivos | length }}
+                                    </a>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="2" class="text-center">No records found</td>
+                            </tr>
+                        {% endfor %}
                     </tbody>
                 </table>
-            </div>
-            <div class="tab-pane fade collapse" id="porcentajes" role="tabpanel" aria-labelledby="porcentajes-tab">
-                <div class="row">
-                    <div class="col-4">
-                        <canvas id="myChart" width="50%" height="50%"></canvas>
-                    </div>
-                    <div class="col-4">
-                        <canvas id="myChart2" width="50%" height="50%"></canvas>
-                    </div>
+                <div class="pagination justify-content-center">
+                    {{ knp_pagination_render(cursos) }}
                 </div>
-
             </div>
         </div>
 
+        <!-- Porcentajes -->
+        <div class="tab-pane fade" id="porcentajes" role="tabpanel" aria-labelledby="porcentajes-tab">
+            <div class="row">
+                <div class="col-6">
+                    <canvas id="myChart" width="100%" height="100%"></canvas>
+                </div>
+                <div class="col-6">
+                    <canvas id="myChart2" width="100%" height="100%"></canvas>
+                </div>
+            </div>
+        </div>
     </div>
-    {% endblock %}
+</div>
+{% endblock %}
 
 {% block javascripts %}
     {{ parent() }}
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script>
-        $(document).ready(function(){
+        $(document).ready(function() {
 
+            // Manejo del formulario de búsqueda
             let form = document.getElementById('buscar');
             form.addEventListener("submit", (e) => {
                 e.preventDefault();
-                let action = $(".nav-tabs").find('.active').attr('aria-controls')
+                let action = $(".nav-tabs").find('.active').attr('aria-controls');
                 $('#buscarAction').val(action);
                 e.currentTarget.submit();
             });
 
-
+            // Acción para mostrar todos los resultados
             $("#todos").click(() => {
-                let action = $(".nav-tabs").find('.active').attr('aria-controls')
-                location.href="{{ path('dashboard_index', {'busqueda': ''}) }}" + "&action=" + action;
-
+                let action = $(".nav-tabs").find('.active').attr('aria-controls');
+                location.href = "{{ path('dashboard_index', {'busqueda': ''}) }}" + "&action=" + action;
             });
 
-            const ctx = document.getElementById('myChart');
+            // Inicialización de gráficos
+            const ctx = document.getElementById('myChart').getContext('2d');
             const myChart = new Chart(ctx, {
                 type: 'pie',
                 data: {
@@ -196,24 +223,24 @@
                             'rgba(75, 192, 192, 1)',
                         ],
                         borderWidth: 1
-                    }],
-                    options: {
-                        plugins: {
-                            legend: {
-                                position: 'right',
-                            }
+                    }]
+                },
+                options: {
+                    plugins: {
+                        legend: {
+                            position: 'right',
                         }
                     }
-
-                },
+                }
             });
 
-            const ctx2 = document.getElementById('myChart2');
+            const ctx2 = document.getElementById('myChart2').getContext('2d');
             const myChart2 = new Chart(ctx2, {
                 type: 'bar',
                 data: {
+                    labels: ['Alumnos'],
                     datasets: [{
-                        label: ['Activos'],
+                        label: 'Activos',
                         data: [{{ activos }}],
                         backgroundColor: [
                             'rgba(75, 192, 192, 0.2)',
@@ -223,7 +250,7 @@
                         ],
                         borderWidth: 1
                     }, {
-                        label: ['Inactivo'],
+                        label: 'Inactivo',
                         data: [{{ inactivos }}],
                         backgroundColor: [
                             'rgba(255, 99, 132, 0.2)',
@@ -232,30 +259,44 @@
                             'rgb(255, 99, 132)',
                         ],
                         borderWidth: 1
-                    }],
-                    labels: ['Alumnos']
-                },
+                    }]
+                }
             });
 
-            $('#{{ action }}-tab').click()
-
+            // Manejo de cambio en el número de registros
             $('#registros').change( () => {
-                let action = $(".nav-tabs").find('.active').attr('aria-controls')
-                location.href = "{{ path('dashboard_index') }}?desde={{ desde }}" + "&hasta={{ hasta }}" + "&busqueda={{ busqueda }}" + "&action="+action+"&registros="+$('#registros').val();
-            } );
+                let action = $(".nav-tabs").find('.active').attr('aria-controls');
+                location.href = "{{ path('dashboard_index') }}?desde={{ desde }}" + "&hasta={{ hasta }}" + "&busqueda={{ busqueda }}" + "&action=" + action + "&registros=" + $('#registros').val();
+            });
 
+            // Configuración de daterangepicker
             $('input[name="daterange"]').daterangepicker({
                 startDate: '{{ desde }}',
                 endDate: '{{ hasta }}',
                 locale: {
-                    format: 'YYYY/MM/DD'
+                    format: 'DD/MM/YYYY'
                 }
             }, function(start, end, label) {
-                let action = $(".nav-tabs").find('.active').attr('aria-controls')
-                location.href = "{{ path('dashboard_index') }}?desde=" + start.format('YYYY/MM/DD') + "&hasta=" + end.format('YYYY/MM/DD') + "&busqueda={{ busqueda }}" + "&action="+action+"&registros="+$('#registros').val();
-               });
-        })
+                let action = $(".nav-tabs").find('.active').attr('aria-controls');
+                location.href = "{{ path('dashboard_index') }}?desde=" + start.format('YYYY/MM/DD') + "&hasta=" + end.format('YYYY/MM/DD') + "&busqueda={{ busqueda }}" + "&action=" + action + "&registros=" + $('#registros').val();
+            });
 
+            // Recargar la tab activa al cargar la página
+            $('#{{ action }}-tab').click();
+
+            // Al cambiar de pestaña, limpiar URL para evitar errores de paginación
+            $('#myTab button[data-bs-toggle="tab"]').on('shown.bs.tab', function (e) {
+                let newTabAction = $(e.target).attr('aria-controls'); // Get newly activated tab
+                if(newTabAction != 'pagos') {
+                    const url = new URL(window.location);
+                    url.searchParams.set('action', newTabAction);
+                    url.searchParams.delete('page');
+                    url.searchParams.delete('desde');
+                    url.searchParams.delete('hasta');
+                    url.searchParams.delete('registros');
+                    history.replaceState(null, '', url);
+                }
+            });
+        });
     </script>
 {% endblock %}
-

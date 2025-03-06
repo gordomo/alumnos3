@@ -23,30 +23,30 @@ class AlumnoType extends AbstractType
     {
         $this->alumno = $options['data'];
         $builder
-            ->add('telefono_fijo', TextType::class, ['attr' => ['class' => 'form-control']])
+            ->add('telefono_fijo', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false,])
             ->add('nombre', TextType::class, ['attr' => ['class' => 'form-control']])
             ->add('apellido', TextType::class, ['attr' => ['class' => 'form-control']])
-            ->add('f_nac', DateType::class, ['widget' => 'single_text', 'html5' => true, 'attr' => ['class' => 'form-control']])
+            ->add('f_nac', DateType::class, ['widget' => 'single_text', 'html5' => true, 'attr' => ['class' => 'form-control'], 'required' => false,])
             ->add('email', EmailType::class, ['attr' => ['class' => 'form-control']])
-            ->add('l_nac', TextType::class, ['attr' => ['class' => 'form-control']])
+            ->add('l_nac', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false,])
             ->add('dni', TextType::class, ['attr' => ['class' => 'form-control']])
-            ->add('celular', TextType::class, ['attr' => ['class' => 'form-control']])
-            ->add('contacto_emergencia', TextType::class, ['attr' => ['class' => 'form-control']])
-            ->add('n_tutor', TextType::class, ['attr' => ['class' => 'form-control']])
-            ->add('t_tutor', TextType::class, ['attr' => ['class' => 'form-control']])
-            ->add('corre_tutor', EmailType::class, ['attr' => ['class' => 'form-control']])
-            ->add('dni_tutor', TextType::class, ['attr' => ['class' => 'form-control']])
-            ->add('escuela', TextType::class, ['attr' => ['class' => 'form-control']])
-            ->add('extras', TextType::class, ['attr' => ['class' => 'form-control']])
-            ->add('g_sanguineo', TextType::class, ['attr' => ['class' => 'form-control']])
-            ->add('enfermedad', TextType::class, ['attr' => ['class' => 'form-control']])
-            ->add('alergico', TextType::class, ['attr' => ['class' => 'form-control']])
+            ->add('celular', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false])
+            ->add('contacto_emergencia', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false])
+            ->add('n_tutor', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false])
+            ->add('t_tutor', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false])
+            ->add('corre_tutor', EmailType::class, ['attr' => ['class' => 'form-control'], 'required' => false])
+            ->add('dni_tutor', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false])
+            ->add('escuela', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false])
+            ->add('extras', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false])
+            ->add('g_sanguineo', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false])
+            ->add('enfermedad', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false])
+            ->add('alergico', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false])
             ->add('activo', ChoiceType::class, ['attr' => ['class' => 'form-control'], 'choices'  => [
                 'Si' => 1,
                 'No' => 0,
                 ]
             ])
-            ->add('medicacion', TextType::class, ['attr' => ['class' => 'form-control']])
+            ->add('medicacion', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false])
             ->add('curso', EntityType::class, [
                 'class' => Curso::class,
                 'choice_label' => 'nombre',
@@ -56,7 +56,7 @@ class AlumnoType extends AbstractType
                 },
                 'multiple' => true,
                 'expanded' => false,
-                'required' => false,
+                'required' => true,
                 'label' => 'Cursos',
                 'attr' => ['class' => 'form-control predictivo']
             ])
@@ -77,7 +77,7 @@ class AlumnoType extends AbstractType
                 'label' => 'Hermanos',
                 'attr' => ['class' => 'form-control predictivo']
             ])
-            ->add('como_conociste', ChoiceType::class, ['attr' => ['class' => 'form-control'], 'choices' => [
+            ->add('como_conociste', ChoiceType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'choices' => [
                 "Por Familia" => "Familia",
                 "Por Amigos" => "Amigos",
                 "Por Facebook" => "Facebook",

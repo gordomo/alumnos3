@@ -1,75 +1,67 @@
+{# templates/profesor/_form.html.twig #}
+
 {{ form_start(form) }}
 <div class="form-group">
     <div class="row g-3">
         <div class="col-md-4">
             {{ form_label(form.nombre, 'Nombre') }}
-            {{ form_widget(form.nombre) }}
+            {{ form_widget(form.nombre, {'attr': {'class': 'form-control'}}) }}
             <small class="form-error">
                 {{ form_errors(form.nombre) }}
             </small>
         </div>
         <div class="col-md-4">
             {{ form_label(form.apellido, 'Apellido') }}
-            {{ form_widget(form.apellido) }}
+            {{ form_widget(form.apellido, {'attr': {'class': 'form-control'}}) }}
             <small class="form-error">
                 {{ form_errors(form.apellido) }}
             </small>
         </div>
         <div class="col-md-4">
             {{ form_label(form.tel, 'Teléfono') }}
-            {{ form_widget(form.tel) }}
+            {{ form_widget(form.tel, {'attr': {'class': 'form-control'}}) }}
             <small class="form-error">
                 {{ form_errors(form.tel) }}
             </small>
         </div>
         <div class="col-md-4">
             {{ form_label(form.dni, 'DNI') }}
-            {{ form_widget(form.dni) }}
+            {{ form_widget(form.dni, {'attr': {'class': 'form-control'}}) }}
             <small class="form-error">
                 {{ form_errors(form.dni) }}
             </small>
         </div>
         <div class="col-md-4">
             {{ form_label(form.email, 'Email') }}
-            {{ form_widget(form.email) }}
+            {{ form_widget(form.email, {'attr': {'class': 'form-control'}}) }}
             <small class="form-error">
                 {{ form_errors(form.email) }}
             </small>
         </div>
         <div class="col-md-4">
             {{ form_label(form.precioHora, 'Precio/Hora') }}
-            {{ form_widget(form.precioHora) }}
+            {{ form_widget(form.precioHora, {'attr': {'class': 'form-control'}}) }}
             <small class="form-error">
                 {{ form_errors(form.precioHora) }}
             </small>
         </div>
         <div class="col-md-4">
             {{ form_label(form.viatico, 'Viaticos') }}
-            {{ form_widget(form.viatico) }}
+            {{ form_widget(form.viatico, {'attr': {'class': 'form-control'}}) }}
             <small class="form-error">
                 {{ form_errors(form.viatico) }}
             </small>
         </div>
     </div>
     <div class="row g-3">
-            {#{{ form_label(form.curso, 'Cursos') }} &nbsp;&nbsp;&nbsp;<small class="form-error">{% if error_curso is defined %}{{ error_curso }} {% endif %}</small>
-            {{ form_widget(form.curso) }}
+        <div class="col-md-12">
+            {{ form_label(form.curso, 'Cursos') }}
+            {{ form_widget(form.curso, {'attr': {'class': 'form-control chosen-select', 'data-placeholder': 'Seleccione los cursos...'}}) }}
+            <small class="form-error">{% if error_curso is defined %}{{ error_curso }} {% endif %}</small>
             <small class="form-error">
                 {{ form_errors(form.curso) }}
-            </small>#}
-            <div class="col-sm-8">
-                {% for child in form.curso.children %}
-                    <div class="group-15">
-                        <div class="custom-control custom-checkbox custom-checkbox-primary">
-                           {{ form_widget(child, {'attr': {'class': 'custom-control-input'}}) }}
-                           <label class="custom-control-label" for="{{ child.vars.id }}" >{{ child.vars.label }}</label>
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
-            <div class="col-sm-4">
-                <small class="form-error">{% if error_curso is defined %}{{ error_curso }} {% endif %}</small>
-            </div>
+            </small>
+        </div>
     </div>
     <div class="row g-3">
         <div class="col-md-12" style="text-align: right;">
@@ -78,3 +70,12 @@
     </div>
 </div>
 {{ form_end(form) }}
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        $(".chosen-select").chosen({
+            width: "100%",
+            no_results_text: "No se encontraron coincidencias"
+        });
+    });
+</script>

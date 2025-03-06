@@ -3,22 +3,21 @@
 {% block title %}Nuevo Alumno{% endblock %}
 
 {% block body %}
-    <div class="editForms">
-        <h1>Nuevo Alumno</h1>
-        <div class="row">
-            {{ include('alumno/_form.html.twig', {'button_label': 'Guardar'}) }}
-        </div>
-        <br><br>
-        <div class="row botones">
-            <div class="col-md-12">
-                <a class="btn btn-primary" href="{{ path('app_alumno_index') }}">Volver</a>
+<div class="container mt-4 d-flex justify-content-center">
+    <div class="col-lg-12">
+        <h1 class="mb-4 text-center">Nuevo Alumno</h1>
+        <div class="card shadow-sm">
+            <div class="card-body">
+                {{ include('alumno/_form.html.twig', {'button_label': 'Guardar'}) }}
             </div>
         </div>
     </div>
+</div>
 {% endblock %}
+
 {% block javascripts %}
     {{ parent() }}
     <script>
-        $('.predictivo').chosen()
+        $('.predictivo').chosen();
     </script>
 {% endblock %}

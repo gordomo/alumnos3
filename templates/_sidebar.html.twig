@@ -30,5 +30,37 @@
             <i class="bi bi-arrow-bar-left"></i> Salir
         </a>
     </div>
+    <button class="mt-2 border-1 w-100" id="menu-toggle">
+        <i class="bi bi-arrow-left" id="arrow-icon"></i>
+    </button>
 </div>
+{% block javascripts %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var menuToggle = document.getElementById('menu-toggle');
+            var wrapper = document.getElementById('wrapper');
+            if (menuToggle != undefined) {
+                menuToggle.addEventListener('click', function () {
+                    wrapper.classList.toggle('toggled');
+                    var toggle = document.getElementById('menu-toggle');
+                    var arrowIcon = document.getElementById('arrow-icon');
+                    if ( toggle.style.position != 'absolute' ) {
+                            toggle.style.position = 'absolute';
+                            toggle.style.left = '0px';
+                            toggle.classList.remove('w-100');
+                            arrowIcon.classList.add('bi-arrow-right');
+                            arrowIcon.classList.remove('bi-arrow-left');   
+                    } else {
+                        toggle.style.position = '';
+                        toggle.style.left = '';
+                        toggle.classList.add('w-100');
+                        arrowIcon.classList.remove('bi-arrow-right');
+                        arrowIcon.classList.add('bi-arrow-left');
+                        
+                    }
+                });
+            }
+        });
+    </script>
+{% endblock %}
 <!-- /#sidebar-wrapper -->

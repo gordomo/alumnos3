@@ -107,6 +107,30 @@ class AlumnoRepository extends ServiceEntityRepository
         return $query->orderBy('p.apellido', 'ASC')->getQuery()->getResult();
     }
 
+    public function getAlumnoByNombreEstadoYcursoQuery($value, $activo = null, $cursoSelected = 0)
+    {
+        $query =  $this->createQueryBuilder('p');
+        if ($value) {
+            $valores = explode(' ', $value);
+            foreach ($valores as $value) {
+                $query->orWhere('p.apellido like :val')->setParameter('val', '%'.$value.'%');
+                $query->orWhere('p.nombre like :val')->setParameter('val', '%'.$value.'%');
+            }
+        }
+        if ($activo !== 'todos') {
+            $query->andWhere('p.activo = :activo')->setParameter('activo', $activo);
+        }
+        if ($cursoSelected != 0) {
+            $query->join('p.curso',
+                'curso',
+                \Doctrine\ORM\Query\Expr\Join::WITH,
+                'curso = :cursoSelected')
+                ->setParameter('cursoSelected', $cursoSelected);
+        }
+
+        return $query->orderBy('p.apellido', 'ASC')->getQuery();
+    }
+
     public function getIdByApellido($value)
     {
         $query =  $this->createQueryBuilder('p');

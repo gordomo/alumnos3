@@ -1,197 +1,44 @@
-{{ form_start(form) }}
+{{ form_start(form, {'attr': {'class': 'form-horizontal'}}) }}
 <div class="form-group">
-    <div class="row g-3">
-        <div class="col-md-3">
-            {{ form_label(form.nombre, 'Nombre') }}
-            {{ form_widget(form.nombre) }}
-            <small class="form-error">
-                {{ form_errors(form.nombre) }}
-            </small>
-        </div>
-        <div class="col-md-3">
-            {{ form_label(form.apellido, 'Apellido') }}
-            {{ form_widget(form.apellido) }}
-            <small class="form-error">
-                {{ form_errors(form.apellido) }}
-            </small>
-        </div>
-        <div class="col-md-3">
-            {{ form_label(form.f_nac, 'Fecha de Nacimiento') }}
-            {{ form_widget(form.f_nac) }}
-            <small class="form-error">
-                {{ form_errors(form.f_nac) }}
-            </small>
-        </div>
-        <div class="col-md-3">
-            {{ form_label(form.l_nac, 'Lugar de Nacimiento') }}
-            {{ form_widget(form.l_nac) }}
-            <small class="form-error">
-                {{ form_errors(form.l_nac) }}
-            </small>
-        </div>
+    <div class="row g-3 mb-3">
+        {% for field in [
+            {form: form.nombre, label: 'Nombre'},
+            {form: form.apellido, label: 'Apellido'},
+            {form: form.f_nac, label: 'Fecha de Nacimiento'},
+            {form: form.l_nac, label: 'Lugar de Nacimiento'},
+            {form: form.telefono_fijo, label: 'Teléfono fijo'},
+            {form: form.email, label: 'Email'},
+            {form: form.dni, label: 'DNI'},
+            {form: form.celular, label: 'Celular'},
+            {form: form.n_tutor, label: 'Nombre Tutor'},
+            {form: form.t_tutor, label: 'Teléfono Tutor'},
+            {form: form.contacto_emergencia, label: 'Contacto de Emergencia'},
+            {form: form.corre_tutor, label: 'Email Tutor'},
+            {form: form.dni_tutor, label: 'DNI Tutor'},
+            {form: form.escuela, label: 'Escuela'},
+            {form: form.extras, label: 'Extras'},
+            {form: form.g_sanguineo, label: 'Grupo Sanguineo'},
+            {form: form.enfermedad, label: 'Enfermedad'},
+            {form: form.alergico, label: 'Alergico'},
+            {form: form.medicacion, label: 'Medicacion'},
+            {form: form.como_conociste, label: 'Como nos Conociste'},
+            {form: form.activo, label: 'Activo'},
+            {form: form.hermanos, label: 'Hermanos'},
+            {form: form.curso, label: 'Curso'}
+        ] %}
+            <div class="col-md-4">
+                {{ form_label(field.form, field.label, {'label_attr': {'class': 'form-label'}}) }}
+                {{ form_widget(field.form, {'attr': {'class': 'form-control'}}) }}
+                <small class="form-error text-danger">
+                    {{ form_errors(field.form) }}
+                </small>
+            </div>
+        {% endfor %}
     </div>
-</div>
-<div class="form-group">
-    <div class="row g-3">
-        <div class="col-md-3">
-            {{ form_label(form.telefono_fijo, 'Teléfono fijo') }}
-            {{ form_widget(form.telefono_fijo) }}
-            <small class="form-error">
-                {{ form_errors(form.telefono_fijo) }}
-            </small>
-        </div>
-        <div class="col-md-3">
-            {{ form_label(form.email, 'Email') }}
-            {{ form_widget(form.email) }}
-            <small class="form-error">
-                {{ form_errors(form.email) }}
-            </small>
-        </div>
-        <div class="col-md-3">
-            {{ form_label(form.dni, 'DNI') }}
-            {{ form_widget(form.dni) }}
-            <small class="form-error">
-                {{ form_errors(form.dni) }}
-            </small>
-        </div>
-        <div class="col-md-3">
-            {{ form_label(form.celular, 'Celular') }}
-            {{ form_widget(form.celular) }}
-            <small class="form-error">
-                {{ form_errors(form.celular) }}
-            </small>
-        </div>
-    </div>
-</div>
-<div class="form-group">
-    <div class="row g-3">
-        <div class="col-md-3">
-            {{ form_label(form.n_tutor, 'Nombre Tutor') }}
-            {{ form_widget(form.n_tutor) }}
-            <small class="form-error">
-                {{ form_errors(form.n_tutor) }}
-            </small>
-        </div>
-        <div class="col-md-3">
-            {{ form_label(form.t_tutor, 'Teléfono Tutor') }}
-            {{ form_widget(form.t_tutor) }}
-            <small class="form-error">
-                {{ form_errors(form.t_tutor) }}
-            </small>
-        </div>
-        <div class="col-md-3">
-            {{ form_label(form.contacto_emergencia, 'Contacto de Emergencia') }}
-            {{ form_widget(form.contacto_emergencia) }}
-            <small class="form-error">
-                {{ form_errors(form.contacto_emergencia) }}
-            </small>
-        </div>
-        <div class="col-md-3">
-            {{ form_label(form.corre_tutor, 'Email Tutor') }}
-            {{ form_widget(form.corre_tutor) }}
-            <small class="form-error">
-                {{ form_errors(form.corre_tutor) }}
-            </small>
-        </div>
-    </div>
-</div>
-<div class="form-group">
-    <div class="row g-3">
-        <div class="col-md-3">
-            {{ form_label(form.dni_tutor, 'DNI Tutor') }}
-            {{ form_widget(form.dni_tutor) }}
-            <small class="form-error">
-                {{ form_errors(form.dni_tutor) }}
-            </small>
-        </div>
-        <div class="col-md-3">
-            {{ form_label(form.escuela, 'Escuela') }}
-            {{ form_widget(form.escuela) }}
-            <small class="form-error">
-                {{ form_errors(form.escuela) }}
-            </small>
-        </div>
-        <div class="col-md-3">
-            {{ form_label(form.extras, 'Extras') }}
-            {{ form_widget(form.extras) }}
-            <small class="form-error">
-                {{ form_errors(form.extras) }}
-            </small>
-        </div>
-        <div class="col-md-3">
-            {{ form_label(form.g_sanguineo, 'Grupo Sanguineo') }}
-            {{ form_widget(form.g_sanguineo) }}
-            <small class="form-error">
-                {{ form_errors(form.g_sanguineo) }}
-            </small>
-        </div>
-    </div>
-</div>
-<div class="form-group">
-    <div class="row g-3">
-        <div class="col-md-3">
-            {{ form_label(form.enfermedad, 'Enfermedad') }}
-            {{ form_widget(form.enfermedad) }}
-            <small class="form-error">
-                {{ form_errors(form.enfermedad) }}
-            </small>
-        </div>
-        <div class="col-md-3">
-            {{ form_label(form.alergico, 'Alergico') }}
-            {{ form_widget(form.alergico) }}
-            <small class="form-error">
-                {{ form_errors(form.alergico) }}
-            </small>
-        </div>
-        <div class="col-md-3">
-            {{ form_label(form.medicacion, 'Medicacion') }}
-            {{ form_widget(form.medicacion) }}
-            <small class="form-error">
-                {{ form_errors(form.medicacion) }}
-            </small>
-        </div>
-        <div class="col-md-3">
-            {{ form_label(form.como_conociste, 'Como nos Conociste') }}
-            {{ form_widget(form.como_conociste) }}
-            <small class="form-error">
-                {{ form_errors(form.como_conociste) }}
-            </small>
-        </div>
-    </div>
-</div>
-<div class="form-group">
-    <div class="row g-3">
-        <div class="col-md-6">
-            {{ form_label(form.curso, 'Curso') }}
-            {{ form_widget(form.curso) }}
-            <small class="form-error">
-                {{ form_errors(form.curso) }}
-            </small>
-        </div>
-        <div class="col-md-6">
-            {{ form_label(form.hermanos, 'Hermanos') }}
-            {{ form_widget(form.hermanos) }}
-            <small class="form-error">
-                {{ form_errors(form.hermanos) }}
-            </small>
-        </div>
-    </div>
-</div>
-<div class="form-group">
-    <div class="row g-3">
-        <div class="col-md-3">
-            {{ form_label(form.activo, 'Activo') }}
-            {{ form_widget(form.activo) }}
-            <small class="form-error">
-                {{ form_errors(form.activo) }}
-            </small>
-        </div>
-    </div>
-</div>
-<div class="form-group">
-    <div class="row g-3">
-        <div class="col-md-12" style="text-align: right;">
-            <button class="btn btn-success">{{ button_label|default('Save') }}</button>
+    <div class="row mb-3">
+        <div class="col text-end">
+            <a class="btn btn-secondary" href="{{ path('app_alumno_index') }}">Volver</a>
+            <button class="btn btn-success">{{ button_label|default('Guardar') }}</button>
         </div>
     </div>
 </div>
