@@ -69,10 +69,12 @@
                                                     </li>
                                                 {% endif %}
                                             {% endfor %}
-                                            <li><hr class="dropdown-divider"></li>
-                                            <li >
-                                                <a href="{{ path('falta_profe', {'id': profe.id, 'remplazo': -1, 'fecha': fecha, 'curso': curso.id}) }}" class="dropdown-item">Limpiar falta</a>
-                                            </li>
+                                            {% if btnClass == 'btn-danger' %}
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li >
+                                                    <a href="{{ path('falta_profe', {'id': profe.id, 'remplazo': -1, 'fecha': fecha, 'curso': curso.id}) }}" class="dropdown-item">Limpiar falta</a>
+                                                </li>
+                                            {% endif %}
                                         </ul>
                                     </div>
                                     <br>

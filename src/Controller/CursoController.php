@@ -21,9 +21,15 @@ class CursoController extends AbstractController
      */
     public function index(CursoRepository $cursoRepository): Response
     {
+        // Obtener el instituto del usuario actual
+        $instituto = $this->getUser()->getInstituto();
+        $cursos = $cursoRepository->findBy(['disabled' => false, 'instituto' => $instituto]);
+        $cursosDesabilitados = $cursoRepository->findBy(['disabled' => true, 'instituto' => $instituto]);
         return $this->render('curso/index.html.twig', [
-            'cursos' => $cursoRepository->findBy(['disabled' => false]),
-            'cursosDesabilitados' => $cursoRepository->findBy(['disabled' => true]),
+            'cursos' => $cursos,
+            'totalCursos' => count($cursos),
+            'cursosDesabilitados' => $cursosDesabilitados,
+            'totalCursosDesabilitados' => count($cursosDesabilitados),
         ]);
     }
 
@@ -32,7 +38,10 @@ class CursoController extends AbstractController
      */
     public function new(Request $request, CursoRepository $cursoRepository): Response
     {
+        // Obtener el instituto del usuario actual
+        $instituto = $this->getUser()->getInstituto();
         $curso = new Curso();
+        $curso->setInstituto($instituto);
         $form = $this->createForm(CursoType::class, $curso, ['allow_extra_fields' =>true]);
         $form->handleRequest($request);
 
@@ -52,6 +61,12 @@ class CursoController extends AbstractController
      */
     public function show(Curso $curso): Response
     {
+        // Obtener el instituto del usuario actual
+        $instituto = $this->getUser()->getInstituto();
+        if ($curso->getInstituto() !== $instituto) {
+            $this->addFlash('danger', 'El curso no pertenece al instituto del usuario.');
+            return $this->redirectToRoute('app_curso_index');
+        }
         return $this->render('curso/show.html.twig', [
             'curso' => $curso,
         ]);
@@ -62,7 +77,13 @@ class CursoController extends AbstractController
      */
     public function edit(Request $request, Curso $curso, CursoRepository $cursoRepository): Response
     {
-        $form = $this->createForm(CursoType::class, $curso, ['allow_extra_fields' =>true]);
+        // Obtener el instituto del usuario actual
+        $instituto = $this->getUser()->getInstituto();
+        if ($curso->getInstituto() !== $instituto) {
+            $this->addFlash('danger', 'El curso no pertenece al instituto del usuario.');
+            return $this->redirectToRoute('app_curso_index');
+        }
+        $form = $this->createForm(CursoType::class, $curso, ['allow_extra_fields' =>true, 'is_edit' => true]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
@@ -81,6 +102,12 @@ class CursoController extends AbstractController
      */
     public function delete(Request $request, Curso $curso, CursoRepository $cursoRepository): Response
     {
+        // Obtener el instituto del usuario actual
+        $instituto = $this->getUser()->getInstituto();
+        if ($curso->getInstituto() !== $instituto) {
+            $this->addFlash('danger', 'El curso no pertenece al instituto del usuario.');
+            return $this->redirectToRoute('app_curso_index');
+        }
         if ($this->isCsrfTokenValid('delete'.$curso->getId(), $request->request->get('_token'))) {
             $cursoRepository->remove($curso);
         }
@@ -93,6 +120,12 @@ class CursoController extends AbstractController
      */
     public function habilitar(Request $request, Curso $curso, CursoRepository $cursoRepository): Response
     {
+        // Obtener el instituto del usuario actual
+        $instituto = $this->getUser()->getInstituto();
+        if ($curso->getInstituto() !== $instituto) {
+            $this->addFlash('danger', 'El curso no pertenece al instituto del usuario.');
+            return $this->redirectToRoute('app_curso_index');
+        }
         $cursoRepository->habilitar($curso);
 
         return $this->redirectToRoute('app_curso_index', [], Response::HTTP_SEE_OTHER);

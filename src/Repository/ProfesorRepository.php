@@ -59,19 +59,15 @@ class ProfesorRepository extends ServiceEntityRepository
     }
 
 
-    public function findByApellido($value, $limit, $offset)
+    public function findByApellido($value = null, $instituto)
     {
         $query =  $this->createQueryBuilder('p');
+        $query->where('p.instituto = :instituto')->setParameter('instituto', $instituto);
         if ($value) {
-            $query->andWhere('p.apellido like :val')->setParameter('val', '%'.$value.'%');
-        }
-        if ($limit) {
-            $query->setMaxResults($limit);
-        }
-        if ($offset) {
-            $query->setFirstResult($offset);
+            $query->andWhere('p.apellido like :val');
+            $query->orWhere('p.nombre like :val')->setParameter('val', '%'.$value.'%');
         }
 
-        return $query->orderBy('p.apellido', 'ASC')->getQuery()->getResult();
+        return $query->orderBy('p.apellido', 'ASC')->getQuery();
     }
 }

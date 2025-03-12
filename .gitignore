@@ -8,4 +8,6 @@
 /public/bundles/
 /var/
 /vendor/
+/public/uploads/
+docker-compose.yml
 ###< symfony/framework-bundle ###

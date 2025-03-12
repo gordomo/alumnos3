@@ -74,15 +74,26 @@ class AlumnosPagosRepository extends ServiceEntityRepository
         ;
     }
 
-    public function findPagosAtiempo()
+    public function findPagosAtiempo($instituto)
     {
         $query = $this->createQueryBuilder('a');
-        return $query->where('DAY(a.fecha) < 21')->getQuery()->getResult();
+        $query->where('DAY(a.fecha) < 21');
+        $query->join('a.alumno', 'p')
+            ->andWhere('p.instituto = :instituto')  
+            ->setParameter('instituto', $instituto);
+
+        return $query->getQuery()->getResult();
     }
-    public function findPagosFueraDeTiempo()
+
+    public function findPagosFueraDeTiempo($instituto)
     {
         $query = $this->createQueryBuilder('a');
-        return $query->where('DAY(a.fecha) >= 21')->getQuery()->getResult();
+        $query->where('DAY(a.fecha) >= 21');
+        $query->join('a.alumno', 'p')
+            ->andWhere('p.instituto = :instituto')  
+            ->setParameter('instituto', $instituto);
+
+        return $query->getQuery()->getResult();
     }
 
 

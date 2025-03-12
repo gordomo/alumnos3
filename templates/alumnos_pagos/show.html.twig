@@ -8,13 +8,13 @@
 <body>
 <header class="clearfix">
     <div id="logo">
-        <img src="{{ asset('assets/img/logo.png') }}">
+        <img src="{{ asset('uploads/logos/' ~ instituto.logo) }}">
     </div>
     <h1>Recibo</h1>
     <div id="company" class="clearfix">
-        <div>Dream Ingles</div>
-        <div>Moreno 1526.<br /> Fighiera. Santa Fe.</div>
-        <div>(3402) 658432</div>
+        <div>{{ instituto.nombre }}</div>
+        <div>{{ instituto.dir }}</div>
+        <div>{{ instituto.tel }}</div>
     </div>
     <div id="project">
         <div><span>Alumno:</span> {{ alumnos_pago.alumno.nombreApellido }}</div>
@@ -57,8 +57,8 @@
         <br>
         <div style="font-size: 120%" >como pago por los servicios previamente detallados en este recibo</div>
         <br><br>
-        <div>Nota:</div>
-        <div>Se cobra un recargo del 10% por pagar después del 20 de cada mes.</div>
+        {# <div>Nota:</div>
+        <div>Se cobra un recargo del 10% por pagar después del 20 de cada mes.</div> #}
     </div>
 </main>
 <footer>

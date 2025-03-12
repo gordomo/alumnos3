@@ -1,0 +1,24 @@
+{# templates/bundles/TwigBundle/Exception/error403.html.twig #}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso Denegado</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light d-flex justify-content-center align-items-center vh-100">
+    <div class="container text-center">
+        <h1 class="display-4">Acceso Denegado</h1>
+        <p class="lead">No tienes permisos para acceder a esta página.</p>
+
+        {% if is_granted('ROLE_ADMIN_INSTITUTO') %}
+            <a href="{{ path('admin_instituto_index') }}" class="btn btn-primary">Ir a la página principal del Instituto</a>
+        {% elseif is_granted('ROLE_USER') or is_granted('ROLE_ADMIN') %}
+            <a href="{{ path('dashboard_index') }}" class="btn btn-primary">Ir al Dashboard</a>
+        {% else %}
+            <a href="{{ path('frontpage') }}" class="btn btn-secondary">Ir a la Página de Inicio</a>
+        {% endif %}
+    </div>
+</body>
+</html>

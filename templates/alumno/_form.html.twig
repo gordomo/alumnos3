@@ -2,33 +2,33 @@
 <div class="form-group">
     <div class="row g-3 mb-3">
         {% for field in [
-            {form: form.nombre, label: 'Nombre'},
-            {form: form.apellido, label: 'Apellido'},
-            {form: form.f_nac, label: 'Fecha de Nacimiento'},
-            {form: form.l_nac, label: 'Lugar de Nacimiento'},
-            {form: form.telefono_fijo, label: 'Teléfono fijo'},
-            {form: form.email, label: 'Email'},
-            {form: form.dni, label: 'DNI'},
-            {form: form.celular, label: 'Celular'},
-            {form: form.n_tutor, label: 'Nombre Tutor'},
-            {form: form.t_tutor, label: 'Teléfono Tutor'},
-            {form: form.contacto_emergencia, label: 'Contacto de Emergencia'},
-            {form: form.corre_tutor, label: 'Email Tutor'},
-            {form: form.dni_tutor, label: 'DNI Tutor'},
-            {form: form.escuela, label: 'Escuela'},
-            {form: form.extras, label: 'Extras'},
-            {form: form.g_sanguineo, label: 'Grupo Sanguineo'},
-            {form: form.enfermedad, label: 'Enfermedad'},
-            {form: form.alergico, label: 'Alergico'},
-            {form: form.medicacion, label: 'Medicacion'},
-            {form: form.como_conociste, label: 'Como nos Conociste'},
-            {form: form.activo, label: 'Activo'},
-            {form: form.hermanos, label: 'Hermanos'},
-            {form: form.curso, label: 'Curso'}
+            {form: form.nombre, label: 'Nombre', class: ''},
+            {form: form.apellido, label: 'Apellido', class: ''},
+            {form: form.f_nac, label: 'Fecha de Nacimiento', class: ''},
+            {form: form.l_nac, label: 'Lugar de Nacimiento', class: ''},
+            {form: form.telefono_fijo, label: 'Teléfono fijo', class: ''},
+            {form: form.email, label: 'Email', class: ''},
+            {form: form.dni, label: 'DNI', class: ''},
+            {form: form.celular, label: 'Celular', class: ''},
+            {form: form.n_tutor, label: 'Nombre Tutor', class: ''},
+            {form: form.t_tutor, label: 'Teléfono Tutor', class: ''},
+            {form: form.contacto_emergencia, label: 'Contacto de Emergencia', class: ''},
+            {form: form.corre_tutor, label: 'Email Tutor', class: ''},
+            {form: form.dni_tutor, label: 'DNI Tutor', class: ''},
+            {form: form.escuela, label: 'Escuela', class: ''},
+            {form: form.extras, label: 'Extras', class: ''},
+            {form: form.g_sanguineo, label: 'Grupo Sanguineo', class: ''},
+            {form: form.enfermedad, label: 'Enfermedad', class: ''},
+            {form: form.alergico, label: 'Alergico', class: ''},
+            {form: form.medicacion, label: 'Medicacion', class: ''},
+            {form: form.como_conociste, label: 'Como nos Conociste', class: ''},
+            {form: form.activo, label: 'Activo', class: ''},
+            {form: form.hermanos, label: 'Hermanos', class: 'chosen-select'},
+            {form: form.curso, label: 'Curso', class: 'chosen-select' }
         ] %}
             <div class="col-md-4">
                 {{ form_label(field.form, field.label, {'label_attr': {'class': 'form-label'}}) }}
-                {{ form_widget(field.form, {'attr': {'class': 'form-control'}}) }}
+                {{ form_widget(field.form, {'attr': {'class': 'form-control ' ~ field.class}}) }}
                 <small class="form-error text-danger">
                     {{ form_errors(field.form) }}
                 </small>
@@ -43,3 +43,14 @@
     </div>
 </div>
 {{ form_end(form) }}
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        $(".chosen-select").chosen({
+            width: "100%",
+            no_results_text: "No se encontraron coincidencias",
+            placeholder_text_single: "Select an option",
+        });
+    });
+</script>

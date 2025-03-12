@@ -34,7 +34,8 @@ class AlumnoController extends AbstractController
             $limit = 10000000000000000;
         }
 
-        $alumnos = $alumnoRepository->getAlumnoByNombreEstadoYcursoQuery($busqueda, $activo, $cursoSelected);
+        $instituto = $this->getUser()->getInstituto();
+        $alumnos = $alumnoRepository->getAlumnoByNombreEstadoYcursoQuery($busqueda, $activo, $cursoSelected, $instituto);
 
         $alumnosPagination = $paginator->paginate(
             $alumnos, 
@@ -60,7 +61,10 @@ class AlumnoController extends AbstractController
     public function new(Request $request, AlumnoRepository $alumnoRepository): Response
     {
         $alumno = new Alumno();
-        $form = $this->createForm(AlumnoType::class, $alumno);
+        $instituto = $this->getUser()->getInstituto();
+        $alumno->setInstituto($instituto);
+
+        $form = $this->createForm(AlumnoType::class, $alumno, ['is_edit' => false, 'instituto' => $instituto]);
 
         $form->handleRequest($request);
 
@@ -101,7 +105,8 @@ class AlumnoController extends AbstractController
      */
     public function edit(Request $request, Alumno $alumno, AlumnoRepository $alumnoRepository): Response
     {
-        $form = $this->createForm(AlumnoType::class, $alumno);
+        $instituto = $this->getUser()->getInstituto();
+        $form = $this->createForm(AlumnoType::class, $alumno, ['is_edit' => true, 'instituto' => $instituto]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {

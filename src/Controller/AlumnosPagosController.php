@@ -102,8 +102,10 @@ class AlumnosPagosController extends AbstractController
      */
     public function show(AlumnosPagos $alumnosPago): Response
     {
+        $instituto = $this->getUser()->getInstituto();
         return $this->render('alumnos_pagos/show.html.twig', [
             'alumnos_pago' => $alumnosPago,
+            'instituto' => $instituto
         ]);
     }
 

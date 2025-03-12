@@ -61,11 +61,14 @@ class CursoRepository extends ServiceEntityRepository
     //  * @return Curso[] Returns an array of Curso objects
     //  */
 
-    public function findByDia($value)
+    public function findByDiaEinstituto($value, $instituto)
     {
         return $this->createQueryBuilder('c')
             ->andWhere('c.dias like :val')
             ->setParameter('val', '%'.$value.'%')
+            ->andWhere('c.instituto = :instituto')
+            ->setParameter('instituto', $instituto)
+            ->andWhere('c.disabled = false')
             ->orderBy('c.id', 'ASC')
             ->getQuery()
             ->getResult()

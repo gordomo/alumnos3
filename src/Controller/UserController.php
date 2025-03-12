@@ -21,8 +21,10 @@ class UserController extends AbstractController
      */
     public function index(UserRepository $userRepository): Response
     {
+        $instituto = $this->getUser()->getInstituto();
+        
         return $this->render('user/index.html.twig', [
-            'users' => $userRepository->findAll(),
+            'users' => $userRepository->findBy(['instituto' => $instituto]),
         ]);
     }
 
@@ -31,12 +33,21 @@ class UserController extends AbstractController
      */
     public function new(Request $request, UserRepository $userRepository, UserPasswordHasherInterface $passwordEncoder): Response
     {
+        $instituto = $this->getUser()->getInstituto();
         $user = new User();
-        $form = $this->createForm(UserType::class, $user);
+        $user->setInstituto($instituto);
+
+        $form = $this->createForm(UserType::class, $user, ['is_edit' => false]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $user->setPassword($passwordEncoder->hashPassword($user, $user->getPassword()));
+            $newEmail = $form->get('email')->getData();
+            $newPassword = $form->get('password')->getData();
+            $roles = $form->get('roles')->getData();
+
+            $user->setPassword($passwordEncoder->hashPassword($user, $newPassword));
+            $user->setEmail($newEmail);
+            $user->setRoles($roles);
             $userRepository->add($user);
             return $this->redirectToRoute('app_user_index', [], Response::HTTP_SEE_OTHER);
         }
@@ -62,12 +73,21 @@ class UserController extends AbstractController
      */
     public function edit(Request $request, User $user, UserRepository $userRepository, UserPasswordHasherInterface $passwordEncoder): Response
     {
-        $form = $this->createForm(UserType::class, $user);
+        $form = $this->createForm(UserType::class, $user, ['is_edit' => true]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $user->setPassword($passwordEncoder->hashPassword($user, $user->getPassword()));
+            $newEmail = $form->get('email')->getData();
+            $newPassword = $form->get('password')->getData();
+            
+            if (!empty($newPassword)) {
+                $user->setPassword($passwordEncoder->hashPassword($user, $newPassword));
+            }
+            if ($newEmail && $user->getEmail() !== $newEmail) {
+                $user->setEmail($newEmail);
+            }
             $userRepository->add($user);
+
             return $this->redirectToRoute('app_user_index', [], Response::HTTP_SEE_OTHER);
         }
 

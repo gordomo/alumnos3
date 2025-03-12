@@ -1,75 +1,36 @@
 {# templates/profesor/_form.html.twig #}
-
-{{ form_start(form) }}
+{{ form_start(form, {'attr': {'class': 'form-horizontal'}}) }}
 <div class="form-group">
-    <div class="row g-3">
-        <div class="col-md-4">
-            {{ form_label(form.nombre, 'Nombre') }}
-            {{ form_widget(form.nombre, {'attr': {'class': 'form-control'}}) }}
-            <small class="form-error">
-                {{ form_errors(form.nombre) }}
-            </small>
-        </div>
-        <div class="col-md-4">
-            {{ form_label(form.apellido, 'Apellido') }}
-            {{ form_widget(form.apellido, {'attr': {'class': 'form-control'}}) }}
-            <small class="form-error">
-                {{ form_errors(form.apellido) }}
-            </small>
-        </div>
-        <div class="col-md-4">
-            {{ form_label(form.tel, 'Teléfono') }}
-            {{ form_widget(form.tel, {'attr': {'class': 'form-control'}}) }}
-            <small class="form-error">
-                {{ form_errors(form.tel) }}
-            </small>
-        </div>
-        <div class="col-md-4">
-            {{ form_label(form.dni, 'DNI') }}
-            {{ form_widget(form.dni, {'attr': {'class': 'form-control'}}) }}
-            <small class="form-error">
-                {{ form_errors(form.dni) }}
-            </small>
-        </div>
-        <div class="col-md-4">
-            {{ form_label(form.email, 'Email') }}
-            {{ form_widget(form.email, {'attr': {'class': 'form-control'}}) }}
-            <small class="form-error">
-                {{ form_errors(form.email) }}
-            </small>
-        </div>
-        <div class="col-md-4">
-            {{ form_label(form.precioHora, 'Precio/Hora') }}
-            {{ form_widget(form.precioHora, {'attr': {'class': 'form-control'}}) }}
-            <small class="form-error">
-                {{ form_errors(form.precioHora) }}
-            </small>
-        </div>
-        <div class="col-md-4">
-            {{ form_label(form.viatico, 'Viaticos') }}
-            {{ form_widget(form.viatico, {'attr': {'class': 'form-control'}}) }}
-            <small class="form-error">
-                {{ form_errors(form.viatico) }}
-            </small>
-        </div>
+    <div class="row g-3 mb-3">
+        {% for field in [
+            {form: form.nombre, label: 'Nombre', class: ''},
+            {form: form.apellido, label: 'Apellido', class: ''},
+            {form: form.tel, label: 'Teléfono', class: ''},
+            {form: form.dni, label: 'DNI', class: ''},
+            {form: form.email, label: 'Email', class: ''},
+            {form: form.precioHora, label: 'Pecio/Hora', class: ''},
+            {form: form.viatico, label: 'Viatico', class: ''},
+            {form: form.curso, label: 'Curso', class: 'chosen-select'}
+            
+        ] %}
+            <div class="col-md-4">
+                {{ form_label(field.form, field.label, {'label_attr': {'class': 'form-label'}}) }}
+                {{ form_widget(field.form, {'attr': {'class': 'form-control ' ~ field.class}}) }}
+                <small class="form-error text-danger">
+                    {{ form_errors(field.form) }}
+                </small>
+            </div>
+        {% endfor %}
     </div>
-    <div class="row g-3">
-        <div class="col-md-12">
-            {{ form_label(form.curso, 'Cursos') }}
-            {{ form_widget(form.curso, {'attr': {'class': 'form-control chosen-select', 'data-placeholder': 'Seleccione los cursos...'}}) }}
-            <small class="form-error">{% if error_curso is defined %}{{ error_curso }} {% endif %}</small>
-            <small class="form-error">
-                {{ form_errors(form.curso) }}
-            </small>
-        </div>
-    </div>
-    <div class="row g-3">
-        <div class="col-md-12" style="text-align: right;">
-            <button class="btn btn-success">{{ button_label|default('Save') }}</button>
+    <div class="row mb-3">
+        <div class="col text-end">
+            <a class="btn btn-secondary" href="{{ path('app_profesor_index') }}">Volver</a>
+            <button class="btn btn-success">{{ button_label|default('Guardar') }}</button>
         </div>
     </div>
 </div>
 {{ form_end(form) }}
+
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {

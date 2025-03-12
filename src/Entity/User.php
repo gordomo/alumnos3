@@ -35,6 +35,23 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      */
     private $password;
 
+    /**
+     * @ORM\ManyToOne(targetEntity=Instituto::class, inversedBy="usuarios")
+     * @ORM\JoinColumn(nullable=false)
+     */
+    private $instituto;
+
+    public function getInstituto(): ?Instituto
+    {
+        return $this->instituto;
+    }
+
+    public function setInstituto(?Instituto $instituto): self
+    {
+        $this->instituto = $instituto;
+        return $this;
+    }
+
     public function getId(): ?int
     {
         return $this->id;
@@ -77,7 +94,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         $roles = $this->roles;
         // guarantee every user at least has ROLE_USER
-        $roles[] = 'ROLE_USER';
+        //if ( count($roles) < 1 ) $roles[] = 'ROLE_USER';
 
         return array_unique($roles);
     }

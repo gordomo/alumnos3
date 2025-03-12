@@ -14,6 +14,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use App\Helpers;
+use Knp\Component\Pager\PaginatorInterface;
 
 /**
  * @Route("/admin/profesor")
@@ -23,27 +24,25 @@ class ProfesorController extends AbstractController
     /**
      * @Route("/", name="app_profesor_index", methods={"GET"})
      */
-    public function index(Request $request, ProfesorRepository $profesorRepository): Response
+    public function index(Request $request, ProfesorRepository $profesorRepository, PaginatorInterface $paginator): Response
     {
         $limit = $request->get('limit', 10);
-        $currentPage = $request->get('currentPage', 0);
-        $offset = $currentPage == 0 ? 0 : (($currentPage * $limit) + 1);
+        $currentPage = $request->get('page', 1);
         $busqueda = $request->get('busqueda', 0);
+        
+        $instituto = $this->getUser()->getInstituto();
+        
+        $profesorsQuery = $profesorRepository->findByApellido($busqueda, $instituto);
 
-        $profesors = $profesorRepository->findByApellido($busqueda, $limit, $offset);
-
-        $total = $profesorRepository->countProfesors($busqueda);
-        $total = !empty($total[1]) ? $total[1] : 0;
-
-        $numeroDePaginas = intval(ceil($total / $limit));
-
-
+        $profesors = $paginator->paginate(
+            $profesorsQuery, 
+            $currentPage, 
+            $limit
+        );
         return $this->render('profesor/index.html.twig', [
             'profesors' => $profesors,
             'busqueda' => $busqueda,
-            'numeroDePaginas' => $numeroDePaginas,
-            'currentPage' => $currentPage,
-            'total' => $total
+            'total' => $profesors->getTotalItemCount()
         ]);
     }
 
@@ -57,11 +56,15 @@ class ProfesorController extends AbstractController
         $day = date('N', strtotime($desde));
         $firstday = date('Y/m/d', strtotime('-'.($day-1).' days', strtotime($desde)));
         $lastday = date('Y/m/d', strtotime('+'.(7-$day).' days', strtotime($desde)));
+        
+        $instituto = $this->getUser()->getInstituto();
 
-        $cursos = $cursoRepository->findBy(['disabled' => false]);
-        $profesores = $profesorRepository->findAll();
+        $cursos = $cursoRepository->findBy(['disabled' => false, 'instituto' => $instituto]);
 
-        $asistencias = $asistenciaProfesoresRepository->findAll();
+        $profesores = $profesorRepository->findByApellido(null, $instituto)->getResult();
+
+        $asistencias = $asistenciaProfesoresRepository->findAll($instituto);
+        
         $asistenciasArray = [];
 
         foreach ($asistencias as $asistencia) {
@@ -89,8 +92,10 @@ class ProfesorController extends AbstractController
         $desde = $request->get('desde', $ds->format("Y/m/d"));
         $hasta = $request->get('hasta', $ls->format("Y/m/d"));
 
-        $cursos = $cursoRepository->findAll();
-        $profesores = $profesorRepository->findAll();
+        $instituto = $this->getUser()->getInstituto();
+
+        $cursos = $cursoRepository->findBy(['instituto' => $instituto, 'disabled' => false]);
+        $profesores = $profesorRepository->findBy(['instituto' => $instituto]);
 
         $rango = $this->createDateRangeArray($desde, $hasta);
 
@@ -101,13 +106,16 @@ class ProfesorController extends AbstractController
             $date = new \DateTime($fecha);
             $day_of_week = Helpers\Fechas::getDiaDeLaSemana(intval($date->format('w')));
 
-            $cursosDelDia = $cursoRepository->findByDia($day_of_week);
+            $cursosDelDia = $cursoRepository->findByDiaEinstituto($day_of_week, $instituto);
 
-            $faltas = $asistenciaProfesoresRepository->findBy(['fecha' => new \DateTime($fecha)]);
+            $faltas = [];
+        
             $faltaArr = [];
 
             foreach ($cursosDelDia as $cursoHoy) {
                 $profeCurso = $cursoHoy->getProfesores();
+                $faltas = $asistenciaProfesoresRepository->findByFechaEinstituto(new \DateTime($fecha), $instituto);
+                /* if($faltas) dd($faltas); */
                 foreach ($profeCurso as $profe) {
                     $asisArray[$profe->getApellido()][$fecha][] = ['falta' => false, 'horas' => $cursoHoy->getDuracion(), 'curso' => $cursoHoy->getNombre()];
                     $asisArray[$profe->getApellido()]['precioHora'] = $profe->getPrecioHora();
@@ -170,16 +178,20 @@ class ProfesorController extends AbstractController
     public function new(Request $request, ProfesorRepository $profesorRepository): Response
     {
         $profesor = new Profesor();
-        $form = $this->createForm(ProfesorType::class, $profesor);
+        $instituto = $this->getUser()->getInstituto();
+        $profesor->setInstituto($instituto);
+
+        $form = $this->createForm(ProfesorType::class, $profesor, ['is_edit' => false, 'instituto' => $instituto]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
             foreach($profesor->getCurso() as $curso) {
                 if(count($curso->getProfesores()->getValues()) > 0) {
+
+                    $this->addFlash('danger', 'el curso ya tiene un profesor asignado.');
                     return $this->renderForm('profesor/new.html.twig', [
                         'profesor' => $profesor,
                         'form' => $form,
-                        'error_curso' => 'el curso ya tiene un profesor asignado'
                     ]);
                 }
             }
@@ -198,18 +210,19 @@ class ProfesorController extends AbstractController
      */
     public function edit(Request $request, Profesor $profesor, ProfesorRepository $profesorRepository): Response
     {
-        $form = $this->createForm(ProfesorType::class, $profesor);
+        $instituto = $this->getUser()->getInstituto();
+        $form = $this->createForm(ProfesorType::class, $profesor, ['is_edit' => false, 'instituto' => $instituto]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-
+            
             foreach($profesor->getCurso() as $curso) {
                 foreach ($curso->getProfesores() as $profe) {
                     if ($profe->getId() != $profesor->getId()) {
+                        $this->addFlash('danger', 'el curso: ' . $curso->getNombre() . ', ya tiene un profesor asignado');
                         return $this->renderForm('profesor/new.html.twig', [
                             'profesor' => $profesor,
                             'form' => $form,
-                            'error_curso' => 'el curso: ' . $curso->getNombre() . ', ya tiene un profesor asignado'
                         ]);
                     }
                 }

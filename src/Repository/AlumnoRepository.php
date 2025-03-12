@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\Alumno;
+use App\Entity\Instituto;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\OptimisticLockException;
 use Doctrine\ORM\ORMException;
@@ -107,7 +108,7 @@ class AlumnoRepository extends ServiceEntityRepository
         return $query->orderBy('p.apellido', 'ASC')->getQuery()->getResult();
     }
 
-    public function getAlumnoByNombreEstadoYcursoQuery($value, $activo = null, $cursoSelected = 0)
+    public function getAlumnoByNombreEstadoYcursoQuery($value, $activo = null, $cursoSelected = 0, $instituto)
     {
         $query =  $this->createQueryBuilder('p');
         if ($value) {
@@ -128,6 +129,8 @@ class AlumnoRepository extends ServiceEntityRepository
                 ->setParameter('cursoSelected', $cursoSelected);
         }
 
+        $query->andWhere('p.instituto = :instituto')->setParameter('instituto' , $instituto);
+
         return $query->orderBy('p.apellido', 'ASC')->getQuery();
     }
 
@@ -143,6 +146,35 @@ class AlumnoRepository extends ServiceEntityRepository
         }
 
         return $query->select('p.id')->getQuery()->getResult();
+    }
+
+    /**
+     * Cuenta los alumnos por instituto y estado.
+     */
+    public function countByInstitutoAndStatus(Instituto $instituto, bool $isActive): int
+    {
+        $qb = $this->createQueryBuilder('a');
+
+        return $qb
+            ->select('COUNT(a.id)')
+            ->where('a.instituto = :instituto')
+            ->andWhere('a.activo = :isActive')
+            ->setParameter('instituto', $instituto)
+            ->setParameter('isActive', $isActive)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    public function countByInstituto(Instituto $instituto): int
+    {
+        $qb = $this->createQueryBuilder('a');
+
+        return $qb
+            ->select('COUNT(a.id)')
+            ->where('a.instituto = :instituto')
+            ->setParameter('instituto', $instituto)
+            ->getQuery()
+            ->getSingleScalarResult();
     }
 
     // /**

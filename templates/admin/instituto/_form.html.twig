@@ -1,0 +1,28 @@
+{{ form_start(form, {'attr': {'class': 'form-horizontal'}}) }}
+<div class="form-group">
+    <div class="row g-3 mb-3">
+        {% for field in [
+            {form: form.nombre, label: 'Nombre'},
+            {form: form.dir, label: 'Dirección'},
+            {form: form.email, label: 'Email'},
+            {form: form.password, label: 'Password'},
+            {form: form.tel, label: 'Teléfono'},
+            {form: form.logo, label: 'Logo'},
+        ] %}
+            <div class="col-md-4">
+                {{ form_label(field.form, field.label, {'label_attr': {'class': 'form-label'}}) }}
+                {{ form_widget(field.form, {'attr': {'class': 'form-control'}}) }}
+                <small class="form-error text-danger">
+                    {{ form_errors(field.form) }}
+                </small>
+            </div>
+        {% endfor %}
+    </div>
+    <div class="row mb-3">
+        <div class="col text-end">
+            <a class="btn btn-secondary" href="{{ path('admin_instituto_index') }}">Volver</a>
+            <button class="btn btn-success">{{ button_label|default('Guardar') }}</button>
+        </div>
+    </div>
+</div>
+{{ form_end(form) }}

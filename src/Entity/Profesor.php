@@ -80,6 +80,23 @@ class Profesor
      */
     private $asistenciaProfesores;
 
+    /**
+     * @ORM\ManyToOne(targetEntity=Instituto::class, inversedBy="profesores")
+     * @ORM\JoinColumn(nullable=false)
+     */
+    private $instituto;
+
+    public function getInstituto(): ?Instituto
+    {
+        return $this->instituto;
+    }
+
+    public function setInstituto(?Instituto $instituto): self
+    {
+        $this->instituto = $instituto;
+        return $this;
+    }
+
     public function __construct()
     {
         $this->curso = new ArrayCollection();

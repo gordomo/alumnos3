@@ -41,6 +41,24 @@ class Curso
     private $disabled = false;
 
     /**
+     * @ORM\ManyToOne(targetEntity=Instituto::class, inversedBy="cursos")
+     * @ORM\JoinColumn(nullable=false)
+     */
+    private $instituto;
+
+    public function getInstituto(): ?Instituto
+    {
+        return $this->instituto;
+    }
+
+    public function setInstituto(?Instituto $instituto): self
+    {
+        $this->instituto = $instituto;
+        return $this;
+    }
+
+
+    /**
      * @return mixed
      */
     public function getDisabled()

@@ -62,6 +62,34 @@ class AsistenciaProfesoresRepository extends ServiceEntityRepository
         ;
     }
 
+    public function findByFechaEinstituto($date, $instituto)
+    {
+        return $this->createQueryBuilder('a')
+            ->join('a.profesor', 'p')  // Agrega explícitamente el join
+            ->andWhere('a.fecha = :date')
+            ->setParameter('date', $date)
+            ->andWhere('p.instituto = :instituto')  // Usa el alias 'p' para profesor
+            ->setParameter('instituto', $instituto)
+            ->orderBy('a.id', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function findByInstituto($from, $to, $instituto)
+    {
+        return $this->createQueryBuilder('a')
+            ->andWhere('a.fecha >= :from')
+            ->setParameter('from', $from)
+            ->andWhere('a.fecha <= :to')
+            ->setParameter('to', $to)
+            ->andWhere('a.profesor.instituto = :instituto')
+            ->setParameter('instituto', $instituto)
+            ->orderBy('a.id', 'ASC')
+            ->getQuery()
+            ->getResult()
+        ;
+    }
+
     public function findByFechaProfe($date, $profe)
     {
         return $this->createQueryBuilder('a')

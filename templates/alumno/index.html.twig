@@ -75,8 +75,8 @@
     <table class="table table-striped">
         <thead class="">
         <tr>
-            <th>Nombre</th>
             <th>Apellido</th>
+            <th>Nombre</th>
             <th>Celular</th>
             <th>Contacto Emergencia</th>
             <th>Curso</th>
@@ -86,8 +86,8 @@
         <tbody>
         {% for alumno in alumnos %}
             <tr class="{% if (alumno.activo) %}activo{% else %}inactivo{% endif %}">
-                <td>{{ alumno.nombre }}</td>
                 <td>{{ alumno.apellido }}</td>
+                <td>{{ alumno.nombre }}</td>
                 <td>{{ alumno.celular }}</td>
                 <td>{{ alumno.contactoEmergencia }}</td>
                 <td>
@@ -97,11 +97,14 @@
                 </td>
                 <td>
                     {#<a href="{{ path('app_alumno_show', {'id': alumno.id}) }}"><i class="bi bi-eye"></i></a>#}
-                    <a href="{{ path('app_alumno_edit', {'id': alumno.id}) }}"><i class="bi bi-pencil" data-toggle="tooltip" title="editar"></i></a>
+                    <a class="btn btn-secondary btn-sm px-1 py-0" style="min-width:0px" href="{{ path('app_alumno_edit', {'id': alumno.id}) }}">editar</a>
                     {% if (alumno.activo) %}
-                        <a href="{{ path('app_alumnos_pagos_new', {'alumno': alumno.id}) }}"><i class="bi bi-currency-dollar" data-toggle="tooltip" title="registrar pago"></i></a>
+                        <a class="btn btn-primary btn-sm px-1 py-0" style="min-width:0px" href="{{ path('app_alumnos_pagos_new', {'alumno': alumno.id}) }}">registrar pago</a>
                     {% endif %}
-                    {{ alumno.debeMes and alumno.activo ? '<i class="bi bi-bell-fill" style="color: red" data-toggle="tooltip" title="debe"></i>' : '' }}
+                    <a class="btn btn-secondary btn-sm px-1 py-0" style="min-width:0px" href="{{ path('app_alumnos_pagos_index', {'alumno': alumno.id}) }}">
+                        ver pagos
+                    </a>
+                    {{ alumno.debeMes and alumno.activo ? '<i class="bi bi-bell-fill p-2" style="color: red" data-toggle="tooltip" title="debe"></i>' : '' }}
                 </td>
             </tr>
         {% else %}

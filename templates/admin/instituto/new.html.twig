@@ -1,0 +1,16 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Nuevo Instituto{% endblock %}
+
+{% block body %}
+<div class="container mt-3 d-flex justify-content-center">
+    <div class="col-lg-12">
+        <h1 class="mb-4 text-center">Nuevo Instituto</h1>
+        <div class="card shadow-sm">
+            <div class="card-body">
+                {{ include('admin/instituto/_form.html.twig', {'button_label': 'Guardar'}) }}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

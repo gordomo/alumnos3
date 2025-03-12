@@ -3,19 +3,17 @@
 {% block title %}Edit User{% endblock %}
 
 {% block body %}
-    <div class="editForms">
-        <h1>Editar Usuario</h1>
-        <div class="row">
-            {{ include('user/_form.html.twig', {'button_label': 'Guardar'}) }}
-        </div>
-        <div class="row">
-            {{ include('user/_delete_form.html.twig') }}
-        </div>
-        <br><br>
-        <div class="row">
-            <a class="btn btn-primary" href="{{ path('app_user_index') }}">Volver</a>
+<div class="container mt-3 d-flex justify-content-center">
+    <div class="col-lg-12">
+        <h1 class="mb-4 text-center">Editar Usuario</h1>
+        <div class="card shadow-sm">
+            <div class="card-body">
+                {{ include('user/_form.html.twig', {'button_label': 'Guardar'}) }}
+                {{ include('user/_delete_form.html.twig') }}
+            </div>
         </div>
     </div>
-
-
+</div>
 {% endblock %}
+
+

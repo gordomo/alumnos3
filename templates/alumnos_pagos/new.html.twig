@@ -4,17 +4,17 @@
 
 {% block body %}
 
-    <div class="editForms">
-        <h1>Nuevo Pago de {{ alumno }}</h1>
-        <div class="row">
-            {{ include('alumnos_pagos/_form.html.twig', {'button_label': 'Guardar'}) }}
-        </div>
-        <br><br>
-        <div class="row botones">
-            <div class="col-md-12">
-                <a class="btn btn-primary" href="javascript:history.back()">Volver</a>
-                <a class="btn btn-secondary" href="{{ path('app_alumnos_pagos_index', {'alumno': alumnoId}) }}">Ver pagos</a>
+    <div class="container mt-3 d-flex justify-content-center">
+        <div class="col-12">
+            <h1>Nuevo Pago de {{ alumno }}</h1>
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    {{ include('alumnos_pagos/_form.html.twig', {'button_label': 'Guardar'}) }}
+                </div>
             </div>
+            <br>
+            <a class="btn btn-primary mr-1" href="javascript:history.back()">Volver</a>
+            <a class="btn btn-secondary" href="{{ path('app_alumnos_pagos_index', {'alumno': alumnoId}) }}">Ver pagos</a>
         </div>
     </div>
 {% endblock %}

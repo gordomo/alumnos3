@@ -39,11 +39,16 @@ security:
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
     access_control:
-        # - { path: ^/admin, roles: ROLE_ADMIN }
-        # - { path: ^/profile, roles: ROLE_USER }
+        # Permitir acceso sin autenticación solo a la página de inicio de sesión
         - { path: ^/login$, roles: IS_AUTHENTICATED_ANONYMOUSLY }
-        - { path: ^/*, roles: ROLE_USER }
+        # Permitir el acceso a la ruta de logout para todos los usuarios autenticados
+        - { path: ^/logout$, roles: IS_AUTHENTICATED_FULLY }
+        # Restringir acceso a las rutas de administradores de institutos
+        - { path: ^/admin/instituto, roles: ROLE_ADMIN_INSTITUTO }
+        # Restringir a los administradores generales
         - { path: ^/admin, roles: ROLE_ADMIN }
+        # Asegurar que las rutas sean accesibles solo para usuarios autenticados con ROLE_USER o ROLE_ADMIN
+        - { path: ^/, roles: [ROLE_USER, ROLE_ADMIN] }
 
 when@test:
     security:

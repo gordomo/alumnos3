@@ -109,3 +109,13 @@ th     { background:#eee; }
 #deudores .table td {
     width: 150px;  /* Define el mismo ancho que el encabezado */
 }
+
+.toast-custom {
+    position: absolute;
+    right: 0;
+    bottom: 10px;
+    transition: opacity 1s ease-out;
+}
+.toast-custom.fade-out {
+    opacity: 0;
+}

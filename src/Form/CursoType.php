@@ -14,16 +14,17 @@ class CursoType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
+        $isEdit = $options['is_edit'];
         $builder
-            ->add('nombre', TextType::class, ['attr' => ['class' => 'form-control']])
-            ->add('precio', TextType::class, ['attr' => ['class' => 'form-control']])
-            ->add('duracion', ChoiceType::class,  ['attr' => ['class' => 'form-control'], 'required' => true, 'choices'  => [
+            ->add('nombre', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => !$isEdit])
+            ->add('precio', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => !$isEdit])
+            ->add('duracion', ChoiceType::class,  ['attr' => ['class' => 'form-control'], 'required' => !$isEdit, 'choices'  => [
                 '1:00 hs' => 1,
                 '1:15 hs ' => 1.25,
                 '2:00hs' => 2,
             ]
             ])
-            ->add('dias', ChoiceType::class, ['attr' => ['class' => 'form-control predictivo'], 'required' => true, 'choices'  => [
+            ->add('dias', ChoiceType::class, ['attr' => ['class' => 'form-control'], 'required' => !$isEdit, 'choices'  => [
                 'Lunes' => 'Lunes',
                 'Martes' => 'Martes',
                 'Miercoles' => 'Miercoles',
@@ -42,6 +43,7 @@ class CursoType extends AbstractType
     {
         $resolver->setDefaults([
             'data_class' => Curso::class,
+            'is_edit' => false,
         ]);
     }
 }

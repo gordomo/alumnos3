@@ -139,6 +139,12 @@ class Alumno
      */
     private $pagos;
 
+    /**
+     * @ORM\ManyToOne(targetEntity=Instituto::class, inversedBy="alumnos")
+     * @ORM\JoinColumn(nullable=false)
+     */
+    private $instituto;
+
     public function __construct()
     {
         $this->curso = new ArrayCollection();
@@ -421,6 +427,15 @@ class Alumno
 
     public function getHermanos(): ?array{
         return $this->hermanos ?? [];
+    }
+
+    public function setInstituto(?Instituto $instituto): self {
+        $this->instituto = $instituto;
+        return $this;
+    }
+
+    public function getInstituto(): ?Instituto{
+        return $this->instituto ?? [];
     }
 
     public function getNombreApellido(): ?string

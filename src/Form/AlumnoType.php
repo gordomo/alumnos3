@@ -22,11 +22,13 @@ class AlumnoType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $this->alumno = $options['data'];
+        $isEdit = $options['is_edit'];
+        $instituto = $options['instituto'];
         $builder
             ->add('telefono_fijo', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false,])
             ->add('nombre', TextType::class, ['attr' => ['class' => 'form-control']])
             ->add('apellido', TextType::class, ['attr' => ['class' => 'form-control']])
-            ->add('f_nac', DateType::class, ['widget' => 'single_text', 'html5' => true, 'attr' => ['class' => 'form-control'], 'required' => false,])
+            ->add('f_nac', DateType::class, ['widget' => 'single_text', 'html5' => true, 'attr' => ['class' => 'form-control'], 'required' => true,])
             ->add('email', EmailType::class, ['attr' => ['class' => 'form-control']])
             ->add('l_nac', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false,])
             ->add('dni', TextType::class, ['attr' => ['class' => 'form-control']])
@@ -50,8 +52,8 @@ class AlumnoType extends AbstractType
             ->add('curso', EntityType::class, [
                 'class' => Curso::class,
                 'choice_label' => 'nombre',
-                'query_builder' => function (EntityRepository $er) {
-                    $curso = $er->createQueryBuilder('c');
+                'query_builder' => function (EntityRepository $er) use ($instituto) {
+                    $curso = $er->createQueryBuilder('c')->where('c.instituto = :instituto')->setParameter('instituto', $instituto);
                     return $curso;
                 },
                 'multiple' => true,
@@ -92,6 +94,8 @@ class AlumnoType extends AbstractType
     {
         $resolver->setDefaults([
             'data_class' => Alumno::class,
+            'is_edit' => false,
+            'instituto' => false,
         ]);
     }
 }

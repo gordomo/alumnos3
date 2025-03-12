@@ -1,5 +1,6 @@
 twig:
     default_path: '%kernel.project_dir%/templates'
+    exception_controller: null # Usar sistema de excepción de Symfony
 
 when@test:
     twig:

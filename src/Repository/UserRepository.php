@@ -62,6 +62,18 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         $this->_em->flush();
     }
 
+
+    public function findLowestIdUserInInstituto($instituto)
+    {
+        return $this->createQueryBuilder('u')
+            ->andWhere('u.instituto = :instituto')
+            ->setParameter('instituto', $instituto)
+            ->orderBy('u.id', 'ASC')
+            ->setMaxResults(1) // Limita los resultados a 1
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
     // /**
     //  * @return User[] Returns an array of User objects
     //  */
