@@ -27,7 +27,7 @@
             {form: form.curso, label: 'Curso', class: 'chosen-select' }
         ] %}
             <div class="col-md-4">
-                {{ form_label(field.form, field.label, {'label_attr': {'class': 'form-label'}}) }}
+                {{ form_label(field.form, field.label) }}
                 {{ form_widget(field.form, {'attr': {'class': 'form-control ' ~ field.class}}) }}
                 <small class="form-error text-danger">
                     {{ form_errors(field.form) }}

@@ -185,6 +185,13 @@ class ProfesorController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            if ( count($form->get('curso')->getData()) < 1) {
+                $this->addFlash('danger', 'necesita seleccionar un curso');
+                return $this->renderForm('profesor/new.html.twig', [
+                    'profesor' => $profesor,
+                    'form' => $form,
+                ]);
+            }
             foreach($profesor->getCurso() as $curso) {
                 if(count($curso->getProfesores()->getValues()) > 0) {
 
@@ -215,12 +222,19 @@ class ProfesorController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            
+            if ( count($form->get('curso')->getData()) < 1) {
+                $this->addFlash('danger', 'necesita seleccionar un curso');
+                return $this->renderForm('profesor/edit.html.twig', [
+                    'profesor' => $profesor,
+                    'form' => $form,
+                ]);
+            }
+
             foreach($profesor->getCurso() as $curso) {
                 foreach ($curso->getProfesores() as $profe) {
                     if ($profe->getId() != $profesor->getId()) {
                         $this->addFlash('danger', 'el curso: ' . $curso->getNombre() . ', ya tiene un profesor asignado');
-                        return $this->renderForm('profesor/new.html.twig', [
+                        return $this->renderForm('profesor/edit.html.twig', [
                             'profesor' => $profesor,
                             'form' => $form,
                         ]);

@@ -46,6 +46,23 @@ class CursoController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            
+            if ( empty($form->get('dias')->getData()) ) {
+                $this->addFlash('danger', 'necesita seleccionar al menos un día');
+                return $this->renderForm('curso/new.html.twig', [
+                    'curso' => $curso,
+                    'form' => $form,
+                ]);
+            }
+
+            if ( empty($form->get('duracion')->getData())) {
+                $this->addFlash('danger', 'necesita seleccionar una duración');
+                return $this->renderForm('curso/new.html.twig', [
+                    'curso' => $curso,
+                    'form' => $form,
+                ]);
+            }
+
             $cursoRepository->add($curso);
             return $this->redirectToRoute('app_curso_index', [], Response::HTTP_SEE_OTHER);
         }
@@ -83,10 +100,27 @@ class CursoController extends AbstractController
             $this->addFlash('danger', 'El curso no pertenece al instituto del usuario.');
             return $this->redirectToRoute('app_curso_index');
         }
-        $form = $this->createForm(CursoType::class, $curso, ['allow_extra_fields' =>true, 'is_edit' => true]);
+        $form = $this->createForm(CursoType::class, $curso, ['allow_extra_fields' =>true]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+
+            if ( empty($form->get('dias')->getData()) ) {
+                $this->addFlash('danger', 'necesita seleccionar al menos un día');
+                return $this->renderForm('curso/edit.html.twig', [
+                    'curso' => $curso,
+                    'form' => $form,
+                ]);
+            }
+
+            if ( empty($form->get('duracion')->getData())) {
+                $this->addFlash('danger', 'necesita seleccionar una duración');
+                return $this->renderForm('curso/edit.html.twig', [
+                    'curso' => $curso,
+                    'form' => $form,
+                ]);
+            }
+
             $cursoRepository->add($curso);
             return $this->redirectToRoute('app_curso_index', [], Response::HTTP_SEE_OTHER);
         }

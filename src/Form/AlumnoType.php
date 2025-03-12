@@ -25,32 +25,33 @@ class AlumnoType extends AbstractType
         $isEdit = $options['is_edit'];
         $instituto = $options['instituto'];
         $builder
-            ->add('telefono_fijo', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false,])
-            ->add('nombre', TextType::class, ['attr' => ['class' => 'form-control']])
-            ->add('apellido', TextType::class, ['attr' => ['class' => 'form-control']])
-            ->add('f_nac', DateType::class, ['widget' => 'single_text', 'html5' => true, 'attr' => ['class' => 'form-control'], 'required' => true,])
-            ->add('email', EmailType::class, ['attr' => ['class' => 'form-control']])
-            ->add('l_nac', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false,])
-            ->add('dni', TextType::class, ['attr' => ['class' => 'form-control']])
-            ->add('celular', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false])
-            ->add('contacto_emergencia', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false])
-            ->add('n_tutor', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false])
-            ->add('t_tutor', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false])
-            ->add('corre_tutor', EmailType::class, ['attr' => ['class' => 'form-control'], 'required' => false])
-            ->add('dni_tutor', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false])
-            ->add('escuela', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false])
-            ->add('extras', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false])
-            ->add('g_sanguineo', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false])
-            ->add('enfermedad', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false])
-            ->add('alergico', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false])
-            ->add('activo', ChoiceType::class, ['attr' => ['class' => 'form-control'], 'choices'  => [
+            ->add('telefono_fijo', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'label_attr' => ['class' => 'form-label'], ])
+            ->add('nombre', TextType::class, ['attr' => ['class' => 'form-control'], 'label_attr' => ['class' => 'form-label required'], ])
+            ->add('apellido', TextType::class, ['attr' => ['class' => 'form-control'], 'label_attr' => ['class' => 'form-label required'], ])
+            ->add('f_nac', DateType::class, ['widget' => 'single_text', 'html5' => true, 'attr' => ['class' => 'form-control'], 'label_attr' => ['class' => 'form-label required'], 'required' => true,])
+            ->add('email', EmailType::class, ['attr' => ['class' => 'form-control'], 'label_attr' => ['class' => 'form-label required'], ])
+            ->add('l_nac', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'label_attr' => ['class' => 'form-label required'], ])
+            ->add('dni', TextType::class, ['attr' => ['class' => 'form-control'], 'label_attr' => ['class' => 'form-label required'], ])
+            ->add('celular', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'label_attr' => ['class' => 'form-label'], ])
+            ->add('contacto_emergencia', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'label_attr' => ['class' => 'form-label '], ])
+            ->add('n_tutor', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'label_attr' => ['class' => 'form-label'], ])
+            ->add('t_tutor', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'label_attr' => ['class' => 'form-label '], ])
+            ->add('corre_tutor', EmailType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'label_attr' => ['class' => 'form-label '], ])
+            ->add('dni_tutor', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'label_attr' => ['class' => 'form-label'], ])
+            ->add('escuela', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'label_attr' => ['class' => 'form-label'], ])
+            ->add('extras', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'label_attr' => ['class' => 'form-label '], ])
+            ->add('g_sanguineo', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'label_attr' => ['class' => 'form-label '], ])
+            ->add('enfermedad', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'label_attr' => ['class' => 'form-label '], ])
+            ->add('alergico', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'label_attr' => ['class' => 'form-label '], ])
+            ->add('activo', ChoiceType::class, ['attr' => ['class' => 'form-control'], 'label_attr' => ['class' => 'form-label required'], 'choices'  => [
                 'Si' => 1,
                 'No' => 0,
                 ]
             ])
-            ->add('medicacion', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false])
+            ->add('medicacion', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'label_attr' => ['class' => 'form-label '], ])
             ->add('curso', EntityType::class, [
                 'class' => Curso::class,
+                'label_attr' => ['class' => 'form-label required'], 
                 'choice_label' => 'nombre',
                 'query_builder' => function (EntityRepository $er) use ($instituto) {
                     $curso = $er->createQueryBuilder('c')->where('c.instituto = :instituto')->setParameter('instituto', $instituto);
@@ -58,13 +59,14 @@ class AlumnoType extends AbstractType
                 },
                 'multiple' => true,
                 'expanded' => false,
-                'required' => true,
+                'required' => false,
                 'label' => 'Cursos',
                 'attr' => ['class' => 'form-control predictivo']
             ])
             ->add('hermanos', EntityType::class, [
                 'class' => Alumno::class,
                 'choice_label' => 'NombreApellido',
+                'label_attr' => ['class' => 'form-label'], 
                 'query_builder' => function (EntityRepository $er) {
                     $hermanos = $er->createQueryBuilder('u');
                     if (!empty($this->alumno->getId())) {
@@ -79,7 +81,7 @@ class AlumnoType extends AbstractType
                 'label' => 'Hermanos',
                 'attr' => ['class' => 'form-control predictivo']
             ])
-            ->add('como_conociste', ChoiceType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'choices' => [
+            ->add('como_conociste', ChoiceType::class, ['attr' => ['class' => 'form-control'], 'label_attr' => ['class' => 'form-label '],  'required' => false, 'choices' => [
                 "Por Familia" => "Familia",
                 "Por Amigos" => "Amigos",
                 "Por Facebook" => "Facebook",

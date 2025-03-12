@@ -14,28 +14,37 @@ class CursoType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
-        $isEdit = $options['is_edit'];
         $builder
-            ->add('nombre', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => !$isEdit])
-            ->add('precio', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => !$isEdit])
-            ->add('duracion', ChoiceType::class,  ['attr' => ['class' => 'form-control'], 'required' => !$isEdit, 'choices'  => [
-                '1:00 hs' => 1,
-                '1:15 hs ' => 1.25,
-                '2:00hs' => 2,
-            ]
+            ->add('nombre', TextType::class, ['attr' => ['class' => 'form-control'], 'label_attr' => ['class' => 'form-label']])
+            ->add('precio', TextType::class, ['attr' => ['class' => 'form-control'], 'label_attr' => ['class' => 'form-label']])
+            ->add('duracion', ChoiceType::class,  
+            [
+                'required' => false,
+                'attr' => ['class' => 'form-control'], 
+                'label_attr' => ['class' => 'form-label required'], 
+                'choices'  => [
+                    '1:00 hs' => 1,
+                    '1:15 hs ' => 1.25,
+                    '2:00hs' => 2,
+                ]
             ])
-            ->add('dias', ChoiceType::class, ['attr' => ['class' => 'form-control'], 'required' => !$isEdit, 'choices'  => [
-                'Lunes' => 'Lunes',
-                'Martes' => 'Martes',
-                'Miercoles' => 'Miercoles',
-                'Jueves' => 'Jueves',
-                'Viernes' => 'Viernes',
-                'Sábado' => 'Sábado',
-                'Domingo' => 'Domingo',
-            ],
-                'multiple'=>true,
-                'expanded'=>false,
-            ])
+            ->add('dias', ChoiceType::class, 
+                [
+                    'attr' => ['class' => 'form-control'], 
+                    'label_attr' => ['class' => 'form-label required'], 
+                    'required' => false, 
+                    'choices'  => [
+                        'Lunes' => 'Lunes',
+                        'Martes' => 'Martes',
+                        'Miercoles' => 'Miercoles',
+                        'Jueves' => 'Jueves',
+                        'Viernes' => 'Viernes',
+                        'Sábado' => 'Sábado',
+                        'Domingo' => 'Domingo',
+                    ],
+                    'multiple'=>true,
+                    'expanded'=>false,
+                ])
         ;
     }
 
@@ -43,7 +52,6 @@ class CursoType extends AbstractType
     {
         $resolver->setDefaults([
             'data_class' => Curso::class,
-            'is_edit' => false,
         ]);
     }
 }

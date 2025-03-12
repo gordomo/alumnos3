@@ -50,7 +50,7 @@ class AlumnoController extends AbstractController
             'activo' => $activo,
             'totalAgregados' => $totalAgregados,
             'alumnosQueNoGuardadamos' => $alumnosQueNoGuardadamos,
-            'cursos' => $cursoRepository->findAll(),
+            'cursos' => $cursoRepository->findBy(['instituto' => $instituto]),
             'cursoSelected' => $cursoSelected
         ]);
     }
@@ -69,6 +69,15 @@ class AlumnoController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+
+            if ( count($form->get('curso')->getData()) < 1 ) {
+                $this->addFlash('danger', 'necesita seleccionar al menos un curso');
+                return $this->renderForm('alumno/new.html.twig', [
+                    'alumno' => $alumno,
+                    'form' => $form,
+                    'hermanos' => $alumno->getHermanos()
+                ]);
+            }
 
             $alumnoRepository->add($alumno);
 
@@ -110,6 +119,16 @@ class AlumnoController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            
+            if ( count($form->get('curso')->getData()) < 1 ) {
+                $this->addFlash('danger', 'necesita seleccionar al menos un curso');
+                return $this->renderForm('alumno/edit.html.twig', [
+                    'alumno' => $alumno,
+                    'form' => $form,
+                    'hermanos' => $alumno->getHermanos()
+                ]);
+            }
+
             $alumnoRepository->add($alumno);
             $this->setearHermandad($request, $alumno, $alumnoRepository);
 
