@@ -17,9 +17,12 @@
                 <li class="list-group-item"><strong>Usuarios:</strong> 
                     <ul class="list-group">
                     {% for usuario in instituto.usuarios %}
-                    <li class="list-group-item">
-                        {{ usuario.email }}
-                    </li>
+                        {% if 'ROLE_ADMIN_INSTITUTO' in usuario.roles %}
+                        {% else %}
+                            <li class="list-group-item" style="border: 0;">
+                                {{ usuario.email }}
+                            </li>
+                        {% endif %}
                     {% endfor %}
                     </ul>
                 </li>

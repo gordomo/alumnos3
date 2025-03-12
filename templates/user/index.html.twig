@@ -25,23 +25,27 @@
                         'ROLE_ADMIN': 'Administrador'
                     } %}
                     {% for user in users %}
-                        <tr>
-                            <td>{{ user.id }}</td>
-                            <td>{{ user.email }}</td>
-                            <td>
-                                {% if user.roles %}
-                                    {% for role in user.roles %}
-                                        <span class="badge bg-primary me-1">{{ role_names[role] | default(role) }}</span>
-                                    {% endfor %}
-                                {% endif %}
-                            </td>
-                            <td>
-                                <a href="{{ path('app_user_edit', {'id': user.id}) }}"><i class="bi bi-pencil"></i></a>
-                            </td>
-                            <td>
-                                {{ include('user/_delete_form.html.twig') }}
-                            </td>
-                        </tr>
+                        {% if 'ROLE_ADMIN_INSTITUTO' in user.roles %}
+                        {% else %}
+                            <tr>
+                                <td>{{ user.id }}</td>
+                                <td>{{ user.email }}</td>
+                                <td>
+                                    {% if user.roles %}
+                                        {% for role in user.roles %}
+                                            <span class="badge bg-primary me-1">{{ role_names[role] | default(role) }}</span>
+                                        {% endfor %}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{{ path('app_user_edit', {'id': user.id}) }}"><i class="bi bi-pencil"></i></a>
+                                </td>
+                                <td>
+                                    {{ include('user/_delete_form.html.twig') }}
+                                </td>
+                            </tr>
+                        {% endif %}
+                        
                     {% else %}
                         <tr>
                             <td colspan="5">No se encontraron registros</td>
