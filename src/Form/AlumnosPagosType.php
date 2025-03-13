@@ -20,6 +20,7 @@ class AlumnosPagosType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
+        $instituto = $options['instituto'];
         $builder
             ->add('fecha', DateType::class, ['widget' => 'single_text', 'html5' => true, 'attr' => ['class' => 'form-control']])
             ->add('monto', NumberType::class, 
@@ -48,8 +49,8 @@ class AlumnosPagosType extends AbstractType
             ->add('curso', EntityType::class, [
                 'class' => Curso::class,
                 'choice_label' => 'nombre',
-                'query_builder' => function (EntityRepository $er) {
-                    $curso = $er->createQueryBuilder('c');
+                'query_builder' => function (EntityRepository $er) use ($instituto) {
+                    $curso = $er->createQueryBuilder('c')->where('c.instituto = :instituto')->setParameter('instituto', $instituto);
                     return $curso;
                 },
                 'multiple' => false,
@@ -58,6 +59,16 @@ class AlumnosPagosType extends AbstractType
                 'label' => 'Cursos',
                 'attr' => ['class' => 'form-control predictivo']
             ])
+            ->add('metodoPago', ChoiceType::class, [
+                'choices' => [
+                    'Efectivo' => 'efectivo',
+                    'Tarjeta' => 'tarjeta',
+                    'Transferencia' => 'transferencia'
+                ],
+                'required' => true,
+                'label' => 'Método de Pago',
+                'attr' => ['class' => 'form-control']
+            ])
         ;
     }
 
@@ -65,6 +76,7 @@ class AlumnosPagosType extends AbstractType
     {
         $resolver->setDefaults([
             'data_class' => AlumnosPagos::class,
+            'instituto' => false,
         ]);
     }
 }

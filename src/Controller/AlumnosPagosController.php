@@ -67,10 +67,15 @@ class AlumnosPagosController extends AbstractController
         $bonificacionHermanos = false;
         $recargo = false;
 
-        if (!empty($alumno->getHermanos())) {
-            $precio = $precio * 0.80;
-            $bonificacionHermanos = true;
+        $hermanos = $alumno->getHermanos();
+        foreach ($hermanos as $hermanoId) {
+            $hermano = $alumnoRepository->find($hermanoId);
+            if ($hermano->getActivo()) {
+                $precio = $precio * 0.80;
+                $bonificacionHermanos = true;
+            }
         }
+        
 
         if ($hoy->format('d') > 20) {
             $precio = $precio * 1.10;
@@ -79,7 +84,7 @@ class AlumnosPagosController extends AbstractController
 
         $alumnosPago->setMonto($precio);
 
-        $form = $this->createForm(AlumnosPagosType::class, $alumnosPago);
+        $form = $this->createForm(AlumnosPagosType::class, $alumnosPago, ['instituto' => $this->getUser()->getInstituto()]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
@@ -114,7 +119,7 @@ class AlumnosPagosController extends AbstractController
      */
     public function edit(Request $request, AlumnosPagos $alumnosPago, AlumnosPagosRepository $alumnosPagosRepository): Response
     {
-        $form = $this->createForm(AlumnosPagosType::class, $alumnosPago);
+        $form = $this->createForm(AlumnosPagosType::class, $alumnosPago, ['instituto' => $this->getUser()->getInstituto()]);
         $form->handleRequest($request);
         $alumnoId = $alumnosPago->getAlumno()->getId();
         if ($form->isSubmitted() && $form->isValid()) {

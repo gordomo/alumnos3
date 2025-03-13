@@ -50,7 +50,16 @@
                 {{ form_errors(form.curso) }}
             </small>
         </div>
-        <div class="col-md-6" style="text-align: right;">
+        <div class="col-md-6">
+            {{ form_label(form.metodoPago, 'Método de Pago') }}
+            {{ form_widget(form.metodoPago) }}
+            <small class="form-error">
+                {{ form_errors(form.metodoPago) }}
+            </small>
+        </div>
+    </div>
+    <div class="row g-3 mt-3">
+        <div class="col-12" style="text-align: right;">
             <button class="btn btn-success">{{ button_label|default('Save') }}</button>
         </div>
     </div>

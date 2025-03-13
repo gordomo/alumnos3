@@ -49,6 +49,11 @@ class AlumnosPagos
     private $curso;
 
     /**
+     * @ORM\Column(type="string", length=20)
+     */
+    private $metodoPago;
+
+    /**
      * @return mixed
      */
     public function getAno()
@@ -130,6 +135,17 @@ class AlumnosPagos
     {
         $this->curso = $curso;
 
+        return $this;
+    }
+
+    public function getMetodoPago(): ?string
+    {
+        return $this->metodoPago;
+    }
+
+    public function setMetodoPago(string $metodoPago): self
+    {
+        $this->metodoPago = $metodoPago;
         return $this;
     }
 }

@@ -113,6 +113,7 @@
                         <th>Mes</th>
                         <th>Año</th>
                         <th>Alumno</th>
+                        <th>Método de Pago</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -123,6 +124,7 @@
                             <td>{{ alumnos_pago.mes }}</td>
                             <td>{{ alumnos_pago.ano }}</td>
                             <td>{{ alumnos_pago.alumno.nombre }} {{ alumnos_pago.alumno.apellido }}</td>
+                            <td>{{ alumnos_pago.metodoPago|title }}</td>
                         </tr>
                     {% else %}
                         <tr>

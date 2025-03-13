@@ -18,6 +18,7 @@
                 <tr>
                     <th scope="col">Fecha</th>
                     <th scope="col">Monto</th>
+                    <th scope="col">Método de Pago</th>
                     <th scope="col">Mes</th>
                     <th scope="col">Año</th>
                     <th scope="col">Acciones</th>
@@ -28,6 +29,7 @@
                 <tr>
                     <td>{{ alumnos_pago.fecha ? alumnos_pago.fecha|date('d/m/Y') : '' }}</td>
                     <td>${{ alumnos_pago.monto | number_format(2, '.', '') }}</td>
+                    <td>{{ alumnos_pago.metodoPago }}</td>
                     <td>{{ alumnos_pago.mes }}</td>
                     <td>{{ alumnos_pago.ano }}</td>
                     <td>
