@@ -22,7 +22,14 @@ class AlumnosPagosType extends AbstractType
     {
         $builder
             ->add('fecha', DateType::class, ['widget' => 'single_text', 'html5' => true, 'attr' => ['class' => 'form-control']])
-            ->add('monto', TextType::class, ['attr' => ['class' => 'form-control']])
+            ->add('monto', NumberType::class, 
+                [
+                    'attr' => [
+                        'class' => 'form-control', 
+                        'step' => '0.01', // Permitir hasta dos decimales
+                        'placeholder' => 'Use punto como separador de decimales, por ejemplo 50250.20',
+                    ]
+                ])
             ->add('ano', TextType::class, ['attr' => ['class' => 'form-control']])
             ->add('mes', ChoiceType::class, ['attr' => ['class' => 'form-control predictivo'], 'required' => true, 'choices'  => [
                 'Enero' => 1,

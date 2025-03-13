@@ -88,7 +88,7 @@
                 <thead class="">
                     <tr>
                         <td colspan="5">
-                            <form action="{{ path('dashboard_index', {'action': 'pagos'}) }}" >
+                            
                                 <div class="row g-3">
                                     <div class="col">
                                         <label for="filtroFechas">Desde/Hasta:</label>
@@ -104,7 +104,7 @@
                                         </select>
                                     </div>
                                 </div>
-                            </form>
+                            
                         </td>
                     </tr>
                     <tr>
@@ -119,7 +119,7 @@
                     {% for alumnos_pago in alumnos_pagos %}
                         <tr>
                             <td>{{ alumnos_pago.fecha ? alumnos_pago.fecha|date('d/m/Y') : '' }}</td>
-                            <td>{{ alumnos_pago.monto }}</td>
+                            <td>${{ alumnos_pago.monto | number_format(2, ',', '.') }}</td>
                             <td>{{ alumnos_pago.mes }}</td>
                             <td>{{ alumnos_pago.ano }}</td>
                             <td>{{ alumnos_pago.alumno.nombre }} {{ alumnos_pago.alumno.apellido }}</td>
@@ -134,7 +134,7 @@
                     <tr>
                         <td></td>
                         <td colspan="4">
-                            Total Pagos: {{ totalPagos }}
+                            Total Pagos: ${{ totalPagos | number_format(2, ',', '.') }}
                         </td>
                     </tr>
                 </tfooter>
@@ -224,14 +224,23 @@
                 window.location = url;
             });
 
-            // Manejo de cambio en el número de registros
-            $('#registros').change(() => {
+            // Manejo de cambio en el número de registros.
+            $('#registros').on('change', ()=>{
                 const url = new URL(window.location);
                 url.searchParams.set('registros', $('#registros').val());
                 url.searchParams.set('page', 1);
-                url.searchParams.set('action', $(".nav-tabs").find('.active').attr('aria-controls'));
+                url.searchParams.set('action', 'pagos');
+                
+                const desde = url.searchParams.get('desde');
+                const hasta = url.searchParams.get('hasta');
+                if (desde && hasta) {
+                    url.searchParams.set('desde', desde);
+                    url.searchParams.set('hasta', hasta);
+                }
+                
                 window.location = url;
             });
+        
 
             // Inicialización de gráficos
             const ctx = document.getElementById('myChart').getContext('2d');
@@ -326,9 +335,11 @@
                 const url = new URL(window.location);
                 url.searchParams.set('desde', start.format('YYYY/MM/DD'));
                 url.searchParams.set('hasta', end.format('YYYY/MM/DD'));
-                url.searchParams.set('action', $(".nav-tabs").find('.active').attr('aria-controls'));
+                url.searchParams.delete('daterange');
+                url.searchParams.set('action', 'pagos');
                 window.location = url;
             });
+            
 
             // Al cambiar de pestaña, actualizar la URL para reflejar la pestaña actual
             $('#myTab button[data-bs-toggle="tab"]').on('shown.bs.tab', function (e) {

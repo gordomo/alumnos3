@@ -27,7 +27,7 @@
             {% for alumnos_pago in alumnos_pagos %}
                 <tr>
                     <td>{{ alumnos_pago.fecha ? alumnos_pago.fecha|date('d/m/Y') : '' }}</td>
-                    <td>{{ alumnos_pago.monto }}</td>
+                    <td>${{ alumnos_pago.monto | number_format(2, '.', '') }}</td>
                     <td>{{ alumnos_pago.mes }}</td>
                     <td>{{ alumnos_pago.ano }}</td>
                     <td>

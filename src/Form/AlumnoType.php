@@ -30,10 +30,10 @@ class AlumnoType extends AbstractType
             ->add('apellido', TextType::class, ['attr' => ['class' => 'form-control'], 'label_attr' => ['class' => 'form-label required'], ])
             ->add('f_nac', DateType::class, ['widget' => 'single_text', 'html5' => true, 'attr' => ['class' => 'form-control'], 'label_attr' => ['class' => 'form-label required'], 'required' => true,])
             ->add('email', EmailType::class, ['attr' => ['class' => 'form-control'], 'label_attr' => ['class' => 'form-label required'], ])
-            ->add('l_nac', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'label_attr' => ['class' => 'form-label required'], ])
+            ->add('l_nac', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'label_attr' => ['class' => 'form-label'], ])
             ->add('dni', TextType::class, ['attr' => ['class' => 'form-control'], 'label_attr' => ['class' => 'form-label required'], ])
-            ->add('celular', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'label_attr' => ['class' => 'form-label'], ])
-            ->add('contacto_emergencia', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'label_attr' => ['class' => 'form-label '], ])
+            ->add('celular', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => true, 'label_attr' => ['class' => 'form-label'], ])
+            ->add('contacto_emergencia', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => true, 'label_attr' => ['class' => 'form-label '], ])
             ->add('n_tutor', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'label_attr' => ['class' => 'form-label'], ])
             ->add('t_tutor', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'label_attr' => ['class' => 'form-label '], ])
             ->add('corre_tutor', EmailType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'label_attr' => ['class' => 'form-label '], ])
@@ -67,10 +67,10 @@ class AlumnoType extends AbstractType
                 'class' => Alumno::class,
                 'choice_label' => 'NombreApellido',
                 'label_attr' => ['class' => 'form-label'], 
-                'query_builder' => function (EntityRepository $er) {
-                    $hermanos = $er->createQueryBuilder('u');
+                'query_builder' => function (EntityRepository $er) use ($instituto) {
+                    $hermanos = $er->createQueryBuilder('u')->where('u.instituto = :instituto')->setParameter('instituto', $instituto);
                     if (!empty($this->alumno->getId())) {
-                        $hermanos->where('u.id != :id')->setParameter('id', $this->alumno->getId());
+                        $hermanos->andWhere('u.id != :id')->setParameter('id', $this->alumno->getId());
                     }
                     return $hermanos;
                 },

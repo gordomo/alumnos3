@@ -66,12 +66,11 @@ class DashboardController extends AbstractController
         }
 
         // Paginación para los "Últimos Pagos" del instituto
-        $alumnosIdsParaPagos = array_map(fn($alumno) => $alumno->getId(), iterator_to_array($paginationAlumnos));
-
         $alumnosPagosQuery = $alumnosPagosRepository->createQueryBuilder('ap')
-            ->where('ap.alumno IN(:ids)')
-            ->setParameter('ids', $alumnosIdsParaPagos)
+            ->join('ap.alumno', 'a')
+            ->where('a.instituto = :instituto')
             ->andWhere('ap.fecha BETWEEN :desde AND :hasta')
+            ->setParameter('instituto', $instituto)
             ->setParameter('desde', $desde)
             ->setParameter('hasta', $hasta)
             ->orderBy('ap.fecha', 'DESC');
@@ -111,7 +110,17 @@ class DashboardController extends AbstractController
             ->setParameter('instituto', $instituto)
             ->getQuery()->getResult();
 
-        $totalPagos = $alumnosPagosQuery->select('SUM(ap.monto) as total')->getQuery()->getSingleScalarResult();
+        // Create a separate query for total calculation
+        $totalPagos = $alumnosPagosRepository->createQueryBuilder('ap')
+            ->join('ap.alumno', 'a')
+            ->where('a.instituto = :instituto')
+            ->andWhere('ap.fecha BETWEEN :desde AND :hasta')
+            ->setParameter('instituto', $instituto)
+            ->setParameter('desde', $desde)
+            ->setParameter('hasta', $hasta)
+            ->select('SUM(ap.monto) as total');
+
+        $totalPagos = $totalPagos->getQuery()->getSingleScalarResult() ?? 0;
 
         return $this->render('dashboard/index.html.twig', [
             'alumnos_pagos' => $alumnosPagosPagination,

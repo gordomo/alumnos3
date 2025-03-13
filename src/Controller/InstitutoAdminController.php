@@ -28,7 +28,7 @@ class InstitutoAdminController extends AbstractController
     {
         $institutos = $institutoRepository->findAll();
 
-        return $this->render('admin/instituto//index.html.twig', [
+        return $this->render('admin/instituto/index.html.twig', [
             'institutos' => $institutos,
         ]);
     }
