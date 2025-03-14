@@ -23,43 +23,52 @@ class CursoController extends AbstractController
     {
         // Get search parameter from request
         $busqueda = $request->get('busqueda');
+        $order = $request->get('order', 'desc');
+        $sort = $request->get('sort', 'nombre');
 
         // Get current user's institute
         $instituto = $this->getUser()->getInstituto();
 
-        // Build query criteria
-        $criteria = ['instituto' => $instituto];
-        if ($busqueda) {
-            $criteria['nombre'] = '%' . $busqueda . '%';
-            $cursos = $cursoRepository->createQueryBuilder('c')
-                ->where('c.instituto = :instituto')
-                ->andWhere('c.disabled = false')
-                ->andWhere('c.nombre LIKE :nombre')
-                ->setParameter('instituto', $instituto)
-                ->setParameter('nombre', '%' . $busqueda . '%')
-                ->getQuery()
-                ->getResult();
-
-            $cursosDesabilitados = $cursoRepository->createQueryBuilder('c')
-                ->where('c.instituto = :instituto') 
-                ->andWhere('c.disabled = true')
-                ->andWhere('c.nombre LIKE :nombre')
-                ->setParameter('instituto', $instituto)
-                ->setParameter('nombre', '%' . $busqueda . '%')
-                ->getQuery()
-                ->getResult();
-        } else {
-            $cursos = $cursoRepository->findBy(['disabled' => false, 'instituto' => $instituto]);
-            $cursosDesabilitados = $cursoRepository->findBy(['disabled' => true, 'instituto' => $instituto]);
-        }
+        // Obtener cursos activos y deshabilitados
+        $cursos = $this->createQuery($cursoRepository, $instituto, $sort, $order, false, $busqueda);
+        $cursosDesabilitados = $this->createQuery($cursoRepository, $instituto, $sort, $order, true, $busqueda);
 
         return $this->render('curso/index.html.twig', [
             'cursos' => $cursos,
+            'order' => $order,
+            'sort' => $sort,
             'totalCursos' => count($cursos),
             'cursosDesabilitados' => $cursosDesabilitados,
             'totalCursosDesabilitados' => count($cursosDesabilitados),
             'busqueda' => $busqueda,
         ]);
+    }
+
+    /**
+     * Crea una consulta para obtener cursos con los filtros especificados
+     */
+    private function createQuery(
+        CursoRepository $cursoRepository,
+        $instituto,
+        string $sort,
+        string $order,
+        bool $disabled,
+        ?string $busqueda = null
+    ): array {
+        $qb = $cursoRepository->createQueryBuilder('c')
+            ->where('c.instituto = :instituto')
+            ->andWhere('c.disabled = :disabled')
+            ->setParameter('instituto', $instituto)
+            ->setParameter('disabled', $disabled);
+
+        if ($busqueda) {
+            $qb->andWhere('c.nombre LIKE :nombre')
+               ->setParameter('nombre', '%' . $busqueda . '%');
+        }
+
+        $qb->orderBy($sort === 'precio' ? 'c.precio + 0' : 'c.'.$sort, $order);
+
+        return $qb->getQuery()->getResult();
     }
 
     /**
@@ -175,7 +184,7 @@ class CursoController extends AbstractController
             $this->addFlash('danger', 'El curso tiene alumnos asociados y no puede ser eliminado.');
             return $this->redirectToRoute('app_curso_index');
         }
-        
+
         if ($this->isCsrfTokenValid('delete'.$curso->getId(), $request->request->get('_token'))) {
             $cursoRepository->remove($curso);
         }

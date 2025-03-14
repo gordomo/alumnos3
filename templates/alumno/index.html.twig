@@ -72,16 +72,26 @@
     {% if total > 0 %}
         <p class="mt-3">total: {{ total }} alumnos {% if (activo) %}activo{% else %}inactivo{% endif %}{% if (total > 1) %}s{% endif %}.</p>
     {% endif %}
-    <table class="table table-striped">
-        <thead class="">
-        <tr>
-            <th>Apellido</th>
-            <th>Nombre</th>
-            <th>Celular</th>
-            <th>Contacto Emergencia</th>
-            <th>Curso</th>
-            <th>Acciones</th>
-        </tr>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>
+                    <a href="{{ path('app_alumno_index', {'sort': 'apellido', 'order': sort == 'apellido' ? (order == 'asc' ? 'desc' : 'asc') : 'asc'}) }}" class="text-decoration-none text-dark">
+                        Apellido
+                        <i class="bi bi-arrow-{{ sort == 'apellido' ? (order == 'asc' ? 'up' : 'down') : 'up-down' }}"></i>
+                    </a>
+                </th>
+                <th>
+                    <a href="{{ path('app_alumno_index', {'sort': 'nombre', 'order': sort == 'nombre' ? (order == 'asc' ? 'desc' : 'asc') : 'asc'}) }}" class="text-decoration-none text-dark">
+                        Nombre
+                        <i class="bi bi-arrow-{{ sort == 'nombre' ? (order == 'asc' ? 'up' : 'down') : 'up-down' }}"></i>
+                    </a>
+                </th>
+                <th>Celular</th>
+                <th>Contacto de Emergencia</th>
+                <th>Cursos</th>
+                <th>Acciones</th>
+            </tr>
         </thead>
         <tbody>
         {% for alumno in alumnos %}

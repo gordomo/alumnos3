@@ -205,4 +205,28 @@ class AlumnoRepository extends ServiceEntityRepository
         ;
     }
     */
+
+    public function createOrderedQueryBuilder($instituto, $sort = 'apellido', $order = 'asc', $busqueda = null)
+    {
+        $conn = $this->getEntityManager()->getConnection();
+        
+        $sql = 'SELECT a.* FROM alumno a WHERE a.instituto_id = :instituto';
+        $params = ['instituto' => $instituto];
+
+        if ($busqueda) {
+            $sql .= ' AND (a.apellido LIKE :busqueda OR a.nombre LIKE :busqueda)';
+            $params['busqueda'] = '%' . $busqueda . '%';
+        }
+
+        if ($sort === 'nombre') {
+            $sql .= ' ORDER BY a.nombre COLLATE utf8_spanish_ci ' . $order . ', 
+                     a.apellido COLLATE utf8_spanish_ci ' . $order;
+        } else {
+            $sql .= ' ORDER BY a.apellido COLLATE utf8_spanish_ci ' . $order . ', 
+                     a.nombre COLLATE utf8_spanish_ci ' . $order;
+        }
+
+        $stmt = $conn->executeQuery($sql, $params);
+        return $stmt;
+    }
 }

@@ -25,8 +25,18 @@
     <table class="table">
         <thead>
             <tr>
-                <th>Apellido</th>
-                <th>Nombre</th>
+                <th>
+                    <a href="{{ path('app_profesor_index', {'sort': 'apellido', 'order': sort == 'apellido' ? (order == 'asc' ? 'desc' : 'asc') : 'asc'}) }}" class="text-decoration-none text-dark">
+                        Apellido
+                        <i class="bi bi-arrow-{{ sort == 'apellido' ? (order == 'asc' ? 'up' : 'down') : 'up-down' }}"></i>
+                    </a>
+                </th>
+                <th>
+                    <a href="{{ path('app_profesor_index', {'sort': 'nombre', 'order': sort == 'nombre' ? (order == 'asc' ? 'desc' : 'asc') : 'asc'}) }}" class="text-decoration-none text-dark">
+                        Nombre
+                        <i class="bi bi-arrow-{{ sort == 'nombre' ? (order == 'asc' ? 'up' : 'down') : 'up-down' }}"></i>
+                    </a>
+                </th>
                 <th>Telefono</th>
                 <th>Cursos</th>
                 <th>Precio/Hora</th>

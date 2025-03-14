@@ -31,6 +31,18 @@ class DashboardController extends AbstractController
         $lastDay = new DateTime();
         $hasta = $request->get('hasta', $lastDay->format('Y-12-31'));
         $max = $request->get('registros', 10);
+        $order = $request->get('order', 'desc');
+        $sort = $request->get('sort', 'fecha');
+
+        // Mapeo de columnas para ordenamiento
+        $sortColumns = [
+            'fecha' => ['prefix' => 'ap.', 'field' => 'fecha'],
+            'monto' => ['prefix' => 'ap.', 'field' => 'monto'],
+            'metodoPago' => ['prefix' => 'ap.', 'field' => 'metodoPago'],
+            'mes' => ['prefix' => 'ap.', 'field' => 'mes'],
+            'ano' => ['prefix' => 'ap.', 'field' => 'ano'],
+            'alumno' => ['prefix' => 'a.', 'field' => 'apellido']
+        ];
 
         // Obtener el instituto del usuario actual
         $instituto = $this->getUser()->getInstituto();
@@ -46,6 +58,11 @@ class DashboardController extends AbstractController
             $alumnosQuery->andWhere('a.apellido LIKE :busqueda OR a.nombre LIKE :busqueda')
                          ->setParameter('busqueda', '%' . $busqueda . '%');
         }
+
+        if ($sort === 'alumnoNombre') {
+            $alumnosQuery->orderBy('a.apellido', $order);
+        }
+        
 
         $paginationAlumnos = $paginator->paginate(
             $alumnosQuery, 
@@ -72,8 +89,21 @@ class DashboardController extends AbstractController
             ->andWhere('ap.fecha BETWEEN :desde AND :hasta')
             ->setParameter('instituto', $instituto)
             ->setParameter('desde', $desde)
-            ->setParameter('hasta', $hasta)
-            ->orderBy('ap.fecha', 'DESC');
+            ->setParameter('hasta', $hasta);
+
+        // Aplicar ordenamiento según la columna seleccionada
+        if (isset($sortColumns[$sort])) {
+            $column = $sortColumns[$sort];
+            $orderBy = $column['prefix'] . $column['field'];
+            $alumnosPagosQuery->orderBy($orderBy, $order);
+            
+            // Si es ordenamiento por alumno, agregar ordenamiento secundario por nombre
+            if ($sort === 'alumno') {
+                $alumnosPagosQuery->addOrderBy('a.nombre', $order);
+            }
+        } else {
+            $alumnosPagosQuery->orderBy('ap.fecha', $order);
+        }
 
         $alumnosPagosPagination = $paginator->paginate(
             $alumnosPagosQuery,
@@ -87,6 +117,10 @@ class DashboardController extends AbstractController
             ->where('a.instituto = :instituto')
             ->andWhere('a.activo = 1')
             ->setParameter('instituto', $instituto);
+
+        if ($sort === 'nombreCurso') {
+            $cursosQuery->orderBy('c.nombre', $order);
+        }
 
         if ($busqueda) {
             $cursosQuery->andWhere('a.apellido LIKE :busqueda OR a.nombre LIKE :busqueda')
@@ -134,6 +168,8 @@ class DashboardController extends AbstractController
             'desde' => (new DateTime($desde))->format('d-m-Y'),
             'hasta' => (new DateTime($hasta))->format('d-m-Y'),
             'max' => $max,
+            'order' => $order,
+            'sort' => $sort,
             'atiempo' => count($pagaronATiempo),
             'fueraDeTiempo' => count($pagaronFueraDeTiempo),
             'activos' => $alumnoRepository->count(['activo' => 1, 'instituto' => $instituto]), 

@@ -22,9 +22,11 @@ class AlumnoController extends AbstractController
      */
     public function index(Request $request, AlumnoRepository $alumnoRepository, CursoRepository $cursoRepository, PaginatorInterface $paginator): Response
     {
-        $limit = $request->get('limit', 20);
+        $limit = $request->get('limit', 10);
         $currentPage = $request->get('page', 1);
         $busqueda = $request->get('busqueda', '');
+        $order = $request->get('order', 'asc');
+        $sort = $request->get('sort', 'apellido');
         $activo = $request->get('activo', 'todos');
         $cursoSelected = $request->get('cursoSelected', '0');
         $totalAgregados = $request->get('totalAgregados', '');
@@ -35,24 +37,56 @@ class AlumnoController extends AbstractController
         }
 
         $instituto = $this->getUser()->getInstituto();
-        $alumnos = $alumnoRepository->getAlumnoByNombreEstadoYcursoQuery($busqueda, $activo, $cursoSelected, $instituto);
+        
+        $alumnosQuery = $this->createQuery($alumnoRepository, $instituto, $sort, $order, $busqueda);
 
-        $alumnosPagination = $paginator->paginate(
-            $alumnos, 
+        $alumnos = $paginator->paginate(
+            $alumnosQuery, 
             $currentPage, 
             $limit
         );
 
         return $this->render('alumno/index.html.twig', [
-            'alumnos' => $alumnosPagination,
+            'alumnos' => $alumnos,
             'busqueda' => $busqueda,
-            'total' => $alumnosPagination->getTotalItemCount(),
+            'total' => $alumnos->getTotalItemCount(),
+            'order' => $order,
+            'sort' => $sort,
             'activo' => $activo,
             'totalAgregados' => $totalAgregados,
             'alumnosQueNoGuardadamos' => $alumnosQueNoGuardadamos,
             'cursos' => $cursoRepository->findBy(['instituto' => $instituto]),
             'cursoSelected' => $cursoSelected
         ]);
+    }
+
+    /**
+     * Crea una consulta para obtener alumnos con los filtros especificados
+     */
+    private function createQuery(
+        AlumnoRepository $alumnoRepository,
+        $instituto,
+        string $sort,
+        string $order,
+        ?string $busqueda = null
+    ) {
+        $qb = $alumnoRepository->createQueryBuilder('a')
+            ->where('a.instituto = :instituto')
+            ->setParameter('instituto', $instituto);
+
+        if ($busqueda) {
+            $qb->andWhere('a.apellido LIKE :busqueda OR a.nombre LIKE :busqueda')
+               ->setParameter('busqueda', '%' . $busqueda . '%');
+        }
+
+        // Ordenamiento por nombre o apellido
+        if ($sort === 'nombre') {
+            $qb->orderBy('a.nombre', $order);
+        } else {
+            $qb->orderBy('a.apellido', $order);
+        }
+
+        return $qb;
     }
 
     /**
@@ -148,7 +182,25 @@ class AlumnoController extends AbstractController
     public function delete(Request $request, Alumno $alumno, AlumnoRepository $alumnoRepository): Response
     {
         if ($this->isCsrfTokenValid('delete'.$alumno->getId(), $request->request->get('_token'))) {
-            //TODO, ver si quieren borrar la relación con los hermanos
+            // Remover relaciones con cursos
+            foreach ($alumno->getCurso() as $curso) {
+                $alumno->removeCurso($curso);
+            }
+
+            // Desarmar relaciones de hermanos
+            $hermanosActuales = $alumno->getHermanos();
+            foreach ($hermanosActuales as $hermanoId) {
+                $hermano = $alumnoRepository->find($hermanoId);
+                if ($hermano) {
+                    $hermanosDelHermano = $hermano->getHermanos();
+                    if (($key = array_search($alumno->getId(), $hermanosDelHermano)) !== false) {
+                        unset($hermanosDelHermano[$key]);
+                        $hermano->setHermanos(array_values($hermanosDelHermano));
+                        $alumnoRepository->add($hermano);
+                    }
+                }
+            }
+            $alumno->setHermanos([]);
             $alumnoRepository->remove($alumno);
         }
 

@@ -29,21 +29,57 @@ class ProfesorController extends AbstractController
         $limit = $request->get('limit', 10);
         $currentPage = $request->get('page', 1);
         $busqueda = $request->get('busqueda', 0);
+        $order = $request->get('order', 'asc');
+        $sort = $request->get('sort', 'apellido');
         
         $instituto = $this->getUser()->getInstituto();
         
-        $profesorsQuery = $profesorRepository->findByApellido($busqueda, $instituto);
+        $profesorsQuery = $this->createQuery($profesorRepository, $instituto, $sort, $order, $busqueda);
 
         $profesors = $paginator->paginate(
             $profesorsQuery, 
             $currentPage, 
             $limit
         );
+
         return $this->render('profesor/index.html.twig', [
             'profesors' => $profesors,
             'busqueda' => $busqueda,
-            'total' => $profesors->getTotalItemCount()
+            'total' => $profesors->getTotalItemCount(),
+            'order' => $order,
+            'sort' => $sort
         ]);
+    }
+
+    /**
+     * Crea una consulta para obtener profesores con los filtros especificados
+     */
+    private function createQuery(
+        ProfesorRepository $profesorRepository,
+        $instituto,
+        string $sort,
+        string $order,
+        ?string $busqueda = null
+    ) {
+        $qb = $profesorRepository->createQueryBuilder('p')
+            ->where('p.instituto = :instituto')
+            ->setParameter('instituto', $instituto);
+
+        if ($busqueda) {
+            $qb->andWhere('p.apellido LIKE :busqueda OR p.nombre LIKE :busqueda')
+               ->setParameter('busqueda', '%' . $busqueda . '%');
+        }
+
+        // Ordenamiento por nombre o apellido
+        if ($sort === 'nombre') {
+            $qb->orderBy('p.nombre', $order)
+               ->addOrderBy('p.apellido', $order);
+        } else {
+            $qb->orderBy('p.apellido', $order)
+               ->addOrderBy('p.nombre', $order);
+        }
+
+        return $qb;
     }
 
     /**
