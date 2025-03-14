@@ -70,7 +70,7 @@ class AlumnosPagosController extends AbstractController
         $hermanos = $alumno->getHermanos();
         foreach ($hermanos as $hermanoId) {
             $hermano = $alumnoRepository->find($hermanoId);
-            if ($hermano->getActivo()) {
+            if ($hermano->getActivo() && !$bonificacionHermanos) {
                 $precio = $precio * 0.80;
                 $bonificacionHermanos = true;
             }
