@@ -38,7 +38,7 @@ class AlumnoController extends AbstractController
 
         $instituto = $this->getUser()->getInstituto();
         
-        $alumnosQuery = $this->createQuery($alumnoRepository, $instituto, $sort, $order, $busqueda);
+        $alumnosQuery = $this->createQuery($alumnoRepository, $instituto, $sort, $order, $busqueda, $activo);
 
         $alumnos = $paginator->paginate(
             $alumnosQuery, 
@@ -68,7 +68,8 @@ class AlumnoController extends AbstractController
         $instituto,
         string $sort,
         string $order,
-        ?string $busqueda = null
+        ?string $busqueda = null,
+        ?string $activo = null
     ) {
         $qb = $alumnoRepository->createQueryBuilder('a')
             ->where('a.instituto = :instituto')
@@ -77,6 +78,11 @@ class AlumnoController extends AbstractController
         if ($busqueda) {
             $qb->andWhere('a.apellido LIKE :busqueda OR a.nombre LIKE :busqueda')
                ->setParameter('busqueda', '%' . $busqueda . '%');
+        }
+
+        if ($activo != 'todos') {
+            $qb->andWhere('a.activo = :activo')
+                ->setParameter('activo', $activo);
         }
 
         // Ordenamiento por nombre o apellido
