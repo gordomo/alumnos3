@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}New Curso{% endblock %}
+{% block title %}Nuevo Curso{% endblock %}
 
 {% block body %}
 <div class="container mt-3 d-flex justify-content-center">
@@ -13,4 +13,11 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        $('.predictivo').chosen();
+    </script>
 {% endblock %}

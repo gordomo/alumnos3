@@ -1,56 +1,98 @@
 <!-- Sidebar -->
-<div class="bg-light border-right" id="sidebar-wrapper">
-    {% if is_granted('ROLE_USER') or is_granted('ROLE_ADMIN') or is_granted('ROLE_ADMIN_INSTITUTO') %}
-        <div class="sidebar-heading">{{ app.user.email }} </div>
-    {% endif %}
-    
-    
-    <div class="list-group list-group-flush">
-    {% if is_granted('ROLE_USER') or is_granted('ROLE_ADMIN') %}    
-        <a class="list-group-item list-group-item-action bg-light " href="{{ path('dashboard_index') }}">
-            <i class="bi bi-bar-chart"></i> Dashboard
-        </a>
-        <a class="list-group-item list-group-item-action bg-light " href="{{ path('app_curso_index') }}">
-            <i class="bi bi-book"></i> Cursos
-        </a>
-        <ul class="nav nav-tabs sidebar-dropdown-ul ">
-            <li class="nav-item dropdown dropend ">
-                <a class="list-group-item list-group-item-action bg-light dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">
-                    <i class="bi bi-briefcase"></i> Profesores
-                </a>
-                <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" href="{{ path('app_profesor_index') }}">Listado</a></li>
-                    <li><a class="dropdown-item" href="{{ path('asistencias') }}">Asistencias</a></li>
-                    <li><a class="dropdown-item" href="{{ path('informes') }}">Informes</a></li>
-                </ul>
-            </li>
-        </ul>
-        <a class="list-group-item list-group-item-action bg-light " href="{{ path('app_alumno_index') }}">
-            <i class="bi bi-people"></i> Alumnos
-        </a>
-
-        <a class="list-group-item list-group-item-action bg-light " href="{{ path('dashboard_index', {'action': 'pagos'}) }}">
-            <i class="bi bi-currency-dollar"></i> Pagos
-        </a>
+<div class="d-flex" id="wrapper">
+    <div class="bg-light border-right" id="sidebar-wrapper">
+        {% if is_granted('ROLE_USER') or is_granted('ROLE_ADMIN') or is_granted('ROLE_ADMIN_INSTITUTO') %}
+            <div class="sidebar-heading">{{ app.user.email }} </div>
+        {% endif %}
         
-        <a class="list-group-item list-group-item-action bg-light " href="{{ path('app_user_index') }}">
-            <i class="bi bi-person-lines-fill"></i> Usuarios
-        </a>
-    {% endif %}
-    {% if is_granted('ROLE_ADMIN_INSTITUTO') %}
-        <a class="list-group-item list-group-item-action bg-light " href="{{ path('admin_instituto_index') }}">
-            <i class="bi bi-book"></i> Institutos
-        </a>
-    {% endif %}
-        <a class="list-group-item list-group-item-action bg-light " href="{{ path('dashboard_index', {'action': 'pagos'}) }}">
-            <i class="bi bi-gear"></i> Configuración
-        </a>
+        <div class="list-group list-group-flush">
+        {% if is_granted('ROLE_USER') or is_granted('ROLE_ADMIN') %}    
+            <ul class="nav nav-tabs sidebar-dropdown-ul">
+                <li class="nav-item">
+                    <a class="list-group-item list-group-item-action bg-light {% if app.request.get('_route') == 'dashboard_index' %}active{% endif %}" href="{{ path('dashboard_index') }}">
+                        <i class="bi bi-bar-chart"></i> Dashboard
+                    </a>
+                </li>
+            </ul>
 
-        <a class="list-group-item list-group-item-action bg-light " href="{{ path('app_logout') }}">
-            <i class="bi bi-arrow-bar-left"></i> Salir
-        </a>
+            <ul class="nav nav-tabs sidebar-dropdown-ul">
+                <li class="nav-item dropdown dropend">
+                    <a class="list-group-item list-group-item-action bg-light dropdown-toggle {% if app.request.get('_route') starts with 'app_curso_' or app.request.get('_route') == 'asistencias' %}active{% endif %}" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">
+                        <i class="bi bi-book"></i> Cursos
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item {% if app.request.get('_route') == 'app_curso_index' %}active{% endif %}" href="{{ path('app_curso_index') }}">Listado</a></li>
+                        <li><a class="dropdown-item {% if app.request.get('_route') == 'app_curso_calendario' %}active{% endif %}" href="{{ path('app_curso_calendario') }}">Calendario</a></li>
+                    </ul>
+                </li>
+            </ul>
+
+            <ul class="nav nav-tabs sidebar-dropdown-ul">
+                <li class="nav-item dropdown dropend">
+                    <a class="list-group-item list-group-item-action bg-light dropdown-toggle {% if app.request.get('_route') starts with 'app_profesor_' or app.request.get('_route') in ['asistencias', 'informes'] %}active{% endif %}" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">
+                        <i class="bi bi-briefcase"></i> Profesores
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item {% if app.request.get('_route') == 'app_profesor_index' %}active{% endif %}" href="{{ path('app_profesor_index') }}">Listado</a></li>
+                        <li><a class="dropdown-item {% if app.request.get('_route') == 'asistencias' %}active{% endif %}" href="{{ path('asistencias') }}">Asistencias</a></li>
+                        <li><a class="dropdown-item {% if app.request.get('_route') == 'informes' %}active{% endif %}" href="{{ path('informes') }}">Informes</a></li>
+                    </ul>
+                </li>
+            </ul>
+
+            <ul class="nav nav-tabs sidebar-dropdown-ul">
+                <li class="nav-item">
+                    <a class="list-group-item list-group-item-action bg-light {% if app.request.get('_route') starts with 'app_alumno_' %}active{% endif %}" href="{{ path('app_alumno_index') }}">
+                        <i class="bi bi-people"></i> Alumnos
+                    </a>
+                </li>
+            </ul>
+
+            <ul class="nav nav-tabs sidebar-dropdown-ul">
+                <li class="nav-item">
+                    <a class="list-group-item list-group-item-action bg-light {% if app.request.get('_route') == 'dashboard_index' and app.request.get('action') == 'pagos' %}active{% endif %}" href="{{ path('dashboard_index', {'action': 'pagos'}) }}">
+                        <i class="bi bi-currency-dollar"></i> Pagos
+                    </a>
+                </li>
+            </ul>
+
+            <ul class="nav nav-tabs sidebar-dropdown-ul">
+                <li class="nav-item">
+                    <a class="list-group-item list-group-item-action bg-light {% if app.request.get('_route') starts with 'app_user_' %}active{% endif %}" href="{{ path('app_user_index') }}">
+                        <i class="bi bi-person-lines-fill"></i> Usuarios
+                    </a>
+                </li>
+            </ul>
+        {% endif %}
+
+        {% if is_granted('ROLE_ADMIN_INSTITUTO') %}
+            <ul class="nav nav-tabs sidebar-dropdown-ul">
+                <li class="nav-item">
+                    <a class="list-group-item list-group-item-action bg-light {% if app.request.get('_route') starts with 'admin_instituto_' %}active{% endif %}" href="{{ path('admin_instituto_index') }}">
+                        <i class="bi bi-book"></i> Institutos
+                    </a>
+                </li>
+            </ul>
+        {% endif %}
+
+            <ul class="nav nav-tabs sidebar-dropdown-ul">
+                <li class="nav-item">
+                    <a class="list-group-item list-group-item-action bg-light {% if app.request.get('_route') == 'dashboard_index' and app.request.get('action') == 'configuracion' %}active{% endif %}" href="{{ path('dashboard_index', {'action': 'configuracion'}) }}">
+                        <i class="bi bi-gear"></i> Configuración
+                    </a>
+                </li>
+            </ul>
+
+            <ul class="nav nav-tabs sidebar-dropdown-ul">
+                <li class="nav-item">
+                    <a class="list-group-item list-group-item-action bg-light {% if app.request.get('_route') == 'app_logout' %}active{% endif %}" href="{{ path('app_logout') }}">
+                        <i class="bi bi-arrow-bar-left"></i> Salir
+                    </a>
+                </li>
+            </ul>
+        </div>
     </div>
-    <button class="mt-2 border-1 w-100" id="menu-toggle">
+    <button class="btn btn-light border-1" id="menu-toggle">
         <i class="bi bi-arrow-left" id="arrow-icon"></i>
     </button>
 </div>
@@ -60,25 +102,11 @@
         document.addEventListener('DOMContentLoaded', function () {
             var menuToggle = document.getElementById('menu-toggle');
             var wrapper = document.getElementById('wrapper');
+            var arrowIcon = document.getElementById('arrow-icon');
+            
             if (menuToggle != undefined) {
                 menuToggle.addEventListener('click', function () {
                     wrapper.classList.toggle('toggled');
-                    var toggle = document.getElementById('menu-toggle');
-                    var arrowIcon = document.getElementById('arrow-icon');
-                    if ( toggle.style.position != 'absolute' ) {
-                            toggle.style.position = 'absolute';
-                            toggle.style.left = '0px';
-                            toggle.classList.remove('w-100');
-                            arrowIcon.classList.add('bi-arrow-right');
-                            arrowIcon.classList.remove('bi-arrow-left');   
-                    } else {
-                        toggle.style.position = '';
-                        toggle.style.left = '';
-                        toggle.classList.add('w-100');
-                        arrowIcon.classList.remove('bi-arrow-right');
-                        arrowIcon.classList.add('bi-arrow-left');
-                        
-                    }
                 });
             }
         });

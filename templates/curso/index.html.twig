@@ -3,7 +3,9 @@
 {% block title %}Curso index{% endblock %}
 
 {% block panelTitle %}
-    Cursos <a href="{{ path('app_curso_new') }}" class="btn btn-success btn-sm">Nuevo Curso</a>
+    Cursos 
+    <a href="{{ path('app_curso_new') }}" class="btn btn-success btn-sm">Nuevo Curso</a>
+    <a href="{{ path('app_curso_calendario') }}" class="btn btn-primary btn-sm">Ver Calendario</a>
 {% endblock %}
 
 {% block body %}
@@ -59,6 +61,7 @@
                                     Precio
                                 <i class="bi bi-arrow-{{ sort == 'precio' ? (order == 'asc' ? 'up' : 'down') : 'up-down' }}"></i></th>
                             <th>Días</th>
+                            <th>Horario</th>
                             <th>Duración</th>
                             <th>Acciones</th>
                             <th>Total: {{totalCursos}}</th>
@@ -78,23 +81,10 @@
                                 {% endfor %}
                             </td>
                             <td>
-                                {% if curso.duracion == 1 %}
-                                    1:00hs
-                                {% elseif curso.duracion == 1.25 %}
-                                    1:15hs
-                                {% elseif curso.duracion == 1.5 %}
-                                    1:30hs
-                                {% elseif curso.duracion == 1.75 %}
-                                    1:45hs
-                                {% elseif curso.duracion == 2 %}
-                                    2:00hs
-                                {% elseif curso.duracion == 2.25 %}
-                                    2:15hs
-                                {% elseif curso.duracion == 2.5 %}
-                                    2:30hs
-                                {% elseif curso.duracion == 2.75 %}
-                                    2:45hs
-                                {% endif %}
+                                {{ curso.horarioInicio|date('H:i') }} - {{ curso.horarioFin|date('H:i') }}
+                            </td>
+                            <td>
+                                {{ curso.duracion|number_format(2) }}hs
                             </td>
                             <td>
                                 <a href="{{ path('app_curso_edit', {'id': curso.id}) }}"><i class="bi bi-pencil" data-toggle="tooltip" title="editar"></i></a>
@@ -119,6 +109,7 @@
                     <th>Nombre</th>
                     <th>Precio</th>
                     <th>Días</th>
+                    <th>Horario</th>
                     <th>Duración</th>
                     <th>Acciones</th>
                     <th>Total: {{ totalCursosDesabilitados }}</th>
@@ -138,7 +129,10 @@
                             {% endfor %}
                         </td>
                         <td>
-                            {{ curso.duracion }}hs
+                            {{ curso.horarioInicio|date('H:i') }} - {{ curso.horarioFin|date('H:i') }}
+                        </td>
+                        <td>
+                            {{ curso.duracion|number_format(2) }}hs
                         </td>
                         <td>
                             <a class="btn btn-success" href="{{ path('app_curso_habilitar', {id: curso.id}) }}">Habilitar</a>

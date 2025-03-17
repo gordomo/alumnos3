@@ -80,12 +80,15 @@ class CursoController extends AbstractController
         $instituto = $this->getUser()->getInstituto();
         $curso = new Curso();
         $curso->setInstituto($instituto);
-        $form = $this->createForm(CursoType::class, $curso, ['allow_extra_fields' =>true]);
+        $form = $this->createForm(CursoType::class, $curso, [
+            'allow_extra_fields' => true,
+            'instituto' => $instituto
+        ]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
             
-            if ( empty($form->get('dias')->getData()) ) {
+            if (empty($form->get('dias')->getData())) {
                 $this->addFlash('danger', 'necesita seleccionar al menos un día');
                 return $this->renderForm('curso/new.html.twig', [
                     'curso' => $curso,
@@ -93,13 +96,57 @@ class CursoController extends AbstractController
                 ]);
             }
 
-            if ( empty($form->get('duracion')->getData())) {
-                $this->addFlash('danger', 'necesita seleccionar una duración');
+            if (empty($form->get('horarioInicio')->getData()) || empty($form->get('horarioFin')->getData())) {
+                $this->addFlash('danger', 'necesita especificar el horario de inicio y fin');
                 return $this->renderForm('curso/new.html.twig', [
                     'curso' => $curso,
                     'form' => $form,
                 ]);
             }
+
+            // Validar que la hora de fin sea posterior a la hora de inicio
+            $horaInicio = $form->get('horarioInicio')->getData();
+            $horaFin = $form->get('horarioFin')->getData();
+            
+            // Crear objetos DateTime para comparar
+            $inicio = new \DateTime($horaInicio);
+            $fin = new \DateTime($horaFin);
+            
+            if ($fin <= $inicio) {
+                $this->addFlash('danger', 'El horario de fin debe ser posterior al horario de inicio');
+                return $this->renderForm('curso/new.html.twig', [
+                    'curso' => $curso,
+                    'form' => $form,
+                ]);
+            }
+
+            // Establecer los horarios en el curso
+            $curso->setHorarioInicio($inicio);
+            $curso->setHorarioFin($fin);
+
+            // Validar fechas
+            $fechaInicio = $form->get('fechaInicio')->getData();
+            $fechaFin = $form->get('fechaFin')->getData();
+
+            if (!$fechaInicio || !$fechaFin) {
+                $this->addFlash('danger', 'Debe especificar las fechas de inicio y fin del curso');
+                return $this->renderForm('curso/new.html.twig', [
+                    'curso' => $curso,
+                    'form' => $form,
+                ]);
+            }
+
+            if ($fechaFin <= $fechaInicio) {
+                $this->addFlash('danger', 'La fecha de fin debe ser posterior a la fecha de inicio');
+                return $this->renderForm('curso/new.html.twig', [
+                    'curso' => $curso,
+                    'form' => $form,
+                ]);
+            }
+
+            // Calcular la duración basada en los horarios
+            $duracion = $this->calcularDuracion($inicio, $fin);
+            $curso->setDuracion($duracion);
 
             $cursoRepository->add($curso);
             return $this->redirectToRoute('app_curso_index', [], Response::HTTP_SEE_OTHER);
@@ -108,6 +155,78 @@ class CursoController extends AbstractController
         return $this->renderForm('curso/new.html.twig', [
             'curso' => $curso,
             'form' => $form,
+        ]);
+    }
+
+    /**
+     * @Route("/calendario", name="app_curso_calendario", methods={"GET"})
+     */
+    public function calendario(CursoRepository $cursoRepository): Response
+    {
+        $instituto = $this->getUser()->getInstituto();
+        $cursos = $cursoRepository->findBy(['instituto' => $instituto]);
+        $eventos = [];
+        $cursosSinHorario = [];
+
+        foreach ($cursos as $curso) {
+            if (!$curso->getHorarioInicio() || !$curso->getHorarioFin() || !$curso->getFechaInicio() || !$curso->getFechaFin()) {
+                $cursosSinHorario[] = $curso;
+                continue;
+            }
+
+            try {
+                $fechaInicio = $curso->getFechaInicio();
+                $fechaFin = $curso->getFechaFin();
+                $horaInicio = $curso->getHorarioInicio();
+                $horaFin = $curso->getHorarioFin();
+                $dias = $curso->getDias();
+
+                // Crear un array de días de la semana (0 = Domingo, 1 = Lunes, etc.)
+                $diasSemana = [
+                    'Domingo' => 0,
+                    'Lunes' => 1,
+                    'Martes' => 2,
+                    'Miercoles' => 3,
+                    'Jueves' => 4,
+                    'Viernes' => 5,
+                    'Sabado' => 6
+                ];
+
+                // Convertir los días seleccionados a números
+                $diasSeleccionados = array_map(function($dia) use ($diasSemana) {
+                    return $diasSemana[$dia];
+                }, $dias);
+
+                // Generar eventos para cada día seleccionado en el rango de fechas
+                $fechaActual = clone $fechaInicio;
+                while ($fechaActual <= $fechaFin) {
+                    $diaSemana = (int)$fechaActual->format('w');
+                    
+                    if (in_array($diaSemana, $diasSeleccionados)) {
+                        $evento = [
+                            'title' => $curso->getNombre(),
+                            'start' => $fechaActual->format('Y-m-d') . 'T' . $horaInicio->format('H:i:s'),
+                            'end' => $fechaActual->format('Y-m-d') . 'T' . $horaFin->format('H:i:s'),
+                            'extendedProps' => [
+                                'profesor' => $curso->getProfesores()->first() ? $curso->getProfesores()->first()->getNombre() . ' ' . $curso->getProfesores()->first()->getApellido() : 'Sin profesor',
+                                'duracion' => $curso->getDuracion(),
+                                'precio' => $curso->getPrecio()
+                            ]
+                        ];
+                        $eventos[] = $evento;
+                    }
+                    
+                    $fechaActual->modify('+1 day');
+                }
+            } catch (\Exception $e) {
+                // Si hay algún error al procesar el curso, lo agregamos a la lista de cursos sin horario
+                $cursosSinHorario[] = $curso;
+            }
+        }
+
+        return $this->render('curso/calendario.html.twig', [
+            'eventos' => json_encode($eventos),
+            'cursosSinHorario' => $cursosSinHorario
         ]);
     }
 
@@ -138,12 +257,15 @@ class CursoController extends AbstractController
             $this->addFlash('danger', 'El curso no pertenece al instituto del usuario.');
             return $this->redirectToRoute('app_curso_index');
         }
-        $form = $this->createForm(CursoType::class, $curso, ['allow_extra_fields' =>true]);
+        $form = $this->createForm(CursoType::class, $curso, [
+            'allow_extra_fields' => true,
+            'instituto' => $instituto
+        ]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
 
-            if ( empty($form->get('dias')->getData()) ) {
+            if (empty($form->get('dias')->getData())) {
                 $this->addFlash('danger', 'necesita seleccionar al menos un día');
                 return $this->renderForm('curso/edit.html.twig', [
                     'curso' => $curso,
@@ -151,13 +273,57 @@ class CursoController extends AbstractController
                 ]);
             }
 
-            if ( empty($form->get('duracion')->getData())) {
-                $this->addFlash('danger', 'necesita seleccionar una duración');
+            if (empty($form->get('horarioInicio')->getData()) || empty($form->get('horarioFin')->getData())) {
+                $this->addFlash('danger', 'necesita especificar el horario de inicio y fin');
                 return $this->renderForm('curso/edit.html.twig', [
                     'curso' => $curso,
                     'form' => $form,
                 ]);
             }
+
+            // Validar que la hora de fin sea posterior a la hora de inicio
+            $horaInicio = $form->get('horarioInicio')->getData();
+            $horaFin = $form->get('horarioFin')->getData();
+            
+            // Crear objetos DateTime para comparar
+            $inicio = new \DateTime($horaInicio);
+            $fin = new \DateTime($horaFin);
+            
+            if ($fin <= $inicio) {
+                $this->addFlash('danger', 'El horario de fin debe ser posterior al horario de inicio');
+                return $this->renderForm('curso/edit.html.twig', [
+                    'curso' => $curso,
+                    'form' => $form,
+                ]);
+            }
+
+            // Establecer los horarios en el curso
+            $curso->setHorarioInicio($inicio);
+            $curso->setHorarioFin($fin);
+
+            // Validar fechas
+            $fechaInicio = $form->get('fechaInicio')->getData();
+            $fechaFin = $form->get('fechaFin')->getData();
+
+            if (!$fechaInicio || !$fechaFin) {
+                $this->addFlash('danger', 'Debe especificar las fechas de inicio y fin del curso');
+                return $this->renderForm('curso/edit.html.twig', [
+                    'curso' => $curso,
+                    'form' => $form,
+                ]);
+            }
+
+            if ($fechaFin <= $fechaInicio) {
+                $this->addFlash('danger', 'La fecha de fin debe ser posterior a la fecha de inicio');
+                return $this->renderForm('curso/edit.html.twig', [
+                    'curso' => $curso,
+                    'form' => $form,
+                ]);
+            }
+
+            // Calcular la duración basada en los horarios
+            $duracion = $this->calcularDuracion($inicio, $fin);
+            $curso->setDuracion($duracion);
 
             $cursoRepository->add($curso);
             return $this->redirectToRoute('app_curso_index', [], Response::HTTP_SEE_OTHER);
@@ -206,5 +372,82 @@ class CursoController extends AbstractController
         $cursoRepository->habilitar($curso);
 
         return $this->redirectToRoute('app_curso_index', [], Response::HTTP_SEE_OTHER);
+    }
+
+    /**
+     * Obtiene la fecha y hora de inicio del curso para un día específico
+     */
+    private function getHoraInicio($curso, $dia): string
+    {
+        $horaInicio = $curso->getHorarioInicio();
+        if (!$horaInicio) {
+            throw new \Exception('Horario de inicio no establecido');
+        }
+
+        $diaSemana = $this->getDiaSemana($dia);
+        
+        // Obtener la fecha del próximo día de la semana
+        $fecha = new \DateTime();
+        
+        $fecha->modify('next ' . $diaSemana);
+        
+        // Combinar la fecha con la hora de inicio
+        $fecha->setTime($horaInicio->format('H'), $horaInicio->format('i'));
+        
+        return $fecha->format('Y-m-d\TH:i:s');
+    }
+
+    /**
+     * Obtiene la fecha y hora de fin del curso para un día específico
+     */
+    private function getHoraFin($curso, $dia): string
+    {
+        $horaFin = $curso->getHorarioFin();
+        if (!$horaFin) {
+            throw new \Exception('Horario de fin no establecido');
+        }
+
+        $diaSemana = $this->getDiaSemana($dia);
+        
+        // Obtener la fecha del próximo día de la semana
+        $fecha = new \DateTime();
+        $fecha->modify('next ' . $diaSemana);
+        
+        // Combinar la fecha con la hora de fin
+        $fecha->setTime($horaFin->format('H'), $horaFin->format('i'));
+        
+        return $fecha->format('Y-m-d\TH:i:s');
+    }
+
+    /**
+     * Convierte el nombre del día en español al formato de PHP
+     */
+    private function getDiaSemana($dia): string
+    {
+        $dias = [
+            'Lunes' => 'monday',
+            'Martes' => 'tuesday',
+            'Miercoles' => 'wednesday',
+            'Jueves' => 'thursday',
+            'Viernes' => 'friday',
+            'Sábado' => 'saturday',
+            'Domingo' => 'sunday'
+        ];
+        
+        return $dias[$dia];
+    }
+
+    /**
+     * Calcula la duración en horas entre dos horarios
+     * @return float Duración en formato decimal (ej: 1.5 para 1 hora y 30 minutos)
+     */
+    private function calcularDuracion(\DateTime $inicio, \DateTime $fin): float
+    {
+        $intervalo = $inicio->diff($fin);
+        $horas = $intervalo->h;
+        $minutos = $intervalo->i;
+        
+        // Convertir a formato decimal (ej: 1:30 -> 1.5)
+        return $horas + ($minutos / 60);
     }
 }

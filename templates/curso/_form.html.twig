@@ -4,10 +4,14 @@
         {% for field in [
             {form: form.nombre, label: 'Nombre', class: ''},
             {form: form.precio, label: 'Precio', class: ''},
-            {form: form.dias, label: 'Dias', class: 'chosen-select'},
-            {form: form.duracion, label: 'Duracion', class: 'chosen-select' }
+            {form: form.fechaInicio, label: 'Fecha de Inicio', class: ''},
+            {form: form.fechaFin, label: 'Fecha de Fin', class: ''},
+            {form: form.horarioInicio, label: 'Horario de Inicio', class: ''},
+            {form: form.horarioFin, label: 'Horario de Fin', class: ''},
+            {form: form.dias, label: 'Días', class: 'chosen-select'},
+            {form: form.profesores, label: 'Profesores', class: 'chosen-select'}
         ] %}
-            <div class="col-md-3 mb-3">
+            <div class="col-md-6">
                 {{ form_label(field.form, field.label) }}
                 {{ form_widget(field.form, {'attr': {'class': 'form-control ' ~ field.class}}) }}
                 <small class="form-error text-danger">
@@ -16,10 +20,10 @@
             </div>
         {% endfor %}
     </div>
-    <div class="row g-3">
-        <div class="col-md-12" style="text-align: right;">
-            <button class="btn btn-success">{{ button_label|default('Save') }}</button>
-            <a class="btn btn-primary" href="{{ path('app_curso_index') }}">Volver</a>
+    <div class="row mb-3">
+        <div class="col text-end">
+            <a class="btn btn-secondary" href="{{ path('app_curso_index') }}">Volver</a>
+            <button class="btn btn-success">{{ button_label|default('Guardar') }}</button>
         </div>
     </div>
 </div>
@@ -29,7 +33,8 @@
     document.addEventListener("DOMContentLoaded", function() {
         $(".chosen-select").chosen({
             width: "100%",
-            no_results_text: "No se encontraron coincidencias"
+            no_results_text: "No se encontraron coincidencias",
+            placeholder_text_single: "Seleccione una opción",
         });
     });
 </script>

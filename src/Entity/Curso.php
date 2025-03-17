@@ -31,6 +31,26 @@ class Curso
     private $dias = [];
 
     /**
+     * @ORM\Column(type="time")
+     */
+    private $horarioInicio;
+
+    /**
+     * @ORM\Column(type="time")
+     */
+    private $horarioFin;
+
+    /**
+     * @ORM\Column(type="date")
+     */
+    private $fechaInicio;
+
+    /**
+     * @ORM\Column(type="date")
+     */
+    private $fechaFin;
+
+    /**
      * @ORM\Column(type="float")
      */
     private $duracion;
@@ -246,6 +266,80 @@ class Curso
             }
         }
 
+        return $this;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getHorarioInicio()
+    {
+        return $this->horarioInicio;
+    }
+
+    /**
+     * @param mixed $horarioInicio
+     */
+    public function setHorarioInicio($horarioInicio): void
+    {
+        $this->horarioInicio = $horarioInicio;
+        $this->calcularDuracion();
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getHorarioFin()
+    {
+        return $this->horarioFin;
+    }
+
+    /**
+     * @param mixed $horarioFin
+     */
+    public function setHorarioFin($horarioFin): void
+    {
+        $this->horarioFin = $horarioFin;
+        $this->calcularDuracion();
+    }
+
+    /**
+     * Calcula la duración del curso basada en el horario de inicio y fin
+     */
+    private function calcularDuracion(): void
+    {
+        if ($this->horarioInicio && $this->horarioFin) {
+            $inicio = $this->horarioInicio;
+            $fin = $this->horarioFin;
+            
+            $diferencia = $fin->diff($inicio);
+            $horas = $diferencia->h;
+            $minutos = $diferencia->i;
+            
+            // Convertir a formato decimal (ej: 1:30 -> 1.5)
+            $this->duracion = $horas + ($minutos / 60);
+        }
+    }
+
+    public function getFechaInicio(): ?\DateTimeInterface
+    {
+        return $this->fechaInicio;
+    }
+
+    public function setFechaInicio(\DateTimeInterface $fechaInicio): self
+    {
+        $this->fechaInicio = $fechaInicio;
+        return $this;
+    }
+
+    public function getFechaFin(): ?\DateTimeInterface
+    {
+        return $this->fechaFin;
+    }
+
+    public function setFechaFin(\DateTimeInterface $fechaFin): self
+    {
+        $this->fechaFin = $fechaFin;
         return $this;
     }
 }

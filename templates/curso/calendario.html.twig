@@ -1,0 +1,66 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Calendario de Cursos{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css' rel='stylesheet' />
+{% endblock %}
+
+{% block body %}
+    <div class="container mt-4">
+        <h1>Calendario de Cursos</h1>
+
+        {% if cursosSinHorario|length > 0 %}
+            <div class="alert alert-warning mb-4">
+                <h4 class="alert-heading">Cursos sin horario establecido</h4>
+                <p>Los siguientes cursos necesitan tener sus horarios configurados para aparecer en el calendario:</p>
+                <ul class="list-unstyled">
+                    {% for curso in cursosSinHorario %}
+                        <li>
+                            <a href="{{ path('app_curso_edit', {'id': curso.id}) }}" class="text-decoration-none">
+                                {{ curso.nombre }}
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        <div id="calendar"></div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js'></script>
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/es.js'></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendar');
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                locale: 'es',
+                initialView: 'timeGridWeek',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                },
+                slotMinTime: '08:00:00',
+                slotMaxTime: '24:00:00',
+                allDaySlot: false,
+                events: {{ eventos|raw }},
+                eventClick: function(info) {
+                    var props = info.event.extendedProps;
+                    alert(
+                        'Curso: ' + info.event.title + '\n' +
+                        'Profesor: ' + props.profesor + '\n' +
+                        'Duración: ' + props.duracion + ' horas\n' +
+                        'Precio: $' + props.precio
+                    );
+                }
+            });
+            calendar.render();
+        });
+    </script>
+{% endblock %}
