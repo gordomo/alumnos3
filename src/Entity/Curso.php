@@ -306,11 +306,12 @@ class Curso
     /**
      * Calcula la duración del curso basada en el horario de inicio y fin
      */
-    private function calcularDuracion(): void
+    public function calcularDuracion(): void
     {
         if ($this->horarioInicio && $this->horarioFin) {
-            $inicio = $this->horarioInicio;
-            $fin = $this->horarioFin;
+            // Convertir strings a DateTime si es necesario
+            $inicio = is_string($this->horarioInicio) ? new \DateTime($this->horarioInicio) : $this->horarioInicio;
+            $fin = is_string($this->horarioFin) ? new \DateTime($this->horarioFin) : $this->horarioFin;
             
             $diferencia = $fin->diff($inicio);
             $horas = $diferencia->h;

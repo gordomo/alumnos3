@@ -2,19 +2,21 @@
 
 {% block title %}Nuevo Pago{% endblock %}
 
-{% block body %}
+{% block panelTitle %}
+    Nuevo Pago de {{ alumno }}
+{% endblock %}
 
-    <div class="container mt-3 d-flex justify-content-center">
-        <div class="col-12">
-            <h1>Nuevo Pago de {{ alumno }}</h1>
+{% block body %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-md-12">
             <div class="card shadow-sm">
                 <div class="card-body">
                     {{ include('alumnos_pagos/_form.html.twig', {'button_label': 'Guardar'}) }}
+                    </div>
                 </div>
             </div>
-            <br>
-            <a class="btn btn-primary mr-1" href="javascript:history.back()">Volver</a>
-            <a class="btn btn-secondary" href="{{ path('app_alumnos_pagos_index', {'alumno': alumnoId}) }}">Ver pagos</a>
         </div>
     </div>
+</div>
 {% endblock %}

@@ -81,10 +81,23 @@
                                 {% endfor %}
                             </td>
                             <td>
-                                {{ curso.horarioInicio|date('H:i') }} - {{ curso.horarioFin|date('H:i') }}
+                                {% if curso.horarioInicio|date('H:i') == curso.horarioFin|date('H:i') %}
+                                    <span class="text-danger">No tiene horario</span>
+                                {% else %}
+                                    {{ curso.horarioInicio|date('H:i') }}hs - {{ curso.horarioFin|date('H:i') }}hs
+                                {% endif %} 
                             </td>
                             <td>
-                                {{ curso.duracion|number_format(2) }}hs
+                                {% if curso.horarioInicio|date('H:i') == curso.horarioFin|date('H:i') %}
+                                    <span class="text-danger">No tiene horario</span>
+                                {% else %}
+                                    {% set horas = (curso.duracion / 1)|round(0, 'floor') %}
+                                        
+                                    {% set minutos = ((curso.duracion - horas) * 60)|round %}
+                                    {{ horas }}:{{ minutos|format('%02d') }}hs
+                                    
+                                {% endif %} 
+                                
                             </td>
                             <td>
                                 <a href="{{ path('app_curso_edit', {'id': curso.id}) }}"><i class="bi bi-pencil" data-toggle="tooltip" title="editar"></i></a>

@@ -1,9 +1,13 @@
 {% extends 'base.html.twig' %}
 
 {% block title %}Asistencias{% endblock %}
-    {% block body %}
-        <h1>Asistencias</h1>
-        <br>
+
+{% block panelTitle %}
+    Asistencias
+{% endblock %}
+
+{% block body %}
+    <div class="container-fluid mt-4">
         <div class="row">
             <div class="col-md-12">
                 <label for="filtroFechas">Semana del:</label>
@@ -86,7 +90,9 @@
             {% endfor %}
             </tbody>
         </table>
-    {% endblock %}
+    </div>
+{% endblock %}
+
 {% block javascripts %}
     {{ parent() }}
     <script>

@@ -183,11 +183,24 @@
     color: #495057;
     display: flex;
     align-items: center;
-    justify-content: space-between;
     width: 100%;
     height: 3.5rem;
 }
 
 .title .btn {
     margin-left: 0.5rem;
+}
+
+.text-center.pt-2 {
+    height: 3.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #e9ecef;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.sidebar-headings.text-center.small.text-muted.ps-3 {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
 }

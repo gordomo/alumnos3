@@ -2,19 +2,14 @@
 
 {% block title %}Pagos de Alumno{% endblock %}
 
+{% block panelTitle %}Pagos de {{ alumno }} <a class="btn btn-primary" href="javascript:history.back()">Volver</a>{% endblock %}
 {% block body %}
-    <div class="row align-items-center mb-4">
-        <div class="col">
-            <h1 class="h3">Pagos de {{ alumno }}</h1>
-        </div>
-        <div class="col text-end">
-            <a class="btn btn-primary" href="javascript:history.back()">Volver</a>
-        </div>
-    </div>
-
-    <div class="table-responsive">
-        <table class="table table-striped table-hover">
-            <thead class="table-dark">
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
                 <tr>
                     <th scope="col">Fecha</th>
                     <th scope="col">Monto</th>
@@ -47,8 +42,10 @@
                 <tr>
                     <td colspan="5" class="text-center">No se encontraron registros.</td>
                 </tr>
-            {% endfor %}
-            </tbody>
-        </table>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
+</div>
 {% endblock %}

@@ -2,7 +2,9 @@
 <div class="d-flex" id="wrapper">
     <div class="bg-light border-right" id="sidebar-wrapper">
         {% if is_granted('ROLE_USER') or is_granted('ROLE_ADMIN') or is_granted('ROLE_ADMIN_INSTITUTO') %}
-            <div class="sidebar-heading">{{ app.user.email }} </div>
+            <div class="sidebar-heading ps-4">{{ app.user.instituto.nombre }}</div>
+            <div class="sidebar-headings small text-muted ps-4">{{ app.user.email }}</div>
+            <hr class="my-0">
         {% endif %}
         
         <div class="list-group list-group-flush">

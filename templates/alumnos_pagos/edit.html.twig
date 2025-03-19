@@ -2,19 +2,23 @@
 
 {% block title %}Edit AlumnosPagos{% endblock %}
 
+{% block panelTitle %}
+    Editar Pago
+{% endblock %}
+
 {% block body %}
-    <div class="editForms">
-        <h1>Editar Pago</h1>
-        <div class="row">
-            {{ include('alumnos_pagos/_form.html.twig', {'button_label': 'Guardar'}) }}
-            {{ include('alumnos_pagos/_delete_form.html.twig') }}
-        </div>
-        <br><br>
-        <div class="row botones">
-            <div class="col-md-12">
-                <a class="btn btn-primary" href="{{ path('app_alumnos_pagos_index', {'alumno': alumnos_pago.alumno.id}) }}">Volver</a>
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    {{ include('alumnos_pagos/_form.html.twig', {'button_label': 'Guardar'}) }}
+                </div>
+            </div>
+            <div class="mt-3 text-center">
+                {{ include('alumnos_pagos/_delete_form.html.twig') }}
             </div>
         </div>
     </div>
-
+</div>
 {% endblock %}

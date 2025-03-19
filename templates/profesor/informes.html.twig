@@ -1,9 +1,13 @@
 {% extends 'base.html.twig' %}
 
 {% block title %}Informes{% endblock %}
-    {% block body %}
-        <h1>Informes</h1>
-        <br>
+
+{% block panelTitle %}
+    Informes
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid mt-4">
         <div class="row">
             <div class="col-md-6">
                 <label for="filtroFechas">Desde/Hasta</label>
@@ -18,9 +22,9 @@
                     {% for fechas in rango %}
                         <th scope="col" class="border-start text-center">{{ fechas }}</th>
                     {% endfor %}
-                    <th scope="col">Total Faltas</th>
-                    <th scope="col">Total Horas</th>
-                    <th scope="col">$</th>
+                    <th scope="col" class="border-start text-center">Total Faltas</th>
+                    <th scope="col" class="border-start text-center">Total Horas</th>
+                    <th scope="col" class="border-start text-center">Total Horas</th>
                 </tr>
             </thead>
             <tbody>
@@ -55,10 +59,10 @@
                                     {% endif %}
                                 </td>
                             {% endfor %}
-                            <td>
+                            <td class="border-start text-center">
                                 {{ totalFaltas }}
                             </td>
-                            <td>
+                            <td class="border-start text-center">
                                 {% set totalRedondeadas = totalHoras | split('.') %}
                                 {% if totalRedondeadas[1] is defined %}
                                     {% if totalRedondeadas[1] == 25 %}
@@ -72,7 +76,7 @@
                                     {{ totalRedondeadas[0] }}:00hs
                                 {% endif %}
                             </td>
-                            <td>
+                            <td class="border-start text-center">
                                 {% if asistencia['precioHora'] is defined %}
                                     ${{ totalHoras * asistencia['precioHora'] }}
                                 {% endif %}
@@ -82,7 +86,9 @@
                 {% endfor %}
             </tbody>
         </table>
-    {% endblock %}
+    </div>
+{% endblock %}
+
 {% block javascripts %}
     {{ parent() }}
     <script>

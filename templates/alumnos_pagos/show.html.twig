@@ -36,7 +36,7 @@
         <tbody>
         <tr>
             <td class="service">{{ alumnos_pago.curso.nombre }}</td>
-            <td class="desc">Pago cuota</td>
+            <td class="desc">Pago cuota - {{ ('months.' ~ alumnos_pago.mes|date('F'))|trans }}/{{ alumnos_pago.ano }}</td>
             <td class="unit">${{ alumnos_pago.monto }}</td>
             <td class="unit">${{ alumnos_pago.monto }}</td>
         </tr>

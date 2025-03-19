@@ -58,9 +58,13 @@
             </small>
         </div>
     </div>
-    <div class="row g-3 mt-3">
-        <div class="col-12" style="text-align: right;">
-            <button class="btn btn-success">{{ button_label|default('Save') }}</button>
+    <div class="row g-3 mt-3 ">
+        <div class="col-12 gap-3">
+            <button class="btn btn-success mr-1">{{ button_label|default('Save') }}</button>
+            {% if alumnoId is defined %}
+                <a class="btn btn-secondary" href="{{ path('app_alumnos_pagos_index', {'alumno': alumnoId}) }}">Ver pagos</a>
+            {% endif %}
+            <a class="btn btn-primary mr-1" href="javascript:history.back()">Volver</a>
         </div>
     </div>
 </div>

@@ -1,0 +1,31 @@
+{% extends 'emails/base_email.html.twig' %}
+
+{% block title %}¡Bienvenido a Team Builder!{% endblock %}
+
+{% block content %}
+    <h2>¡Hola {{ username }}!</h2>
+    
+    <p>¡Bienvenido a Team Builder! Nos alegra tenerte como parte de nuestra comunidad.</p>
+    
+    <p>Con tu cuenta podrás:</p>
+    <ul>
+        <li>Acceder a todos nuestros recursos</li>
+        <li>Participar en proyectos</li>
+        <li>Conectar con otros miembros</li>
+        <li>Y mucho más...</li>
+    </ul>
+    
+    <p style="text-align: center;">
+        <a href="{{ url('app_login') }}" class="button">
+            Iniciar Sesión
+        </a>
+    </p>
+    
+    <p>
+        Si tienes alguna pregunta o necesitas ayuda, no dudes en contactarnos.
+    </p>
+{% endblock %}
+
+{% block footer %}
+    <p><small>Este es un mensaje automático, por favor no respondas a este correo.</small></p>
+{% endblock %} 
