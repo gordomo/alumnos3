@@ -104,15 +104,11 @@ class CursoController extends AbstractController
                 ]);
             }
 
-            // Validar que la hora de fin sea posterior a la hora de inicio
-            $horaInicio = $form->get('horarioInicio')->getData();
-            $horaFin = $form->get('horarioFin')->getData();
+            // Convertir los horarios seleccionados a DateTime
+            $horaInicio = new \DateTime($form->get('horarioInicio')->getData());
+            $horaFin = new \DateTime($form->get('horarioFin')->getData());
             
-            // Crear objetos DateTime para comparar
-            $inicio = new \DateTime($horaInicio);
-            $fin = new \DateTime($horaFin);
-            
-            if ($fin <= $inicio) {
+            if ($horaFin <= $horaInicio) {
                 $this->addFlash('danger', 'El horario de fin debe ser posterior al horario de inicio');
                 return $this->renderForm('curso/new.html.twig', [
                     'curso' => $curso,
@@ -121,8 +117,8 @@ class CursoController extends AbstractController
             }
 
             // Establecer los horarios en el curso
-            $curso->setHorarioInicio($inicio);
-            $curso->setHorarioFin($fin);
+            $curso->setHorarioInicio($horaInicio);
+            $curso->setHorarioFin($horaFin);
 
             // Validar fechas
             $fechaInicio = $form->get('fechaInicio')->getData();
@@ -145,7 +141,7 @@ class CursoController extends AbstractController
             }
 
             // Calcular la duración basada en los horarios
-            $duracion = $this->calcularDuracion($inicio, $fin);
+            $duracion = $this->calcularDuracion($horaInicio, $horaFin);
             $curso->setDuracion($duracion);
 
             $cursoRepository->add($curso);
@@ -261,6 +257,13 @@ class CursoController extends AbstractController
             'allow_extra_fields' => true,
             'instituto' => $instituto
         ]);
+
+        // Establecer los valores iniciales para los campos de horario
+        if ($curso->getHorarioInicio() && $curso->getHorarioFin()) {
+            $form->get('horarioInicio')->setData($curso->getHorarioInicio()->format('H:i'));
+            $form->get('horarioFin')->setData($curso->getHorarioFin()->format('H:i'));
+        }
+
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
@@ -281,15 +284,11 @@ class CursoController extends AbstractController
                 ]);
             }
 
-            // Validar que la hora de fin sea posterior a la hora de inicio
-            $horaInicio = $form->get('horarioInicio')->getData();
-            $horaFin = $form->get('horarioFin')->getData();
+            // Convertir los horarios seleccionados a DateTime
+            $horaInicio = new \DateTime($form->get('horarioInicio')->getData());
+            $horaFin = new \DateTime($form->get('horarioFin')->getData());
             
-            // Crear objetos DateTime para comparar
-            $inicio = new \DateTime($horaInicio);
-            $fin = new \DateTime($horaFin);
-            
-            if ($fin <= $inicio) {
+            if ($horaFin <= $horaInicio) {
                 $this->addFlash('danger', 'El horario de fin debe ser posterior al horario de inicio');
                 return $this->renderForm('curso/edit.html.twig', [
                     'curso' => $curso,
@@ -298,8 +297,8 @@ class CursoController extends AbstractController
             }
 
             // Establecer los horarios en el curso
-            $curso->setHorarioInicio($inicio);
-            $curso->setHorarioFin($fin);
+            $curso->setHorarioInicio($horaInicio);
+            $curso->setHorarioFin($horaFin);
 
             // Validar fechas
             $fechaInicio = $form->get('fechaInicio')->getData();
@@ -322,7 +321,7 @@ class CursoController extends AbstractController
             }
 
             // Calcular la duración basada en los horarios
-            $duracion = $this->calcularDuracion($inicio, $fin);
+            $duracion = $this->calcularDuracion($horaInicio, $horaFin);
             $curso->setDuracion($duracion);
 
             $cursoRepository->add($curso);

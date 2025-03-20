@@ -48,6 +48,7 @@ class CursoType extends AbstractType
             ])
             ->add('horarioInicio', ChoiceType::class, [
                 'required' => true,
+                'mapped' => false,
                 'attr' => ['class' => 'form-control'],
                 'label_attr' => ['class' => 'form-label required'],
                 'choices' => $this->getTimeChoices(),
@@ -55,6 +56,7 @@ class CursoType extends AbstractType
             ])
             ->add('horarioFin', ChoiceType::class, [
                 'required' => true,
+                'mapped' => false,
                 'attr' => ['class' => 'form-control'],
                 'label_attr' => ['class' => 'form-label required'],
                 'choices' => $this->getTimeChoices(),
