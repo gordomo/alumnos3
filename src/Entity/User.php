@@ -41,6 +41,16 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      */
     private $instituto;
 
+    /**
+     * @ORM\Column(type="string", length=100, nullable=true)
+     */
+    private $resetToken;
+
+    /**
+     * @ORM\Column(type="datetime", nullable=true)
+     */
+    private $resetTokenExpiresAt;
+
     public function getInstituto(): ?Instituto
     {
         return $this->instituto;
@@ -139,5 +149,27 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         // If you store any temporary, sensitive data on the user, clear it here
         // $this->plainPassword = null;
+    }
+
+    public function getResetToken(): ?string
+    {
+        return $this->resetToken;
+    }
+
+    public function setResetToken(?string $resetToken): self
+    {
+        $this->resetToken = $resetToken;
+        return $this;
+    }
+
+    public function getResetTokenExpiresAt(): ?\DateTimeInterface
+    {
+        return $this->resetTokenExpiresAt;
+    }
+
+    public function setResetTokenExpiresAt(?\DateTimeInterface $resetTokenExpiresAt): self
+    {
+        $this->resetTokenExpiresAt = $resetTokenExpiresAt;
+        return $this;
     }
 }

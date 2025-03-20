@@ -1,53 +1,90 @@
 {% extends 'base.html.twig' %}
+
 {% block stylesheets %}
     {{ parent() }}
     <link rel="stylesheet" href="{{ asset('assets/css/loginform.css') }}">
 {% endblock %}
-{% block title %}Log in!{% endblock %}
+
+{% block title %}Iniciar Sesión{% endblock %}
 
 {% block body %}
-<div class="wrapper fadeInDown">
+<div class="wrapper">
     <div id="formContent">
-        <form method="post">
-            {% if error %}
-                <div class="alert alert-danger">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
-            {% endif %}
+        
+        <div class="logo-container">
+            <img src="{{ asset('assets/img/logoteam.png') }}" alt="Logo" class="logo">
+        </div>
+        <h2 style="text-align: center; color: #5c6f6c; font-size: 1.8rem; margin-bottom: 1.5rem; font-weight: 600;">
+            Institutos
+        </h2>
+        {% if error %}
+            <div class="alert alert-danger">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+        {% endif %}
 
-            {% if app.user %}
-                <div class="mb-3">
-                    You are logged in as {{ app.user.username }}, <a href="{{ path('app_logout') }}">Logout</a>
-                </div>
-            {% endif %}
-
-            <img src="{{ asset('assets/img/logoteam.png') }}" class="img-fluid">
-            <br>
-            <br>
-            <br>
-            <input placeholder="Email" type="email" value="{{ last_username }}" name="email" id="inputEmail" class="form-control" autocomplete="email" required autofocus>
-            <input type="password" name="password" id="inputPassword" class="form-control" autocomplete="current-password" placeholder="password" required>
-
-            <input type="hidden" name="_csrf_token"
-                   value="{{ csrf_token('authenticate') }}"
-            >
-
-            <br>
-            <br>
-
-            {#
-            Uncomment this section and add a remember_me option below your firewall to activate remember me functionality.
-            See https://symfony.com/doc/current/security/remember_me.html
-
-            <div class="checkbox mb-3">
-                <label>
-                    <input type="checkbox" name="_remember_me"> Remember me
-                </label>
+        {% if app.user %}
+            <div class="alert alert-info">
+                Ya estás conectado como {{ app.user.username }}, 
+                <a href="{{ path('app_logout') }}" class="alert-link">Cerrar sesión</a>
             </div>
-            #}
+        {% endif %}
 
-            <button class="btn btn-lg btn-primary mrl-15" type="submit" style="width: 85%;">
+        <form method="post" class="login-form" id="loginForm">
+            <div class="form-group">
+                <input type="email" 
+                       value="{{ last_username }}" 
+                       name="email" 
+                       id="inputEmail" 
+                       class="form-control" 
+                       placeholder="Correo electrónico"
+                       autocomplete="email" 
+                       required 
+                       autofocus>
+            </div>
+
+            <div class="form-group">
+                <input type="password" 
+                       name="password" 
+                       id="inputPassword" 
+                       class="form-control" 
+                       placeholder="Contraseña"
+                       autocomplete="current-password" 
+                       required>
+            </div>
+
+            <div class="form-options">
+                <div class="form-check">
+                    <input type="checkbox" name="_remember_me" id="remember_me" class="form-check-input">
+                    <label class="form-check-label" for="remember_me">Recordarme</label>
+                </div>
+                <a href="{{ path('app_reset_password') }}" class="forgot-password">
+                    ¿Olvidaste tu contraseña?
+                </a>
+            </div>
+
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+
+            <button class="btn btn-primary" type="submit">
                 Ingresar
             </button>
         </form>
     </div>
 </div>
+
+{{ include('components/loading.html.twig') }}
+
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('loginForm');
+            
+            form.addEventListener('submit', function(e) {
+                if (form.checkValidity()) {
+                    showLoading();
+                }
+            });
+        });
+    </script>
 {% endblock %}

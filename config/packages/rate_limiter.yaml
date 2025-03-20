@@ -1,0 +1,6 @@
+framework:
+    rate_limiter:
+        reset_password:
+            policy: 'fixed_window'
+            limit: 3
+            interval: '15 minutes'

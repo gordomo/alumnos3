@@ -1,142 +1,182 @@
-
-.mrl-15 {
-    margin: 15px 0;
+html, body {
+    background-color: #5e706e;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
 }
-
-
-h2 {
-    text-align: center;
-    font-size: 16px;
-    font-weight: 600;
-    text-transform: uppercase;
-    display:inline-block;
-    margin: 40px 8px 10px 8px;
-    color: #cccccc;
-}
-
-
-
-/* STRUCTURE */
 
 .wrapper {
     display: flex;
     align-items: center;
-    flex-direction: column;
     justify-content: center;
-    width: 100%;
-    min-height: 100%;
-    padding: 20px;
+    min-height: 100vh;
+    margin-top: -50px;
 }
 
 #formContent {
-    -webkit-border-radius: 10px 10px 10px 10px;
-    border-radius: 10px 10px 10px 10px;
-    background: #fff;
-    padding: 30px;
-    width: 90%;
-    max-width: 450px;
+    background-color: #e8edec;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(92, 111, 108, 0.1);
+    width: 100%;
+    max-width: 400px;
     position: relative;
-    padding: 0px;
-    -webkit-box-shadow: 0 30px 60px 0 rgba(0,0,0,0.3);
-    box-shadow: 0 30px 60px 0 rgba(0,0,0,0.3);
+    z-index: 1;
+}
+
+.logo-container {
     text-align: center;
+    margin-bottom: 2rem;
+    margin-right: -2rem;
+    margin-left: -2rem;
 }
 
-#formFooter {
-    background-color: #f6f6f6;
-    border-top: 1px solid #dce8f1;
-    padding: 25px;
-    text-align: center;
-    -webkit-border-radius: 0 0 10px 10px;
-    border-radius: 0 0 10px 10px;
+.logo {
+    max-width: 100%;
+    height: auto;
 }
 
-
-
-/* TABS */
-
-h2.inactive {
-    color: #cccccc;
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
 }
 
-h2.active {
-    color: #0d0d0d;
-    border-bottom: 2px solid #5fbae9;
+.form-group {
+    position: relative;
 }
 
+.form-control {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 2px solid #849d9a;
+    border-radius: 5px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background-color: #ffffff;
+    color: #2c3e50;
+}
 
+.form-control:focus {
+    border-color: #5c6f6c;
+    box-shadow: 0 0 0 0.2rem rgba(92, 111, 108, 0.25);
+    outline: none;
+}
 
-/* FORM TYPOGRAPHY*/
+.form-control::placeholder {
+    color: #849d9a;
+}
 
-input[type=button], input[type=submit], input[type=reset]  {
-    background-color: #56baed;
+.btn-primary {
+    background-color: #d4a373;
     border: none;
-    color: white;
-    padding: 15px 80px;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
+    color: #ffffff;
+    padding: 0.75rem 1.5rem;
+    border-radius: 5px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
     text-transform: uppercase;
-    font-size: 13px;
-    -webkit-box-shadow: 0 10px 30px 0 rgba(95,186,233,0.4);
-    box-shadow: 0 10px 30px 0 rgba(95,186,233,0.4);
-    -webkit-border-radius: 5px 5px 5px 5px;
-    border-radius: 5px 5px 5px 5px;
-    margin: 5px 20px 40px 20px;
-    -webkit-transition: all 0.3s ease-in-out;
-    -moz-transition: all 0.3s ease-in-out;
-    -ms-transition: all 0.3s ease-in-out;
-    -o-transition: all 0.3s ease-in-out;
-    transition: all 0.3s ease-in-out;
+    letter-spacing: 0.5px;
 }
 
-input[type=button]:hover, input[type=submit]:hover, input[type=reset]:hover  {
-    background-color: #39ace7;
+.btn-primary:hover {
+    background-color: #c49262;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(92, 111, 108, 0.2);
 }
 
-input[type=button]:active, input[type=submit]:active, input[type=reset]:active  {
-    -moz-transform: scale(0.95);
-    -webkit-transform: scale(0.95);
-    -o-transform: scale(0.95);
-    -ms-transform: scale(0.95);
-    transform: scale(0.95);
+.btn-primary:active {
+    transform: translateY(0);
 }
 
-input[type=text], input[type=password], input[type=email] {
-    background-color: #f6f6f6;
-    border: none;
-    color: #0d0d0d;
-    padding: 15px 32px;
-    text-align: center;
+.forgot-password {
+    color: #5c6f6c;
     text-decoration: none;
-    display: inline-block;
-    font-size: 16px;
-    margin: 5px;
-    width: 85%;
-    border: 2px solid #f6f6f6;
-    -webkit-transition: all 0.5s ease-in-out;
-    -moz-transition: all 0.5s ease-in-out;
-    -ms-transition: all 0.5s ease-in-out;
-    -o-transition: all 0.5s ease-in-out;
-    transition: all 0.5s ease-in-out;
-    -webkit-border-radius: 5px 5px 5px 5px;
-    border-radius: 5px 5px 5px 5px;
+    font-size: 0.9rem;
+    transition: color 0.3s ease;
 }
 
-input[type=text], input[type=password]:focus {
-    background-color: #fff;
-    border-bottom: 2px solid #5fbae9;
+.forgot-password:hover {
+    color: #d4a373;
+    text-decoration: none;
 }
 
-input[type=password]::placeholder {
-    color: #cccccc;
+.alert {
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    border-radius: 5px;
+    font-size: 0.9rem;
 }
 
+.alert-danger {
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+}
 
+.alert-success {
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+}
 
-/* ANIMATIONS */
+.alert-info {
+    background-color: #d1ecf1;
+    border: 1px solid #bee5eb;
+    color: #0c5460;
+}
 
-/* Simple CSS3 Fade-in-down Animation */
+/* Estilos para el checkbox de "Recordarme" */
+.form-check {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 1rem 0;
+}
+
+.form-check-input {
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid #849d9a;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.form-check-label {
+    color: #5c6f6c;
+    font-size: 0.9rem;
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+    #formContent {
+        padding: 1.5rem;
+        margin: 1rem;
+    }
+
+    .logo {
+        max-width: 150px;
+    }
+
+    .form-control {
+        padding: 0.6rem 0.8rem;
+        font-size: 0.9rem;
+    }
+
+    .btn-primary {
+        padding: 0.6rem 1.2rem;
+        font-size: 0.9rem;
+    }
+
+    .alert {
+        padding: 0.8rem;
+        font-size: 0.85rem;
+    }
+}
+
+/* Animaciones */
 .fadeInDown {
     -webkit-animation-name: fadeInDown;
     animation-name: fadeInDown;
@@ -235,10 +275,6 @@ input[type=password]::placeholder {
 .underlineHover:hover:after{
     width: 100%;
 }
-
-
-
-/* OTHERS */
 
 *:focus {
     outline: none;

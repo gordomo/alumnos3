@@ -1,0 +1,60 @@
+{% extends 'base.html.twig' %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('assets/css/loginform.css') }}">
+{% endblock %}
+
+{% block title %}Recuperar Contraseña{% endblock %}
+
+{% block body %}
+<div class="wrapper">
+    <div id="formContent">
+        <div class="logo-container">
+            <img src="{{ asset('assets/img/logoteam.png') }}" alt="Logo" class="logo">
+        </div>
+
+        {% for flash_error in app.flashes('reset_password_error') %}
+            <div class="alert alert-danger" role="alert">{{ flash_error }}</div>
+        {% endfor %}
+
+        <form method="post" class="login-form" id="resetPasswordForm">
+            <div class="form-group">
+                <input type="email" 
+                       name="email" 
+                       id="inputEmail" 
+                       class="form-control" 
+                       placeholder="Correo electrónico"
+                       autocomplete="email" 
+                       required 
+                       autofocus>
+            </div>
+
+            <button class="btn btn-primary" type="submit">
+                Enviar instrucciones
+            </button>
+
+            <div class="text-center mt-3">
+                <a href="{{ path('app_login') }}" class="forgot-password">
+                    Volver al inicio de sesión
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('resetPasswordForm');
+            
+            form.addEventListener('submit', function(e) {
+                if (form.checkValidity()) {
+                    showLoading();
+                }
+            });
+        });
+    </script>
+{% endblock %} 
