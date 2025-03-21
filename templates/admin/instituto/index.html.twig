@@ -37,11 +37,3 @@
     
 
 {% endblock %}
-{% block javascripts %}
-    {{ parent() }}
-        <script>
-            $(document).ready(function(){
-                $("[data-toggle=tooltip]").tooltip({ placement: 'right'});
-            });
-        </script>
-{% endblock %}

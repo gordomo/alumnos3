@@ -78,6 +78,13 @@
                 }, 4000); // Debe ser mayor que el de arriba para asegurarse que la transición se ejecute
             });
         });
+
+        $(document).ready(function(){
+            $("[data-toggle=tooltip]").tooltip({ placement: function(tooltip, link) {
+                return $(link).data('placement') || 'right';
+            }});
+
+        });
     </script>
 {% endblock %}
 </body>

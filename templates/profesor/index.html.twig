@@ -60,8 +60,12 @@
                 </td>
                 <td>${{ profesor.viatico }}</td>
                 <td>
-                    <a href="{{ path('app_profesor_show', {'id': profesor.id}) }}"><i class="bi bi-eye"></i></a>
-                    <a href="{{ path('app_profesor_edit', {'id': profesor.id}) }}"><i class="bi bi-pencil"></i></a>
+                    <a href="{{ path('app_profesor_show', {'id': profesor.id}) }}" class="btn btn-sm btn-outline-primary" title="Ver" data-toggle="tooltip" data-placement="left">
+                        <i class="bi bi-eye"></i>
+                    </a>
+                    <a href="{{ path('app_profesor_edit', {'id': profesor.id}) }}" class="btn btn-sm btn-outline-secondary" title="Editar" data-toggle="tooltip" data-placement="left">
+                        <i class="bi bi-pencil"></i>
+                    </a>
                 </td>
             </tr>
         {% else %}

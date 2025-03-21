@@ -97,7 +97,9 @@
                                 {% endif %} 
                             </td>
                             <td>
-                                <a href="{{ path('app_curso_edit', {'id': curso.id}) }}"><i class="bi bi-pencil" data-toggle="tooltip" title="editar"></i></a>
+                                <a href="{{ path('app_curso_edit', {'id': curso.id}) }}" class="btn btn-sm btn-outline-primary" title="Editar" data-toggle="tooltip" data-placement="left">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
                             </td>
                             <td>
                                 {{ include('curso/_delete_form.html.twig') }}
@@ -158,12 +160,4 @@
         </div>
     </div>
 </div>
-{% endblock %}
-{% block javascripts %}
-    {{ parent() }}
-    <script>
-        $(document).ready(function(){
-            $("[data-toggle=tooltip]").tooltip({ placement: 'right'});
-        });
-    </script>
 {% endblock %}

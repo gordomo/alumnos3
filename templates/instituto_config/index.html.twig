@@ -2,15 +2,17 @@
 
 {% block title %}Configuración del Instituto{% endblock %}
 
+{% block panelTitle %}
+    Configuración del Instituto
+{% endblock %}
+
 {% block body %}
-<div class="container mt-4">
-    <div class="row">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h1 class="h3 mb-0">Configuración del Instituto</h1>
-                </div>
-                <div class="card-body">
+<div class="container-fluid">
+        <div class="card shadow mb-4 mt-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Información General</h6>
+            </div>
+            <div class="card-body">
                     <div class="row">
                         <div class="col-md-4 text-center mb-4">
                             {% if instituto.logo %}

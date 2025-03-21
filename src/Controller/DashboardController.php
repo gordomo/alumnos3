@@ -11,6 +11,8 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Doctrine\ORM\EntityManagerInterface;
+use App\Entity\Alumno;
 
 class DashboardController extends AbstractController
 {
@@ -22,7 +24,8 @@ class DashboardController extends AbstractController
         AlumnosPagosRepository $alumnosPagosRepository, 
         AlumnoRepository $alumnoRepository, 
         CursoRepository $cursoRepository, 
-        PaginatorInterface $paginator
+        PaginatorInterface $paginator,
+        EntityManagerInterface $entityManager
     ): Response {
         $busqueda = $request->get('busqueda', '');
         $action = $request->get('action', 'home');
@@ -33,6 +36,11 @@ class DashboardController extends AbstractController
         $max = $request->get('registros', 10);
         $order = $request->get('order', 'desc');
         $sort = $request->get('sort', 'fecha');
+
+        if($action == 'home') {
+            $sort = $request->get('sort', 'alumnoNombre');
+            $order = $request->get('order', 'asc');
+        }
 
         // Mapeo de columnas para ordenamiento
         $sortColumns = [
@@ -214,6 +222,71 @@ class DashboardController extends AbstractController
 
         $totalPagos = $totalPagos->getQuery()->getSingleScalarResult() ?? 0;
 
+        $mesActual = (int)date('m');
+        $añoActual = (int)date('Y');
+
+        // Crear array de deudores con información detallada
+        $deudoresDetalles = [];
+        foreach ($paginationAlumnos as $alumno) {
+            $mesesAdeudados = [];
+            $motivo = '';
+            
+            // Verificar deuda del mes actual
+            $tienePagoMesActual = false;
+            foreach ($alumno->getPagos() as $pago) {
+                if ($pago->getMes() == $mesActual && $pago->getAno() == $añoActual) {
+                    $tienePagoMesActual = true;
+                    break;
+                }
+            }
+            
+            if (!$tienePagoMesActual) {
+                $mesesAdeudados[] = [
+                    'mes' => $mesActual,
+                    'año' => $añoActual
+                ];
+                $motivo = 'Sin pago en el mes actual';
+            }
+            
+            // Verificar deuda del mes anterior
+            $mesAnterior = $mesActual - 1;
+            $añoAnterior = $añoActual;
+            if ($mesAnterior < 1) {
+                $mesAnterior = 12;
+                $añoAnterior--;
+            }
+            
+            $tienePagoMesAnterior = false;
+            foreach ($alumno->getPagos() as $pago) {
+                if ($pago->getMes() == $mesAnterior && $pago->getAno() == $añoAnterior) {
+                    $tienePagoMesAnterior = true;
+                    break;
+                }
+            }
+            
+            if (!$tienePagoMesAnterior) {
+                $mesesAdeudados[] = [
+                    'mes' => $mesAnterior,
+                    'año' => $añoAnterior
+                ];
+                if (empty($motivo)) {
+                    $motivo = 'Sin pago en el mes anterior';
+                }
+            }
+
+            // Solo agregar al alumno si tiene meses adeudados
+            if (!empty($mesesAdeudados)) {
+                $deudoresDetalles[] = [
+                    'alumno' => $alumno,
+                    'mesesAdeudados' => $mesesAdeudados,
+                    'motivo' => $motivo,
+                    'ultimoPago' => $alumno->getUltimoPago()
+                ];
+            }
+        }
+
+        $totalDeudoresDetalles = count($deudoresDetalles);
+
         return $this->render('dashboard/index.html.twig', [
             'alumnos_pagos' => $alumnosPagosPagination,
             'totalPagos' => $totalPagos,
@@ -231,8 +304,12 @@ class DashboardController extends AbstractController
             'atiempo' => count($pagaronATiempo),
             'fueraDeTiempo' => count($pagaronFueraDeTiempo),
             'activos' => $alumnoRepository->count(['activo' => 1, 'instituto' => $instituto]), 
-            'totalDeudores' => $totalDeudores,
-            'inactivos' => count($inactivos) 
+            'totalDeudores' => $totalDeudoresDetalles,
+            'inactivos' => count($inactivos),
+            'deudoresDetalles' => $deudoresDetalles,
+            'totalDeudoresDetalles' => $totalDeudoresDetalles,
+            'mesActual' => $mesActual,
+            'añoActual' => $añoActual
         ]);
     }
 }
