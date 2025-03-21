@@ -214,58 +214,51 @@ class AlumnoController extends AbstractController
     }
 
     private function setearHermandad($request, Alumno $alumno, $alumnoRepository) {
-        $hermanosForm = $request->request->get('alumno')['hermanos'] ?? [];
-
+        // Obtener los hermanos del formulario y convertirlos a enteros
+        $hermanosForm = array_map('intval', $request->request->get('alumno')['hermanos'] ?? []);
+        
+        // Eliminar duplicados
+        $hermanosForm = array_unique($hermanosForm);
+        
+        // Limpiar todas las relaciones anteriores
         $hermanosActuales = $alumno->getHermanos();
-
-        $todosLosHermanosActualesDelAlumno = [];
-        foreach ($hermanosActuales as $hermanoActual) {
-            $hermanoActualObj = $alumnoRepository->find($hermanoActual);
-            $todosLosHermanosActualesDelAlumno[] = $hermanoActualObj;
-            $otrosHermanosActuales = $hermanoActualObj->getHermanos();
-
-            foreach ($otrosHermanosActuales as $otroHermanoActual) {
-                $todosLosHermanosActualesDelAlumno[] = $otroHermanoActual;
-                $otroHermanoActualDelAlumno = $alumnoRepository->find($otroHermanoActual);
-                $otrosHermanosActualesMas = $otroHermanoActualDelAlumno->getHermanos();
-                if(in_array($alumno->getId(), $otrosHermanosActualesMas)) {
-                    $key = array_search($alumno->getId(), $otrosHermanosActualesMas);
-                    unset($otrosHermanosActualesMas[$key]);
-                    $otroHermanoActualDelAlumno->setHermanos($otrosHermanosActualesMas);
-                    $alumnoRepository->add($otroHermanoActualDelAlumno);
+        foreach ($hermanosActuales as $hermanoId) {
+            $hermano = $alumnoRepository->find($hermanoId);
+            if ($hermano) {
+                $hermanosDelHermano = $hermano->getHermanos();
+                if (($key = array_search($alumno->getId(), $hermanosDelHermano)) !== false) {
+                    unset($hermanosDelHermano[$key]);
+                    $hermano->setHermanos(array_values($hermanosDelHermano));
+                    $alumnoRepository->add($hermano);
                 }
             }
         }
-
+        
+        // Limpiar los hermanos del alumno actual
         $alumno->setHermanos([]);
         $alumnoRepository->add($alumno);
-
-        $todosLosHermanosDelAlumno = [];
-
-        foreach ($hermanosForm as $hermano) {
-            $todosLosHermanosDelAlumno[] = $hermano;
-            $hermanoDelAlumno = $alumnoRepository->find($hermano);
-            $otrosHermanos = $hermanoDelAlumno->getHermanos();
-
-            foreach ($otrosHermanos as $otroHermano) {
-                $todosLosHermanosDelAlumno[] = $otroHermano;
-                $otroHermanoDelAlumno = $alumnoRepository->find($otroHermano);
-                $otrosHermanosMas = $otroHermanoDelAlumno->getHermanos();
-                if(!in_array($alumno->getId(), $otrosHermanosMas)) {
-                    array_push($otrosHermanosMas, $alumno->getId());
-                    $otroHermanoDelAlumno->setHermanos($otrosHermanosMas);
-                    $alumnoRepository->add($otroHermanoDelAlumno);
+        
+        // Establecer las nuevas relaciones
+        foreach ($hermanosForm as $hermanoId) {
+            $hermano = $alumnoRepository->find($hermanoId);
+            if ($hermano && $hermano->getId() !== $alumno->getId()) {
+                // Agregar el hermano al alumno actual
+                $hermanosActuales = $alumno->getHermanos();
+                if (!in_array($hermanoId, $hermanosActuales)) {
+                    $hermanosActuales[] = $hermanoId;
+                    $alumno->setHermanos($hermanosActuales);
                 }
+                
+                // Agregar el alumno actual como hermano
+                $hermanosDelHermano = $hermano->getHermanos();
+                if (!in_array($alumno->getId(), $hermanosDelHermano)) {
+                    $hermanosDelHermano[] = $alumno->getId();
+                    $hermano->setHermanos($hermanosDelHermano);
+                }
+                
+                $alumnoRepository->add($alumno);
+                $alumnoRepository->add($hermano);
             }
-
-            if(!in_array($alumno->getId(), $otrosHermanos)) {
-                array_push($otrosHermanos, $alumno->getId());
-                $hermanoDelAlumno->setHermanos($otrosHermanos);
-                $alumnoRepository->add($hermanoDelAlumno);
-            }
-
-            $alumno->setHermanos($todosLosHermanosDelAlumno);
-            $alumnoRepository->add($alumno);
         }
     }
 }

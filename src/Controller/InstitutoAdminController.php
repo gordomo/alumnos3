@@ -159,7 +159,7 @@ class InstitutoAdminController extends AbstractController
                 }
             }
 
-           // Manejo de la carga de imágenes
+            // Manejo de la carga de imágenes
             $logoFile = $form->get('logo')->getData();
             if ($logoFile) {
                 // Obtener el nombre del archivo anterior

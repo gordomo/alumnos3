@@ -42,13 +42,18 @@
             </div>
 
             <div class="form-group">
-                <input type="password" 
-                       name="password" 
-                       id="inputPassword" 
-                       class="form-control" 
-                       placeholder="Contraseña"
-                       autocomplete="current-password" 
-                       required>
+                <div class="input-group">
+                    <input type="password" 
+                           name="password" 
+                           id="inputPassword" 
+                           class="form-control" 
+                           placeholder="Contraseña"
+                           autocomplete="current-password" 
+                           required>
+                    <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </div>
             </div>
 
             <div class="form-options">
@@ -84,6 +89,20 @@
                 if (form.checkValidity()) {
                     showLoading();
                 }
+            });
+
+            const togglePassword = document.querySelector('#togglePassword');
+            const password = document.querySelector('#inputPassword');
+            const icon = togglePassword.querySelector('i');
+
+            togglePassword.addEventListener('click', function() {
+                // Cambiar el tipo de input
+                const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+                password.setAttribute('type', type);
+                
+                // Cambiar el ícono
+                icon.classList.toggle('bi-eye');
+                icon.classList.toggle('bi-eye-slash');
             });
         });
     </script>

@@ -50,7 +50,7 @@ class InstitutoConfigController extends AbstractController
                     
                     try {
                         $logoFile->move(
-                            $this->getParameter('institutos_directory'),
+                            $this->getParameter('logos_directory'),
                             $newFilename
                         );
                     } catch (FileException $e) {
@@ -60,7 +60,7 @@ class InstitutoConfigController extends AbstractController
                     
                     // Eliminar el logo anterior si existe
                     if ($instituto->getLogo()) {
-                        $oldLogoPath = $this->getParameter('institutos_directory').'/'.$instituto->getLogo();
+                        $oldLogoPath = $this->getParameter('logos_directory').'/'.$instituto->getLogo();
                         if (file_exists($oldLogoPath)) {
                             unlink($oldLogoPath);
                         }
