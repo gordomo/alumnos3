@@ -489,42 +489,73 @@ class Alumno
         return $this;
     }
 
-    public function getDebeMes() {
-
+    public function getDebeMes(): bool
+    {
         $pagos = $this->getPagos();
         $array = $pagos->getValues();
 
-        if ( !empty($array) ) {
-            $hoy = new \DateTime('now');
-            $hoyDia = $hoy->format('d');
-
-            usort($array, function($a, $b) {
-                if (intval($a->getAno() . $a->getMes())  == intval($b->getAno() . $b->getMes()))
-                    return (0);
-                return ((intval($a->getAno() . $a->getMes()) < intval($b->getAno() . $b->getMes()) ? -1 : 1));
-            });
-
-            $ultima = end($array);
-            $ultimoMesPago = $ultima->getMes();
-            $ultimoAnoPago = $ultima->getAno();
-
-            $ultimoPagoDate = new \DateTime("$ultimoAnoPago-$ultimoMesPago-01");
-
-            $interval = $hoy->diff($ultimoPagoDate);
-
-            if ($interval->format('%m') > 1) {
-                return true;
-            }
-
-            if ($interval->format('%m') == 1 && $hoyDia > 20) {
-                return true;
-            }
-
-            return false;
+        if (empty($array)) {
+            return true;
         }
 
-        return true;
+        $hoy = new \DateTime('now');
+        $hoyDia = $hoy->format('d');
+        $mesActual = $hoy->format('m');
+        $anoActual = $hoy->format('Y');
 
+        // Ordenar pagos por fecha (año y mes)
+        usort($array, function($a, $b) {
+            return intval($a->getAno() . $a->getMes()) <=> intval($b->getAno() . $b->getMes());
+        });
+
+        // Verificar si tiene pago del mes actual
+        $tienePagoMesActual = false;
+        foreach ($array as $pago) {
+            if ($pago->getAno() == $anoActual && $pago->getMes() == $mesActual) {
+                $tienePagoMesActual = true;
+                break;
+            }
+        }
+
+        // Si no tiene pago del mes actual y estamos después del día 20
+        if (!$tienePagoMesActual && $hoyDia >= 20) {
+            return true;
+        }
+
+        // Verificar pagos faltantes en meses anteriores
+        $ultimoPago = end($array);
+        $ultimoPagoDate = new \DateTime("{$ultimoPago->getAno()}-{$ultimoPago->getMes()}-01");
+        $mesActualDate = new \DateTime("$anoActual-$mesActual-01");
+
+        // Si el último pago fue hace más de un mes
+        if ($ultimoPagoDate->diff($mesActualDate)->m > 1) {
+            return true;
+        }
+
+        // Verificar si hay meses sin pagar entre el último pago y el mes actual
+        $mesesSinPagar = [];
+        $fechaActual = clone $ultimoPagoDate;
+        $fechaActual->modify('first day of next month');
+
+        while ($fechaActual <= $mesActualDate) {
+            $mesesSinPagar[] = $fechaActual->format('Y-m');
+            $fechaActual->modify('first day of next month');
+        }
+
+        foreach ($mesesSinPagar as $mesAno) {
+            $tienePago = false;
+            foreach ($array as $pago) {
+                if ($pago->getAno() . '-' . $pago->getMes() == $mesAno) {
+                    $tienePago = true;
+                    break;
+                }
+            }
+            if (!$tienePago) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function getUltimoPago(): ?AlumnosPagos

@@ -35,9 +35,7 @@
             </button>
 
             <div class="text-center mt-3">
-                <a href="{{ path('app_login') }}" class="forgot-password">
-                    Volver al inicio de sesión
-                </a>
+                {{ include('components/back_button.html.twig', {'default_path': path('app_login')}) }}
             </div>
         </form>
     </div>

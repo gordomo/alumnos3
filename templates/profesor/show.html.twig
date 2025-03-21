@@ -1,48 +1,69 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Profesor{% endblock %}
+
+{% block title %}Detalle del Profesor{% endblock %}
+
+
+{% block panelTitle %}
+    Detalle del Profesor
+{% endblock %}
+
 
 {% block body %}
-    <h1>Profesor</h1>
+<div class="container-fluid">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Información Personal</h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <table class="table table-bordered">
+                        <tbody>
+                            <tr>
+                                <th style="width: 200px;">Nombre</th>
+                                <td>{{ profesor.nombre }}</td>
+                            </tr>
+                            <tr>
+                                <th>Apellido</th>
+                                <td>{{ profesor.apellido }}</td>
+                            </tr>
+                            <tr>
+                                <th>DNI</th>
+                                <td>{{ profesor.dni }}</td>
+                            </tr>
+                            <tr>
+                                <th>Email</th>
+                                <td>{{ profesor.email }}</td>
+                            </tr>
+                            <tr>
+                                <th>Teléfono</th>
+                                <td>{{ profesor.tel }}</td>
+                            </tr>
+                            <tr>
+                                <th>Horario</th>
+                                <td>{{ horas }}:{{ minutos|format('%02d') }}hs</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <table class="table">
-        <tbody>
-            <tr>
-                <th>Id</th>
-                <td>{{ profesor.id }}</td>
-            </tr>
-            <tr>
-                <th>Nombre</th>
-                <td>{{ profesor.nombre }}</td>
-            </tr>
-            <tr>
-                <th>Apellido</th>
-                <td>{{ profesor.apellido }}</td>
-            </tr>
-            <tr>
-                <th>Dni</th>
-                <td>{{ profesor.dni }}</td>
-            </tr>
-            <tr>
-                <th>Email</th>
-                <td>{{ profesor.email }}</td>
-            </tr>
-            <tr>
-                <th>Teléfono</th>
-                <td>{{ profesor.tel }}</td>
-            </tr>
-        <tr>
-            <td colspan="2">
-                <a href="{{ path('app_profesor_index') }}" class="btn btn-primary">Volver</a>
-                <a href="{{ path('app_profesor_edit', {'id': profesor.id}) }}" class="btn btn-success"><i class="bi bi-pencil"></i></a>
-            </td>
-        </tr>
-        <tr>
-            <td colspan="2">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Acciones</h6>
+        </div>
+        <div class="card-body">
+            <div class="d-flex gap-2">
+                <a href="{{ path('app_profesor_edit', {'id': profesor.id}) }}" class="btn btn-primary">
+                    <i class="bi bi-pencil"></i> Editar
+                </a>
+                {{ include('components/back_button.html.twig', {'default_path': path('app_profesor_index')}) }}
                 {{ include('profesor/_delete_form.html.twig') }}
-            </td>
-        </tr>
-        </tbody>
-    </table>
-
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

@@ -1,4 +1,4 @@
 <form action="{{ path('admin_instituto_delete', {'id': instituto.id}) }}" method="post" style="display:inline-block;" onsubmit="return confirm('Seguro desea borrar este instituto?');">
     <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ instituto.id) }}">
-    <button class="btn btn-danger btn-borrar">Borrar</button>
+    <button class="btn btn-danger">Borrar</button>
 </form>

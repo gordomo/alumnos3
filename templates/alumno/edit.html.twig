@@ -2,10 +2,14 @@
 
 {% block title %}Editar Alumno{% endblock %}
 
+{% block panelTitle %}
+    Editar Alumno
+{% endblock %}
+
 {% block body %}
 <div class="container mt-3 d-flex justify-content-center">
     <div class="col-lg-12">
-        <h1 class="mb-4 text-center">Editar Alumno</h1>
+        
         <div class="card shadow-sm">
             <div class="card-body">
                 {{ include('alumno/_form.html.twig', {'button_label': 'Guardar'}) }}

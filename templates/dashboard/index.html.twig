@@ -63,11 +63,11 @@
                             <a href="{{ path('dashboard_index', {
                                 'action': 'home',
                                 'order': order == 'asc' ? 'desc' : 'asc',
-                                'sort': 'alumbosPagos',
+                                'sort': 'alumnosPagos',
                                 'busqueda': busqueda
                             }) }}" class="text-decoration-none text-dark">
                                 Última fecha de pago
-                                <i class="bi bi-arrow-{{ sort == 'alumbosPagos' ? (order == 'asc' ? 'up' : 'down') : 'up-down' }}"></i>
+                                <i class="bi bi-arrow-{{ sort == 'alumnosPagos' ? (order == 'asc' ? 'up' : 'down') : 'up-down' }}"></i>
                             </a>
                         </th>
                         <th>Acciones</th>
@@ -80,7 +80,7 @@
                     
                         {% for deudor in deudores %}
                             <tr>
-                                <td>{{ deudor.alumno.nombre }} {{ deudor.alumno.apellido }}</td>
+                                <td>{{ deudor.alumno.apellido }} {{ deudor.alumno.nombre }}</td>
                                 <td>{{ deudor.ultimo_pago }}</td>
                                 <td>
                                     <div class="d-flex flex-wrap gap-2">

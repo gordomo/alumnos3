@@ -1,0 +1,14 @@
+{# Template para el botón volver #}
+{% set referer = app.request.headers.get('referer') %}
+{% set current_path = app.request.pathinfo %}
+
+{# Si no hay referer o el referer es la misma página actual, usar una ruta por defecto #}
+{% if not referer or referer ends with current_path %}
+    {% set back_path = default_path|default(path('dashboard_index')) %}
+{% else %}
+    {% set back_path = referer %}
+{% endif %}
+
+<a href="{{ back_path }}" class="btn btn-secondary">
+    <i class="bi bi-arrow-left"></i> Volver
+</a> 

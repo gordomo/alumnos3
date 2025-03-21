@@ -2,7 +2,10 @@
 
 {% block title %}Pagos de Alumno{% endblock %}
 
-{% block panelTitle %}Pagos de {{ alumno }} <a class="btn btn-primary" href="javascript:history.back()">Volver</a>{% endblock %}
+{% block panelTitle %}
+    Pagos de {{ alumno }}
+    {{ include('components/back_button.html.twig', {'default_path': path('dashboard_index', {'action': 'pagos'})}) }}
+{% endblock %}
 {% block body %}
 <div class="container-fluid mt-4">
     <div class="row">

@@ -64,7 +64,7 @@
             {% if alumnoId is defined %}
                 <a class="btn btn-secondary" href="{{ path('app_alumnos_pagos_index', {'alumno': alumnoId}) }}">Ver pagos</a>
             {% endif %}
-            <a class="btn btn-primary mr-1" href="javascript:history.back()">Volver</a>
+            {{ include('components/back_button.html.twig', {'default_path': path('dashboard_index', {'action': 'pagos'})}) }}
         </div>
     </div>
 </div>

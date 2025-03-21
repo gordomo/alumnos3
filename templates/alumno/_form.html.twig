@@ -37,7 +37,7 @@
     </div>
     <div class="row mb-3">
         <div class="col text-end">
-            <a class="btn btn-secondary" href="{{ path('app_alumno_index') }}">Volver</a>
+            {{ include('components/back_button.html.twig', {'default_path': path('app_alumno_index')}) }}
             <button class="btn btn-success">{{ button_label|default('Guardar') }}</button>
         </div>
     </div>

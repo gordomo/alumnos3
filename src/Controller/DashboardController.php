@@ -53,6 +53,52 @@ class DashboardController extends AbstractController
             ->andWhere('a.instituto = :instituto')
             ->setParameter('activo', 1)
             ->setParameter('instituto', $instituto);
+
+        // Obtener el primer día del mes actual
+        $primerDiaMesActual = new DateTime('first day of this month');
+        $ultimoDiaMesActual = new DateTime('last day of this month');
+        
+        // Verificar si estamos en el día 20 o posterior
+        $hoy = new DateTime();
+        $diaActual = (int)$hoy->format('d');
+        
+        if ($diaActual >= 20) {
+            // Subconsulta para obtener los meses con pagos
+            $subQuery = $alumnoRepository->createQueryBuilder('a2')
+                ->select('IDENTITY(p2.alumno) as alumno_id, p2.mes, p2.ano')
+                ->join('a2.pagos', 'p2')
+                ->where('p2.alumno = a')
+                ->getDQL();
+
+            // Query principal modificada para encontrar deudores
+            $alumnosQuery
+                ->andWhere('NOT EXISTS (
+                    SELECT 1 FROM App\Entity\AlumnosPagos p
+                    JOIN p.alumno pa
+                    WHERE p.alumno = a
+                    AND pa.instituto = :instituto
+                    AND p.mes = :mesActual
+                    AND p.ano = :anoActual
+                )')
+                ->orWhere('EXISTS (
+                    SELECT 1 FROM App\Entity\AlumnosPagos p1
+                    JOIN p1.alumno pa1
+                    WHERE p1.alumno = a
+                    AND pa1.instituto = :instituto
+                    AND p1.fecha < :primerDiaMesActual
+                    AND NOT EXISTS (
+                        SELECT 1 FROM App\Entity\AlumnosPagos p2
+                        JOIN p2.alumno pa2
+                        WHERE p2.alumno = a
+                        AND pa2.instituto = :instituto
+                        AND p2.fecha > p1.fecha
+                        AND p2.fecha < :primerDiaMesActual
+                    )
+                )')
+                ->setParameter('mesActual', (int)$hoy->format('m'))
+                ->setParameter('anoActual', (int)$hoy->format('Y'))
+                ->setParameter('primerDiaMesActual', $primerDiaMesActual);
+        }
         
         if ($busqueda) {
             $alumnosQuery->andWhere('a.apellido LIKE :busqueda OR a.nombre LIKE :busqueda')
@@ -61,8 +107,17 @@ class DashboardController extends AbstractController
 
         if ($sort === 'alumnoNombre') {
             $alumnosQuery->orderBy('a.apellido', $order);
+        } elseif ($sort === 'alumnosPagos') {
+            // Subconsulta para obtener la fecha del último pago
+            $alumnosQuery
+                ->leftJoin('a.pagos', 'ultimo_pago')
+                ->addSelect('a', 'MAX(ultimo_pago.fecha) as ultimo_pago_fecha')
+                ->groupBy('a.id')
+                ->orderBy('ultimo_pago_fecha', $order);
         }
-        
+
+        // Obtener el total de deudores antes de la paginación
+        $totalDeudores = count($alumnosQuery->getQuery()->getResult());
 
         $paginationAlumnos = $paginator->paginate(
             $alumnosQuery, 
@@ -72,14 +127,18 @@ class DashboardController extends AbstractController
 
         $deudores = [];
         foreach ($paginationAlumnos as $alumno) {
-            if ($alumno->getDebeMes()) {
+            if (is_array($alumno)) {
+                $ultimoPago = $alumno['ultimo_pago_fecha'];
+                $alumno = $alumno[0];
+                $ultimoPagoFecha = $ultimoPago ? (new DateTime($ultimoPago))->format('d/m/Y') : 'Sin pagos';
+            } else {
                 $ultimoPago = $alumno->getUltimoPago();
                 $ultimoPagoFecha = $ultimoPago ? $ultimoPago->getFecha()->format('d/m/Y') : 'Sin pagos';
-                $deudores[] = [
-                    'alumno' => $alumno,
-                    'ultimo_pago' => $ultimoPagoFecha
-                ];
             }
+            $deudores[] = [
+                'alumno' => $alumno,
+                'ultimo_pago' => $ultimoPagoFecha
+            ];
         }
 
         // Paginación para los "Últimos Pagos" del instituto
@@ -137,7 +196,6 @@ class DashboardController extends AbstractController
         // Esto puede necesitar actualización según tu implementación actual
         $pagaronATiempo = $alumnosPagosRepository->findPagosAtiempo($instituto);
         $pagaronFueraDeTiempo = $alumnosPagosRepository->findPagosFueraDeTiempo($instituto);
-        $deudoresCount = $paginationAlumnos->getTotalItemCount();
         $inactivos = $alumnoRepository->createQueryBuilder('a')
             ->where('a.activo = 0')
             ->andWhere('a.instituto = :instituto')
@@ -173,7 +231,7 @@ class DashboardController extends AbstractController
             'atiempo' => count($pagaronATiempo),
             'fueraDeTiempo' => count($pagaronFueraDeTiempo),
             'activos' => $alumnoRepository->count(['activo' => 1, 'instituto' => $instituto]), 
-            'totalDeudores' => $deudoresCount,
+            'totalDeudores' => $totalDeudores,
             'inactivos' => count($inactivos) 
         ]);
     }
