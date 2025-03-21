@@ -1,0 +1,59 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Configuración del Instituto{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h1 class="h3 mb-0">Configuración del Instituto</h1>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 text-center mb-4">
+                            {% if instituto.logo %}
+                                <img src="{{ asset('uploads/institutos/' ~ instituto.logo) }}" 
+                                     alt="Logo del Instituto" 
+                                     class="img-fluid rounded"
+                                     style="max-height: 200px;">
+                            {% else %}
+                                <div class="bg-light p-4 rounded">
+                                    <i class="fas fa-building fa-4x text-muted"></i>
+                                    <p class="mt-2">Sin logo</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-8">
+                            <table class="table">
+                                <tr>
+                                    <th>Nombre:</th>
+                                    <td>{{ instituto.nombre }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Email:</th>
+                                    <td>{{ instituto.email ?? 'No especificado' }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Teléfono:</th>
+                                    <td>{{ instituto.tel ?? 'No especificado' }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Dirección:</th>
+                                    <td>{{ instituto.dir ?? 'No especificada' }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="text-center mt-4">
+                        <a href="{{ path('instituto_config_edit') }}" class="btn btn-primary">
+                            <i class="fas fa-edit"></i> Editar Configuración
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

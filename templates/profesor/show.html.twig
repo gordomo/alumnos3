@@ -11,7 +11,7 @@
 
 {% block body %}
 <div class="container-fluid">
-    <div class="card shadow mb-4">
+    <div class="card shadow mb-4 mt-4">
         <div class="card-header py-3">
             <h6 class="m-0 font-weight-bold text-primary">Información Personal</h6>
         </div>
@@ -41,8 +41,8 @@
                                 <td>{{ profesor.tel }}</td>
                             </tr>
                             <tr>
-                                <th>Horario</th>
-                                <td>{{ horas }}:{{ minutos|format('%02d') }}hs</td>
+                                <th>Precio Horario</th>
+                                <td>${{ profesor.precioHora|number_format(2, ',', '.') }}</td>
                             </tr>
                         </tbody>
                     </table>
