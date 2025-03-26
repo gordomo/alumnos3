@@ -53,15 +53,4 @@
 
 {% block javascripts %}
     {{ parent() }}
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const form = document.getElementById('resetPasswordForm');
-            
-            form.addEventListener('submit', function(e) {
-                if (form.checkValidity()) {
-                    showLoading();
-                }
-            });
-        });
-    </script>
 {% endblock %} 

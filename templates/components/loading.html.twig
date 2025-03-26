@@ -53,6 +53,9 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Obtener la URL base del sitio desde la variable de entorno de Symfony
+    const siteUrl = '{{ app.request.getSchemeAndHttpHost() }}';
+    
     // Función para mostrar el loading
     window.showLoading = function() {
         document.querySelector('.loading-overlay').style.display = 'flex';
@@ -63,18 +66,25 @@ document.addEventListener('DOMContentLoaded', function() {
         document.querySelector('.loading-overlay').style.display = 'none';
     };
 
+    // Función para detectar navegación hacia atrás usando PerformanceNavigationTiming
+    function isBackNavigation() {
+        if (window.performance && window.performance.getEntriesByType) {
+            const navigationEntries = window.performance.getEntriesByType('navigation');
+            if (navigationEntries.length > 0) {
+                const navigation = navigationEntries[0];
+                return navigation.type === 'back_forward';
+            }
+        }
+        return false;
+    }
+
     // Función para verificar si un enlace es de navegación
     function isNavigationLink(link) {
-        // No mostrar loading para enlaces externos
-
-        //if (link.href.startsWith('http')) return false;
-        
         // No mostrar loading para enlaces que abren en nueva pestaña
         if (link.target === '_blank') return false;
         
         // No mostrar loading para enlaces con data-no-loading
         if (link.hasAttribute('data-no-loading')) return false;
-
 
         if (link.classList.contains('search-choice-close')) return false;
         
@@ -84,7 +94,13 @@ document.addEventListener('DOMContentLoaded', function() {
         // No mostrar loading para el botón de toggle del menú
         if (link.id === 'menu-toggle') return false;
         
-        // Mostrar loading para todos los demás enlaces
+        // Verificar si es un enlace interno usando la URL base del sitio
+        const isInternalLink = link.href.startsWith(siteUrl) || 
+                             link.href.startsWith('/') ||
+                             !link.href.includes('://');
+        
+        if (!isInternalLink) return false;
+        
         return true;
     }
 
@@ -97,30 +113,46 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Manejar clicks en enlaces
-    document.querySelectorAll('a').forEach(link => {
-        link.addEventListener('click', function(e) {
-            if (isNavigationLink(this)) {
-                showLoading();
-            }
-        });
+    // Manejar clicks en enlaces usando delegación de eventos
+    document.addEventListener('click', function(e) {
+        const link = e.target.closest('a');
+        if (link && isNavigationLink(link)) {
+            showLoading();
+        }
     });
 
     // Manejar navegación del navegador (botones adelante/atrás)
     window.addEventListener('popstate', function() {
-        showLoading();
+        if (isBackNavigation()) {
+            hideLoading();
+        } else {
+            showLoading();
+        }
+    });
+
+    // Manejar el evento pageshow para detectar navegación
+    window.addEventListener('pageshow', function(event) {
+        if (event.persisted) {
+            hideLoading();
+        } else if (isBackNavigation()) {
+            hideLoading();
+        }
     });
 
     // Ocultar loading cuando la página termine de cargar
     window.addEventListener('load', function() {
-        hideLoading();
+        if (isBackNavigation()) {
+            hideLoading();
+        }
     });
 
     // Manejar la navegación AJAX si existe
     if (typeof window.fetch === 'function') {
         const originalFetch = window.fetch;
         window.fetch = function() {
-            showLoading();
+            if (!isBackNavigation()) {
+                showLoading();
+            }
             return originalFetch.apply(this, arguments)
                 .finally(() => {
                     hideLoading();

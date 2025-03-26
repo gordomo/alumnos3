@@ -83,13 +83,6 @@
     {{ parent() }}
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const form = document.getElementById('loginForm');
-            
-            form.addEventListener('submit', function(e) {
-                if (form.checkValidity()) {
-                    showLoading();
-                }
-            });
 
             const togglePassword = document.querySelector('#togglePassword');
             const password = document.querySelector('#inputPassword');

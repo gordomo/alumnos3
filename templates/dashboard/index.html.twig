@@ -10,7 +10,7 @@
 <div class="container-fluid mt-4">
     <div class="row mb-3">
         <div class="col-12 d-flex justify-content-between align-items-center">
-            <ul class="nav nav-tabs flex-grow-1" id="myTab" role="tablist">
+            <ul class="nav nav-tabs flex-grow-1 pestanas" id="myTab" role="tablist">
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button" role="tab" aria-controls="home" aria-selected="false">
                         <i class="bi bi-house-door"></i> Deudas
@@ -33,9 +33,10 @@
                 </li>
             </ul>
             <form method="get" action="{{ path('dashboard_index') }}" id="buscar" class="d-flex ms-2">
-                <input id="buscarAction" name="action" type="hidden" class="form-control" value="{{ action }}">
+                <input id="buscarAction" name="action" type="hidden" class="form-control" value="home">
                 <input name="busqueda" type="text" class="form-control me-2" placeholder="Buscar" value="{{ busqueda }}" aria-label="Buscar">
                 <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i></button>
+
             </form>
             <a class="btn btn-success ms-2" id="todos">Todos</a>
         </div>
@@ -53,19 +54,37 @@
                 <table class="table table-hover">
                     <thead>
                         <tr>
-                            <th>Alumno</th>
+                            <th>
+                                <a href="{{ path('dashboard_index', {
+                                    'action': 'home',
+                                    'order': order == 'asc' ? 'desc' : 'asc',
+                                    'sort': 'alumnoNombre',
+                                }) }}" class="text-decoration-none text-dark">
+                                    Alumnos
+                                    <i class="bi bi-arrow-{{ sort == 'alumnoNombre' ? (order == 'asc' ? 'up' : 'down') : 'up-down' }}"></i>
+                                </a>                   
+                            </th>
                             <th>Meses Adeudados</th>
                             <th>Motivo</th>
-                            <th>Último Pago</th>
-                            <th>Acciones</th>
-                        </tr>
+                            <th>
+                                <a href="{{ path('dashboard_index', {
+                                    'action': 'home',
+                                    'order': order == 'asc' ? 'desc' : 'asc',
+                                    'sort': 'ultimoPago',
+                                }) }}" class="text-decoration-none text-dark">
+                                    Último Pago
+                                    <i class="bi bi-arrow-{{ sort == 'ultimoPago' ? (order == 'asc' ? 'up' : 'down') : 'up-down' }}"></i>
+                                </a>                        
+                            </th>
+                        <th>Acciones</th>
+                    </tr>
                     </thead>
                     <tbody>
                         {% for deudor in deudoresDetalles %}
                             <tr>
                                 <td>
                                     <a href="{{ path('app_alumno_show', {'id': deudor.alumno.id}) }}" class="text-decoration-none">
-                                        {{ deudor.alumno.nombre }} {{ deudor.alumno.apellido }}
+                                        {{ deudor.alumno.apellido }} {{ deudor.alumno.nombre }}
                                     </a>
                                 </td>
                                 <td>
@@ -136,6 +155,15 @@
                                             <option {% if max == 20 %} selected {% endif %} value="20">20</option>
                                             <option {% if max == 50 %} selected {% endif %} value="50">50</option>
                                             <option {% if max == 100 %} selected {% endif %} value="100">100</option>
+                                        </select>
+                                    </div>
+                                    <div class="col">
+                                        <label for="registros">Método de Pago:</label>
+                                        <select class="form-control" id="mdp">
+                                            <option value="todos" {% if mdp == 'todos' %} selected {% endif %}>Todos</option>
+                                            <option value="efectivo" {% if mdp == 'efectivo' %} selected {% endif %}>Efectivo</option>
+                                            <option value="tarjeta" {% if mdp == 'tarjeta' %} selected {% endif %}>Tarjeta</option>
+                                            <option value="transferencia" {% if mdp == 'transferencia' %} selected {% endif %}>Transferencia</option>
                                         </select>
                                     </div>
                                 </div>
@@ -226,7 +254,7 @@
                             <td>{{ alumnos_pago.metodoPago|title }}</td>
                             <td>{{ alumnos_pago.mes }}</td>
                             <td>{{ alumnos_pago.ano }}</td>
-                            <td>{{ alumnos_pago.alumno.nombre }} {{ alumnos_pago.alumno.apellido }}</td>
+                            <td>{{ alumnos_pago.alumno.apellido }} {{ alumnos_pago.alumno.nombre }}</td>
                             <td>
                                 <div class="d-flex flex-wrap gap-2">
                                     <a href="{{ path('app_alumnos_pagos_index', {'alumno': alumnos_pago.alumno.id}) }}" class="btn btn-sm btn-outline-primary" title="Ver pagos" data-toggle="tooltip">
@@ -330,7 +358,7 @@
             let form = document.getElementById('buscar');
             form.addEventListener("submit", (e) => {
                 e.preventDefault();
-                let action = $(".nav-tabs").find('.active').attr('aria-controls');
+                let action = $(".pestanas").find('.active').attr('aria-controls');
                 $('#buscarAction').val(action);
                 e.currentTarget.submit();
             });
@@ -341,7 +369,16 @@
                 url.searchParams.delete('busqueda');
                 url.searchParams.delete('desde');
                 url.searchParams.delete('hasta');
-                url.searchParams.set('action', $(".nav-tabs").find('.active').attr('aria-controls'));
+                url.searchParams.delete('mdp');
+                // Obtener la pestaña activa
+                let action = $(".pestanas").find('.active').attr('aria-controls');
+                if (action !== undefined) {
+                    url.searchParams.set('action', action);
+                } else {
+                    // Si no hay pestaña activa, usar 'home' como valor por defecto
+                    url.searchParams.set('action', 'home');
+                }
+                
                 window.location = url;
             });
 
@@ -351,6 +388,7 @@
                 url.searchParams.set('registros', $('#registros').val());
                 url.searchParams.set('page', 1);
                 url.searchParams.set('action', 'pagos');
+                url.searchParams.delete('mdp');
                 
                 const desde = url.searchParams.get('desde');
                 const hasta = url.searchParams.get('hasta');
@@ -359,6 +397,21 @@
                     url.searchParams.set('hasta', hasta);
                 }
                 
+                window.location = url;
+            });
+
+            $('#mdp').on('change', ()=>{
+                const url = new URL(window.location);
+                url.searchParams.set('mdp', $('#mdp').val());
+                url.searchParams.set('action', 'pagos');
+                url.searchParams.set('registros', $('#registros').val());
+                url.searchParams.set('page', 1);
+                const desde = url.searchParams.get('desde');
+                const hasta = url.searchParams.get('hasta');
+                if (desde && hasta) {
+                    url.searchParams.set('desde', desde);
+                    url.searchParams.set('hasta', hasta);
+                }
                 window.location = url;
             });
         
@@ -459,7 +512,7 @@
                 url.searchParams.delete('daterange');
                 url.searchParams.set('action', 'pagos');
                 window.location = url;
-            });
+});
             
 
             // Al cambiar de pestaña, actualizar la URL para reflejar la pestaña actual
@@ -468,6 +521,14 @@
                 const url = new URL(window.location);
                 url.searchParams.set('action', newTabAction);
                 history.replaceState(null, '', url);
+            });
+
+            document.addEventListener('DOMContentLoaded', function() {
+                // Inicializar tooltips
+                var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                    return new bootstrap.Tooltip(tooltipTriggerEl);
+                });
             });
         });
     </script>

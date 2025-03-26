@@ -52,6 +52,7 @@
                                     Nombre
                                 <i class="bi bi-arrow-{{ sort == 'nombre' ? (order == 'asc' ? 'up' : 'down') : 'up-down' }}"></i>
                             </a> </th>
+                            <th>Profesor</th>
                             <th><a href="{{ path('app_curso_index', {
                                     'action': 'cursos',
                                     'order': order == 'asc' ? 'desc' : 'asc',
@@ -71,6 +72,16 @@
                     {% for curso in cursos %}
                         <tr>
                             <td>{{ curso.nombre }}</td>
+                            <td>
+                                {% for profesor in curso.profesores %}
+                                    {{ profesor.apellido }} {{ profesor.nombre }}
+                                    {% if not loop.last %}
+                                        <br>
+                                    {% endif %}
+                                    {% else %}
+                                        <span class="text-danger">No tiene profesor</span>
+                                    {% endfor %}
+                            </td>
                             <td>${{ curso.precio | number_format(2, ',', '.') }} </td>
                             <td>
                                 {% for key in curso.dias %}
@@ -119,6 +130,7 @@
                 <thead>
                 <tr>
                     <th>Nombre</th>
+                    <th>Profesor</th>
                     <th>Precio</th>
                     <th>Días</th>
                     <th>Horario</th>
@@ -131,6 +143,16 @@
                 {% for curso in cursosDesabilitados %}
                     <tr>
                         <td>{{ curso.nombre }}</td>
+                        <td>
+                            {% for profesor in curso.profesores %}
+                                {{ profesor.apellido }}, {{ profesor.nombre }}
+                                {% if not loop.last %}
+                                    <br>
+                                {% endif %}
+                                {% else %}
+                                    <span class="text-danger">No tiene profesor</span>
+                                {% endfor %}
+                        </td>
                         <td>${{ curso.precio }}</td>
                         <td>
                             {% for key in curso.dias %}
@@ -144,7 +166,9 @@
                             {{ curso.horarioInicio|date('H:i') }} - {{ curso.horarioFin|date('H:i') }}
                         </td>
                         <td>
-                            {{ curso.duracion|number_format(2) }}hs
+                            {% set horas = (curso.duracion)|round(0, 'floor') %}
+                            {% set minutos = ((curso.duracion - horas) * 60)|round(0, 'floor') %}
+                            {{ horas }}:{{ '%02d'|format(minutos) }}hs
                         </td>
                         <td>
                             <a class="btn btn-success" href="{{ path('app_curso_habilitar', {id: curso.id}) }}">Habilitar</a>

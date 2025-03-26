@@ -36,14 +36,22 @@ class DashboardController extends AbstractController
         $max = $request->get('registros', 10);
         $order = $request->get('order', 'desc');
         $sort = $request->get('sort', 'fecha');
+        $mdp = $request->get('mdp', 'todos');
 
         if($action == 'home') {
             $sort = $request->get('sort', 'alumnoNombre');
             $order = $request->get('order', 'asc');
         }
 
-        // Mapeo de columnas para ordenamiento
-        $sortColumns = [
+        // Mapeo de columnas para ordenamiento de alumnos
+        $sortColumnsAlumnos = [
+            'alumno' => ['prefix' => 'a.', 'field' => 'apellido'],
+            'alumnoNombre' => ['prefix' => 'a.', 'field' => 'apellido'],
+            'ultimoPago' => ['prefix' => 'ultimo_pago.', 'field' => 'fecha', 'join' => 'pagos']
+        ];
+
+        // Mapeo de columnas para ordenamiento de pagos
+        $sortColumnsPagos = [
             'fecha' => ['prefix' => 'ap.', 'field' => 'fecha'],
             'monto' => ['prefix' => 'ap.', 'field' => 'monto'],
             'metodoPago' => ['prefix' => 'ap.', 'field' => 'metodoPago'],
@@ -113,15 +121,29 @@ class DashboardController extends AbstractController
                          ->setParameter('busqueda', '%' . $busqueda . '%');
         }
 
-        if ($sort === 'alumnoNombre') {
-            $alumnosQuery->orderBy('a.apellido', $order);
-        } elseif ($sort === 'alumnosPagos') {
-            // Subconsulta para obtener la fecha del último pago
-            $alumnosQuery
-                ->leftJoin('a.pagos', 'ultimo_pago')
-                ->addSelect('a', 'MAX(ultimo_pago.fecha) as ultimo_pago_fecha')
-                ->groupBy('a.id')
-                ->orderBy('ultimo_pago_fecha', $order);
+        // Aplicar ordenamiento según la columna seleccionada para alumnos
+        if (isset($sortColumnsAlumnos[$sort])) {
+            $column = $sortColumnsAlumnos[$sort];
+            
+            // Si es ordenamiento por último pago, necesitamos hacer un join especial
+            if ($sort === 'ultimoPago') {
+                $alumnosQuery
+                    ->leftJoin('a.pagos', 'ultimo_pago')
+                    ->groupBy('a.id')
+                    ->orderBy('MAX(ultimo_pago.fecha)', $order);
+            } else {
+                // Para otros campos, usar el mapeo normal
+                $orderBy = $column['prefix'] . $column['field'];
+                $alumnosQuery->orderBy($orderBy, $order);
+                
+                // Si es ordenamiento por alumno, agregar ordenamiento secundario por nombre
+                if ($sort === 'alumno' || $sort === 'alumnoNombre') {
+                    $alumnosQuery->addOrderBy('a.nombre', $order);
+                }
+            }
+        } else {
+            // Ordenamiento por defecto para alumnos
+            $alumnosQuery->orderBy('a.apellido', 'asc');
         }
 
         // Obtener el total de deudores antes de la paginación
@@ -158,9 +180,14 @@ class DashboardController extends AbstractController
             ->setParameter('desde', $desde)
             ->setParameter('hasta', $hasta);
 
-        // Aplicar ordenamiento según la columna seleccionada
-        if (isset($sortColumns[$sort])) {
-            $column = $sortColumns[$sort];
+        if($mdp != 'todos') {
+            $alumnosPagosQuery->andWhere('ap.metodoPago = :mdp')
+                ->setParameter('mdp', $mdp);
+        }
+
+        // Aplicar ordenamiento según la columna seleccionada para pagos
+        if (isset($sortColumnsPagos[$sort])) {
+            $column = $sortColumnsPagos[$sort];
             $orderBy = $column['prefix'] . $column['field'];
             $alumnosPagosQuery->orderBy($orderBy, $order);
             
@@ -169,7 +196,8 @@ class DashboardController extends AbstractController
                 $alumnosPagosQuery->addOrderBy('a.nombre', $order);
             }
         } else {
-            $alumnosPagosQuery->orderBy('ap.fecha', $order);
+            // Ordenamiento por defecto para la vista de pagos
+            $alumnosPagosQuery->orderBy('ap.fecha', 'desc');
         }
 
         $alumnosPagosPagination = $paginator->paginate(
@@ -309,7 +337,8 @@ class DashboardController extends AbstractController
             'deudoresDetalles' => $deudoresDetalles,
             'totalDeudoresDetalles' => $totalDeudoresDetalles,
             'mesActual' => $mesActual,
-            'añoActual' => $añoActual
+            'añoActual' => $añoActual,
+            'mdp' => $mdp
         ]);
     }
 }
