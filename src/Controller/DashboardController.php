@@ -211,10 +211,13 @@ class DashboardController extends AbstractController
             ->join('c.alumnos', 'a')
             ->where('a.instituto = :instituto')
             ->andWhere('a.activo = 1')
-            ->setParameter('instituto', $instituto);
+            ->setParameter('instituto', $instituto)
+            ->groupBy('c.id');
 
         if ($sort === 'nombreCurso') {
             $cursosQuery->orderBy('c.nombre', $order);
+        } elseif ($sort === 'alumnosActivos') {
+            $cursosQuery->orderBy('COUNT(a.id)', $order);
         }
 
         if ($busqueda) {

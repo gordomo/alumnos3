@@ -140,9 +140,11 @@ class AlumnoController extends AbstractController
     {
         $hermanos = [];
         foreach ($alumno->getHermanos() as $hermanoId) {
-            $hermanos[] = $alumnoRepository->find($hermanoId);
+            $hermano = $alumnoRepository->find($hermanoId);
+            if ( $hermano !== null ) {
+                $hermanos[] = $hermano;
+            }
         }
-
         return $this->render('alumno/show.html.twig', [
             'alumno' => $alumno,
             'hermanos' => $hermanos

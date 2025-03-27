@@ -300,7 +300,17 @@
                                     Nombre
                                 <i class="bi bi-arrow-{{ sort == 'nombreCurso' ? (order == 'asc' ? 'up' : 'down') : 'up-down' }}"></i>
                             </a></th>
-                            <th>Alumnos Activos</th>
+                            <th>
+                                <a href="{{ path('dashboard_index', {
+                                    'action': 'cursos',
+                                    'order': order == 'asc' ? 'desc' : 'asc',
+                                    'sort': 'alumnosActivos',
+                                    'desde': desde|date('Y/m/d'),
+                                    'hasta': hasta|date('Y/m/d')
+                                }) }}" class="text-decoration-none text-dark">
+                                    Alumnos Activos
+                                <i class="bi bi-arrow-{{ sort == 'alumnosActivos' ? (order == 'asc' ? 'up' : 'down') : 'up-down' }}"></i>
+                            </th>
                         </tr>
                     </thead>
                     <tbody>

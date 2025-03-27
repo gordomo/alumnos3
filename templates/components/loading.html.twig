@@ -53,8 +53,8 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Obtener la URL base del sitio desde la variable de entorno de Symfony
-    const siteUrl = '{{ app.request.getSchemeAndHttpHost() }}';
+    // Obtener la URL base del sitio de forma dinámica
+    const siteUrl = window.location.origin;
     
     // Función para mostrar el loading
     window.showLoading = function() {
