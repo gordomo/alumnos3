@@ -1,0 +1,63 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Pagos Históricos{% endblock %}
+
+{% block body %}
+    <div class="container mt-4">
+        <h1>Pagos Históricos</h1>
+
+        {% for alumnoId, datos in pagos_por_alumno %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3>{{ datos.alumno.nombre }} {{ datos.alumno.apellido }}</h3>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Curso</th>
+                                    <th>Período</th>
+                                    <th>Precio</th>
+                                    <th>Meses Pagados</th>
+                                    <th>Meses Adeudados</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for curso in datos.cursos %}
+                                    <tr>
+                                        <td>{{ curso.curso.nombre }}</td>
+                                        <td>{{ curso.fecha_inicio|date('d/m/Y') }} - {{ curso.fecha_fin|date('d/m/Y') }}</td>
+                                        <td>${{ curso.precio|number_format(2, ',', '.') }}</td>
+                                        <td>
+                                            {% for mes in curso.meses_pagados %}
+                                                <span class="badge bg-success">{{ mes }}</span>
+                                            {% endfor %}
+                                        </td>
+                                        <td>
+                                            {% for mes in curso.meses_adeudados %}
+                                                <span class="badge bg-danger">{{ mes }}</span>
+                                            {% endfor %}
+                                        </td>
+                                        <td>
+                                            <span class="badge {% if curso.estado == 'Activo' %}bg-success{% else %}bg-warning{% endif %}">
+                                                {{ curso.estado }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <a href="{{ path('app_pagos_historicos_alumno', {'id': datos.alumno.id}) }}" class="btn btn-sm btn-info">
+                                                Ver Detalles
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %} 

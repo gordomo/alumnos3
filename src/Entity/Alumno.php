@@ -50,7 +50,7 @@ class Alumno
     private $l_nac;
 
     /**
-     * @ORM\Column(type="text", unique=true, length=10)
+     * @ORM\Column(type="string", length=10, unique=true)
      */
     private $dni;
 
@@ -145,10 +145,16 @@ class Alumno
      */
     private $instituto;
 
+    /**
+     * @ORM\OneToMany(targetEntity=AlumnoCursoHistorico::class, mappedBy="alumno", orphanRemoval=true)
+     */
+    private $cursosHistoricos;
+
     public function __construct()
     {
         $this->curso = new ArrayCollection();
         $this->pagos = new ArrayCollection();
+        $this->cursosHistoricos = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -489,73 +495,67 @@ class Alumno
         return $this;
     }
 
-    public function getDebeMes(): bool
+    /**
+     * Verifica si el alumno debe el mes actual
+     */
+    public function debeMes(int $mes, int $ano, int $dia): bool
     {
-        $pagos = $this->getPagos();
-        $array = $pagos->getValues();
-
-        if (empty($array)) {
-            return true;
+        // Si el alumno no tiene cursos, no debe
+        if ($this->curso->isEmpty()) {
+            return false;
         }
 
-        $hoy = new \DateTime('now');
-        $hoyDia = $hoy->format('d');
-        $mesActual = $hoy->format('m');
-        $anoActual = $hoy->format('Y');
-
-        // Ordenar pagos por fecha (año y mes)
-        usort($array, function($a, $b) {
-            return intval($a->getAno() . $a->getMes()) <=> intval($b->getAno() . $b->getMes());
-        });
-
-        // Verificar si tiene pago del mes actual
-        $tienePagoMesActual = false;
-        foreach ($array as $pago) {
-            if ($pago->getAno() == $anoActual && $pago->getMes() == $mesActual) {
-                $tienePagoMesActual = true;
+        // Obtener el historial de cursos activo para el mes actual
+        $historicoActivo = null;
+        foreach ($this->cursosHistoricos as $historico) {
+            $fechaInicio = $historico->getFechaInicio();
+            $fechaFin = $historico->getFechaFin();
+            
+            // Verificar si el mes actual está dentro del período del curso
+            if ($fechaInicio->format('Y-m') <= "$ano-$mes" && 
+                ($fechaFin === null || $fechaFin->format('Y-m') >= "$ano-$mes")) {
+                $historicoActivo = $historico;
                 break;
             }
         }
 
-        // Si no tiene pago del mes actual y estamos después del día 20
-        if (!$tienePagoMesActual && $hoyDia >= 20) {
+        // Si no hay historial activo para el mes actual, debe
+        if (!$historicoActivo) {
             return true;
         }
 
-        // Verificar pagos faltantes en meses anteriores
-        $ultimoPago = end($array);
-        $ultimoPagoDate = new \DateTime("{$ultimoPago->getAno()}-{$ultimoPago->getMes()}-01");
-        $mesActualDate = new \DateTime("$anoActual-$mesActual-01");
+        // Verificar si el mes está en los meses pagados
+        $mesActual = "$ano-$mes";
+        return !in_array($mesActual, $historicoActivo->getMesesPagados());
+    }
 
-        // Si el último pago fue hace más de un mes
-        if ($ultimoPagoDate->diff($mesActualDate)->m > 1) {
-            return true;
+    /**
+     * Obtiene el porcentaje de interés aplicable según el día de pago
+     */
+    public function getPorcentajeInteresAplicable(): float
+    {
+        $vencimientos = $this->instituto->getVencimientos()->toArray();
+        usort($vencimientos, function($a, $b) {
+            return $a->getOrden() <=> $b->getOrden();
+        });
+
+        // Si no hay vencimientos configurados, no hay interés
+        if (empty($vencimientos)) {
+            return 0;
         }
 
-        // Verificar si hay meses sin pagar entre el último pago y el mes actual
-        $mesesSinPagar = [];
-        $fechaActual = clone $ultimoPagoDate;
-        $fechaActual->modify('first day of next month');
+        $hoy = new \DateTime();
+        $diaActual = (int)$hoy->format('d');
 
-        while ($fechaActual <= $mesActualDate) {
-            $mesesSinPagar[] = $fechaActual->format('Y-m');
-            $fechaActual->modify('first day of next month');
-        }
-
-        foreach ($mesesSinPagar as $mesAno) {
-            $tienePago = false;
-            foreach ($array as $pago) {
-                if ($pago->getAno() . '-' . $pago->getMes() == $mesAno) {
-                    $tienePago = true;
-                    break;
-                }
-            }
-            if (!$tienePago) {
-                return true;
+        // Encontrar el vencimiento aplicable
+        foreach ($vencimientos as $vencimiento) {
+            if ($diaActual > $vencimiento->getDiaVencimiento()) {
+                return $vencimiento->getPorcentajeInteres();
             }
         }
 
-        return false;
+        // Si no se encontró ningún vencimiento aplicable (es decir, el día actual es menor o igual al primer vencimiento)
+        return 0;
     }
 
     public function getUltimoPago(): ?AlumnosPagos
@@ -574,5 +574,32 @@ class Alumno
         });
 
         return $pagosArray[0]; // Retorna el primer elemento (último pago por fecha)
+    }
+
+    /**
+     * @return Collection<int, AlumnoCursoHistorico>
+     */
+    public function getCursosHistoricos(): Collection
+    {
+        return $this->cursosHistoricos;
+    }
+
+    public function addCursoHistorico(AlumnoCursoHistorico $cursoHistorico): self
+    {
+        if (!$this->cursosHistoricos->contains($cursoHistorico)) {
+            $this->cursosHistoricos[] = $cursoHistorico;
+            $cursoHistorico->setAlumno($this);
+        }
+        return $this;
+    }
+
+    public function removeCursoHistorico(AlumnoCursoHistorico $cursoHistorico): self
+    {
+        if ($this->cursosHistoricos->removeElement($cursoHistorico)) {
+            if ($cursoHistorico->getAlumno() === $this) {
+                $cursoHistorico->setAlumno(null);
+            }
+        }
+        return $this;
     }
 }

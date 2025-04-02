@@ -52,7 +52,7 @@
 
             <ul class="nav nav-tabs sidebar-dropdown-ul">
                 <li class="nav-item">
-                    <a class="list-group-item list-group-item-action bg-light {% if app.request.get('_route') == 'dashboard_index' and app.request.get('action') == 'pagos' %}active{% endif %}" href="{{ path('dashboard_index', {'action': 'pagos'}) }}">
+                    <a class="list-group-item list-group-item-action bg-light {% if app.request.get('_route') == 'app_alumnos_pagos_index'  %}active{% endif %}" href="{{ path('app_alumnos_pagos_index') }}">
                         <i class="bi bi-currency-dollar"></i> Pagos
                     </a>
                 </li>

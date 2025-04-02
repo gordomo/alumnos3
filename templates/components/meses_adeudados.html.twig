@@ -1,0 +1,27 @@
+{% if mesesAdeudados is defined and mesesAdeudados|length > 0 %}
+    <div class="alert alert-warning">
+        <h5 class="alert-heading">Meses adeudados</h5>
+        <p>Existen meses adeudados anteriores al mes actual:</p>
+        {% set cursos = {} %}
+        {% for mes in mesesAdeudados %}
+            {% if not cursos[mes.curso] is defined %}
+                {% set cursos = cursos|merge({(mes.curso): []}) %}
+            {% endif %}
+            {% set cursos = cursos|merge({(mes.curso): cursos[mes.curso]|merge([mes])}) %}
+        {% endfor %}
+        
+        {% for curso, meses in cursos %}
+            <div class="mb-3">
+                <strong>{{ curso }}</strong>
+                <ul class="mb-0">
+                    {% for mes in meses %}
+                        <li>{{ mes.nombre }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% if not loop.last %}
+                <hr class="my-2">
+            {% endif %}
+        {% endfor %}
+    </div>
+{% endif %} 

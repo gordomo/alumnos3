@@ -49,12 +49,17 @@ class Instituto
      */
     private $tel;
     
+    /**
+     * @ORM\OneToMany(targetEntity=Vencimiento::class, mappedBy="instituto", orphanRemoval=true)
+     */
+    private $vencimientos;
 
     // Métodos de inicialización y getters/setters
 
     public function __construct()
     {
         $this->usuarios = new ArrayCollection();
+        $this->vencimientos = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -123,6 +128,34 @@ class Instituto
     {
         $this->dir = $dir;
 
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Vencimiento>
+     */
+    public function getVencimientos(): Collection
+    {
+        return $this->vencimientos ?? new ArrayCollection();
+    }
+
+    public function addVencimiento(Vencimiento $vencimiento): self
+    {
+        if (!$this->vencimientos->contains($vencimiento)) {
+            $this->vencimientos[] = $vencimiento;
+            $vencimiento->setInstituto($this);
+        }
+        return $this;
+    }
+
+    public function removeVencimiento(Vencimiento $vencimiento): self
+    {
+        if ($this->vencimientos->removeElement($vencimiento)) {
+            // set the owning side to null (unless already changed)
+            if ($vencimiento->getInstituto() === $this) {
+                $vencimiento->setInstituto(null);
+            }
+        }
         return $this;
     }
 }

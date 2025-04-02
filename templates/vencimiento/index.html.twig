@@ -1,0 +1,65 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Configuración de Vencimientos{% endblock %}
+
+{% block body %}
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Configuración de Vencimientos</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <a href="{{ path('vencimiento_new') }}" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Nuevo Vencimiento
+                            </a>
+                        </div>
+
+                        {% for message in app.flashes('success') %}
+                            <div class="alert alert-success">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Día de Vencimiento</th>
+                                        <th>Porcentaje de Interés</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for vencimiento in vencimientos %}
+                                        <tr>
+                                            <td>{{ vencimiento.diaVencimiento }}</td>
+                                            <td>{{ vencimiento.porcentajeInteres }}%</td>
+                                            <td>
+                                                <a href="{{ path('vencimiento_edit', {'id': vencimiento.id}) }}" class="btn btn-sm btn-info">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                <form method="post" action="{{ path('vencimiento_delete', {'id': vencimiento.id}) }}" onsubmit="return confirm('¿Está seguro que desea eliminar este vencimiento?');" style="display: inline-block;">
+                                                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ vencimiento.id) }}">
+                                                    <button class="btn btn-sm btn-danger">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    {% else %}
+                                        <tr>
+                                            <td colspan="4" class="text-center">No se encontraron vencimientos configurados</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %} 

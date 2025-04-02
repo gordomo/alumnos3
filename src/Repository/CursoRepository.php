@@ -88,6 +88,19 @@ class CursoRepository extends ServiceEntityRepository
         return $query->getResult();
     }
 
+    /**
+     * @return Curso[] Returns an array of Curso objects
+     */
+    public function findByInstituto($instituto): array
+    {
+        return $this->createQueryBuilder('c')
+            ->andWhere('c.instituto = :instituto')
+            ->setParameter('instituto', $instituto)
+            ->orderBy('c.nombre', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
     /*
     public function findOneBySomeField($value): ?Curso
     {

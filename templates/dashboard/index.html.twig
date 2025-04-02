@@ -1,545 +1,205 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Dashboard Index{% endblock %}
+{% block title %}Dashboard{% endblock %}
 
 {% block panelTitle %}
-    Dashboard de {{ instituto.nombre}}
+    Dashboard
 {% endblock %}
 
 {% block body %}
-<div class="container-fluid mt-4">
-    <div class="row mb-3">
-        <div class="col-12 d-flex justify-content-between align-items-center">
-            <ul class="nav nav-tabs flex-grow-1 pestanas" id="myTab" role="tablist">
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button" role="tab" aria-controls="home" aria-selected="false">
-                        <i class="bi bi-house-door"></i> Deudas
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="pagos-tab" data-bs-toggle="tab" data-bs-target="#pagos" type="button" role="tab" aria-controls="pagos" aria-selected="false">
-                        <i class="bi bi-cash"></i> Pagos
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="cursos-tab" data-bs-toggle="tab" data-bs-target="#cursos" type="button" role="tab" aria-controls="cursos" aria-selected="false">
-                        <i class="bi bi-book"></i> Cursos con Alumnos activos
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="porcentajes-tab" data-bs-toggle="tab" data-bs-target="#porcentajes" type="button" role="tab" aria-controls="porcentajes" aria-selected="false">
-                        <i class="bi bi-percent"></i> Porcentajes
-                    </button>
-                </li>
-            </ul>
-            <form method="get" action="{{ path('dashboard_index') }}" id="buscar" class="d-flex ms-2">
-                <input id="buscarAction" name="action" type="hidden" class="form-control" value="home">
-                <input name="busqueda" type="text" class="form-control me-2" placeholder="Buscar" value="{{ busqueda }}" aria-label="Buscar">
-                <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i></button>
-
-            </form>
-            <a class="btn btn-success ms-2" id="todos">Todos</a>
-        </div>
-    </div>
-
-    <div class="tab-content" id="myTabContent">
-        <!-- Deudas -->
-        <div class="tab-pane fade" id="home" role="tabpanel" aria-labelledby="home-tab">
-            {% if totalDeudores > 0 %}
-                <div class="alert alert-info">
-                    En total, {{ totalDeudores }} alumnos tienen deudas pendientes.
+    <div class="container-fluid mt-4">
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Total Deudores</h5>
+                        <h2 class="card-text">{{ totalDeudores }}</h2>
+                        <p class="card-text small">{{ porcentajeDeudores|number_format(2, ',', '.') }}% del total de alumnos</p>
+                    </div>
                 </div>
-            {% endif %}
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>
-                                <a href="{{ path('dashboard_index', {
-                                    'action': 'home',
-                                    'order': order == 'asc' ? 'desc' : 'asc',
-                                    'sort': 'alumnoNombre',
-                                }) }}" class="text-decoration-none text-dark">
-                                    Alumnos
-                                    <i class="bi bi-arrow-{{ sort == 'alumnoNombre' ? (order == 'asc' ? 'up' : 'down') : 'up-down' }}"></i>
-                                </a>                   
-                            </th>
-                            <th>Meses Adeudados</th>
-                            <th>Motivo</th>
-                            <th>
-                                <a href="{{ path('dashboard_index', {
-                                    'action': 'home',
-                                    'order': order == 'asc' ? 'desc' : 'asc',
-                                    'sort': 'ultimoPago',
-                                }) }}" class="text-decoration-none text-dark">
-                                    Último Pago
-                                    <i class="bi bi-arrow-{{ sort == 'ultimoPago' ? (order == 'asc' ? 'up' : 'down') : 'up-down' }}"></i>
-                                </a>                        
-                            </th>
-                        <th>Acciones</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                        {% for deudor in deudoresDetalles %}
-                            <tr>
-                                <td>
-                                    <a href="{{ path('app_alumno_show', {'id': deudor.alumno.id}) }}" class="text-decoration-none">
-                                        {{ deudor.alumno.apellido }} {{ deudor.alumno.nombre }}
-                                    </a>
-                                </td>
-                                <td>
-                                    {% for mes in deudor.mesesAdeudados %}
-                                        {% set mesNombre = {
-                                            1: 'Enero',
-                                            2: 'Febrero',
-                                            3: 'Marzo',
-                                            4: 'Abril',
-                                            5: 'Mayo',
-                                            6: 'Junio',
-                                            7: 'Julio',
-                                            8: 'Agosto',
-                                            9: 'Septiembre',
-                                            10: 'Octubre',
-                                            11: 'Noviembre',
-                                            12: 'Diciembre'
-                                        }[mes.mes] %}
-                                        {{ mesNombre }} de {{ mes.año }}{% if not loop.last %}, {% endif %}
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-warning text-dark">
+                    <div class="card-body">
+                        <h5 class="card-title">Deudores Críticos</h5>
+                        <h2 class="card-text">{{ deudoresCriticos }}</h2>
+                        <p class="card-text small">Más de 3 meses sin pagar</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-info text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Monto Total Adeudado</h5>
+                        <h2 class="card-text">${{ montoTotalAdeudado|number_format(2, ',', '.') }}</h2>
+                        <p class="card-text small">Promedio: ${{ montoPromedioAdeudado|number_format(2, ',', '.') }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Promedio de Meses</h5>
+                        <h2 class="card-text">{{ promedioMesesAdeudados|number_format(1) }}</h2>
+                        <p class="card-text small">Por deudor</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card" style="box-shadow: 5px 5px 10px;">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Distribución de Deudas por Curso</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Curso</th>
+                                        <th>Deudores</th>
+                                        <th>Monto Total</th>
+                                        <th>% del Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for curso in deudasPorCurso %}
+                                        <tr>
+                                            <td>{{ curso.nombre }}</td>
+                                            <td>{{ curso.deudores }}</td>
+                                            <td>${{ curso.monto|number_format(2, ',', '.') }}</td>
+                                            <td>{{ curso.porcentaje|number_format(1) }}%</td>
+                                        </tr>
                                     {% endfor %}
-                                </td>
-                                <td>{{ deudor.motivo }}</td>
-                                <td>
-                                    {% if deudor.ultimoPago %}
-                                        {{ deudor.ultimoPago.fecha|date('d/m/Y') }}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card" style="box-shadow: 5px 5px 10px;">
+                    <div class="card-header">
+                        <h3 class="card-title">Lista de Deudores</h3>
+                    </div>
+                    <div class="card-body">
+                        <form method="get" class="mb-3">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="input-group">
+                                        <input type="text" name="busqueda" class="form-control" placeholder="Buscar alumno..." value="{{ busqueda }}">
+                                        <div class="input-group-append">
+                                            <button class="btn btn-outline-secondary" type="submit">
+                                                <i class="bi bi-search"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <select name="sort" class="form-control">
+                                        <option value="alumnoNombre" {% if sort == 'alumnoNombre' %}selected{% endif %}>Ordenar por Nombre</option>
+                                        <option value="ultimoPago" {% if sort == 'ultimoPago' %}selected{% endif %}>Ordenar por Último Pago</option>
+                                        <option value="mesesAdeudados" {% if sort == 'mesesAdeudados' %}selected{% endif %}>Ordenar por Meses Adeudados</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <select name="order" class="form-control">
+                                        <option value="asc" {% if order == 'asc' %}selected{% endif %}>Ascendente</option>
+                                        <option value="desc" {% if order == 'desc' %}selected{% endif %}>Descendente</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </form>
+
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Alumno</th>
+                                        <th>Último Pago</th>
+                                        <th>Meses Adeudados</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for deudor in pagination %}
+                                        <tr>
+                                            <td>{{ deudor.alumno.apellido }}, {{ deudor.alumno.nombre }}</td>
+                                            <td>
+                                                {% if deudor.ultimoPago %}
+                                                    {{ deudor.ultimoPago.fecha|date('d/m/Y') }}
+                                                {% else %}
+                                                    Sin pagos
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <span class="meses-adeudados" data-bs-toggle="modal" data-bs-target="#mesesModal{{ deudor.alumno.id }}" style="cursor: pointer;">
+                                                    {{ deudor.mesesAdeudados|slice(0, 2)|map(mes => mes.nombre)|join(', ') }}
+                                                    {% if deudor.mesesAdeudados|length > 2 %}
+                                                        <span class="text-muted">(+{{ deudor.mesesAdeudados|length - 2 }} más)</span>
+                                                    {% endif %}
+                                                </span>
+
+                                                <!-- Modal para mostrar todos los meses -->
+                                                <div class="modal fade" id="mesesModal{{ deudor.alumno.id }}" tabindex="-1" aria-labelledby="mesesModalLabel{{ deudor.alumno.id }}" aria-hidden="true">
+                                                    <div class="modal-dialog">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title" id="mesesModalLabel{{ deudor.alumno.id }}">
+                                                                    Meses Adeudados - {{ deudor.alumno.apellido }}, {{ deudor.alumno.nombre }}
+                                                                </h5>
+                                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                <div class="list-group">
+                                                                    {% for mes in deudor.mesesAdeudados %}
+                                                                        <div class="list-group-item">
+                                                                            <div class="d-flex justify-content-between align-items-center">
+                                                                                <div>
+                                                                                    <h6 class="mb-1">{{ mes.nombre }}</h6>
+                                                                                    <small class="text-muted">Curso: {{ mes.curso }}</small>
+                                                                                </div>
+                                                                                <div class="text-end">
+                                                                                    <strong>${{ mes.curso_obj.precio|number_format(2, ',', '.') }}</strong>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    {% endfor %}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <a href="{{ path('app_alumno_show', {'id': deudor.alumno.id}) }}" title="Ver" data-toggle="tooltip" data-placement="left"  class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                                <a href="{{ path('app_alumnos_pagos_new', {'id': deudor.alumno.id}) }}" title="Registrar Pago" data-toggle="tooltip" data-placement="top" class="btn btn-sm btn-outline-success">
+                                                    <i class="bi bi-cash"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
                                     {% else %}
-                                        Sin pagos
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    <a href="{{ path('app_alumno_show', {'id': deudor.alumno.id}) }}" class="btn btn-sm btn-outline-primary" title="Ver Alumno" data-toggle="tooltip" data-placement="left">
-                                        <i class="bi bi-eye"></i>
-                                    </a>
-                                    <a href="{{ path('app_alumnos_pagos_new', {'alumno': deudor.alumno.id}) }}" class="btn btn-sm btn-outline-success" title="Registrar Pago" data-toggle="tooltip">
-                                        <i class="bi bi-cash"></i>
-                                    </a>
-                                </td>
-                            </tr>
-                        {% else %}
-                            <tr>
-                                <td colspan="5" class="text-center">No hay deudores</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            <div class="pagination justify-content-center">
-                {{ knp_pagination_render(paginationAlumnos, '', {'action': 'home'}) }}
-            </div>
-        </div>
+                                        <tr>
+                                            <td colspan="4" class="text-center">No hay deudores registrados</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
 
-        <!-- Últimos Pagos -->
-        <div class="tab-pane fade" id="pagos" role="tabpanel" aria-labelledby="pagos-tab">
-            <table class="table table-striped table-hover">
-                <thead class="">
-                    <tr>
-                        <td colspan="5">
-                            
-                                <div class="row g-3">
-                                    <div class="col">
-                                        <label for="filtroFechas">Desde/Hasta:</label>
-                                        <input class="form-control" type="text" id="filtroFechas" name="daterange"/>
-                                    </div>
-                                    <div class="col">
-                                        <label for="registros">Registros por página:</label>
-                                        <select class="form-control" id="registros">
-                                            <option {% if max == 10 %} selected {% endif %} value="10">10</option>
-                                            <option {% if max == 20 %} selected {% endif %} value="20">20</option>
-                                            <option {% if max == 50 %} selected {% endif %} value="50">50</option>
-                                            <option {% if max == 100 %} selected {% endif %} value="100">100</option>
-                                        </select>
-                                    </div>
-                                    <div class="col">
-                                        <label for="registros">Método de Pago:</label>
-                                        <select class="form-control" id="mdp">
-                                            <option value="todos" {% if mdp == 'todos' %} selected {% endif %}>Todos</option>
-                                            <option value="efectivo" {% if mdp == 'efectivo' %} selected {% endif %}>Efectivo</option>
-                                            <option value="tarjeta" {% if mdp == 'tarjeta' %} selected {% endif %}>Tarjeta</option>
-                                            <option value="transferencia" {% if mdp == 'transferencia' %} selected {% endif %}>Transferencia</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            
-                        </td>
-                    </tr>
-                    <tr>
-                        <th>
-                            <a href="{{ path('dashboard_index', {
-                                'action': 'pagos',
-                                'order': order == 'asc' ? 'desc' : 'asc',
-                                'sort': 'fecha',
-                                'desde': desde|date('Y/m/d'),
-                                'hasta': hasta|date('Y/m/d')
-                            }) }}" class="text-decoration-none text-dark">
-                                Fecha
-                                <i class="bi bi-arrow-{{ sort == 'fecha' ? (order == 'asc' ? 'up' : 'down') : 'up-down' }}"></i>
-                            </a>
-                        </th>
-                        <th>
-                            <a href="{{ path('dashboard_index', {
-                                'action': 'pagos',
-                                'order': order == 'asc' ? 'desc' : 'asc',
-                                'sort': 'monto',
-                                'desde': desde|date('Y/m/d'),
-                                'hasta': hasta|date('Y/m/d')
-                            }) }}" class="text-decoration-none text-dark">
-                                Monto
-                                <i class="bi bi-arrow-{{ sort == 'monto' ? (order == 'asc' ? 'up' : 'down') : 'up-down' }}"></i>
-                            </a>
-                        </th>
-                        <th>
-                            <a href="{{ path('dashboard_index', {
-                                'action': 'pagos',
-                                'order': order == 'asc' ? 'desc' : 'asc',
-                                'sort': 'metodoPago',
-                                'desde': desde|date('Y/m/d'),
-                                'hasta': hasta|date('Y/m/d')
-                            }) }}" class="text-decoration-none text-dark">
-                                Método de Pago
-                                <i class="bi bi-arrow-{{ sort == 'metodoPago' ? (order == 'asc' ? 'up' : 'down') : 'up-down' }}"></i>
-                            </a>
-                        </th>
-                        <th>
-                            <a href="{{ path('dashboard_index', {
-                                'action': 'pagos',
-                                'order': order == 'asc' ? 'desc' : 'asc',
-                                'sort': 'mes',
-                                'desde': desde|date('Y/m/d'),
-                                'hasta': hasta|date('Y/m/d')
-                            }) }}" class="text-decoration-none text-dark">
-                                Mes
-                                <i class="bi bi-arrow-{{ sort == 'mes' ? (order == 'asc' ? 'up' : 'down') : 'up-down' }}"></i>
-                            </a>
-                        </th>
-                        <th>
-                            <a href="{{ path('dashboard_index', {
-                                'action': 'pagos',
-                                'order': order == 'asc' ? 'desc' : 'asc',
-                                'sort': 'ano',
-                                'desde': desde|date('Y/m/d'),
-                                'hasta': hasta|date('Y/m/d')
-                            }) }}" class="text-decoration-none text-dark">
-                                Año
-                                <i class="bi bi-arrow-{{ sort == 'ano' ? (order == 'asc' ? 'up' : 'down') : 'up-down' }}"></i>
-                            </a>
-                        </th>
-                        <th>
-                            <a href="{{ path('dashboard_index', {
-                                'action': 'pagos',
-                                'order': order == 'asc' ? 'desc' : 'asc',
-                                'sort': 'alumno',
-                                'desde': desde|date('Y/m/d'),
-                                'hasta': hasta|date('Y/m/d')
-                            }) }}" class="text-decoration-none text-dark">
-                                Alumno
-                                <i class="bi bi-arrow-{{ sort == 'alumno' ? (order == 'asc' ? 'up' : 'down') : 'up-down' }}"></i>
-                            </a>
-                        </th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for alumnos_pago in alumnos_pagos %}
-                        <tr>
-                            <td>{{ alumnos_pago.fecha ? alumnos_pago.fecha|date('d/m/Y') : '' }}</td>
-                            <td>${{ alumnos_pago.monto | number_format(2, ',', '.') }}</td>
-                            <td>{{ alumnos_pago.metodoPago|title }}</td>
-                            <td>{{ alumnos_pago.mes }}</td>
-                            <td>{{ alumnos_pago.ano }}</td>
-                            <td>{{ alumnos_pago.alumno.apellido }} {{ alumnos_pago.alumno.nombre }}</td>
-                            <td>
-                                <div class="d-flex flex-wrap gap-2">
-                                    <a href="{{ path('app_alumnos_pagos_index', {'alumno': alumnos_pago.alumno.id}) }}" class="btn btn-sm btn-outline-primary" title="Ver pagos" data-toggle="tooltip">
-                                        <i class="bi bi-eye"></i>
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                    {% else %}
-                        <tr>
-                            <td colspan="6" class="text-center">No records found</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-                <tfooter>
-                    <tr>
-                        <td></td>
-                        <td colspan="6">
-                            Total Pagos: ${{ totalPagos | number_format(2, ',', '.') }}
-                        </td>
-                    </tr>
-                </tfooter>
-            </table>
-            <div class="pagination justify-content-center">
-                {{ knp_pagination_render(alumnos_pagos,  '', {'action': 'pagos'}) }}
-            </div>
-        </div>
-
-        <!-- Cursos -->
-        <div class="tab-pane fade" id="cursos" role="tabpanel" aria-labelledby="cursos-tab">
-            <div class="table-responsive">
-                <table class="table table-striped table-hover">
-                    <thead class="">
-                        <tr>
-                            <th>
-                                <a href="{{ path('dashboard_index', {
-                                    'action': 'cursos',
-                                    'order': order == 'asc' ? 'desc' : 'asc',
-                                    'sort': 'nombreCurso',
-                                    'desde': desde|date('Y/m/d'),
-                                    'hasta': hasta|date('Y/m/d')
-                                }) }}" class="text-decoration-none text-dark">
-                                    Nombre
-                                <i class="bi bi-arrow-{{ sort == 'nombreCurso' ? (order == 'asc' ? 'up' : 'down') : 'up-down' }}"></i>
-                            </a></th>
-                            <th>
-                                <a href="{{ path('dashboard_index', {
-                                    'action': 'cursos',
-                                    'order': order == 'asc' ? 'desc' : 'asc',
-                                    'sort': 'alumnosActivos',
-                                    'desde': desde|date('Y/m/d'),
-                                    'hasta': hasta|date('Y/m/d')
-                                }) }}" class="text-decoration-none text-dark">
-                                    Alumnos Activos
-                                <i class="bi bi-arrow-{{ sort == 'alumnosActivos' ? (order == 'asc' ? 'up' : 'down') : 'up-down' }}"></i>
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for curso in cursos %}
-                            <tr>
-                                <td>{{ curso.nombre }}</td>
-                                <td>
-                                    <a href="{{ path('app_alumno_index', {'activo': 1}) }}&cursoSelected={{ curso.id }}">
-                                        {{ curso.alumnosActivos | length }}
-                                    </a>
-                                </td>
-                            </tr>
-                        {% else %}
-                            <tr>
-                                <td colspan="2" class="text-center">No records found</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                <div class="pagination justify-content-center">
-                    {{ knp_pagination_render(cursos,  '', {'action': 'cursos'}) }}
-                </div>
-            </div>
-        </div>
-
-        <!-- Porcentajes -->
-        <div class="tab-pane fade" id="porcentajes" role="tabpanel" aria-labelledby="porcentajes-tab">
-            <div class="row">
-                <div class="col-6">
-                    <canvas id="myChart" width="100%" height="100%"></canvas>
-                </div>
-                <div class="col-6">
-                    <canvas id="myChart2" width="100%" height="100%"></canvas>
+                        <div class="navigation d-flex justify-content-center mt-4">
+                            {{ knp_pagination_render(pagination) }}
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
-{% endblock %}
-
-{% block javascripts %}
-    {{ parent() }}
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-    <script>
-        $(document).ready(function() {
-            // Establecer pestaña activa basada en el parámetro 'action'
-            const urlParams = new URLSearchParams(window.location.search);
-            const action = urlParams.get('action') || 'home';
-            const actionTab = $(`#${action}-tab`);
-            if (actionTab.length) {
-                actionTab.tab('show');
-            }
-
-            // Manejo del formulario de búsqueda
-            let form = document.getElementById('buscar');
-            form.addEventListener("submit", (e) => {
-                e.preventDefault();
-                let action = $(".pestanas").find('.active').attr('aria-controls');
-                $('#buscarAction').val(action);
-                e.currentTarget.submit();
-            });
-
-            // Acción para mostrar todos los resultados
-            $("#todos").click(() => {
-                const url = new URL(window.location);
-                url.searchParams.delete('busqueda');
-                url.searchParams.delete('desde');
-                url.searchParams.delete('hasta');
-                url.searchParams.delete('mdp');
-                // Obtener la pestaña activa
-                let action = $(".pestanas").find('.active').attr('aria-controls');
-                if (action !== undefined) {
-                    url.searchParams.set('action', action);
-                } else {
-                    // Si no hay pestaña activa, usar 'home' como valor por defecto
-                    url.searchParams.set('action', 'home');
-                }
-                
-                window.location = url;
-            });
-
-            // Manejo de cambio en el número de registros.
-            $('#registros').on('change', ()=>{
-                const url = new URL(window.location);
-                url.searchParams.set('registros', $('#registros').val());
-                url.searchParams.set('page', 1);
-                url.searchParams.set('action', 'pagos');
-                url.searchParams.delete('mdp');
-                
-                const desde = url.searchParams.get('desde');
-                const hasta = url.searchParams.get('hasta');
-                if (desde && hasta) {
-                    url.searchParams.set('desde', desde);
-                    url.searchParams.set('hasta', hasta);
-                }
-                
-                window.location = url;
-            });
-
-            $('#mdp').on('change', ()=>{
-                const url = new URL(window.location);
-                url.searchParams.set('mdp', $('#mdp').val());
-                url.searchParams.set('action', 'pagos');
-                url.searchParams.set('registros', $('#registros').val());
-                url.searchParams.set('page', 1);
-                const desde = url.searchParams.get('desde');
-                const hasta = url.searchParams.get('hasta');
-                if (desde && hasta) {
-                    url.searchParams.set('desde', desde);
-                    url.searchParams.set('hasta', hasta);
-                }
-                window.location = url;
-            });
-        
-
-            // Inicialización de gráficos
-            const ctx = document.getElementById('myChart').getContext('2d');
-            const myChart = new Chart(ctx, {
-                type: 'pie',
-                data: {
-                    labels: ['Pagaron antes del 20', 'Pagaron después del 20'],
-                    datasets: [{
-                        label: 'Cuotas',
-                        data: [{{ atiempo }}, {{ fueraDeTiempo }}],
-                        backgroundColor: ['rgba(75,192,192,0.45)', 'rgba(255,27,83,0.45)'],
-                        borderColor: ['rgba(75, 192, 192, 1)', 'rgba(255, 27, 83, 1)'],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    plugins: {
-                        legend: {
-                            position: 'right',
-                        }
-                    }
-                }
-            });
-
-            const ctx2 = document.getElementById('myChart2').getContext('2d');
-            const myChart2 = new Chart(ctx2, {
-                type: 'bar',
-                data: {
-                    labels: ['Alumnos'],
-                    datasets: [{
-                        label: 'Activos',
-                        data: [{{ activos }}],
-                        backgroundColor: ['rgba(75, 192, 192, 0.2)'],
-                        borderColor: ['rgb(75, 192, 192)'],
-                        borderWidth: 1
-                    }, {
-                        label: 'Inactivo',
-                        data: [{{ inactivos }}],
-                        backgroundColor: ['rgba(255, 99, 132, 0.2)'],
-                        borderColor: ['rgb(255, 99, 132)'],
-                        borderWidth: 1
-                    }]
-                }
-            });
-
-            // Configuración de daterangepicker
-            $('input[name="daterange"]').daterangepicker({
-                startDate: '{{ desde }}',
-                endDate: '{{ hasta }}',
-                ranges: {
-                    'Hoy': [moment(), moment()],
-                    'Ayer': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
-                    'Últimos 7 días': [moment().subtract(6, 'days'), moment()],
-                    'Últimos 30 días': [moment().subtract(29, 'days'), moment()],
-                    'Este mes': [moment().startOf('month'), moment().endOf('month')],
-                    'Último mes': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
-                },
-                "locale": {
-                            "format": "DD/MM/YYYY",
-                            "applyLabel": "Ver",
-                            "cancelLabel": "Cancelar",
-                            "fromLabel": "Desde",
-                            "toLabel": "Hasta",
-                            "customRangeLabel": "Custom",
-                            "weekLabel": "Semana",
-                            "daysOfWeek": [
-                                "Do",
-                                "Lu",
-                                "Ma",
-                                "Mi",
-                                "Ju",
-                                "Vi",
-                                "Sa"
-                            ],
-                            "monthNames": [
-                                "Enero",
-                                "Febrero",
-                                "Marzo",
-                                "Abril",
-                                "Mayo",
-                                "Junio",
-                                "Julio",
-                                "Agosto",
-                                "Septiembre",
-                                "Octubre",
-                                "Noviembre",
-                                "Diciembre"
-                            ],
-                            "firstDay": 1
-                        },
-            }, function(start, end, label) {
-                const url = new URL(window.location);
-                url.searchParams.set('desde', start.format('YYYY/MM/DD'));
-                url.searchParams.set('hasta', end.format('YYYY/MM/DD'));
-                url.searchParams.delete('daterange');
-                url.searchParams.set('action', 'pagos');
-                window.location = url;
-});
-            
-
-            // Al cambiar de pestaña, actualizar la URL para reflejar la pestaña actual
-            $('#myTab button[data-bs-toggle="tab"]').on('shown.bs.tab', function (e) {
-                const newTabAction = $(e.target).attr('aria-controls');
-                const url = new URL(window.location);
-                url.searchParams.set('action', newTabAction);
-                history.replaceState(null, '', url);
-            });
-
-            document.addEventListener('DOMContentLoaded', function() {
-                // Inicializar tooltips
-                var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-                var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-                    return new bootstrap.Tooltip(tooltipTriggerEl);
-                });
-            });
-        });
-    </script>
 {% endblock %}

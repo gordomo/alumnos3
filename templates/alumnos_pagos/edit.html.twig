@@ -1,24 +1,31 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Edit AlumnosPagos{% endblock %}
+{% block title %}Editar Pago{% endblock %}
 
-{% block panelTitle %}
-    Editar Pago
-{% endblock %}
+{% block panelTitle %}Editar Pago{% endblock %}
 
 {% block body %}
-<div class="container-fluid mt-4">
-    <div class="row">
-        <div class="col-md-12">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    {{ include('alumnos_pagos/_form.html.twig', {'button_label': 'Guardar'}) }}
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-md-8 offset-md-2">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="card-title mb-0">{{ alumno.nombreApellido }}</h4>
+                    </div>
+                    <div class="card-body">
+                        {% for message in app.flashes('success') %}
+                            <div class="alert alert-success">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+
+                        {{ include('alumnos_pagos/_form.html.twig', {
+                            'button_label': 'Actualizar',
+                            'alumno': alumno
+                        }) }}
+                    </div>
                 </div>
-            </div>
-            <div class="mt-3 text-center">
-                {{ include('alumnos_pagos/_delete_form.html.twig') }}
             </div>
         </div>
     </div>
-</div>
 {% endblock %}

@@ -84,7 +84,7 @@
                 <th>
                     <a href="{{ path('app_alumno_index', {'sort': 'nombre', 'order': sort == 'nombre' ? (order == 'asc' ? 'desc' : 'asc') : 'asc'}) }}" class="text-decoration-none text-dark">
                         Nombre
-                        <i class="bi bi-arrow-{{ sort == 'nombre' ? (order == 'asc' ? 'up' : 'down') : 'up-down' }}"></i>
+                        <i class="bi bi-arrow-{{ sort == 'nombre' ? (order == 'asc' ? 'desc' : 'asc') : 'up-down' }}"></i>
                     </a>
                 </th>
                 <th>Celular</th>
@@ -103,26 +103,33 @@
                 <td>
                     {% for curso in alumno.curso %}
                         {{ curso.nombre }}
+                        {% if not loop.last %}
+                            /
+                        {% endif %}
                     {% endfor %}
                 </td>
                 <td>
-                    <a href="{{ path('app_alumno_show', {'id': alumno.id}) }}" class="btn btn-sm btn-outline-primary" title="Ver" data-toggle="tooltip" data-placement="left">
+                    <a href="{{ path('app_alumno_show', {'id': alumno.id}) }}" style="min-width: auto;width: 45px;" class="btn btn-sm btn-outline-primary" title="Ver" data-toggle="tooltip" data-placement="left">
                         <i class="bi bi-eye"></i>
                     </a>
-                    <a href="{{ path('app_alumno_edit', {'id': alumno.id}) }}" class="btn btn-sm btn-outline-secondary" title="Editar" data-toggle="tooltip" data-placement="top">
+                    <a href="{{ path('app_alumno_edit', {'id': alumno.id}) }}" style="min-width: auto;width: 45px;" class="btn btn-sm btn-outline-secondary" title="Editar" data-toggle="tooltip" data-placement="top">
                         <i class="bi bi-pencil"></i>
                     </a>
+                    <button type="button" class="btn btn-sm btn-outline-info" style="min-width: auto;width: 45px;" title="Gestionar Cursos" data-toggle="tooltip" data-placement="top" data-bs-toggle="modal" data-bs-target="#cursosModal{{ alumno.id }}">
+                        <i class="bi bi-book"></i>
+                    </button>
                     {% if (alumno.activo) %}
-                        <a href="{{ path('app_alumnos_pagos_new', {'alumno': alumno.id}) }}" class="btn btn-sm btn-success" title="Registrar Pago" data-toggle="tooltip" data-placement="top">
+                        <a href="{{ path('app_alumnos_pagos_new', {'id': alumno.id}) }}" style="min-width: auto;width: 45px;" class="btn btn-sm btn-success" title="Registrar Pago" data-toggle="tooltip" data-placement="top">
                             <i class="bi bi-cash"></i>
                         </a>
                     {% endif %}
-                    <a href="{{ path('app_alumnos_pagos_index', {'alumno': alumno.id}) }}" class="btn btn-sm btn-outline-success" title="Ver Pagos" data-toggle="tooltip" data-placement="top">
+                    <a href="{{ path('app_alumnos_pagos_index', {'alumno': alumno.id}) }}" style="min-width: auto;width: 45px;" class="btn btn-sm btn-outline-success" title="Ver Pagos" data-toggle="tooltip" data-placement="top">
                         <i class="bi bi-eye"></i>
                     </a>
-                    {{ alumno.debeMes and alumno.activo ? '<i class="bi bi-bell p-2" style="color: red" data-toggle="tooltip" title="debe"></i>' : '' }}
+                    {{ alumno.debeMes("now"|date("m"), "now"|date("Y"), "now"|date("d")) and alumno.activo ? '<i class="bi bi-bell p-2" style="color: red" data-toggle="tooltip" title="debe"></i>' : '' }}
                 </td>
             </tr>
+            {{ include('alumno/_cursos_modal.html.twig') }}
         {% else %}
             <tr>
                 <td colspan="23">No se encontraron registros</td>

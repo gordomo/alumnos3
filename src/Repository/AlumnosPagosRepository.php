@@ -3,12 +3,15 @@
 namespace App\Repository;
 
 use App\Entity\AlumnosPagos;
+use App\Entity\Instituto;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\OptimisticLockException;
 use Doctrine\ORM\ORMException;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
+ * @extends ServiceEntityRepository<AlumnosPagos>
+ *
  * @method AlumnosPagos|null find($id, $lockMode = null, $lockVersion = null)
  * @method AlumnosPagos|null findOneBy(array $criteria, array $orderBy = null)
  * @method AlumnosPagos[]    findAll()
@@ -96,6 +99,36 @@ class AlumnosPagosRepository extends ServiceEntityRepository
         return $query->getQuery()->getResult();
     }
 
+    public function findByInstituto(Instituto $instituto): array
+    {
+        return $this->createQueryBuilder('p')
+            ->join('p.alumno', 'a')
+            ->where('a.instituto = :instituto')
+            ->setParameter('instituto', $instituto)
+            ->orderBy('p.fecha', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function findByAlumno(int $alumnoId): array
+    {
+        return $this->createQueryBuilder('p')
+            ->join('p.alumno', 'a')
+            ->where('a.id = :alumnoId')
+            ->setParameter('alumnoId', $alumnoId)
+            ->orderBy('p.fecha', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function save(AlumnosPagos $entity, bool $flush = false): void
+    {
+        $this->getEntityManager()->persist($entity);
+
+        if ($flush) {
+            $this->getEntityManager()->flush();
+        }
+    }
 
     /*
     public function findOneBySomeField($value): ?AlumnosPagos

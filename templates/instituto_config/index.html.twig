@@ -7,55 +7,115 @@
 {% endblock %}
 
 {% block body %}
-<div class="container-fluid">
-        <div class="card shadow mb-4 mt-4">
-            <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">Información General</h6>
-            </div>
-            <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-4 text-center mb-4">
-                            {% if instituto.logo %}
-                                <img src="{{ asset('uploads/logos/' ~ instituto.logo) }}" 
-                                     alt="Logo del Instituto" 
-                                     class="img-fluid rounded"
-                                     style="max-height: 200px;">
-                            {% else %}
-                                <div class="bg-light p-4 rounded">
-                                    <i class="fas fa-building fa-4x text-muted"></i>
-                                    <p class="mt-2">Sin logo</p>
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h4 class="card-title mb-0">Información General</h4>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-4 text-center mb-4">
+                                        {% if instituto.logo %}
+                                            <img src="{{ asset('uploads/logos/' ~ instituto.logo) }}" 
+                                                 alt="Logo del Instituto" 
+                                                 class="img-fluid rounded"
+                                                 style="max-height: 200px;">
+                                        {% else %}
+                                            <div class="bg-light p-4 rounded">
+                                                <i class="fas fa-building fa-4x text-muted"></i>
+                                                <p class="mt-2">Sin logo</p>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-md-8">
+                                        <table class="table">
+                                            <tr>
+                                                <th>Nombre:</th>
+                                                <td>{{ instituto.nombre }}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Email:</th>
+                                                <td>{{ instituto.email ?? 'No especificado' }}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Teléfono:</th>
+                                                <td>{{ instituto.tel ?? 'No especificado' }}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Dirección:</th>
+                                                <td>{{ instituto.dir ?? 'No especificada' }}</td>
+                                            </tr>
+                                        </table>
+                                    </div>
                                 </div>
-                            {% endif %}
+                                <div class="text-center mt-4">
+                                    <a href="{{ path('instituto_config_edit') }}" class="btn btn-primary">
+                                        <i class="bi bi-pencil"></i> Editar Información
+                                    </a>
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-md-8">
-                            <table class="table">
-                                <tr>
-                                    <th>Nombre:</th>
-                                    <td>{{ instituto.nombre }}</td>
-                                </tr>
-                                <tr>
-                                    <th>Email:</th>
-                                    <td>{{ instituto.email ?? 'No especificado' }}</td>
-                                </tr>
-                                <tr>
-                                    <th>Teléfono:</th>
-                                    <td>{{ instituto.tel ?? 'No especificado' }}</td>
-                                </tr>
-                                <tr>
-                                    <th>Dirección:</th>
-                                    <td>{{ instituto.dir ?? 'No especificada' }}</td>
-                                </tr>
-                            </table>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <h4 class="card-title mb-0">Vencimientos</h4>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <a href="{{ path('instituto_config_vencimiento_new') }}" class="btn btn-primary">
+                                        <i class="bi bi-plus"></i> Nuevo Vencimiento
+                                    </a>
+                                </div>
+
+                                {% for message in app.flashes('success') %}
+                                    <div class="alert alert-success">
+                                        {{ message }}
+                                    </div>
+                                {% endfor %}
+
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Día de Vencimiento</th>
+                                                <th>Porcentaje de Interés</th>
+                                                <th>Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for vencimiento in vencimientos %}
+                                                <tr>
+                                                    <td>{{ vencimiento.diaVencimiento }}</td>
+                                                    <td>{{ vencimiento.porcentajeInteres }}%</td>
+                                                    <td>
+                                                        <a href="{{ path('instituto_config_vencimiento_edit', {'id': vencimiento.id}) }}" class="btn btn-sm btn-outline-primary">
+                                                            <i class="bi bi-pencil"></i>
+                                                        </a>
+                                                        <form method="post" action="{{ path('instituto_config_vencimiento_delete', {'id': vencimiento.id}) }}" onsubmit="return confirm('¿Está seguro que desea eliminar este vencimiento?');" style="display: inline-block;">
+                                                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ vencimiento.id) }}">
+                                                            <button class="btn btn-sm btn-outline-danger">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        </form>
+                                                    </td>
+                                                </tr>
+                                            {% else %}
+                                                <tr>
+                                                    <td colspan="4" class="text-center">No se encontraron vencimientos configurados</td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="text-center mt-4">
-                        <a href="{{ path('instituto_config_edit') }}" class="btn btn-primary">
-                            <i class="fas fa-edit"></i> Editar Configuración
-                        </a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 {% endblock %} 

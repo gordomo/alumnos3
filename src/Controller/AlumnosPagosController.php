@@ -3,148 +3,350 @@
 namespace App\Controller;
 
 use App\Entity\AlumnosPagos;
+use App\Entity\Alumno;
+use App\Entity\Curso;
 use App\Form\AlumnosPagosType;
-use App\Repository\AlumnoRepository;
 use App\Repository\AlumnosPagosRepository;
+use App\Repository\VencimientoRepository;
+use App\Repository\AlumnoRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-
+use Symfony\Component\Validator\Validator\ValidatorInterface;
+use App\Repository\CursoRepository;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use App\Service\HistorialCursosService;
+use Knp\Component\Pager\PaginatorInterface;
 /**
  * @Route("/alumnos/pagos")
  */
 class AlumnosPagosController extends AbstractController
 {
-    /**
-     * @Route("/", name="app_alumnos_pagos_index", methods={"GET"})
-     */
-    public function index(Request $request, AlumnosPagosRepository $alumnosPagosRepository, AlumnoRepository $alumnoRepository): Response
+    private $entityManager;
+    private $historialCursosService;
+
+    public function __construct(EntityManagerInterface $entityManager, HistorialCursosService $historialCursosService)
     {
-        $alumnoId = $request->get('alumno', 0);
-        $alumno = $alumnoRepository->find($alumnoId);
-        $nombreApellido = $alumno ? $alumno->getNombreApellido() : '';
-        $pagos = $alumnosPagosRepository->findAll();
-
-        if ($alumnoId) {
-            $pagos = $alumnosPagosRepository->findBy(['alumno' => $alumnoId]);
-        }
-
-
-        return $this->render('alumnos_pagos/index.html.twig', [
-            'alumnos_pagos' => $pagos,
-            'alumno' => $nombreApellido,
-            'alumnoId' => $alumnoId
-        ]);
+        $this->entityManager = $entityManager;
+        $this->historialCursosService = $historialCursosService;
     }
 
     /**
-     * @Route("/new", name="app_alumnos_pagos_new", methods={"GET", "POST"})
+     * @Route("/", name="app_alumnos_pagos_index", methods={"GET"})
      */
-    public function new(Request $request, AlumnosPagosRepository $alumnosPagosRepository, AlumnoRepository $alumnoRepository): Response
-    {
-        $alumnosPago = new AlumnosPagos();
-        $alumnoId = $request->get('alumno', 0);
-        $alumno = $alumnoRepository->find($alumnoId);
+    public function index(
+        Request $request,
+        AlumnosPagosRepository $alumnosPagosRepository,
+        CursoRepository $cursoRepository,
+        AlumnoRepository $alumnoRepository,
+        PaginatorInterface $paginator
+    ): Response {
+        $busqueda = $request->get('busqueda', '');
+        $cursoSelected = $request->get('curso', '');
+        $metodoSelected = $request->get('metodoPago', '');
+        $fechaDesde = $request->get('fechaDesde', '');
+        $fechaHasta = $request->get('fechaHasta', '');
+        $sort = $request->get('sort', 'fecha');
+        $order = $request->get('order', 'desc');
 
-        //dd($alumno->getDebeMes());
-        $hoy = new \DateTime();
-        $alumnosPago->setAlumno($alumno);
-        if (!empty($alumno->getCurso())) {
-            $alumnosPago->setCurso($alumno->getCurso()[0]);
-        }
+        $alumnoId = $request->query->get('alumno');
+        $alumno = null;
+        $mesesAdeudados = [];
+        $nombreAlumno = '';
 
-        $alumnosPago->setFecha($hoy);
-        $alumnosPago->setAno($hoy->format('Y'));
-        $mes = $hoy->format('m');
-        if($mes[0] == 0){
-            $mes = $mes[1];
-        }
-        $alumnosPago->setMes($mes);
-
-        $curso = $alumno->getCurso()->getValues();
-        $precio = isset($curso[0]) ? $curso[0]->getPrecio() : 0;
-        $bonificacionHermanos = false;
-        $recargo = false;
-
-        $hermanos = $alumno->getHermanos();
-        foreach ($hermanos as $hermanoId) {
-            $hermano = $alumnoRepository->find($hermanoId);
-            if ($hermano->getActivo() && !$bonificacionHermanos) {
-                $precio = $precio * 0.80;
-                $bonificacionHermanos = true;
-            }
-        }
+        // Obtener el instituto del usuario actual
+        $instituto = $this->getUser()->getInstituto();
         
-
-        if ($hoy->format('d') > 20) {
-            $precio = $precio * 1.10;
-            $recargo = true;
+        if ($alumnoId) {
+            //$pagos = $alumnosPagosRepository->findByAlumno($alumnoId);
+            $alumno = $alumnoRepository->find($alumnoId);
+            $nombreAlumno = $alumno->getNombre() . ' ' . $alumno->getApellido();
+            $mesesAdeudados = $this->historialCursosService->verificarMesesAdeudados($alumno);
+        } else {
+            //$pagos = $alumnosPagosRepository->findByInstituto($instituto);
+            $nombreAlumno = $instituto->getNombre();
         }
 
-        $alumnosPago->setMonto($precio);
+        // Crear QueryBuilder
+        $qb = $alumnosPagosRepository->createQueryBuilder('p')
+            ->leftJoin('p.alumno', 'a')
+            ->leftJoin('p.curso', 'c')
+            ->andWhere('a.instituto = :instituto')
+            ->setParameter('instituto', $instituto);
 
-        $form = $this->createForm(AlumnosPagosType::class, $alumnosPago, ['instituto' => $this->getUser()->getInstituto()]);
-        $form->handleRequest($request);
-
-        if ($form->isSubmitted() && $form->isValid()) {
-            $alumnosPagosRepository->add($alumnosPago);
-            return $this->redirectToRoute('app_alumnos_pagos_index', ['alumno' => $alumnoId], Response::HTTP_SEE_OTHER);
+        // Aplicar filtros
+        if ($busqueda) {
+            $qb->andWhere('a.nombre LIKE :busqueda OR a.apellido LIKE :busqueda')
+               ->setParameter('busqueda', '%' . $busqueda . '%');
         }
 
-        return $this->renderForm('alumnos_pagos/new.html.twig', [
-            'alumnos_pago' => $alumnosPago,
-            'form' => $form,
-            'alumno' => $alumno->getNombreApellido(),
-            'alumnoId' => $alumnoId,
-            'bonificacionHermanos' => $bonificacionHermanos,
-            'recargo' => $recargo
+        if ($cursoSelected) {
+            $qb->andWhere('c.id = :curso')
+               ->setParameter('curso', $cursoSelected);
+        }
+
+        if ($metodoSelected) {
+            $qb->andWhere('p.metodoPago = :metodo')
+               ->setParameter('metodo', $metodoSelected);
+        }
+
+        if ($fechaDesde) {
+            $qb->andWhere('p.fecha >= :fechaDesde')
+               ->setParameter('fechaDesde', new \DateTime($fechaDesde));
+        }
+
+        if ($fechaHasta) {
+            $qb->andWhere('p.fecha <= :fechaHasta')
+               ->setParameter('fechaHasta', new \DateTime($fechaHasta));
+        }
+
+        if($alumnoId){
+            $qb->andWhere('p.alumno = :alumno')
+               ->setParameter('alumno', $alumno);
+        }
+
+        // Aplicar ordenamiento
+        switch ($sort) {
+            case 'fecha':
+                $qb->orderBy('p.fecha', $order);
+                break;
+            case 'alumno':
+                $qb->orderBy('a.apellido', $order)
+                   ->addOrderBy('a.nombre', $order);
+                break;
+            case 'curso':
+                $qb->orderBy('c.nombre', $order);
+                break;
+            case 'monto':
+                $qb->orderBy('p.monto', $order);
+                break;
+            case 'metodoPago':
+                $qb->orderBy('p.metodoPago', $order);
+                break;
+            default:
+                $qb->orderBy('p.fecha', 'desc');
+        }
+
+        // Obtener todos los cursos para el filtro
+        $cursos = $cursoRepository->findBy(['instituto' => $instituto]);
+
+        // Obtener métodos de pago únicos
+        $metodosPago = $alumnosPagosRepository->createQueryBuilder('p')
+            ->select('DISTINCT p.metodoPago')
+            ->andWhere('p.alumno IN (SELECT a2 FROM App\Entity\Alumno a2 WHERE a2.instituto = :instituto)')
+            ->setParameter('instituto', $instituto)
+            ->getQuery()
+            ->getSingleColumnResult();
+
+        // Paginar resultados
+        $pagination = $paginator->paginate(
+            $qb->getQuery(),
+            $request->query->getInt('page', 1),
+            20
+        );
+
+        return $this->render('alumnos_pagos/index.html.twig', [
+            'pagos' => $pagination,
+            'alumno' => $alumno,
+            'nombreAlumno' => $nombreAlumno,
+            'cursos' => $cursos,
+            'cursoSelected' => $cursoSelected,
+            'metodosPago' => $metodosPago,
+            'metodoSelected' => $metodoSelected,
+            'fechaDesde' => $fechaDesde,
+            'fechaHasta' => $fechaHasta,
+            'busqueda' => $busqueda,
+            'sort' => $sort,
+            'order' => $order,
+            'total' => $pagination->getTotalItemCount()
         ]);
     }
 
     /**
      * @Route("/{id}", name="app_alumnos_pagos_show", methods={"GET"})
      */
-    public function show(AlumnosPagos $alumnosPago): Response
+    public function show(AlumnosPagos $pago): Response
     {
         $instituto = $this->getUser()->getInstituto();
+        
         return $this->render('alumnos_pagos/show.html.twig', [
-            'alumnos_pago' => $alumnosPago,
+            'alumnos_pago' => $pago,
             'instituto' => $instituto
+        ]);
+    }
+
+    
+    /**
+     * Verifica los meses adeudados para un alumno y curso específico
+     */
+    private function verificarMesesAdeudadosPorCurso(Alumno $alumno, Curso $curso, int $ano): array
+    {
+        return $this->historialCursosService->verificarMesesAdeudadosPorCurso($alumno, $curso);
+    }
+
+    /**
+     * Calcula el monto sugerido para un pago
+     */
+    private function calcularMonto(Alumno $alumno, Curso $curso, $vencimientos, array $mesesAdeudados): array
+    {
+        // Obtener fecha actual
+        $fechaActual = new \DateTime();
+        $mesActual = (int)$fechaActual->format('n');
+        $anoActual = (int)$fechaActual->format('Y');
+
+        $montoBase = $curso->getPrecio();
+        $montoFinal = $montoBase;
+        $porcentajeInteres = 0;
+
+        // Si hay meses adeudados, aplicar el máximo interés
+        if (!empty($mesesAdeudados)) {
+            // Buscar el máximo interés en los vencimientos
+            foreach ($vencimientos as $vencimiento) {
+                if ($vencimiento->getPorcentajeInteres() > $porcentajeInteres) {
+                    $porcentajeInteres = $vencimiento->getPorcentajeInteres();
+                }
+            }
+        } else {
+            // Si no hay meses adeudados, calcular el interés según la fecha actual
+            $porcentajeInteres = $alumno->getPorcentajeInteresAplicable();
+        }
+
+        // Calcular el monto final con el interés correspondiente
+        if ($porcentajeInteres > 0) {
+            $montoFinal = $montoBase * (1 + ($porcentajeInteres / 100));
+        }
+        
+        return [
+            'monto' => $montoFinal,
+            'montoBase' => $montoBase,
+            'porcentajeInteres' => $porcentajeInteres,
+            'mesesAdeudados' => array_values($mesesAdeudados)
+        ];
+    }
+
+    /**
+     * @Route("/new/{id}", name="app_alumnos_pagos_new", methods={"GET", "POST"})
+     */
+    public function new(Request $request, Alumno $alumno, EntityManagerInterface $entityManager): Response
+    {
+        $alumnosPago = new AlumnosPagos();
+        $alumnosPago->setAlumno($alumno);
+        $alumnosPago->setFecha(new \DateTime());
+        $alumnosPago->setMetodoPago('Efectivo');
+
+        // Obtener los meses adeudados para el componente
+        $mesesAdeudados = $this->historialCursosService->verificarMesesAdeudados($alumno);
+        
+        // Obtener el curso seleccionado si existe
+        $cursoSeleccionado = null;
+        if ($request->query->has('curso')) {
+            $cursoId = $request->query->get('curso');
+            $cursoSeleccionado = $entityManager->getRepository(Curso::class)->find($cursoId);
+        }
+
+        // Obtener los vencimientos
+        $vencimientos = $alumno->getInstituto()->getVencimientos();
+
+        // Si hay meses adeudados y no hay curso seleccionado, establecer valores por defecto
+        if (!empty($mesesAdeudados) && !$cursoSeleccionado) {
+            $primerMesAdeudado = $mesesAdeudados[0];
+            $alumnosPago->setMes($primerMesAdeudado['mes']);
+            $alumnosPago->setAno($primerMesAdeudado['ano']);
+            
+            $alumnosPago->setCurso($primerMesAdeudado['curso_obj']);
+            $cursoSeleccionado = $primerMesAdeudado['curso_obj'];
+        } elseif ($cursoSeleccionado) {
+            // Si hay un curso seleccionado, establecerlo
+            $alumnosPago->setCurso($cursoSeleccionado);
+        }   
+
+        // Calcular el monto sugerido si hay un curso seleccionado
+        if ($cursoSeleccionado) {
+            $mesesAdeudadosCurso = $this->historialCursosService->verificarMesesAdeudadosPorCurso($alumno, $cursoSeleccionado);
+            $calculoMonto = $this->calcularMonto($alumno, $cursoSeleccionado, $vencimientos, $mesesAdeudadosCurso);
+            $alumnosPago->setMonto($calculoMonto['monto']);
+        }
+
+        $cursosHistoricos = $alumno->getCursosHistoricos();
+        $cursos = [];
+        foreach ($cursosHistoricos as $cursoHistorico) {
+            $cursos[] = $cursoHistorico->getCurso();
+        }
+
+        // Crear el formulario
+        $form = $this->createForm(AlumnosPagosType::class, $alumnosPago, [
+            'alumnos' => [$alumno],
+            'cursos' => array_values($cursos),
+            'vencimientos' => $vencimientos
+        ]);
+
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            // Verificar si ya existe un pago para este alumno, curso, mes y año
+            $pagoExistente = $entityManager->getRepository(AlumnosPagos::class)->findOneBy([
+                'alumno' => $alumnosPago->getAlumno(),
+                'curso' => $alumnosPago->getCurso(),
+                'mes' => $alumnosPago->getMes(),
+                'ano' => $alumnosPago->getAno()
+            ]);
+
+            if ($pagoExistente) {
+                $this->addFlash('error', 'Ya existe un pago registrado para este alumno en este curso para el mes y año seleccionados.');
+                return $this->redirectToRoute('app_alumnos_pagos_new', [
+                    'alumno' => $alumnosPago->getAlumno()->getId(),
+                    'curso' => $alumnosPago->getCurso()->getId()
+                ]);
+            }
+
+            // Registrar el pago en el historial
+            $this->historialCursosService->registrarPago($alumnosPago);
+            
+            return $this->redirectToRoute('app_alumnos_pagos_index', ['alumno' => $alumno->getId()]);
+        }
+
+        return $this->render('alumnos_pagos/new.html.twig', [
+            'form' => $form->createView(),
+            'alumno' => $alumno,
+            'cursos' => array_values($cursos),
+            'curso' => $cursoSeleccionado,
+            'vencimientos' => $vencimientos,
+            'is_general' => false,
+            'mesesAdeudados' => $mesesAdeudados
         ]);
     }
 
     /**
      * @Route("/{id}/edit", name="app_alumnos_pagos_edit", methods={"GET", "POST"})
      */
-    public function edit(Request $request, AlumnosPagos $alumnosPago, AlumnosPagosRepository $alumnosPagosRepository): Response
+    public function edit(Request $request, AlumnosPagos $pago, VencimientoRepository $vencimientoRepository, CursoRepository $cursoRepository): Response
     {
-        $form = $this->createForm(AlumnosPagosType::class, $alumnosPago, ['instituto' => $this->getUser()->getInstituto()]);
-        $form->handleRequest($request);
-        $alumnoId = $alumnosPago->getAlumno()->getId();
-        if ($form->isSubmitted() && $form->isValid()) {
-            $alumnosPagosRepository->add($alumnosPago);
-            return $this->redirectToRoute('app_alumnos_pagos_index', ['alumno' => $alumnoId], Response::HTTP_SEE_OTHER);
-        }
-
-        return $this->renderForm('alumnos_pagos/edit.html.twig', [
-            'alumnos_pago' => $alumnosPago,
-            'form' => $form,
-            'bonificacionHermanos' => false,
-            'recargo' => false,
-        ]);
+        
     }
 
     /**
-     * @Route("/{id}", name="app_alumnos_pagos_delete", methods={"POST"})
+     * @Route("/{id}/delete", name="app_alumnos_pagos_delete", methods={"POST"})
      */
-    public function delete(Request $request, AlumnosPagos $alumnosPago, AlumnosPagosRepository $alumnosPagosRepository): Response
+    public function delete(Request $request, AlumnosPagos $pago): Response
     {
-        $alumnoId = $alumnosPago->getAlumno()->getId();
-        if ($this->isCsrfTokenValid('delete'.$alumnosPago->getId(), $request->request->get('_token'))) {
-            $alumnosPagosRepository->remove($alumnosPago);
+        if ($this->isCsrfTokenValid('delete'.$pago->getId(), $request->request->get('_token'))) {
+            $alumnoId = $pago->getAlumno()->getId();
+            $this->entityManager->remove($pago);
+            $this->entityManager->flush();
+            $this->addFlash('success', 'Pago eliminado correctamente.');
         }
 
-        return $this->redirectToRoute('app_alumnos_pagos_index', ['alumno' => $alumnoId], Response::HTTP_SEE_OTHER);
+        return $this->redirectToRoute('app_alumnos_pagos_index', ['alumno' => $alumnoId]);
+    }
+
+    /**
+     * @Route("/verificar-meses-adeudados/{id}", name="app_alumnos_pagos_verificar_meses_adeudados", methods={"GET"})
+     */
+    public function verificarMesesAdeudados(Alumno $alumno, PagosService $pagosService): JsonResponse
+    {
+        $mesesAdeudados = $pagosService->verificarMesesAdeudados($alumno);
+        return $this->json(['mesesAdeudados' => $mesesAdeudados]);
     }
 }

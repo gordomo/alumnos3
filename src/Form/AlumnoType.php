@@ -25,71 +25,55 @@ class AlumnoType extends AbstractType
         $isEdit = $options['is_edit'];
         $instituto = $options['instituto'];
         $builder
-            ->add('telefono_fijo', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'label_attr' => ['class' => 'form-label'], ])
             ->add('nombre', TextType::class, ['attr' => ['class' => 'form-control'], 'label_attr' => ['class' => 'form-label required'], ])
             ->add('apellido', TextType::class, ['attr' => ['class' => 'form-control'], 'label_attr' => ['class' => 'form-label required'], ])
-            ->add('f_nac', DateType::class, ['widget' => 'single_text', 'html5' => true, 'attr' => ['class' => 'form-control'], 'label_attr' => ['class' => 'form-label required'], 'required' => true,])
             ->add('email', EmailType::class, ['attr' => ['class' => 'form-control'], 'label_attr' => ['class' => 'form-label required'], ])
-            ->add('l_nac', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'label_attr' => ['class' => 'form-label'], ])
             ->add('dni', TextType::class, ['attr' => ['class' => 'form-control'], 'label_attr' => ['class' => 'form-label required'], ])
-            ->add('celular', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => true, 'label_attr' => ['class' => 'form-label'], ])
-            ->add('contacto_emergencia', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => true, 'label_attr' => ['class' => 'form-label '], ])
-            ->add('n_tutor', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'label_attr' => ['class' => 'form-label'], ])
+            ->add('f_nac', DateType::class, ['widget' => 'single_text', 'attr' => ['class' => 'form-control'], 'label_attr' => ['class' => 'form-label required'], ])
+            ->add('l_nac', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'label_attr' => ['class' => 'form-label '], ])
+            ->add('telefono_fijo', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'label_attr' => ['class' => 'form-label '], ])
+            ->add('celular', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'label_attr' => ['class' => 'form-label '], ])
+            ->add('contacto_emergencia', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'label_attr' => ['class' => 'form-label '], ])
+            ->add('n_tutor', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'label_attr' => ['class' => 'form-label '], ])
             ->add('t_tutor', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'label_attr' => ['class' => 'form-label '], ])
             ->add('corre_tutor', EmailType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'label_attr' => ['class' => 'form-label '], ])
-            ->add('dni_tutor', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'label_attr' => ['class' => 'form-label'], ])
-            ->add('escuela', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'label_attr' => ['class' => 'form-label'], ])
+            ->add('dni_tutor', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'label_attr' => ['class' => 'form-label '], ])
+            ->add('escuela', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'label_attr' => ['class' => 'form-label '], ])
             ->add('extras', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'label_attr' => ['class' => 'form-label '], ])
             ->add('g_sanguineo', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'label_attr' => ['class' => 'form-label '], ])
             ->add('enfermedad', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'label_attr' => ['class' => 'form-label '], ])
             ->add('alergico', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'label_attr' => ['class' => 'form-label '], ])
+            ->add('como_conociste', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'label_attr' => ['class' => 'form-label '], ])
             ->add('activo', ChoiceType::class, ['attr' => ['class' => 'form-control'], 'label_attr' => ['class' => 'form-label required'], 'choices'  => [
                 'Si' => 1,
                 'No' => 0,
                 ]
             ])
             ->add('medicacion', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'label_attr' => ['class' => 'form-label '], ])
-            ->add('curso', EntityType::class, [
-                'class' => Curso::class,
-                'label_attr' => ['class' => 'form-label required'], 
-                'choice_label' => 'nombre',
-                'query_builder' => function (EntityRepository $er) use ($instituto) {
-                    $curso = $er->createQueryBuilder('c')->where('c.instituto = :instituto')->setParameter('instituto', $instituto);
-                    return $curso;
-                },
-                'multiple' => true,
-                'expanded' => false,
-                'required' => false,
-                'label' => 'Cursos',
-                'attr' => ['class' => 'form-control predictivo']
-            ])
             ->add('hermanos', EntityType::class, [
                 'class' => Alumno::class,
-                'choice_label' => 'NombreApellido',
                 'label_attr' => ['class' => 'form-label'], 
-                'query_builder' => function (EntityRepository $er) use ($instituto) {
-                    $hermanos = $er->createQueryBuilder('u')->where('u.instituto = :instituto')->setParameter('instituto', $instituto);
-                    if (!empty($this->alumno->getId())) {
-                        $hermanos->andWhere('u.id != :id')->setParameter('id', $this->alumno->getId());
-                    }
-                    return $hermanos;
+                'choice_label' => function(Alumno $alumno) {
+                    return $alumno->getNombre() . ' ' . $alumno->getApellido();
                 },
-                'mapped' => false,
+                'query_builder' => function (EntityRepository $er) use ($instituto, $isEdit) {
+                    $qb = $er->createQueryBuilder('a')
+                        ->where('a.instituto = :instituto')
+                        ->setParameter('instituto', $instituto);
+                    
+                    if ($isEdit) {
+                        $qb->andWhere('a.id != :id')
+                           ->setParameter('id', $this->alumno->getId());
+                    }
+                    
+                    return $qb;
+                },
                 'multiple' => true,
                 'expanded' => false,
                 'required' => false,
                 'label' => 'Hermanos',
                 'attr' => ['class' => 'form-control predictivo']
-            ])
-            ->add('como_conociste', ChoiceType::class, ['attr' => ['class' => 'form-control'], 'label_attr' => ['class' => 'form-label '],  'required' => false, 'choices' => [
-                "Por Familia" => "Familia",
-                "Por Amigos" => "Amigos",
-                "Por Facebook" => "Facebook",
-                "Por Instagram" => "Instagram",
-                "Otra" => "Otra"
-
-            ]])
-        ;
+            ]);
     }
 
     public function configureOptions(OptionsResolver $resolver): void

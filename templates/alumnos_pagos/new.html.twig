@@ -2,21 +2,44 @@
 
 {% block title %}Nuevo Pago{% endblock %}
 
-{% block panelTitle %}
-    Nuevo Pago de {{ alumno }}
-{% endblock %}
-
 {% block body %}
-<div class="container-fluid mt-4">
-    <div class="row">
-        <div class="col-md-12">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    {{ include('alumnos_pagos/_form.html.twig', {'button_label': 'Guardar'}) }}
+    <div class="container mt-4">
+        <div class="card">
+            <div class="card-header">
+                <h1 class="h3 mb-0">Nuevo Pago</h1>
+            </div>
+            <div class="card-body">
+                {% for message in app.flashes('error') %}
+                    <div class="alert alert-danger">
+                        {{ message }}
                     </div>
-                </div>
+                {% endfor %}
+
+                {% for message in app.flashes('success') %}
+                    <div class="alert alert-success">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+
+                {{ include('components/meses_adeudados.html.twig') }}
+
+                {% if verificacion is defined and verificacion.mesInicio is defined %}
+                    <div class="alert alert-info">
+                        <h5 class="alert-heading">Período del curso </h5>
+                        <p>El curso se dicta desde {{ curso.fechaInicio | date('d/m/Y') }} hasta {{ curso.fechaFin | date('d/m/Y') }}.</p>
+                        <h6 class="alert-heading">{{ curso.nombre }} - precio: ${{ curso.precio | number_format(2, ',', '.')}}</h6>
+                    </div>
+                {% endif %}
+
+                {{ include('alumnos_pagos/_form.html.twig', {
+                    'button_label': 'Guardar',
+                    'alumno': alumno,
+                    'alumnos': alumnos is defined ? alumnos : [alumno],
+                    'cursos': cursos,
+                    'vencimientos': vencimientos,
+                    'is_general': is_general
+                }) }}
             </div>
         </div>
     </div>
-</div>
 {% endblock %}

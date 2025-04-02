@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Repository\AlumnosPagosRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * @ORM\Entity(repositoryClass=AlumnosPagosRepository::class)
@@ -18,30 +19,41 @@ class AlumnosPagos
     private $id;
 
     /**
-     * @ORM\Column(type="date")
-     */
-    private $fecha;
-
-    /**
      * @ORM\ManyToOne(targetEntity=Alumno::class, inversedBy="pagos")
      * @ORM\JoinColumn(nullable=false)
      */
     private $alumno;
 
     /**
-     * @ORM\Column(type="float")
+     * @ORM\Column(type="datetime")
      */
-    private $monto;
+    private $fecha;
 
     /**
      * @ORM\Column(type="integer")
+     * @Assert\Range(
+     *      min = 1,
+     *      max = 12,
+     *      notInRangeMessage = "El mes debe estar entre {{ min }} y {{ max }}"
+     * )
      */
     private $mes;
 
     /**
-     * @ORM\Column(type="text")
+     * @ORM\Column(type="integer")
      */
     private $ano;
+
+    /**
+     * @ORM\Column(type="decimal", precision=10, scale=2)
+     * @Assert\Positive(message="El monto debe ser mayor a 0")
+     */
+    private $monto;
+
+    /**
+     * @ORM\Column(type="text", nullable=true)
+     */
+    private $observacion;
 
     /**
      * @ORM\ManyToOne(targetEntity=Curso::class, inversedBy="alumnosPagos")
@@ -54,52 +66,14 @@ class AlumnosPagos
     private $metodoPago;
 
     /**
-     * @return mixed
+     * @ORM\ManyToOne(targetEntity=AlumnoCursoHistorico::class, inversedBy="pagos")
+     * @ORM\JoinColumn(nullable=false)
      */
-    public function getAno()
-    {
-        return $this->ano;
-    }
-
-    /**
-     * @param mixed $ano
-     */
-    public function setAno($ano): void
-    {
-        $this->ano = $ano;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getMes()
-    {
-        return $this->mes;
-    }
-
-    /**
-     * @param mixed $mes
-     */
-    public function setMes($mes): void
-    {
-        $this->mes = $mes;
-    }
+    private $cursoHistorico;
 
     public function getId(): ?int
     {
         return $this->id;
-    }
-
-    public function getFecha(): ?\DateTimeInterface
-    {
-        return $this->fecha;
-    }
-
-    public function setFecha(\DateTimeInterface $fecha): self
-    {
-        $this->fecha = $fecha;
-
-        return $this;
     }
 
     public function getAlumno(): ?Alumno
@@ -110,7 +84,39 @@ class AlumnosPagos
     public function setAlumno(?Alumno $alumno): self
     {
         $this->alumno = $alumno;
+        return $this;
+    }
 
+    public function getFecha(): ?\DateTimeInterface
+    {
+        return $this->fecha;
+    }
+
+    public function setFecha(\DateTimeInterface $fecha): self
+    {
+        $this->fecha = $fecha;
+        return $this;
+    }
+
+    public function getMes(): ?int
+    {
+        return $this->mes;
+    }
+
+    public function setMes(int $mes): self
+    {
+        $this->mes = $mes;
+        return $this;
+    }
+
+    public function getAno(): ?int
+    {
+        return $this->ano;
+    }
+
+    public function setAno(int $ano): self
+    {
+        $this->ano = $ano;
         return $this;
     }
 
@@ -122,7 +128,17 @@ class AlumnosPagos
     public function setMonto(float $monto): self
     {
         $this->monto = $monto;
+        return $this;
+    }
 
+    public function getObservacion(): ?string
+    {
+        return $this->observacion;
+    }
+
+    public function setObservacion(?string $observacion): self
+    {
+        $this->observacion = $observacion;
         return $this;
     }
 
@@ -146,6 +162,17 @@ class AlumnosPagos
     public function setMetodoPago(string $metodoPago): self
     {
         $this->metodoPago = $metodoPago;
+        return $this;
+    }
+
+    public function getCursoHistorico(): ?AlumnoCursoHistorico
+    {
+        return $this->cursoHistorico;
+    }
+
+    public function setCursoHistorico(?AlumnoCursoHistorico $cursoHistorico): self
+    {
+        $this->cursoHistorico = $cursoHistorico;
         return $this;
     }
 }

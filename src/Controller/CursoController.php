@@ -10,6 +10,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use App\Helpers;
+use Symfony\Component\HttpFoundation\JsonResponse;
 
 /**
  * @Route("/admin/curso")
@@ -57,13 +58,28 @@ class CursoController extends AbstractController
     ): array {
         $qb = $cursoRepository->createQueryBuilder('c')
             ->where('c.instituto = :instituto')
-            ->andWhere('c.disabled = :disabled')
-            ->setParameter('instituto', $instituto)
-            ->setParameter('disabled', $disabled);
+            ->setParameter('instituto', $instituto);
 
         if ($busqueda) {
             $qb->andWhere('c.nombre LIKE :nombre')
                ->setParameter('nombre', '%' . $busqueda . '%');
+        }
+
+        if ($disabled) {
+            // Para cursos deshabilitados, incluir:
+            // 1. Cursos manualmente deshabilitados
+            // 2. Cursos cuya fecha fin está en el pasado
+            $qb->andWhere('c.disabled = :disabled OR c.fechaFin < :fechaActual')
+               ->setParameter('disabled', true)
+               ->setParameter('fechaActual', new \DateTime());
+        } else {
+            // Para cursos activos, solo incluir:
+            // 1. Cursos no deshabilitados manualmente
+            // 2. Cursos cuya fecha fin es futura o no tiene fecha fin
+            $qb->andWhere('c.disabled = :disabled')
+               ->andWhere('c.fechaFin IS NULL OR c.fechaFin >= :fechaActual')
+               ->setParameter('disabled', false)
+               ->setParameter('fechaActual', new \DateTime());
         }
 
         $qb->orderBy($sort === 'precio' ? 'c.precio + 0' : 'c.'.$sort, $order);
@@ -448,5 +464,21 @@ class CursoController extends AbstractController
         
         // Convertir a formato decimal (ej: 1:30 -> 1.5)
         return $horas + ($minutos / 60);
+    }
+
+    /**
+     * @Route("/api/cursos/{id}/precio", name="app_curso_precio", methods={"GET"})
+     */
+    public function getPrecio(CursoRepository $cursoRepository, int $id): JsonResponse
+    {
+        $curso = $cursoRepository->find($id);
+        
+        if (!$curso) {
+            return $this->json(['error' => 'Curso no encontrado'], 404);
+        }
+
+        return $this->json([
+            'precio' => $curso->getPrecio()
+        ]);
     }
 }

@@ -11,12 +11,22 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Knp\Component\Pager\PaginatorInterface;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use App\Service\HistorialCursosService;
+use Doctrine\ORM\EntityManagerInterface;
 
 /**
  * @Route("/admin/alumno")
  */
 class AlumnoController extends AbstractController
 {
+    private $entityManager;
+
+    public function __construct(EntityManagerInterface $entityManager)
+    {
+        $this->entityManager = $entityManager;
+    }
+
     /**
      * @Route("/", name="app_alumno_index", methods={"GET", "POST"})
      */
@@ -32,13 +42,9 @@ class AlumnoController extends AbstractController
         $totalAgregados = $request->get('totalAgregados', '');
         $alumnosQueNoGuardadamos = $request->get('alumnosQueNoGuardadamos', []);
 
-        if ($cursoSelected != 0) {
-            $limit = 10000000000000000;
-        }
-
         $instituto = $this->getUser()->getInstituto();
         
-        $alumnosQuery = $this->createQuery($alumnoRepository, $instituto, $sort, $order, $busqueda, $activo);
+        $alumnosQuery = $this->createQuery($alumnoRepository, $instituto, $sort, $order, $busqueda, $activo, $cursoSelected);
 
         $alumnos = $paginator->paginate(
             $alumnosQuery, 
@@ -69,9 +75,11 @@ class AlumnoController extends AbstractController
         string $sort,
         string $order,
         ?string $busqueda = null,
-        ?string $activo = null
+        ?string $activo = null,
+        ?int $cursoSelected = null
     ) {
         $qb = $alumnoRepository->createQueryBuilder('a')
+            ->leftJoin('a.curso', 'c')
             ->where('a.instituto = :instituto')
             ->setParameter('instituto', $instituto);
 
@@ -83,6 +91,11 @@ class AlumnoController extends AbstractController
         if ($activo != 'todos') {
             $qb->andWhere('a.activo = :activo')
                 ->setParameter('activo', $activo);
+        }
+
+        if ($cursoSelected != 0) {
+            $qb->andWhere('c.id = :curso')
+                ->setParameter('curso', $cursoSelected);
         }
 
         // Ordenamiento por nombre o apellido
@@ -109,20 +122,8 @@ class AlumnoController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-
-            if ( count($form->get('curso')->getData()) < 1 ) {
-                $this->addFlash('danger', 'necesita seleccionar al menos un curso');
-                return $this->renderForm('alumno/new.html.twig', [
-                    'alumno' => $alumno,
-                    'form' => $form,
-                    'hermanos' => $alumno->getHermanos()
-                ]);
-            }
-
             $alumnoRepository->add($alumno);
-
             $this->setearHermandad($request, $alumno, $alumnoRepository);
-
             return $this->redirectToRoute('app_alumno_index', [], Response::HTTP_SEE_OTHER);
         }
 
@@ -161,19 +162,8 @@ class AlumnoController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            
-            if ( count($form->get('curso')->getData()) < 1 ) {
-                $this->addFlash('danger', 'necesita seleccionar al menos un curso');
-                return $this->renderForm('alumno/edit.html.twig', [
-                    'alumno' => $alumno,
-                    'form' => $form,
-                    'hermanos' => $alumno->getHermanos()
-                ]);
-            }
-
             $alumnoRepository->add($alumno);
             $this->setearHermandad($request, $alumno, $alumnoRepository);
-
             return $this->redirectToRoute('app_alumno_index', [], Response::HTTP_SEE_OTHER);
         }
 
@@ -262,5 +252,49 @@ class AlumnoController extends AbstractController
                 $alumnoRepository->add($hermano);
             }
         }
+    }
+
+    /**
+     * @Route("/{id}/update-cursos", name="app_alumno_update_cursos", methods={"POST"})
+     */
+    public function updateCursos(Request $request, Alumno $alumno, CursoRepository $cursoRepository, HistorialCursosService $historialCursosService): JsonResponse
+    {
+        $instituto = $this->getUser()->getInstituto();
+        $cursoIds = $request->request->get('cursos', []);
+        
+        // Obtener los cursos seleccionados
+        $cursosSeleccionados = $cursoRepository->findBy(['id' => $cursoIds, 'instituto' => $instituto]);
+        
+        // Obtener los cursos actuales del alumno
+        $cursosActuales = $alumno->getCurso();
+        
+        // Cursos a remover
+        foreach ($cursosActuales as $curso) {
+            if (!in_array($curso, $cursosSeleccionados)) {
+                // Marcar el historial como inactivo
+                $historico = $historialCursosService->buscarHistorial($alumno, $curso, new \DateTime());
+                if ($historico) {
+                    $historico->setActivo(false);
+                    $historico->setFechaFin(new \DateTime());
+                }
+                $alumno->removeCurso($curso);
+            }
+        }
+        
+        // Cursos a agregar
+        foreach ($cursosSeleccionados as $curso) {
+            if (!$cursosActuales->contains($curso)) {
+                $alumno->addCurso($curso);
+                // Crear nuevo historial
+                $historico = $historialCursosService->crearHistorial($alumno, $curso);
+            }
+        }
+        
+        $this->entityManager->flush();
+        
+        return new JsonResponse([
+            'success' => true,
+            'message' => 'Cursos actualizados correctamente'
+        ]);
     }
 }
