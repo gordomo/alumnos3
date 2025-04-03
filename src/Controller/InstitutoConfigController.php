@@ -118,6 +118,10 @@ class InstitutoConfigController extends AbstractController
                 $entityManager->flush();
                 $this->addFlash('success', 'Vencimiento creado correctamente.');
                 return $this->redirectToRoute('instituto_config_index');
+            } else {
+                foreach ($errors as $error) {
+                    $this->addFlash('danger', $error->getMessage());
+                }
             }
         }
 
@@ -135,17 +139,22 @@ class InstitutoConfigController extends AbstractController
         if ($request->isMethod('POST')) {
             $diaVencimiento = $request->request->get('diaVencimiento');
             $porcentajeInteres = $request->request->get('porcentajeInteres');
-            $orden = $request->request->get('orden');
 
             $vencimiento->setDiaVencimiento((int)$diaVencimiento);
             $vencimiento->setPorcentajeInteres((float)$porcentajeInteres);
-            $vencimiento->setOrden((int)$orden);
 
+            
             $errors = $validator->validate($vencimiento);
+            
             if (count($errors) === 0) {
+                $entityManager->persist($vencimiento);
                 $entityManager->flush();
                 $this->addFlash('success', 'Vencimiento actualizado correctamente.');
                 return $this->redirectToRoute('instituto_config_index');
+            } else {
+                foreach ($errors as $error) {
+                    $this->addFlash('danger', $error->getMessage());
+                }
             }
         }
 
