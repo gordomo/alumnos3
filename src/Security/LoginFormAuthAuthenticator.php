@@ -2,6 +2,7 @@
 
 namespace App\Security;
 
+use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -65,21 +66,23 @@ class LoginFormAuthAuthenticator extends AbstractLoginFormAuthenticator
 
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
     {
-        if ($targetPath = $this->getTargetPath($request->getSession(), $firewallName)) {
-            return new RedirectResponse($targetPath);
-        }
-
-        // For example:
-        //return new RedirectResponse($this->urlGenerator->generate('some_route'));
-        //throw new \Exception('TODO: provide a valid redirect inside '.__FILE__);
-
         $user = $token->getUser();
-
-        if (in_array('ROLE_ADMIN_INSTITUTO', $user->getRoles())) {
-            return new RedirectResponse($this->urlGenerator->generate('admin_instituto_index'));
+        
+        // Redirigir según el rol
+        if (in_array('ROLE_ADMIN', $user->getRoles())) {
+            return new RedirectResponse($this->urlGenerator->generate('dashboard_index'));
         }
         
-        return new RedirectResponse($this->urlGenerator->generate('dashboard_index'));
+        if (in_array('ROLE_ADMIN_INSTITUTO', $user->getRoles())) {
+            return new RedirectResponse($this->urlGenerator->generate('app_instituto_index'));
+        }
+        
+        if (in_array('ROLE_PROFESOR', $user->getRoles())) {
+            return new RedirectResponse($this->urlGenerator->generate('app_profesor_dashboard'));
+        }
+
+        // Si no tiene ningún rol específico, redirigir a la página principal
+        return new RedirectResponse($this->urlGenerator->generate('app_instituto_index'));
     }
 
     public function checkCredentials($credentials, PasswordAuthenticatedUserInterface $user){

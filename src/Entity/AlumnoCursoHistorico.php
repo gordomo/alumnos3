@@ -4,6 +4,8 @@ namespace App\Entity;
 
 use App\Repository\AlumnoCursoHistoricoRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 
 /**
  * @ORM\Entity(repositoryClass=AlumnoCursoHistoricoRepository::class)
@@ -43,6 +45,16 @@ class AlumnoCursoHistorico
      * @ORM\Column(type="boolean")
      */
     private $activo = true;
+
+    /**
+     * @ORM\OneToMany(targetEntity=AlumnosPagos::class, mappedBy="cursoHistorico")
+     */
+    private $pagos;
+
+    public function __construct()
+    {
+        $this->pagos = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -101,6 +113,33 @@ class AlumnoCursoHistorico
     public function setActivo(bool $activo): self
     {
         $this->activo = $activo;
+        return $this;
+    }
+
+    /**
+     * @return Collection|AlumnosPagos[]
+     */
+    public function getPagos(): Collection
+    {
+        return $this->pagos;
+    }
+
+    public function addPago(AlumnosPagos $pago): self
+    {
+        if (!$this->pagos->contains($pago)) {
+            $this->pagos[] = $pago;
+            $pago->setCursoHistorico($this);
+        }
+        return $this;
+    }
+
+    public function removePago(AlumnosPagos $pago): self
+    {
+        if ($this->pagos->removeElement($pago)) {
+            if ($pago->getCursoHistorico() === $this) {
+                $pago->setCursoHistorico(null);
+            }
+        }
         return $this;
     }
 } 

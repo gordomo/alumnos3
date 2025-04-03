@@ -101,6 +101,18 @@ class CursoRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    public function findByProfesor($profesor)
+    {
+        return $this->createQueryBuilder('c')
+            ->innerJoin('c.profesores', 'p')
+            ->where('p = :profesor')
+            ->andWhere('c.disabled = false')
+            ->setParameter('profesor', $profesor)
+            ->orderBy('c.nombre', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
     /*
     public function findOneBySomeField($value): ?Curso
     {

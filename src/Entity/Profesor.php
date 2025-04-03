@@ -35,7 +35,7 @@ class Profesor
     private $dni;
 
     /**
-     * @ORM\Column(type="text")
+     * @ORM\Column(type="text", unique=true)
      */
     private $email;
 
@@ -71,7 +71,7 @@ class Profesor
     private $tel;
 
     /**
-     * @ORM\ManyToMany(targetEntity=Curso::class, inversedBy="profesores")
+     * @ORM\ManyToMany(targetEntity=Curso::class, mappedBy="profesores")
      */
     private $cursos;
 
@@ -86,6 +86,18 @@ class Profesor
      */
     private $instituto;
 
+    /**
+     * @ORM\OneToOne(targetEntity=User::class, inversedBy="profesor")
+     * @ORM\JoinColumn(name="user_id", referencedColumnName="id", nullable=true)
+     */
+    private $user;
+
+    public function __construct()
+    {
+        $this->cursos = new ArrayCollection();
+        $this->asistenciaProfesores = new ArrayCollection();
+    }
+
     public function getInstituto(): ?Instituto
     {
         return $this->instituto;
@@ -97,11 +109,17 @@ class Profesor
         return $this;
     }
 
-    public function __construct()
+    public function getUser(): ?User
     {
-        $this->cursos = new ArrayCollection();
-        $this->asistenciaProfesores = new ArrayCollection();
+        return $this->user;
     }
+
+    public function setUser(?User $user): self
+    {
+        $this->user = $user;
+        return $this;
+    }
+   
 
     public function getId(): ?int
     {
@@ -188,7 +206,6 @@ class Profesor
     public function removeCurso(Curso $curso): self
     {
         $this->cursos->removeElement($curso);
-
         return $this;
     }
 

@@ -1,0 +1,90 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Tomar Asistencia - {{ curso.nombre }}{% endblock %}
+
+{% block panelTitle %}
+    Tomar Asistencia - {{ curso.nombre }}
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <form method="get" action="{{ path('app_asistencia_alumnos_curso', {'id': curso.id}) }}" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label for="fecha" class="form-label">Fecha de Asistencia</label>
+                    <input type="date" class="form-control" id="fecha" name="fecha" value="{{ fecha|date('Y-m-d') }}" max="{{ "now"|date("Y-m-d") }}">
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">Cambiar Fecha</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% if asistenciasExistentes|length > 0 %}
+        <div class="alert alert-warning">
+            Ya se tomaron asistencias para este curso en esta fecha. Si continúa, se registrarán nuevas asistencias.
+        </div>
+    {% endif %}
+
+    <div class="row">
+        <div class="col-md-12">
+            <form method="post" action="{{ path('app_asistencia_alumnos_curso', {'id': curso.id}) }}">
+                <input type="hidden" name="fecha" value="{{ fecha|date('Y-m-d') }}">
+                
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Alumno</th>
+                                <th>Presente</th>
+                                <th>Observaciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for alumno in alumnos %}
+                                <tr>
+                                    <td>{{ alumno.nombre }} {{ alumno.apellido }}</td>
+                                    <td>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" 
+                                                   name="asistencias[{{ alumno.id }}]" 
+                                                   value="1" 
+                                                   id="asistencia_{{ alumno.id }}"
+                                                   {% if asistenciasExistentes|filter(a => a.alumno.id == alumno.id and a.presente)|length > 0 %}
+                                                       checked
+                                                   {% endif %}>
+                                            <label class="form-check-label" for="asistencia_{{ alumno.id }}">
+                                                Presente
+                                            </label>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <input type="text" 
+                                               class="form-control" 
+                                               name="observaciones_{{ alumno.id }}"
+                                               value="{{ asistenciasExistentes|filter(a => a.alumno.id == alumno.id)|first.observaciones ?? '' }}"
+                                               placeholder="Observaciones">
+                                    </td>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <td colspan="3" class="text-center">No hay alumnos inscriptos en este curso</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="row mt-4">
+                    <div class="col-md-12 text-end">
+                        <a href="{{ path('app_asistencia_alumnos_index') }}" class="btn btn-secondary">Cancelar</a>
+                        <button type="submit" class="btn btn-primary">Guardar Asistencias</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -51,6 +51,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      */
     private $resetTokenExpiresAt;
 
+    /**
+     * @ORM\OneToOne(targetEntity=Profesor::class, mappedBy="user")
+     */
+    private $profesor;
+
     public function getInstituto(): ?Instituto
     {
         return $this->instituto;
@@ -170,6 +175,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setResetTokenExpiresAt(?\DateTimeInterface $resetTokenExpiresAt): self
     {
         $this->resetTokenExpiresAt = $resetTokenExpiresAt;
+        return $this;
+    }
+
+    public function getProfesor(): ?Profesor
+    {
+        return $this->profesor;
+    }
+
+    public function setProfesor(?Profesor $profesor): self
+    {
+        $this->profesor = $profesor;
         return $this;
     }
 }

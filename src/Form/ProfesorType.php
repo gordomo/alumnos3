@@ -30,7 +30,7 @@ class ProfesorType extends AbstractType
             ->add('cursos', EntityType::class, [
                 'class' => Curso::class,
                 'attr' => ['class' => 'form-control'],
-                'label_attr'=> ['class'=> 'form-label required'],
+                'label_attr'=> ['class'=> 'form-label'],
                 'choice_label' => 'nombre',
                 'query_builder' => function (EntityRepository $er) use ($instituto) {
                     $curso = $er->createQueryBuilder('c')->where('c.instituto = :instituto')->setParameter('instituto', $instituto);

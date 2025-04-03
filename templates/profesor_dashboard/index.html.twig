@@ -1,0 +1,39 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Dashboard Profesor{% endblock %}
+
+{% block panelTitle %}
+    Bienvenido, {{ profesor.nombre }} {{ profesor.apellido }}
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        {% for curso in cursos %}
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ curso.nombre }}</h5>
+                        <p class="card-text">
+                            <strong>Horario:</strong> {{ curso.horarioInicio|date('H:i') }} - {{ curso.horarioFin|date('H:i') }}<br>
+                            <strong>Días:</strong> {{ curso.dias|join(', ') }}<br>
+                            <strong>Alumnos Inscriptos:</strong> {{ curso.alumnos|length }}
+                        </p>
+                    </div>
+                    <div class="card-footer">
+                        <a href="{{ path('app_asistencia_alumnos_curso', {'id': curso.id}) }}" class="btn btn-primary">
+                            <i class="bi bi-clipboard-list"></i> Tomar Asistencia
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="col-12">
+                <div class="alert alert-info">
+                    No tienes cursos asignados.
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %} 

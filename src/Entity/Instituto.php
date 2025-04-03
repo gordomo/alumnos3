@@ -54,12 +54,30 @@ class Instituto
      */
     private $vencimientos;
 
+    /**
+     * @ORM\OneToMany(targetEntity=Curso::class, mappedBy="instituto")
+     */
+    private $cursos;
+
+    /**
+     * @ORM\OneToMany(targetEntity=Profesor::class, mappedBy="instituto")
+     */
+    private $profesores;
+
+    /**
+     * @ORM\OneToMany(targetEntity=Alumno::class, mappedBy="instituto")
+     */
+    private $alumnos;
+
     // Métodos de inicialización y getters/setters
 
     public function __construct()
     {
         $this->usuarios = new ArrayCollection();
         $this->vencimientos = new ArrayCollection();
+        $this->cursos = new ArrayCollection();
+        $this->profesores = new ArrayCollection();
+        $this->alumnos = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -154,6 +172,87 @@ class Instituto
             // set the owning side to null (unless already changed)
             if ($vencimiento->getInstituto() === $this) {
                 $vencimiento->setInstituto(null);
+            }
+        }
+        return $this;
+    }
+
+    /**
+     * @return Collection|Curso[]
+     */
+    public function getCursos(): Collection
+    {
+        return $this->cursos;
+    }
+
+    public function addCurso(Curso $curso): self
+    {
+        if (!$this->cursos->contains($curso)) {
+            $this->cursos[] = $curso;
+            $curso->setInstituto($this);
+        }
+        return $this;
+    }
+
+    public function removeCurso(Curso $curso): self
+    {
+        if ($this->cursos->removeElement($curso)) {
+            if ($curso->getInstituto() === $this) {
+                $curso->setInstituto(null);
+            }
+        }
+        return $this;
+    }
+
+    /**
+     * @return Collection|Profesor[]
+     */
+    public function getProfesores(): Collection
+    {
+        return $this->profesores;
+    }
+
+    public function addProfesor(Profesor $profesor): self
+    {
+        if (!$this->profesores->contains($profesor)) {
+            $this->profesores[] = $profesor;
+            $profesor->setInstituto($this);
+        }
+        return $this;
+    }
+
+    public function removeProfesor(Profesor $profesor): self
+    {
+        if ($this->profesores->removeElement($profesor)) {
+            if ($profesor->getInstituto() === $this) {
+                $profesor->setInstituto(null);
+            }
+        }
+        return $this;
+    }
+
+    /**
+     * @return Collection|Alumno[]
+     */
+    public function getAlumnos(): Collection
+    {
+        return $this->alumnos;
+    }
+
+    public function addAlumno(Alumno $alumno): self
+    {
+        if (!$this->alumnos->contains($alumno)) {
+            $this->alumnos[] = $alumno;
+            $alumno->setInstituto($this);
+        }
+        return $this;
+    }
+
+    public function removeAlumno(Alumno $alumno): self
+    {
+        if ($this->alumnos->removeElement($alumno)) {
+            if ($alumno->getInstituto() === $this) {
+                $alumno->setInstituto(null);
             }
         }
         return $this;

@@ -21,7 +21,7 @@ security:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
         public:
-            pattern: ^/(login|reset-password|test/email)/
+            pattern: ^/(login|reset-password|test/email|logout)/
             security: false
         main:
             lazy: true
@@ -30,6 +30,11 @@ security:
             logout:
                 path: app_logout
                 target: app_login
+                csrf_token_generator: security.csrf.token_manager
+                csrf_token_id: logout
+                invalidate_session: true
+                delete_cookies:
+                    PHPSESSID: { path: / }
 
             # activate different ways to authenticate
             # https://symfony.com/doc/current/security.html#the-firewall
@@ -40,18 +45,29 @@ security:
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
     access_control:
-        # Rutas públicas (sin autenticación)
-        - { path: ^/test/email, roles: PUBLIC_ACCESS }
+        # Public routes
+        - { path: ^/login, roles: PUBLIC_ACCESS }
+        - { path: ^/logout, roles: PUBLIC_ACCESS }
+        - { path: ^/register, roles: PUBLIC_ACCESS }
         - { path: ^/reset-password, roles: PUBLIC_ACCESS }
-        - { path: ^/login$, roles: PUBLIC_ACCESS }
         
-        # Rutas que requieren autenticación
-        - { path: ^/logout$, roles: IS_AUTHENTICATED_FULLY }
-        - { path: ^/admin/instituto, roles: ROLE_ADMIN_INSTITUTO }
-        - { path: ^/admin, roles: ROLE_ADMIN }
+        # Profesor routes
+        - { path: ^/profesor/dashboard, roles: [ROLE_PROFESOR, ROLE_ADMIN] }
+        - { path: ^/profesor/asistencia, roles: [ROLE_PROFESOR, ROLE_ADMIN] }
+        - { path: ^/profesor/curso, roles: [ROLE_PROFESOR, ROLE_ADMIN] }
+        - { path: ^/asistencias/alumnos, roles: [ROLE_PROFESOR, ROLE_ADMIN] }
         
-        # Rutas que requieren autenticación con roles específicos
-        - { path: ^/, roles: [ROLE_USER, ROLE_ADMIN] }
+        # Admin routes
+        - { path: ^/admin, roles: [ROLE_ADMIN, ROLE_ADMIN_INSTITUTO] }
+        - { path: ^/instituto, roles: [ROLE_ADMIN_INSTITUTO, ROLE_ADMIN] }
+        - { path: ^/instituto/config, roles: [ROLE_ADMIN_INSTITUTO, ROLE_ADMIN] }
+        - { path: ^/instituto/profesor, roles: [ROLE_ADMIN_INSTITUTO, ROLE_ADMIN] }
+        - { path: ^/instituto/curso, roles: [ROLE_ADMIN_INSTITUTO, ROLE_ADMIN] }
+        - { path: ^/instituto/alumno, roles: [ROLE_ADMIN_INSTITUTO, ROLE_ADMIN] }
+        - { path: ^/instituto/asistencia, roles: [ROLE_ADMIN_INSTITUTO, ROLE_ADMIN] }
+        
+        # Default access control
+        - { path: ^/, roles: ROLE_USER }
 
 when@test:
     security:

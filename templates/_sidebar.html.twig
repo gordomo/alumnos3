@@ -1,25 +1,48 @@
 <!-- Sidebar -->
 <div class="d-flex" id="wrapper">
     <div class="bg-light border-right" id="sidebar-wrapper">
-        {% if is_granted('ROLE_USER') or is_granted('ROLE_ADMIN') or is_granted('ROLE_ADMIN_INSTITUTO') %}
+        {% if is_granted('ROLE_USER') or is_granted('ROLE_ADMIN') or is_granted('ROLE_ADMIN_INSTITUTO') or is_granted('ROLE_PROFESOR')%}
             <div class="sidebar-heading ps-4">{{ app.user.instituto.nombre }}</div>
             <div class="sidebar-headings small text-muted ps-4">{{ app.user.email }}</div>
             <hr class="my-0">
         {% endif %}
         
         <div class="list-group list-group-flush">
-        {% if is_granted('ROLE_USER') or is_granted('ROLE_ADMIN') %}    
+        {% if is_granted('ROLE_PROFESOR') %} 
+            <ul class="nav nav-tabs sidebar-dropdown-ul">
+                <li class="nav-item">
+                    <a class="list-group-item list-group-item-action bg-light {% if app.request.get('_route') == 'app_profesor_dashboard' %}active{% endif %}" href="{{ path('app_profesor_dashboard') }}">
+                        <i class="bi bi-bar-chart"></i> Mis Cursos
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="list-group-item list-group-item-action bg-light {% if app.request.get('_route') == 'app_asistencia_alumnos_index' %}active{% endif %}" href="{{ path('app_asistencia_alumnos_index') }}">
+                        <i class="bi bi-clipboard-check"></i> Asistencias de Alumnos
+                    </a>
+                </li>
+            </ul>
+        {% endif %}
+
+        {% if is_granted('ROLE_ADMIN')  or is_granted('ROLE_ADMIN_INSTITUTO')%}
+            {# <ul class="nav nav-tabs sidebar-dropdown-ul">
+                <li class="nav-item">
+                    <a class="list-group-item list-group-item-action bg-light {% if app.request.get('_route') == 'app_instituto_index' %}active{% endif %}" href="{{ path('app_instituto_index') }}">
+                        <i class="bi bi-building"></i> Instituto
+                    </a>
+                </li>
+            </ul> #}
+
             <ul class="nav nav-tabs sidebar-dropdown-ul">
                 <li class="nav-item">
                     <a class="list-group-item list-group-item-action bg-light {% if app.request.get('_route') == 'dashboard_index' %}active{% endif %}" href="{{ path('dashboard_index') }}">
-                        <i class="bi bi-bar-chart"></i> Dashboard
+                        <i class="bi bi-house"></i> Dashboard
                     </a>
                 </li>
             </ul>
 
             <ul class="nav nav-tabs sidebar-dropdown-ul">
                 <li class="nav-item dropdown dropend">
-                    <a class="list-group-item list-group-item-action bg-light dropdown-toggle {% if app.request.get('_route') starts with 'app_curso_' or app.request.get('_route') == 'asistencias' %}active{% endif %}" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">
+                    <a class="list-group-item list-group-item-action bg-light dropdown-toggle {% if app.request.get('_route') starts with 'app_curso_' %}active{% endif %}" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">
                         <i class="bi bi-book"></i> Cursos
                     </a>
                     <ul class="dropdown-menu">
@@ -28,6 +51,7 @@
                     </ul>
                 </li>
             </ul>
+
 
             <ul class="nav nav-tabs sidebar-dropdown-ul">
                 <li class="nav-item dropdown dropend">
@@ -44,38 +68,11 @@
 
             <ul class="nav nav-tabs sidebar-dropdown-ul">
                 <li class="nav-item">
-                    <a class="list-group-item list-group-item-action bg-light {% if app.request.get('_route') starts with 'app_alumno_' %}active{% endif %}" href="{{ path('app_alumno_index') }}">
-                        <i class="bi bi-people"></i> Alumnos
+                    <a class="list-group-item list-group-item-action bg-light {% if app.request.get('_route') == 'app_alumno_index' %}active{% endif %}" href="{{ path('app_alumno_index') }}">
+                        <i class="bi bi-mortarboard"></i> Alumnos
                     </a>
                 </li>
             </ul>
-
-            <ul class="nav nav-tabs sidebar-dropdown-ul">
-                <li class="nav-item">
-                    <a class="list-group-item list-group-item-action bg-light {% if app.request.get('_route') == 'app_alumnos_pagos_index'  %}active{% endif %}" href="{{ path('app_alumnos_pagos_index') }}">
-                        <i class="bi bi-currency-dollar"></i> Pagos
-                    </a>
-                </li>
-            </ul>
-
-            <ul class="nav nav-tabs sidebar-dropdown-ul">
-                <li class="nav-item">
-                    <a class="list-group-item list-group-item-action bg-light {% if app.request.get('_route') starts with 'app_user_' %}active{% endif %}" href="{{ path('app_user_index') }}">
-                        <i class="bi bi-person-lines-fill"></i> Usuarios
-                    </a>
-                </li>
-            </ul>
-        {% endif %}
-
-        {% if is_granted('ROLE_ADMIN_INSTITUTO') %}
-            <ul class="nav nav-tabs sidebar-dropdown-ul">
-                <li class="nav-item">
-                    <a class="list-group-item list-group-item-action bg-light {% if app.request.get('_route') starts with 'admin_instituto_' %}active{% endif %}" href="{{ path('admin_instituto_index') }}">
-                        <i class="bi bi-book"></i> Institutos
-                    </a>
-                </li>
-            </ul>
-        {% endif %}
 
             <ul class="nav nav-tabs sidebar-dropdown-ul">
                 <li class="nav-item">
@@ -84,12 +81,26 @@
                     </a>
                 </li>
             </ul>
+        {% endif %}
+
+        {% if is_granted('ROLE_ADMIN') %}
+            <ul class="nav nav-tabs sidebar-dropdown-ul">
+                <li class="nav-item">
+                    <a class="list-group-item list-group-item-action bg-light {% if app.request.get('_route') == 'admin_instituto_index' %}active{% endif %}" href="{{ path('admin_instituto_index') }}">
+                        <i class="bi bi-building"></i> Institutos
+                    </a>
+                </li>
+            </ul>
+        {% endif %}
 
             <ul class="nav nav-tabs sidebar-dropdown-ul">
                 <li class="nav-item">
-                    <a class="list-group-item list-group-item-action bg-light {% if app.request.get('_route') == 'app_logout' %}active{% endif %}" href="{{ path('app_logout') }}">
-                        <i class="bi bi-arrow-bar-left"></i> Salir
-                    </a>
+                    <form method="post" action="{{ path('app_logout') }}" class="d-inline">
+                        <input type="hidden" name="_csrf_token" value="{{ csrf_token('logout') }}">
+                        <button type="submit" class="list-group-item list-group-item-action bg-light border-0 w-100 text-start">
+                            <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
+                        </button>
+                    </form>
                 </li>
             </ul>
         </div>

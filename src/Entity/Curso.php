@@ -66,58 +66,8 @@ class Curso
      */
     private $instituto;
 
-    public function getInstituto(): ?Instituto
-    {
-        return $this->instituto;
-    }
-
-    public function setInstituto(?Instituto $instituto): self
-    {
-        $this->instituto = $instituto;
-        return $this;
-    }
-
-
-    /**
-     * @return mixed
-     */
-    public function getDisabled()
-    {
-        return $this->disabled;
-    }
-
-    /**
-     * @param mixed $disabled
-     */
-    public function setDisabled($disabled): void
-    {
-        $this->disabled = $disabled;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getDuracion()
-    {
-        return $this->duracion;
-    }
-
-    /**
-     * @param mixed $duracion
-     */
-    public function setDuracion($duracion): void
-    {
-        $this->duracion = $duracion;
-    }
-
-    /**
-     * @ORM\Column(type="text")
-     */
-    private $precio;
-
     /**
      * @ORM\ManyToMany(targetEntity=Profesor::class, inversedBy="cursos")
-     * @ORM\JoinTable(name="profesor_curso")
      */
     private $profesores;
 
@@ -130,6 +80,11 @@ class Curso
      * @ORM\OneToMany(targetEntity=AlumnosPagos::class, mappedBy="curso")
      */
     private $alumnosPagos;
+
+     /**
+     * @ORM\Column(type="text")
+     */
+    private $precio;
 
     public function __construct()
     {
@@ -147,6 +102,7 @@ class Curso
     {
         return $this->nombre;
     }
+    
 
     public function setNombre(string $nombre): self
     {
@@ -167,6 +123,18 @@ class Curso
         return $this;
     }
 
+    public function getInstituto(): ?Instituto
+    {
+        return $this->instituto;
+    }
+
+    public function setInstituto(Instituto $instituto): self
+    {
+        $this->instituto = $instituto;
+
+        return $this;
+    }
+
     public function getDias(): ?array
     {
         return $this->dias;
@@ -180,7 +148,23 @@ class Curso
     }
 
     /**
-     * @return Collection<int, Profesor>
+     * @return mixed
+     */
+    public function getDuracion()
+    {
+        return $this->duracion;
+    }
+
+    /**
+     * @param mixed $duracion
+     */
+    public function setDuracion($duracion): void
+    {
+        $this->duracion = $duracion;
+    }
+
+    /**
+     * @return Collection|Profesor[]
      */
     public function getProfesores(): Collection
     {
@@ -191,18 +175,13 @@ class Curso
     {
         if (!$this->profesores->contains($profesor)) {
             $this->profesores[] = $profesor;
-            $profesor->addCurso($this);
         }
-
         return $this;
     }
 
     public function removeProfesor(Profesor $profesor): self
     {
-        if ($this->profesores->removeElement($profesor)) {
-            $profesor->removeCurso($this);
-        }
-
+        $this->profesores->removeElement($profesor);
         return $this;
     }
 

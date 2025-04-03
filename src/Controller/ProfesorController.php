@@ -15,6 +15,9 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use App\Helpers;
 use Knp\Component\Pager\PaginatorInterface;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use App\Entity\User;
 
 /**
  * @Route("/admin/profesor")
@@ -211,7 +214,12 @@ class ProfesorController extends AbstractController
     /**
      * @Route("/new", name="app_profesor_new", methods={"GET", "POST"})
      */
-    public function new(Request $request, ProfesorRepository $profesorRepository): Response
+    public function new(
+        Request $request, 
+        ProfesorRepository $profesorRepository,
+        EntityManagerInterface $entityManager,
+        UserPasswordHasherInterface $passwordHasher
+    ): Response
     {
         $profesor = new Profesor();
         $instituto = $this->getUser()->getInstituto();
@@ -220,26 +228,54 @@ class ProfesorController extends AbstractController
         $form = $this->createForm(ProfesorType::class, $profesor, ['is_edit' => false, 'instituto' => $instituto]);
         $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            if ( count($form->get('cursos')->getData()) < 1) {
-                $this->addFlash('danger', 'necesita seleccionar un curso');
-                return $this->renderForm('profesor/new.html.twig', [
-                    'profesor' => $profesor,
-                    'form' => $form,
-                ]);
-            }
-            foreach($profesor->getCurso() as $curso) {
-                if(count($curso->getProfesores()->getValues()) > 0) {
+        if ($form->isSubmitted()) {
+            if ($form->isValid()) {
+                // Verificar que los cursos seleccionados no tengan profesor asignado
+                foreach($profesor->getCursos() as $curso) {
+                    if(count($curso->getProfesores()) > 0) {
+                        $this->addFlash('danger', 'El curso ' . $curso->getNombre() . ' ya tiene un profesor asignado.');
+                        return $this->renderForm('profesor/new.html.twig', [
+                            'profesor' => $profesor,
+                            'form' => $form,
+                        ]);
+                    }
+                }
 
-                    $this->addFlash('danger', 'el curso ya tiene un profesor asignado.');
-                    return $this->renderForm('profesor/new.html.twig', [
-                        'profesor' => $profesor,
-                        'form' => $form,
-                    ]);
+                // Crear el usuario para el profesor
+                $user = new User();
+                $user->setEmail($profesor->getEmail());
+                $user->setRoles(['ROLE_PROFESOR']);
+                $user->setInstituto($instituto);
+                
+                // Generar una contraseña temporal
+                $plainPassword = bin2hex(random_bytes(4)); // Genera una contraseña aleatoria de 8 caracteres
+                $hashedPassword = $passwordHasher->hashPassword($user, $plainPassword);
+                $user->setPassword($hashedPassword);
+
+                // Establecer la relación bidireccional
+                $user->setProfesor($profesor);
+                $profesor->setUser($user);
+
+                // Guardar el usuario y el profesor
+                $entityManager->persist($user);
+                $entityManager->persist($profesor);
+                $entityManager->flush();
+
+                // Asegurar que la relación bidireccional se establezca con los cursos
+                foreach($profesor->getCursos() as $curso) {
+                    $curso->addProfesore($profesor);
+                }
+
+                // Mostrar mensaje con la contraseña temporal
+                $this->addFlash('success', 'Profesor creado exitosamente');
+
+                return $this->redirectToRoute('app_profesor_index', [], Response::HTTP_SEE_OTHER);
+            } else {
+                $errors = $form->getErrors(true);
+                foreach ($errors as $error) {
+                    $this->addFlash('danger', $error->getMessage());
                 }
             }
-            $profesorRepository->add($profesor);
-            return $this->redirectToRoute('app_profesor_index', [], Response::HTTP_SEE_OTHER);
         }
 
         return $this->renderForm('profesor/new.html.twig', [
@@ -251,25 +287,22 @@ class ProfesorController extends AbstractController
     /**
      * @Route("/{id}/edit", name="app_profesor_edit", methods={"GET", "POST"})
      */
-    public function edit(Request $request, Profesor $profesor, ProfesorRepository $profesorRepository): Response
+    public function edit(Request $request, Profesor $profesor, ProfesorRepository $profesorRepository, CursoRepository $cursoRepository): Response
     {
         $instituto = $this->getUser()->getInstituto();
-        $form = $this->createForm(ProfesorType::class, $profesor, ['is_edit' => false, 'instituto' => $instituto]);
+        
+        // Guardar los cursos actuales antes de modificar el profesor
+        $cursosOriginales = clone $profesor->getCursos();
+        
+        $form = $this->createForm(ProfesorType::class, $profesor, ['is_edit' => true, 'instituto' => $instituto]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            if ( count($form->get('curso')->getData()) < 1) {
-                $this->addFlash('danger', 'necesita seleccionar un curso');
-                return $this->renderForm('profesor/edit.html.twig', [
-                    'profesor' => $profesor,
-                    'form' => $form,
-                ]);
-            }
-
-            foreach($profesor->getCurso() as $curso) {
+            // Verificar que los cursos seleccionados no tengan otro profesor asignado
+            foreach($profesor->getCursos() as $curso) {
                 foreach ($curso->getProfesores() as $profe) {
                     if ($profe->getId() != $profesor->getId()) {
-                        $this->addFlash('danger', 'el curso: ' . $curso->getNombre() . ', ya tiene un profesor asignado');
+                        $this->addFlash('danger', 'El curso ' . $curso->getNombre() . ' ya tiene un profesor asignado.');
                         return $this->renderForm('profesor/edit.html.twig', [
                             'profesor' => $profesor,
                             'form' => $form,
@@ -278,7 +311,25 @@ class ProfesorController extends AbstractController
                 }
             }
 
-            $profesorRepository->add($profesor);
+            // Primero, remover al profesor de los cursos que ya no están asignados
+            foreach($cursosOriginales as $curso) {
+                if (!$profesor->getCursos()->contains($curso)) {
+                    $curso->removeProfesor($profesor);
+                    $cursoRepository->add($curso, true);
+                }
+            }
+
+            // Luego, agregar al profesor a los nuevos cursos
+            foreach($profesor->getCursos() as $curso) {
+                if (!$cursosOriginales->contains($curso)) {
+                    $curso->addProfesor($profesor);
+                    $cursoRepository->add($curso, true);
+                }
+            }
+
+            // Finalmente, guardar el profesor
+            $profesorRepository->add($profesor, true);
+
             return $this->redirectToRoute('app_profesor_index', [], Response::HTTP_SEE_OTHER);
         }
 

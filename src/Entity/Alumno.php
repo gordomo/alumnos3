@@ -150,11 +150,17 @@ class Alumno
      */
     private $cursosHistoricos;
 
+    /**
+     * @ORM\OneToMany(targetEntity=AsistenciaAlumnos::class, mappedBy="alumno")
+     */
+    private $asistencias;
+
     public function __construct()
     {
         $this->curso = new ArrayCollection();
         $this->pagos = new ArrayCollection();
         $this->cursosHistoricos = new ArrayCollection();
+        $this->asistencias = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -600,6 +606,36 @@ class Alumno
                 $cursoHistorico->setAlumno(null);
             }
         }
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, AsistenciaAlumnos>
+     */
+    public function getAsistencias(): Collection
+    {
+        return $this->asistencias;
+    }
+
+    public function addAsistencia(AsistenciaAlumnos $asistencia): self
+    {
+        if (!$this->asistencias->contains($asistencia)) {
+            $this->asistencias[] = $asistencia;
+            $asistencia->setAlumno($this);
+        }
+
+        return $this;
+    }
+
+    public function removeAsistencia(AsistenciaAlumnos $asistencia): self
+    {
+        if ($this->asistencias->removeElement($asistencia)) {
+            // set the owning side to null (unless already changed)
+            if ($asistencia->getAlumno() === $this) {
+                $asistencia->setAlumno(null);
+            }
+        }
+
         return $this;
     }
 }
