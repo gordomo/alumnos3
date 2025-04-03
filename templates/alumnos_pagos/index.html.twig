@@ -91,6 +91,18 @@
                             <i class="bi bi-arrow-{{ sort == 'metodoPago' ? (order == 'asc' ? 'up' : 'down') : 'up-down' }}"></i>
                         </a>
                     </th>
+                    <th>
+                        <a href="{{ path('app_alumnos_pagos_index', {'sort': 'mes', 'order': sort == 'mes' ? (order == 'asc' ? 'desc' : 'asc') : 'asc'}) }}" class="text-decoration-none text-dark">
+                            Mes
+                            <i class="bi bi-arrow-{{ sort == 'mes' ? (order == 'asc' ? 'up' : 'down') : 'up-down' }}"></i>
+                        </a>
+                    </th>
+                    <th>
+                        <a href="{{ path('app_alumnos_pagos_index', {'sort': 'ano', 'order': sort == 'ano' ? (order == 'asc' ? 'desc' : 'asc') : 'asc'}) }}" class="text-decoration-none text-dark">
+                            Año
+                            <i class="bi bi-arrow-{{ sort == 'ano' ? (order == 'asc' ? 'up' : 'down') : 'up-down' }}"></i>
+                        </a>
+                    </th>
                     <th>Acciones</th>
                 </tr>
             </thead>
@@ -102,6 +114,8 @@
                     <td>{{ pago.curso.nombre }}</td>
                     <td>${{ pago.monto|number_format(2, ',', '.') }}</td>
                     <td>{{ pago.metodoPago }}</td>
+                    <td>{{ pago.mes }}</td>
+                    <td>{{ pago.ano }}</td>
                     <td>
                         <a href="{{ path('app_alumnos_pagos_show', {'id': pago.id}) }}" class="btn btn-sm btn-outline-primary" title="Ver" data-toggle="tooltip" data-placement="left">
                             <i class="bi bi-eye"></i>
@@ -113,7 +127,7 @@
                 </tr>
             {% else %}
                 <tr>
-                    <td colspan="6" class="text-center">No se encontraron registros</td>
+                    <td colspan="8" class="text-center">No se encontraron registros</td>
                 </tr>
             {% endfor %}
             </tbody>

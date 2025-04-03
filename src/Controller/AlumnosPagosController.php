@@ -125,6 +125,12 @@ class AlumnosPagosController extends AbstractController
             case 'metodoPago':
                 $qb->orderBy('p.metodoPago', $order);
                 break;
+            case 'mes':
+                $qb->orderBy('p.mes', $order);
+                break;
+            case 'ano':
+                $qb->orderBy('p.ano', $order);
+                break;
             default:
                 $qb->orderBy('p.fecha', 'desc');
         }
@@ -229,7 +235,7 @@ class AlumnosPagosController extends AbstractController
     /**
      * @Route("/new/{id}", name="app_alumnos_pagos_new", methods={"GET", "POST"})
      */
-    public function new(Request $request, Alumno $alumno, EntityManagerInterface $entityManager): Response
+    public function new(Request $request, Alumno $alumno): Response
     {
         $alumnosPago = new AlumnosPagos();
         $alumnosPago->setAlumno($alumno);
@@ -243,7 +249,7 @@ class AlumnosPagosController extends AbstractController
         $cursoSeleccionado = null;
         if ($request->query->has('curso')) {
             $cursoId = $request->query->get('curso');
-            $cursoSeleccionado = $entityManager->getRepository(Curso::class)->find($cursoId);
+            $cursoSeleccionado = $this->entityManager->getRepository(Curso::class)->find($cursoId);
         }
 
         // Obtener los vencimientos
@@ -284,27 +290,38 @@ class AlumnosPagosController extends AbstractController
 
         $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            // Verificar si ya existe un pago para este alumno, curso, mes y año
-            $pagoExistente = $entityManager->getRepository(AlumnosPagos::class)->findOneBy([
-                'alumno' => $alumnosPago->getAlumno(),
-                'curso' => $alumnosPago->getCurso(),
-                'mes' => $alumnosPago->getMes(),
-                'ano' => $alumnosPago->getAno()
-            ]);
+        if ($form->isSubmitted()) {
+            if ($form->isValid()) {
+                try {
+                    // Verificar si ya existe un pago para este alumno, curso, mes y año
+                    $pagoExistente = $this->entityManager->getRepository(AlumnosPagos::class)->findOneBy([
+                        'alumno' => $alumnosPago->getAlumno(),
+                        'curso' => $alumnosPago->getCurso(),
+                        'mes' => $alumnosPago->getMes(),
+                        'ano' => $alumnosPago->getAno()
+                    ]);
 
-            if ($pagoExistente) {
-                $this->addFlash('error', 'Ya existe un pago registrado para este alumno en este curso para el mes y año seleccionados.');
-                return $this->redirectToRoute('app_alumnos_pagos_new', [
-                    'alumno' => $alumnosPago->getAlumno()->getId(),
-                    'curso' => $alumnosPago->getCurso()->getId()
-                ]);
+                    if ($pagoExistente) {
+                        $this->addFlash('danger', 'Ya existe un pago registrado para este alumno en este curso para el mes y año seleccionados.');
+                        return $this->redirectToRoute('app_alumnos_pagos_new', [
+                            'id' => $alumno->getId(),
+                            'curso' => $alumnosPago->getCurso()->getId()
+                        ]);
+                    }
+
+                    // Registrar el pago en el historial
+                    $this->historialCursosService->registrarPago($alumnosPago);
+                    
+                    $this->addFlash('success', 'Pago creado correctamente.');
+                    return $this->redirectToRoute('app_alumnos_pagos_index', ['alumno' => $alumno->getId()]);
+                } catch (\Exception $e) {
+                    $this->addFlash('danger', 'Ocurrió un error al crear el pago.');
+                }
+            } else {
+                foreach ($form->getErrors(true) as $error) {
+                    $this->addFlash('danger', $error->getMessage());
+                }
             }
-
-            // Registrar el pago en el historial
-            $this->historialCursosService->registrarPago($alumnosPago);
-            
-            return $this->redirectToRoute('app_alumnos_pagos_index', ['alumno' => $alumno->getId()]);
         }
 
         return $this->render('alumnos_pagos/new.html.twig', [
@@ -323,7 +340,67 @@ class AlumnosPagosController extends AbstractController
      */
     public function edit(Request $request, AlumnosPagos $pago, VencimientoRepository $vencimientoRepository, CursoRepository $cursoRepository): Response
     {
+        $alumno = $pago->getAlumno();
+        $instituto = $this->getUser()->getInstituto();
         
+        // Obtener los cursos históricos del alumno
+        $cursosHistoricos = $alumno->getCursosHistoricos();
+        $cursos = [];
+        foreach ($cursosHistoricos as $cursoHistorico) {
+            $cursos[] = $cursoHistorico->getCurso();
+        }
+
+        // Obtener los vencimientos del instituto
+        $vencimientos = $instituto->getVencimientos();
+
+        // Crear el formulario
+        $form = $this->createForm(AlumnosPagosType::class, $pago, [
+            'alumnos' => [$alumno],
+            'cursos' => array_values($cursos),
+            'vencimientos' => $vencimientos
+        ]);
+
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted()) {
+            if ($form->isValid()) {
+                try {
+                    // Verificar si ya existe un pago para este alumno, curso, mes y año
+                    $pagoExistente = $this->entityManager->getRepository(AlumnosPagos::class)->findOneBy([
+                        'alumno' => $pago->getAlumno(),
+                        'curso' => $pago->getCurso(),
+                        'mes' => $pago->getMes(),
+                        'ano' => $pago->getAno()
+                    ]);
+
+                    if ($pagoExistente && $pagoExistente->getId() !== $pago->getId()) {
+                        $this->addFlash('danger', 'Ya existe un pago registrado para este alumno en este curso para el mes y año seleccionados.');
+                        return $this->redirectToRoute('app_alumnos_pagos_edit', ['id' => $pago->getId()]);
+                    }
+
+                    // Actualizar el pago en el historial
+                    $this->historialCursosService->actualizarPago($pago);
+                    
+                    $this->addFlash('success', 'Pago actualizado correctamente.');
+                    return $this->redirectToRoute('app_alumnos_pagos_index', ['alumno' => $alumno->getId()]);
+                } catch (\Exception $e) {
+                    $this->addFlash('danger', 'Ocurrió un error al actualizar el pago.');
+                }
+            } else {
+                foreach ($form->getErrors(true) as $error) {
+                    $this->addFlash('danger', $error->getMessage());
+                }
+            }
+        }
+
+        return $this->render('alumnos_pagos/edit.html.twig', [
+            'form' => $form->createView(),
+            'alumno' => $alumno,
+            'cursos' => array_values($cursos),
+            'curso' => $pago->getCurso(),
+            'vencimientos' => $vencimientos,
+            'is_general' => false
+        ]);
     }
 
     /**

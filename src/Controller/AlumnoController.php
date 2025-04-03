@@ -21,10 +21,12 @@ use Doctrine\ORM\EntityManagerInterface;
 class AlumnoController extends AbstractController
 {
     private $entityManager;
+    private $historialCursosService;
 
-    public function __construct(EntityManagerInterface $entityManager)
+    public function __construct(EntityManagerInterface $entityManager, HistorialCursosService $historialCursosService)
     {
         $this->entityManager = $entityManager;
+        $this->historialCursosService = $historialCursosService;
     }
 
     /**
@@ -121,10 +123,32 @@ class AlumnoController extends AbstractController
 
         $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $alumnoRepository->add($alumno);
-            $this->setearHermandad($request, $alumno, $alumnoRepository);
-            return $this->redirectToRoute('app_alumno_index', [], Response::HTTP_SEE_OTHER);
+        if ($form->isSubmitted()) {
+            if ($form->isValid()) {
+                try {
+                    // Guardar el alumno
+                    $alumnoRepository->add($alumno);
+                    
+                    // Crear historial para cada curso seleccionado
+                    foreach ($alumno->getCurso() as $curso) {
+                        $this->historialCursosService->crearHistorial($alumno, $curso);
+                    }
+                    
+                    $this->setearHermandad($request, $alumno, $alumnoRepository);
+                    $this->addFlash('success', 'Alumno creado correctamente.');
+                    return $this->redirectToRoute('app_alumno_index', [], Response::HTTP_SEE_OTHER);
+                } catch (\Exception $e) {
+                    if (strpos($e->getMessage(), 'UNIQ_') !== false) {
+                        $this->addFlash('danger', 'Ya existe un alumno con ese DNI.');
+                    } else {
+                        $this->addFlash('danger', 'Ocurrió un error al crear el alumno.');
+                    }
+                }
+            } else {
+                foreach ($form->getErrors(true) as $error) {
+                    $this->addFlash('danger', $error->getMessage());
+                }
+            }
         }
 
         return $this->renderForm('alumno/new.html.twig', [
@@ -158,13 +182,55 @@ class AlumnoController extends AbstractController
     public function edit(Request $request, Alumno $alumno, AlumnoRepository $alumnoRepository): Response
     {
         $instituto = $this->getUser()->getInstituto();
+        $cursosActuales = $alumno->getCurso()->toArray();
+        
         $form = $this->createForm(AlumnoType::class, $alumno, ['is_edit' => true, 'instituto' => $instituto]);
         $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $alumnoRepository->add($alumno);
-            $this->setearHermandad($request, $alumno, $alumnoRepository);
-            return $this->redirectToRoute('app_alumno_index', [], Response::HTTP_SEE_OTHER);
+        if ($form->isSubmitted()) {
+            if ($form->isValid()) {
+                try {
+                    // Obtener los cursos seleccionados
+                    $cursosNuevos = $alumno->getCurso()->toArray();
+                    
+                    // Cursos a remover
+                    foreach ($cursosActuales as $curso) {
+                        if (!in_array($curso, $cursosNuevos)) {
+                            // Marcar el historial como inactivo
+                            $historico = $this->historialCursosService->buscarHistorial($alumno, $curso, new \DateTime());
+                            if ($historico) {
+                                $historico->setActivo(false);
+                                $historico->setFechaFin(new \DateTime());
+                            }
+                            $alumno->removeCurso($curso);
+                        }
+                    }
+                    
+                    // Cursos a agregar
+                    foreach ($cursosNuevos as $curso) {
+                        if (!in_array($curso, $cursosActuales)) {
+                            $alumno->addCurso($curso);
+                            // Crear nuevo historial
+                            $this->historialCursosService->crearHistorial($alumno, $curso);
+                        }
+                    }
+                    
+                    $alumnoRepository->add($alumno);
+                    $this->setearHermandad($request, $alumno, $alumnoRepository);
+                    $this->addFlash('success', 'Alumno actualizado correctamente.');
+                    return $this->redirectToRoute('app_alumno_index', [], Response::HTTP_SEE_OTHER);
+                } catch (\Exception $e) {
+                    if (strpos($e->getMessage(), 'UNIQ_') !== false && strpos($e->getMessage(), 'dni') !== false) {
+                        $this->addFlash('danger', 'Ya existe un alumno con ese DNI.');
+                    } else {
+                        $this->addFlash('danger', 'Ocurrió un error al actualizar el alumno.');
+                    }
+                }
+            } else {
+                foreach ($form->getErrors(true) as $error) {
+                    $this->addFlash('danger', $error->getMessage());
+                }
+            }
         }
 
         return $this->renderForm('alumno/edit.html.twig', [

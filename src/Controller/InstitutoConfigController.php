@@ -36,14 +36,22 @@ class InstitutoConfigController extends AbstractController
     /**
      * @Route("/edit", name="instituto_config_edit", methods={"GET", "POST"})
      */
-    public function edit(Request $request, EntityManagerInterface $entityManager, SluggerInterface $slugger): Response
+    public function edit(Request $request, EntityManagerInterface $entityManager, SluggerInterface $slugger, ValidatorInterface $validator): Response
     {
         $instituto = $this->getUser()->getInstituto();
         
         if ($request->isMethod('POST')) {
             $instituto->setNombre($request->request->get('nombre'));
             $instituto->setEmail($request->request->get('email'));
-            $instituto->setTel($request->request->get('tel'));
+            
+            // Validación del teléfono
+            $tel = $request->request->get('tel');
+            if (strlen($tel) > 25) {
+                $this->addFlash('danger', 'El número de teléfono no puede tener más de 20 caracteres.');
+                return $this->redirectToRoute('instituto_config_edit');
+            }
+            $instituto->setTel($tel);
+            
             $instituto->setDir($request->request->get('dir'));
 
             // Manejo del logo
@@ -60,7 +68,7 @@ class InstitutoConfigController extends AbstractController
                             $newFilename
                         );
                     } catch (FileException $e) {
-                        $this->addFlash('error', 'No se pudo subir el logo.');
+                        $this->addFlash('danger', 'No se pudo subir el logo.');
                         return $this->redirectToRoute('instituto_config_edit');
                     }
                     
@@ -76,9 +84,21 @@ class InstitutoConfigController extends AbstractController
                 }
             }
 
-            $entityManager->flush();
-            $this->addFlash('success', 'La configuración se ha actualizado correctamente.');
-            return $this->redirectToRoute('instituto_config_index');
+            try {
+                $errors = $validator->validate($instituto); 
+                if (count($errors) === 0) {
+                    $entityManager->flush();
+                    $this->addFlash('success', 'La configuración se ha actualizado correctamente.');
+                    return $this->redirectToRoute('instituto_config_index');
+                } else {
+                    foreach ($errors as $error) {
+                        $this->addFlash('danger', $error->getMessage());
+                    }
+                }
+            } catch (\Exception $e) {
+                dd($e);
+                $this->addFlash('danger', 'Ocurrió un error al guardar los cambios. Por favor, verifica los datos ingresados.');
+            }
         }
 
         return $this->render('instituto_config/edit.html.twig', [

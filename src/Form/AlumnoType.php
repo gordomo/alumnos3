@@ -73,6 +73,21 @@ class AlumnoType extends AbstractType
                 'required' => false,
                 'label' => 'Hermanos',
                 'attr' => ['class' => 'form-control predictivo']
+            ])
+            ->add('curso', EntityType::class, [
+                'class' => Curso::class,
+                'label_attr' => ['class' => 'form-label'],
+                'choice_label' => 'nombre',
+                'query_builder' => function (EntityRepository $er) use ($instituto) {
+                    return $er->createQueryBuilder('c')
+                        ->where('c.instituto = :instituto')
+                        ->setParameter('instituto', $instituto);
+                },
+                'multiple' => true,
+                'expanded' => false,
+                'required' => false,
+                'label' => 'Cursos',
+                'attr' => ['class' => 'form-control chosen-select']
             ]);
     }
 
