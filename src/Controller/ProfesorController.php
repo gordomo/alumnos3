@@ -221,7 +221,7 @@ class ProfesorController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            if ( count($form->get('curso')->getData()) < 1) {
+            if ( count($form->get('cursos')->getData()) < 1) {
                 $this->addFlash('danger', 'necesita seleccionar un curso');
                 return $this->renderForm('profesor/new.html.twig', [
                     'profesor' => $profesor,

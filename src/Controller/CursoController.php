@@ -11,12 +11,20 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use App\Helpers;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Psr\Log\LoggerInterface;
 
 /**
  * @Route("/admin/curso")
  */
 class CursoController extends AbstractController
 {
+    private $logger;
+
+    public function __construct(LoggerInterface $logger)
+    {
+        $this->logger = $logger;
+    }
+
     /**
      * @Route("/", name="app_curso_index", methods={"GET"})
      */
@@ -102,66 +110,19 @@ class CursoController extends AbstractController
         ]);
         $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            
-            if (empty($form->get('dias')->getData())) {
-                $this->addFlash('danger', 'necesita seleccionar al menos un día');
-                return $this->renderForm('curso/new.html.twig', [
-                    'curso' => $curso,
-                    'form' => $form,
-                ]);
+        if ($form->isSubmitted()) {
+            if ($form->isValid()) {
+                $curso->setHorarioInicio(new \DateTime($form->get('horarioInicio')->getData()));
+                $curso->setHorarioFin(new \DateTime($form->get('horarioFin')->getData()));
+                $curso->setDuracion($this->calcularDuracion($curso->getHorarioInicio(), $curso->getHorarioFin()));
+                $cursoRepository->add($curso);
+                return $this->redirectToRoute('app_curso_index', [], Response::HTTP_SEE_OTHER);
+            } else {
+                $errors = $form->getErrors(true);
+                foreach ($errors as $error) {
+                    $this->addFlash('danger', $error->getMessage());
+                }
             }
-
-            if (empty($form->get('horarioInicio')->getData()) || empty($form->get('horarioFin')->getData())) {
-                $this->addFlash('danger', 'necesita especificar el horario de inicio y fin');
-                return $this->renderForm('curso/new.html.twig', [
-                    'curso' => $curso,
-                    'form' => $form,
-                ]);
-            }
-
-            // Convertir los horarios seleccionados a DateTime
-            $horaInicio = new \DateTime($form->get('horarioInicio')->getData());
-            $horaFin = new \DateTime($form->get('horarioFin')->getData());
-            
-            if ($horaFin <= $horaInicio) {
-                $this->addFlash('danger', 'El horario de fin debe ser posterior al horario de inicio');
-                return $this->renderForm('curso/new.html.twig', [
-                    'curso' => $curso,
-                    'form' => $form,
-                ]);
-            }
-
-            // Establecer los horarios en el curso
-            $curso->setHorarioInicio($horaInicio);
-            $curso->setHorarioFin($horaFin);
-
-            // Validar fechas
-            $fechaInicio = $form->get('fechaInicio')->getData();
-            $fechaFin = $form->get('fechaFin')->getData();
-
-            if (!$fechaInicio || !$fechaFin) {
-                $this->addFlash('danger', 'Debe especificar las fechas de inicio y fin del curso');
-                return $this->renderForm('curso/new.html.twig', [
-                    'curso' => $curso,
-                    'form' => $form,
-                ]);
-            }
-
-            if ($fechaFin <= $fechaInicio) {
-                $this->addFlash('danger', 'La fecha de fin debe ser posterior a la fecha de inicio');
-                return $this->renderForm('curso/new.html.twig', [
-                    'curso' => $curso,
-                    'form' => $form,
-                ]);
-            }
-
-            // Calcular la duración basada en los horarios
-            $duracion = $this->calcularDuracion($horaInicio, $horaFin);
-            $curso->setDuracion($duracion);
-
-            $cursoRepository->add($curso);
-            return $this->redirectToRoute('app_curso_index', [], Response::HTTP_SEE_OTHER);
         }
 
         return $this->renderForm('curso/new.html.twig', [
@@ -270,7 +231,6 @@ class CursoController extends AbstractController
             return $this->redirectToRoute('app_curso_index');
         }
         $form = $this->createForm(CursoType::class, $curso, [
-            'allow_extra_fields' => true,
             'instituto' => $instituto
         ]);
 
@@ -282,66 +242,19 @@ class CursoController extends AbstractController
 
         $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-
-            if (empty($form->get('dias')->getData())) {
-                $this->addFlash('danger', 'necesita seleccionar al menos un día');
-                return $this->renderForm('curso/edit.html.twig', [
-                    'curso' => $curso,
-                    'form' => $form,
-                ]);
+        if ($form->isSubmitted()) {
+            if ($form->isValid()) {
+                $curso->setHorarioInicio(new \DateTime($form->get('horarioInicio')->getData()));
+                $curso->setHorarioFin(new \DateTime($form->get('horarioFin')->getData()));
+                $curso->setDuracion($this->calcularDuracion($curso->getHorarioInicio(), $curso->getHorarioFin()));
+                $cursoRepository->add($curso);
+                return $this->redirectToRoute('app_curso_index', [], Response::HTTP_SEE_OTHER);
+            } else {
+                $errors = $form->getErrors(true);
+                foreach ($errors as $error) {
+                    $this->addFlash('danger', $error->getMessage());
+                }
             }
-
-            if (empty($form->get('horarioInicio')->getData()) || empty($form->get('horarioFin')->getData())) {
-                $this->addFlash('danger', 'necesita especificar el horario de inicio y fin');
-                return $this->renderForm('curso/edit.html.twig', [
-                    'curso' => $curso,
-                    'form' => $form,
-                ]);
-            }
-
-            // Convertir los horarios seleccionados a DateTime
-            $horaInicio = new \DateTime($form->get('horarioInicio')->getData());
-            $horaFin = new \DateTime($form->get('horarioFin')->getData());
-            
-            if ($horaFin <= $horaInicio) {
-                $this->addFlash('danger', 'El horario de fin debe ser posterior al horario de inicio');
-                return $this->renderForm('curso/edit.html.twig', [
-                    'curso' => $curso,
-                    'form' => $form,
-                ]);
-            }
-
-            // Establecer los horarios en el curso
-            $curso->setHorarioInicio($horaInicio);
-            $curso->setHorarioFin($horaFin);
-
-            // Validar fechas
-            $fechaInicio = $form->get('fechaInicio')->getData();
-            $fechaFin = $form->get('fechaFin')->getData();
-
-            if (!$fechaInicio || !$fechaFin) {
-                $this->addFlash('danger', 'Debe especificar las fechas de inicio y fin del curso');
-                return $this->renderForm('curso/edit.html.twig', [
-                    'curso' => $curso,
-                    'form' => $form,
-                ]);
-            }
-
-            if ($fechaFin <= $fechaInicio) {
-                $this->addFlash('danger', 'La fecha de fin debe ser posterior a la fecha de inicio');
-                return $this->renderForm('curso/edit.html.twig', [
-                    'curso' => $curso,
-                    'form' => $form,
-                ]);
-            }
-
-            // Calcular la duración basada en los horarios
-            $duracion = $this->calcularDuracion($horaInicio, $horaFin);
-            $curso->setDuracion($duracion);
-
-            $cursoRepository->add($curso);
-            return $this->redirectToRoute('app_curso_index', [], Response::HTTP_SEE_OTHER);
         }
 
         return $this->renderForm('curso/edit.html.twig', [
@@ -481,4 +394,5 @@ class CursoController extends AbstractController
             'precio' => $curso->getPrecio()
         ]);
     }
+
 }

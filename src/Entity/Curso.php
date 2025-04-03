@@ -116,7 +116,8 @@ class Curso
     private $precio;
 
     /**
-     * @ORM\ManyToMany(targetEntity=Profesor::class, mappedBy="curso")
+     * @ORM\ManyToMany(targetEntity=Profesor::class, inversedBy="cursos")
+     * @ORM\JoinTable(name="profesor_curso")
      */
     private $profesores;
 
@@ -186,20 +187,20 @@ class Curso
         return $this->profesores;
     }
 
-    public function addProfesore(Profesor $profesore): self
+    public function addProfesor(Profesor $profesor): self
     {
-        if (!$this->profesores->contains($profesore)) {
-            $this->profesores[] = $profesore;
-            $profesore->addCurso($this);
+        if (!$this->profesores->contains($profesor)) {
+            $this->profesores[] = $profesor;
+            $profesor->addCurso($this);
         }
 
         return $this;
     }
 
-    public function removeProfesore(Profesor $profesore): self
+    public function removeProfesor(Profesor $profesor): self
     {
-        if ($this->profesores->removeElement($profesore)) {
-            $profesore->removeCurso($this);
+        if ($this->profesores->removeElement($profesor)) {
+            $profesor->removeCurso($this);
         }
 
         return $this;

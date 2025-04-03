@@ -51,7 +51,7 @@
                 <td>{{ profesor.nombre }}</td>
                 <td>{{ profesor.tel }}</td>
                 <td>
-                    {% for curso in profesor.curso %}
+                    {% for curso in profesor.cursos %}
                         <a href="{{ path('app_curso_edit', {'id': curso.id}) }}">{{ curso.nombre }}</a><br>
                     {% endfor %}
                 </td>

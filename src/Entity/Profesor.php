@@ -73,7 +73,7 @@ class Profesor
     /**
      * @ORM\ManyToMany(targetEntity=Curso::class, inversedBy="profesores")
      */
-    private $curso;
+    private $cursos;
 
     /**
      * @ORM\OneToMany(targetEntity=AsistenciaProfesores::class, mappedBy="profesor", orphanRemoval=true)
@@ -99,7 +99,7 @@ class Profesor
 
     public function __construct()
     {
-        $this->curso = new ArrayCollection();
+        $this->cursos = new ArrayCollection();
         $this->asistenciaProfesores = new ArrayCollection();
     }
 
@@ -171,15 +171,15 @@ class Profesor
     /**
      * @return Collection<int, Curso>
      */
-    public function getCurso(): Collection
+    public function getCursos(): Collection
     {
-        return $this->curso;
+        return $this->cursos;
     }
 
     public function addCurso(Curso $curso): self
     {
-        if (!$this->curso->contains($curso)) {
-            $this->curso[] = $curso;
+        if (!$this->cursos->contains($curso)) {
+            $this->cursos[] = $curso;
         }
 
         return $this;
@@ -187,7 +187,7 @@ class Profesor
 
     public function removeCurso(Curso $curso): self
     {
-        $this->curso->removeElement($curso);
+        $this->cursos->removeElement($curso);
 
         return $this;
     }
