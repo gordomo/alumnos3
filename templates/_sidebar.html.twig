@@ -23,7 +23,7 @@
             </ul>
         {% endif %}
 
-        {% if is_granted('ROLE_ADMIN')  or is_granted('ROLE_ADMIN_INSTITUTO')%}
+        {% if  is_granted('ROLE_ADMIN_INSTITUTO')%}
             {# <ul class="nav nav-tabs sidebar-dropdown-ul">
                 <li class="nav-item">
                     <a class="list-group-item list-group-item-action bg-light {% if app.request.get('_route') == 'app_instituto_index' %}active{% endif %}" href="{{ path('app_instituto_index') }}">
