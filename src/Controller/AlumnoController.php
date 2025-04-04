@@ -333,8 +333,8 @@ class AlumnoController extends AbstractController
     }
 
     private function setearHermandad($request, Alumno $alumno, $alumnoRepository) {
-        // Obtener los hermanos del formulario y convertirlos a enteros
-        $hermanosForm = array_map('intval', $request->request->get('alumno')['hermanos'] ?? []);
+        // Obtener los hermanos del formulario
+        $hermanosForm = $request->request->get('alumno')['hermanos'] ?? [];
         
         // Eliminar duplicados
         $hermanosForm = array_unique($hermanosForm);

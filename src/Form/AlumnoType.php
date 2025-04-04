@@ -72,7 +72,8 @@ class AlumnoType extends AbstractType
                 'expanded' => false,
                 'required' => false,
                 'label' => 'Hermanos',
-                'attr' => ['class' => 'form-control predictivo']
+                'attr' => ['class' => 'form-control predictivo'],
+                'choice_value' => 'id'
             ])
             ->add('curso', EntityType::class, [
                 'class' => Curso::class,
