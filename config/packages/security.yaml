@@ -68,7 +68,11 @@ security:
         - { path: ^/instituto/curso, roles: [ROLE_ADMIN_INSTITUTO, ROLE_ADMIN] }
         - { path: ^/instituto/alumno, roles: [ROLE_ADMIN_INSTITUTO, ROLE_ADMIN] }
         - { path: ^/instituto/asistencia, roles: [ROLE_ADMIN_INSTITUTO, ROLE_ADMIN] }
+
+        # Alumno routes
+        - { path: ^/alumnos/, roles: [ROLE_ADMIN_INSTITUTO, ROLE_ADMIN] }
         
+
         # Default access control
         - { path: ^/, roles: ROLE_USER }
 
