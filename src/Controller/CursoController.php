@@ -14,7 +14,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Psr\Log\LoggerInterface;
 
 /**
- * @Route("/admin/curso")
+ * @Route("/instituto/curso")
  */
 class CursoController extends AbstractController
 {

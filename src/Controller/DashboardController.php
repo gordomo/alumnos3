@@ -25,7 +25,7 @@ class DashboardController extends AbstractController
     }
 
     /**
-     * @Route("/", name="dashboard_index", methods={"GET"})
+     * @Route("/instituto", name="dashboard_index", methods={"GET"})
      */
     public function index(
         Request $request, 

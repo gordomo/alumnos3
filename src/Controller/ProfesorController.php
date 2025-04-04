@@ -20,7 +20,7 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use App\Entity\User;
 
 /**
- * @Route("/admin/profesor")
+ * @Route("/instituto/profesor")
  */
 class ProfesorController extends AbstractController
 {

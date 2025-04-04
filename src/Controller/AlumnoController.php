@@ -16,7 +16,7 @@ use App\Service\HistorialCursosService;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
- * @Route("/admin/alumno")
+ * @Route("/instituto/alumno")
  */
 class AlumnoController extends AbstractController
 {

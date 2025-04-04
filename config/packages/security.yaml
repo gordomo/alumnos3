@@ -58,7 +58,7 @@ security:
         - { path: ^/asistencias/alumnos, roles: [ROLE_PROFESOR, ROLE_ADMIN] }
         
         # Admin routes
-        - { path: ^/admin, roles: [ROLE_ADMIN, ROLE_ADMIN_INSTITUTO] }
+        - { path: ^/admin, roles: [ROLE_ADMIN] }
         - { path: ^/instituto, roles: [ROLE_ADMIN_INSTITUTO, ROLE_ADMIN] }
         - { path: ^/instituto/config, roles: [ROLE_ADMIN_INSTITUTO, ROLE_ADMIN] }
         - { path: ^/instituto/profesor, roles: [ROLE_ADMIN_INSTITUTO, ROLE_ADMIN] }

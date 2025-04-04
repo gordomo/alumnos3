@@ -70,11 +70,11 @@ class LoginFormAuthAuthenticator extends AbstractLoginFormAuthenticator
         
         // Redirigir según el rol
         if (in_array('ROLE_ADMIN', $user->getRoles())) {
-            return new RedirectResponse($this->urlGenerator->generate('dashboard_index'));
+            return new RedirectResponse($this->urlGenerator->generate('app_instituto_index'));
         }
         
         if (in_array('ROLE_ADMIN_INSTITUTO', $user->getRoles())) {
-            return new RedirectResponse($this->urlGenerator->generate('app_instituto_index'));
+            return new RedirectResponse($this->urlGenerator->generate('dashboard_index'));
         }
         
         if (in_array('ROLE_PROFESOR', $user->getRoles())) {
