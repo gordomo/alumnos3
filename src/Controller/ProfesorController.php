@@ -263,7 +263,7 @@ class ProfesorController extends AbstractController
 
                 // Asegurar que la relación bidireccional se establezca con los cursos
                 foreach($profesor->getCursos() as $curso) {
-                    $curso->addProfesore($profesor);
+                    $curso->addProfesor($profesor);
                 }
 
                 // Mostrar mensaje con la contraseña temporal
