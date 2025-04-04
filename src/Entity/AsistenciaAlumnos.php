@@ -82,7 +82,7 @@ class AsistenciaAlumnos
         return $this;
     }
 
-    public function isPresente(): ?bool
+    public function getPresente(): ?bool
     {
         return $this->presente;
     }

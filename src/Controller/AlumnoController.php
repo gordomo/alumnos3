@@ -14,6 +14,7 @@ use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use App\Service\HistorialCursosService;
 use Doctrine\ORM\EntityManagerInterface;
+use App\Repository\AsistenciaAlumnosRepository;
 
 /**
  * @Route("/instituto/alumno")
@@ -155,6 +156,66 @@ class AlumnoController extends AbstractController
             'alumno' => $alumno,
             'form' => $form,
             'hermanos' => $alumno->getHermanos()
+        ]);
+    }
+
+    /**
+     * @Route("/asistencias", name="app_instituto_asistencias_index", methods={"GET"})
+     */
+    public function asistencias(Request $request, AsistenciaAlumnosRepository $asistenciaRepository, CursoRepository $cursoRepository): Response
+    {
+        $instituto = $this->getUser()->getInstituto();
+        
+        // Obtener fecha del formulario o usar la fecha actual
+        $fecha = $request->get('fecha', date('Y-m-d'));
+        $cursoId = $request->get('curso');
+        
+        // Obtener todos los cursos del instituto
+        $cursos = $cursoRepository->findByInstituto($instituto);
+        
+        // Si se seleccionó un curso, obtener las asistencias de ese curso para la fecha seleccionada
+        if ($cursoId) {
+            $curso = $cursoRepository->find($cursoId);
+            
+            // Verificar que el curso pertenece al instituto
+            if ($curso->getInstituto() !== $instituto) {
+                throw $this->createAccessDeniedException('No tiene acceso a este curso.');
+            }
+            
+            $asistencias = $asistenciaRepository->findByCursoAndDate($curso, new \DateTime($fecha));
+            
+            // Obtener todos los alumnos del curso
+            $alumnos = $curso->getAlumnos();
+            
+            // Crear un array con todos los alumnos y su estado de asistencia
+            $asistenciasPorAlumno = [];
+            foreach ($alumnos as $alumno) {
+                $asistencia = $asistenciaRepository->findOneBy([
+                    'alumno' => $alumno,
+                    'curso' => $curso,
+                    'fecha' => new \DateTime($fecha)
+                ]);
+                
+                $asistenciasPorAlumno[] = [
+                    'alumno' => $alumno,
+                    'presente' => $asistencia ? $asistencia->getPresente() : false,
+                    'observaciones' => $asistencia ? $asistencia->getObservaciones() : ''
+                ];
+            }
+            
+            return $this->render('asistencia_instituto/index.html.twig', [
+                'asistenciasPorAlumno' => $asistenciasPorAlumno,
+                'fecha' => $fecha,
+                'cursos' => $cursos,
+                'cursoSeleccionado' => $curso
+            ]);
+        }
+        
+        // Si no se seleccionó un curso, mostrar la lista de cursos
+        return $this->render('asistencia_instituto/index.html.twig', [
+            'fecha' => $fecha,
+            'cursos' => $cursos,
+            'cursoSeleccionado' => null
         ]);
     }
 
@@ -363,4 +424,6 @@ class AlumnoController extends AbstractController
             'message' => 'Cursos actualizados correctamente'
         ]);
     }
+
+    
 }

@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\AsistenciaAlumnos;
+use App\Entity\Alumno;
 use App\Entity\Curso;
 use App\Repository\AlumnoRepository;
 use App\Repository\AsistenciaAlumnosRepository;
@@ -12,6 +13,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Doctrine\ORM\EntityManagerInterface;
 
 /**
  * @Route("/asistencias/alumnos")
@@ -19,9 +21,15 @@ use Symfony\Component\Routing\Annotation\Route;
 class AsistenciaAlumnosController extends AbstractController
 {
     /**
-     * @Route("/", name="app_asistencia_alumnos_index", methods={"GET"})
+     * @Route("/", name="app_asistencia_alumnos_index", methods={"GET", "POST"})
      */
-    public function index(Request $request, AsistenciaAlumnosRepository $asistenciaRepository, CursoRepository $cursoRepository, ProfesorRepository $profesorRepository): Response
+    public function index(
+        Request $request,
+        AsistenciaAlumnosRepository $asistenciaRepository,
+        CursoRepository $cursoRepository,
+        ProfesorRepository $profesorRepository,
+        EntityManagerInterface $entityManager
+    ): Response
     {
         $instituto = $this->getUser()->getInstituto();
         
@@ -47,6 +55,49 @@ class AsistenciaAlumnosController extends AbstractController
             if (!$cursos->contains($curso)) {
                 throw $this->createAccessDeniedException('No tiene acceso a este curso.');
             }
+
+            // Si es una petición POST, procesar el formulario de asistencia
+            if ($request->isMethod('POST')) {
+                $asistencias = $request->request->all('asistencias');
+                $observaciones = $request->request->all('observaciones');
+                $fechaAsistencia = new \DateTime($fecha);
+
+                // Eliminar asistencias existentes para este curso y fecha
+                $asistenciasExistentes = $asistenciaRepository->findBy([
+                    'curso' => $curso,
+                    'fecha' => $fechaAsistencia
+                ]);
+
+                foreach ($asistenciasExistentes as $asistenciaExistente) {
+                    $entityManager->remove($asistenciaExistente);
+                }
+                $entityManager->flush();
+
+                // Crear nuevas asistencias
+                foreach ($asistencias as $alumnoId => $presente) {
+                    $alumno = $entityManager->getRepository(Alumno::class)->find($alumnoId);
+                    if (!$alumno) {
+                        continue;
+                    }
+
+                    $asistencia = new AsistenciaAlumnos();
+                    $asistencia->setAlumno($alumno);
+                    $asistencia->setCurso($curso);
+                    $asistencia->setFecha($fechaAsistencia);
+                    $asistencia->setPresente($presente === '1');
+                    $asistencia->setObservaciones($observaciones[$alumnoId] ?? '');
+
+                    $entityManager->persist($asistencia);
+                }
+
+                $entityManager->flush();
+                $this->addFlash('success', 'Asistencias guardadas correctamente');
+                
+                return $this->redirectToRoute('app_asistencia_alumnos_index', [
+                    'fecha' => $fecha,
+                    'curso' => $cursoId
+                ]);
+            }
             
             $asistencias = $asistenciaRepository->findByCursoAndDate($curso, new \DateTime($fecha));
             
@@ -64,7 +115,7 @@ class AsistenciaAlumnosController extends AbstractController
                 
                 $asistenciasPorAlumno[] = [
                     'alumno' => $alumno,
-                    'presente' => $asistencia ? $asistencia->isPresente() : false,
+                    'presente' => $asistencia ? $asistencia->getPresente() : false,
                     'observaciones' => $asistencia ? $asistencia->getObservaciones() : ''
                 ];
             }
@@ -86,57 +137,70 @@ class AsistenciaAlumnosController extends AbstractController
     }
 
     /**
-     * @Route("/curso/{id}", name="app_asistencia_alumnos_curso", methods={"GET", "POST"})
+     *@Route("/curso/{id}", name="app_asistencia_alumnos_curso", methods={"POST"})
      */
-    public function tomarAsistencia(Request $request, Curso $curso, AlumnoRepository $alumnoRepository, AsistenciaAlumnosRepository $asistenciaRepository, ProfesorRepository $profesorRepository): Response
+    public function tomarAsistencia(
+        Request $request,
+        CursoRepository $cursoRepository,
+        AsistenciaAlumnosRepository $asistenciaRepository,
+        EntityManagerInterface $entityManager,
+        $id
+    ): Response
     {
-        // Verificar que el profesor tiene acceso al curso
-        $profesor = $profesorRepository->findOneBy(['user' => $this->getUser()]);
-        if (!$profesor || !$profesor->getCursos()->contains($curso)) {
-            throw $this->createAccessDeniedException('No tiene acceso a este curso.');
+        $cursoId = $request->request->get('curso', $id);
+        $fecha = $request->request->get('fecha');
+        $asistencias = $request->request->all('asistencias');
+        $observaciones = $request->request->all('observaciones');
+
+        $curso = $cursoRepository->find($cursoId);
+        if (!$curso) {
+            throw $this->createNotFoundException('Curso no encontrado');
         }
-        
-        $fecha = new \DateTime($request->get('fecha', 'today'));
-        $alumnos = $curso->getAlumnos();
-        
-        // Verificar si ya se tomaron asistencias para este curso en esta fecha
-        $asistenciasExistentes = $asistenciaRepository->findByCursoAndDate($curso, $fecha);
-        
-        if ($request->isMethod('POST')) {
-            $asistencias = $request->request->get('asistencias', []);
-            $observaciones = $request->request->all();
-            
-            // Eliminar asistencias existentes para esta fecha y curso
-            foreach ($asistenciasExistentes as $asistenciaExistente) {
-                $asistenciaRepository->remove($asistenciaExistente, false);
-            }
-            
-            // Crear nuevas asistencias
-            foreach ($alumnos as $alumno) {
-                $asistencia = new AsistenciaAlumnos();
-                $asistencia->setAlumno($alumno);
-                $asistencia->setCurso($curso);
-                $asistencia->setFecha($fecha);
-                $asistencia->setPresente(isset($asistencias[$alumno->getId()]));
-                $asistencia->setObservaciones($observaciones['observaciones_' . $alumno->getId()] ?? '');
-                
-                $asistenciaRepository->add($asistencia, false);
-            }
-            
-            $asistenciaRepository->getEntityManager()->flush();
-            
-            $this->addFlash('success', 'Asistencias guardadas correctamente');
-            return $this->redirectToRoute('app_asistencia_alumnos_index', [
-                'fecha' => $fecha->format('Y-m-d'),
-                'curso' => $curso->getId()
-            ]);
+
+        // Verificar que el profesor tenga acceso a este curso
+        $profesor = $this->getUser()->getProfesor();
+        if (!$profesor || !$curso->getProfesores()->contains($profesor)) {
+            throw $this->createAccessDeniedException('No tienes permiso para tomar asistencia en este curso');
         }
-        
-        return $this->render('asistencia_alumnos/tomar.html.twig', [
+
+        // Obtener la fecha actual si no se proporciona una
+        if (!$fecha) {
+            $fecha = new \DateTime();
+        } else {
+            $fecha = new \DateTime($fecha);
+        }
+
+        // Eliminar asistencias existentes para este curso y fecha
+        $asistenciasExistentes = $asistenciaRepository->findBy([
             'curso' => $curso,
-            'alumnos' => $alumnos,
-            'fecha' => $fecha,
-            'asistenciasExistentes' => $asistenciasExistentes
+            'fecha' => $fecha
         ]);
+
+        foreach ($asistenciasExistentes as $asistenciaExistente) {
+            $entityManager->remove($asistenciaExistente);
+        }
+        $entityManager->flush();
+
+        // Crear nuevas asistencias
+        foreach ($asistencias as $alumnoId => $presente) {
+            $alumno = $entityManager->getRepository(Alumno::class)->find($alumnoId);
+            if (!$alumno) {
+                continue;
+            }
+
+            $asistencia = new AsistenciaAlumnos();
+            $asistencia->setAlumno($alumno);
+            $asistencia->setCurso($curso);
+            $asistencia->setFecha($fecha);
+            $asistencia->setPresente($presente === '1');
+            $asistencia->setObservaciones($observaciones[$alumnoId] ?? '');
+
+            $entityManager->persist($asistencia);
+        }
+
+        $entityManager->flush();
+
+        $this->addFlash('success', 'Asistencias guardadas correctamente');
+        return $this->redirectToRoute('app_asistencia_alumnos_index');
     }
 } 
