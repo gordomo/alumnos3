@@ -4,7 +4,9 @@
 
 {% block panelTitle %}
     Pagos de {{ nombreAlumno }}
-    {{ include('components/back_button.html.twig', {'default_path': path('dashboard_index', {'action': 'pagos'})}) }}
+    <a href="{{ path('app_alumnos_pagos_new', alumnoId ? {'alumnoId': alumnoId} : {}) }}" class="btn btn-success btn-sm">
+        Nuevo Pago
+    </a>
 {% endblock %}
 
 {% block body %}
@@ -55,9 +57,9 @@
 
     {% if total > 0 %}
         <p class="mt-3">Total: {{ total }} pagos</p>
-    {% endif %}
+                {% endif %}
 
-    <div class="table-responsive">
+            <div class="table-responsive">
         <table class="table table-striped">
             <thead>
                 <tr>
@@ -121,18 +123,18 @@
                             <i class="bi bi-eye"></i>
                         </a>
                         <a href="{{ path('app_alumnos_pagos_edit', {'id': pago.id}) }}" class="btn btn-sm btn-outline-secondary" title="Editar" data-toggle="tooltip" data-placement="top">
-                            <i class="bi bi-pencil"></i>
-                        </a>
+                                <i class="bi bi-pencil"></i>
+                            </a>
                     </td>
                 </tr>
             {% else %}
                 <tr>
                     <td colspan="8" class="text-center">No se encontraron registros</td>
                 </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-    </div>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
 
     <div class="navigation d-flex justify-content-center mt-4">
         {{ knp_pagination_render(pagos) }}

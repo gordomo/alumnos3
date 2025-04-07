@@ -21,12 +21,3 @@
     </div>
 </div>
 {% endblock %}
-
-{% block javascripts %}
-    {{ parent() }}
-    <script>
-        $('.predictivo').chosen();
-        $('#alumno_hermanos').val([{{ hermanos|join(', ') }}]);
-        $('#alumno_hermanos').trigger("chosen:updated");
-    </script>
-{% endblock %}

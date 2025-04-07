@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const formData = new FormData(this);
             const alumnoId = this.dataset.alumnoId;
             
-            fetch(`/admin/alumno/${alumnoId}/update-cursos`, {
+            fetch(`/instituto/alumno/${alumnoId}/update-cursos`, {
                 method: 'POST',
                 body: formData
             })

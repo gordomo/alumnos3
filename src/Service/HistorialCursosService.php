@@ -197,14 +197,21 @@ class HistorialCursosService
 
         // Obtener el último día de vencimiento del mes actual
         $ultimoVencimiento = null;
-        foreach ($alumno->getInstituto()->getVencimientos() as $vencimiento) {
-            if ($vencimiento->getDiaVencimiento() > $diaActual) {
-                $ultimoVencimiento = $vencimiento;
-            }
+        $vencimientos = $alumno->getInstituto()->getVencimientos();
+        $vencimientosOrdenados = $vencimientos->toArray();
+        
+        // Ordenar vencimientos por día (ascendente)
+        usort($vencimientosOrdenados, function($a, $b) {
+            return $a->getDiaVencimiento() <=> $b->getDiaVencimiento();
+        });
+
+        // Si hay vencimientos, determinar el último
+        if (!empty($vencimientosOrdenados)) {
+            $ultimoVencimiento = $vencimientosOrdenados[count($vencimientosOrdenados) - 1];
         }
 
         // Si hay un vencimiento posterior al día actual, considerar el mes actual como adeudado
-        $incluirMesActual = $ultimoVencimiento !== null;
+        $incluirMesActual = $ultimoVencimiento !== null && $diaActual > $ultimoVencimiento->getDiaVencimiento();
 
         // Obtener todos los pagos del alumno para este curso
         $pagos = $this->entityManager->getRepository(AlumnosPagos::class)->findBy([
@@ -223,24 +230,29 @@ class HistorialCursosService
                 $fechaFin = $historico->getFechaFin();
                 
                 // Generar todos los meses entre fecha inicio y fin
-                $fechaActual = clone $fechaInicio;
+                $fechaIteracion = clone $fechaInicio;
                 // Si hay fecha fin, usar el último día del mes
                 $fechaFinLimite = $fechaFin ? new \DateTime($fechaFin->format('Y-m-t')) : new \DateTime();
                 
-                while ($fechaActual <= $fechaFinLimite) {
-                    $mesKey = $fechaActual->format('Y-n');
-                    $mes = (int)$fechaActual->format('n');
-                    $ano = (int)$fechaActual->format('Y');
+                while ($fechaIteracion <= $fechaFinLimite) {
+                    $mesKey = $fechaIteracion->format('Y-n');
+                    $mes = (int)$fechaIteracion->format('n');
+                    $ano = (int)$fechaIteracion->format('Y');
                     
                     // Verificar si el mes debe incluirse
                     $debeIncluirse = false;
+                    $razonIncluido = "";
+                    
                     if ($ano < $anoActual) {
                         $debeIncluirse = true;
+                        $razonIncluido = "Mes de año anterior";
                     } elseif ($ano == $anoActual) {
                         if ($mes < $mesActual) {
                             $debeIncluirse = true;
+                            $razonIncluido = "Mes anterior al actual";
                         } elseif ($mes == $mesActual && $incluirMesActual) {
                             $debeIncluirse = true;
+                            $razonIncluido = "Mes actual con vencimiento pasado";
                         }
                     }
 
@@ -248,16 +260,30 @@ class HistorialCursosService
                         $mesesAdeudados[] = [
                             'mes' => $mes,
                             'ano' => $ano,
-                            'nombre' => $nombresMeses[$mes] . ' ' . $ano
+                            'nombre' => $nombresMeses[$mes] . ' ' . $ano,
+                            'curso_id' => $curso->getId(),
+                            'curso_nombre' => $curso->getNombre(),
+                            'curso_obj' => $curso,
+                            'razon' => $razonIncluido,
+                            'antiguedad' => $this->calcularAntiguedadDeuda($mes, $ano, $mesActual, $anoActual)
                         ];
                     }
 
-                    $fechaActual->modify('+1 month');
+                    $fechaIteracion->modify('+1 month');
                 }
                 break; // Solo procesamos el primer historial activo que encontremos
             }
         }
 
         return $mesesAdeudados;
+    }
+
+    /**
+     * Calcula la antigüedad de una deuda en meses
+     */
+    private function calcularAntiguedadDeuda($mesDeuda, $anoDeuda, $mesActual, $anoActual): int
+    {
+        $mesesDiferencia = ($anoActual - $anoDeuda) * 12 + ($mesActual - $mesDeuda);
+        return max(0, $mesesDiferencia);
     }
 } 

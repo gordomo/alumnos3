@@ -80,6 +80,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Función para verificar si un enlace es de navegación
     function isNavigationLink(link) {
+        
         // No mostrar loading para enlaces que abren en nueva pestaña
         if (link.target === '_blank') return false;
         
@@ -87,6 +88,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (link.hasAttribute('data-no-loading')) return false;
 
         if (link.classList.contains('search-choice-close')) return false;
+        
+        if (link.classList.contains('chosen-single')) return false;
         
         // No mostrar loading para enlaces que son dropdowns
         if (link.hasAttribute('data-bs-toggle') && link.getAttribute('data-bs-toggle') === 'dropdown') return false;

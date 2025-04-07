@@ -171,7 +171,7 @@ class AlumnoController extends AbstractController
         $cursoId = $request->get('curso');
         
         // Obtener todos los cursos del instituto
-        $cursos = $cursoRepository->findByInstituto($instituto);
+        $cursos = $cursoRepository->findByInstitutoSoloActivos($instituto);
         
         // Si se seleccionó un curso, obtener las asistencias de ese curso para la fecha seleccionada
         if ($cursoId) {

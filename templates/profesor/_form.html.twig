@@ -1,42 +1,30 @@
 {# templates/profesor/_form.html.twig #}
 {{ form_start(form, {'attr': {'class': 'form-horizontal'}}) }}
-<div class="form-group">
-    <div class="row g-3 mb-3">
-        {% for field in [
-            {form: form.nombre, label: 'Nombre', class: ''},
-            {form: form.apellido, label: 'Apellido', class: ''},
-            {form: form.tel, label: 'Teléfono', class: ''},
-            {form: form.dni, label: 'DNI', class: ''},
-            {form: form.email, label: 'Email', class: ''},
-            {form: form.precioHora, label: 'Pecio/Hora', class: ''},
-            {form: form.viatico, label: 'Viatico', class: ''},
-            {form: form.cursos, label: 'Cursos', class: 'chosen-select'}
-            
-        ] %}
-            <div class="col-md-4">
-                {{ form_label(field.form, field.label) }}
-                {{ form_widget(field.form, {'attr': {'class': 'form-control ' ~ field.class}}) }}
-                <small class="form-error text-danger">
-                    {{ form_errors(field.form) }}
-                </small>
-            </div>
-        {% endfor %}
-    </div>
-    <div class="row mb-3">
-        <div class="col text-end">
-            {{ include('components/back_button.html.twig', {'default_path': path('app_profesor_index')}) }}
-            <button class="btn btn-success">{{ button_label|default('Guardar') }}</button>
+<div class="row g-3 mb-3">
+    {% for field in [
+        {form: form.nombre, label: 'Nombre', class: '', required: true},
+        {form: form.apellido, label: 'Apellido', class: '', required: true},
+        {form: form.tel, label: 'Teléfono', class: ''},
+        {form: form.dni, label: 'DNI', class: '', required: true},
+        {form: form.email, label: 'Email', class: '', required: true},
+        {form: form.precioHora, label: 'Precio/Hora', class: ''},
+        {form: form.viatico, label: 'Viático', class: ''},
+        {form: form.cursos, label: 'Cursos', class: 'chosen-select'}
+    ] %}
+        <div class="col-md-4">
+            {{ include('components/formGroup.html.twig', {
+                form: field.form,
+                label: field.label,
+                class: field.class,
+                required: field.required|default(false)
+            }) }}
         </div>
+    {% endfor %}
+</div>
+<div class="row mb-3">
+    <div class="col text-end">
+        {{ include('components/back_button.html.twig', {'default_path': path('app_profesor_index')}) }}
+        <button class="btn btn-success">{{ button_label|default('Guardar') }}</button>
     </div>
 </div>
 {{ form_end(form) }}
-
-
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        $(".chosen-select").chosen({
-            width: "100%",
-            no_results_text: "No se encontraron coincidencias"
-        });
-    });
-</script>

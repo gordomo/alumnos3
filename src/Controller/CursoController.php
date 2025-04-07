@@ -77,17 +77,14 @@ class CursoController extends AbstractController
             // Para cursos deshabilitados, incluir:
             // 1. Cursos manualmente deshabilitados
             // 2. Cursos cuya fecha fin está en el pasado
-            $qb->andWhere('c.disabled = :disabled OR c.fechaFin < :fechaActual')
-               ->setParameter('disabled', true)
-               ->setParameter('fechaActual', new \DateTime());
+            $qb->andWhere('c.disabled = :disabled')
+               ->setParameter('disabled', true);
         } else {
             // Para cursos activos, solo incluir:
             // 1. Cursos no deshabilitados manualmente
             // 2. Cursos cuya fecha fin es futura o no tiene fecha fin
             $qb->andWhere('c.disabled = :disabled')
-               ->andWhere('c.fechaFin IS NULL OR c.fechaFin >= :fechaActual')
-               ->setParameter('disabled', false)
-               ->setParameter('fechaActual', new \DateTime());
+               ->setParameter('disabled', false);
         }
 
         $qb->orderBy($sort === 'precio' ? 'c.precio + 0' : 'c.'.$sort, $order);

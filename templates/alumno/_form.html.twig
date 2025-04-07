@@ -1,56 +1,44 @@
 {{ form_start(form, {'attr': {'class': 'form-horizontal'}}) }}
-<div class="form-group">
-    <div class="row g-3 mb-3">
-        {% for field in [
-            {form: form.nombre, label: 'Nombre', class: ''},
-            {form: form.apellido, label: 'Apellido', class: ''},
-            {form: form.f_nac, label: 'Fecha de Nacimiento', class: ''},
-            {form: form.l_nac, label: 'Lugar de Nacimiento', class: ''},
-            {form: form.telefono_fijo, label: 'Teléfono fijo', class: ''},
-            {form: form.email, label: 'Email', class: ''},
-            {form: form.dni, label: 'DNI', class: ''},
-            {form: form.celular, label: 'Celular', class: ''},
-            {form: form.n_tutor, label: 'Nombre Tutor', class: ''},
-            {form: form.t_tutor, label: 'Teléfono Tutor', class: ''},
-            {form: form.contacto_emergencia, label: 'Contacto de Emergencia - (Nombre + Cel)', class: ''},
-            {form: form.corre_tutor, label: 'Email Tutor', class: ''},
-            {form: form.dni_tutor, label: 'DNI Tutor', class: ''},
-            {form: form.escuela, label: 'Escuela', class: ''},
-            {form: form.extras, label: 'Extras', class: ''},
-            {form: form.g_sanguineo, label: 'Grupo Sanguineo', class: ''},
-            {form: form.enfermedad, label: 'Enfermedad', class: ''},
-            {form: form.alergico, label: 'Alergico', class: ''},
-            {form: form.medicacion, label: 'Medicacion', class: ''},
-            {form: form.como_conociste, label: 'Como nos Conociste', class: ''},
-            {form: form.activo, label: 'Activo', class: ''},
-            {form: form.hermanos, label: 'Hermanos', class: 'chosen-select'},
-            {form: form.curso, label: 'Cursos', class: 'chosen-select'}
-        ] %}
-            <div class="col-md-4">
-                {{ form_label(field.form, field.label) }}
-                {{ form_widget(field.form, {'attr': {'class': 'form-control ' ~ field.class}}) }}
-                <small class="form-error text-danger">
-                    {{ form_errors(field.form) }}
-                </small>
-            </div>
-        {% endfor %}
-    </div>
-    <div class="row mb-3">
-        <div class="col text-end">
-            {{ include('components/back_button.html.twig', {'default_path': path('app_alumno_index')}) }}
-            <button class="btn btn-success">{{ button_label|default('Guardar') }}</button>
+<div class="row g-3 mb-3">
+    {% for field in [
+        {form: form.nombre, label: 'Nombre', class: '', required: true},
+        {form: form.apellido, label: 'Apellido', class: '', required: true},
+        {form: form.f_nac, label: 'Fecha de Nacimiento', class: '', required: true},
+        {form: form.l_nac, label: 'Lugar de Nacimiento', class: ''},
+        {form: form.telefono_fijo, label: 'Teléfono fijo', class: ''},
+        {form: form.email, label: 'Email', class: '', required: true},
+        {form: form.dni, label: 'DNI', class: '', required: true},
+        {form: form.celular, label: 'Celular', class: '', required: true},
+        {form: form.n_tutor, label: 'Nombre Tutor', class: ''},
+        {form: form.t_tutor, label: 'Teléfono Tutor', class: ''},
+        {form: form.contacto_emergencia, label: 'Contacto de Emergencia - (Nombre + Cel)', class: '', required: true},
+        {form: form.corre_tutor, label: 'Email Tutor', class: ''},
+        {form: form.dni_tutor, label: 'DNI Tutor', class: ''},
+        {form: form.escuela, label: 'Escuela', class: ''},
+        {form: form.extras, label: 'Extras', class: ''},
+        {form: form.g_sanguineo, label: 'Grupo Sanguineo', class: ''},
+        {form: form.enfermedad, label: 'Enfermedad', class: ''},
+        {form: form.alergico, label: 'Alergico', class: ''},
+        {form: form.medicacion, label: 'Medicacion', class: ''},
+        {form: form.como_conociste, label: 'Como nos Conociste', class: ''},
+        {form: form.activo, label: 'Activo', class: '', required: true},
+        {form: form.hermanos, label: 'Hermanos', class: 'chosen-select'},
+        {form: form.curso, label: 'Cursos', class: 'chosen-select'}
+    ] %}
+        <div class="col-md-4">
+            {{ include('components/formGroup.html.twig', {
+                form: field.form,
+                label: field.label,
+                class: field.class,
+                required: field.required|default(false)
+            }) }}
         </div>
+    {% endfor %}
+</div>
+<div class="row mb-3">
+    <div class="col text-end">
+        {{ include('components/back_button.html.twig', {'default_path': path('app_alumno_index')}) }}
+        <button class="btn btn-success">{{ button_label|default('Guardar') }}</button>
     </div>
 </div>
 {{ form_end(form) }}
-
-
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        $(".chosen-select").chosen({
-            width: "100%",
-            no_results_text: "No se encontraron coincidencias",
-            placeholder_text_single: "Select an option",
-        });
-    });
-</script>

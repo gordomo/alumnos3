@@ -32,8 +32,8 @@ class AlumnoType extends AbstractType
             ->add('f_nac', DateType::class, ['widget' => 'single_text', 'attr' => ['class' => 'form-control'], 'label_attr' => ['class' => 'form-label required'], ])
             ->add('l_nac', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'label_attr' => ['class' => 'form-label '], ])
             ->add('telefono_fijo', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'label_attr' => ['class' => 'form-label '], ])
-            ->add('celular', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'label_attr' => ['class' => 'form-label '], ])
-            ->add('contacto_emergencia', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'label_attr' => ['class' => 'form-label '], ])
+            ->add('celular', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => true, 'label_attr' => ['class' => 'form-label '], ])
+            ->add('contacto_emergencia', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => true, 'label_attr' => ['class' => 'form-label '], ])
             ->add('n_tutor', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'label_attr' => ['class' => 'form-label '], ])
             ->add('t_tutor', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'label_attr' => ['class' => 'form-label '], ])
             ->add('corre_tutor', EmailType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'label_attr' => ['class' => 'form-label '], ])
@@ -54,12 +54,13 @@ class AlumnoType extends AbstractType
                 'class' => Alumno::class,
                 'label_attr' => ['class' => 'form-label'], 
                 'choice_label' => function(Alumno $alumno) {
-                    return $alumno->getNombre() . ' ' . $alumno->getApellido();
+                    return  $alumno->getApellido() . ' ' .  $alumno->getNombre();
                 },
                 'query_builder' => function (EntityRepository $er) use ($instituto, $isEdit) {
                     $qb = $er->createQueryBuilder('a')
                         ->where('a.instituto = :instituto')
                         ->setParameter('instituto', $instituto);
+                    $qb->orderBy('a.apellido', 'ASC');
                     
                     if ($isEdit) {
                         $qb->andWhere('a.id != :id')
@@ -72,7 +73,10 @@ class AlumnoType extends AbstractType
                 'expanded' => false,
                 'required' => false,
                 'label' => 'Hermanos',
-                'attr' => ['class' => 'form-control predictivo'],
+                'attr' => [
+                    'class' => 'form-control chosen-select',
+                    'data-placeholder' => 'Seleccione hermanos...'
+                ],
                 'choice_value' => 'id'
             ])
             ->add('curso', EntityType::class, [

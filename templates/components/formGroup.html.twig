@@ -1,0 +1,27 @@
+{#
+Componente para mostrar un grupo de formulario estándar
+Parámetros:
+- form: El campo de formulario
+- label: Etiqueta para el campo
+- required: Booleano que indica si el campo es obligatorio (opcional, por defecto false)
+- class: Clase CSS adicional para el campo (opcional)
+#}
+
+{% set required = required is defined ? required : false %}
+{% set class = class is defined ? class : '' %}
+
+<div class="form-group mb-3">
+    <label for="{{ form.vars.id }}" class="form-label{% if required %} required{% endif %}">
+        {{ label|default(form.vars.label) }}
+        
+    </label>
+    
+    {{ form_widget(form) }}
+
+    
+    {% if form.vars.errors|length > 0 %}
+        <div class="form-error text-danger">
+            {{ form_errors(form) }}
+        </div>
+    {% endif %}
+</div> 

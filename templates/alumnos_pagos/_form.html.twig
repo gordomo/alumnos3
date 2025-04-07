@@ -1,69 +1,28 @@
 {{ form_start(form) }}
-    <div class="row mb-3">
-        <div class="col-md-6">
-            <div class="form-group">
-                {{ form_label(form.fecha) }}
-                {{ form_widget(form.fecha) }}
-                {{ form_errors(form.fecha) }}
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="form-group">
-                {{ form_label(form.metodoPago) }}
-                {{ form_widget(form.metodoPago) }}
-                {{ form_errors(form.metodoPago) }}
-            </div>
-        </div>
-    </div>
-    
-    <div class="row mb-3">
-        <div class="col-md-12">
-            <div class="form-group">
-                {{ form_label(form.alumno) }}
-                {{ form_widget(form.alumno) }}
-                {{ form_errors(form.alumno) }}
-            </div>
-        </div>
-    </div>
-    
-    <div class="row mb-3">
-        <div class="col-md-4">
-            <div class="form-group">
-                {{ form_label(form.mes) }}
-                {{ form_widget(form.mes) }}
-                {{ form_errors(form.mes) }}
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="form-group">
-                {{ form_label(form.ano) }}
-                {{ form_widget(form.ano) }}
-                {{ form_errors(form.ano) }}
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="form-group">
-                {{ form_label(form.curso) }}
-                {{ form_widget(form.curso) }}
-                {{ form_errors(form.curso) }}
-            </div>
-        </div>
-    </div>
-
     <div class="row">
         <div class="col-md-6">
-            <div class="form-group">
-                {{ form_label(form.monto) }}
-                {{ form_widget(form.monto) }}
-                {{ form_errors(form.monto) }}
-            </div>
+            {{ include('components/formGroup.html.twig', {form: form.alumno, label: 'Alumno', required: true}) }}
         </div>
         <div class="col-md-6">
-            <div class="form-group">
-                {{ form_label(form.observacion) }}
-                {{ form_widget(form.observacion) }}
-                {{ form_errors(form.observacion) }}
-            </div>
+            {{ include('components/formGroup.html.twig', {form: form.curso, label: 'Curso', required: true}) }}
+        </div>
+        <div class="col-md-4">
+            {{ include('components/formGroup.html.twig', {form: form.fecha, label: 'Fecha de Pago', required: true}) }}
+        </div>
+        <div class="col-md-4">
+            {{ include('components/formGroup.html.twig', {form: form.mes, label: 'Mes', required: true}) }}
+        </div>
+        <div class="col-md-4">
+            {{ include('components/formGroup.html.twig', {form: form.ano, label: 'Año', required: true}) }}
+        </div>
+        <div class="col-md-6">
+            {{ include('components/formGroup.html.twig', {form: form.monto, label: 'Monto', required: true}) }}
+        </div>
+        <div class="col-md-6">
+            {{ include('components/formGroup.html.twig', {form: form.metodoPago, label: 'Método de Pago', required: true}) }}
+        </div>
+        <div class="col-md-12">
+            {{ include('components/formGroup.html.twig', {form: form.observacion, label: 'Observaciones'}) }}
         </div>
     </div>
 
@@ -78,8 +37,8 @@
         </div>
     {% endif %}
 
-    <div class="row mt-4">
-        <div class="col-md-12 text-center">
+    <div class="form-group row mt-3">
+        <div class="col-sm-12">
             <button type="submit" class="btn btn-primary">
                 <i class="fas fa-save"></i> {{ button_label|default('Guardar') }}
             </button>
@@ -95,16 +54,44 @@
         </div>
     </div>
 {{ form_end(form) }}
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        document.querySelector('#alumnos_pagos_curso').addEventListener('change', function() {
-            // Obtener el valor del curso seleccionado
-            const cursoId = this.value;
-            // Agregar el valor como parámetro a la URL actual
-            const currentUrl = new URL(window.location.href);
-            currentUrl.searchParams.set('curso', cursoId);
-            // Recargar la página con el nuevo parámetro
-            window.location.href = currentUrl.toString();
+        // Método 1: Usar el evento chosen:ready de Chosen
+        $('#alumnos_pagos_curso').on('chosen:ready', function() {
+            initializeChosenEventsCursos();
         });
+
+        $('#alumnos_pagos_alumno').on('chosen:ready', function() {
+            initializeChosenEventsAlumnos();
+        });
+    
+        
+        // Función para inicializar los eventos una vez que Chosen esté listo
+        function initializeChosenEventsCursos() {
+            // Usar jQuery para detectar cambios en los selects originales
+            $('#alumnos_pagos_curso').on('change', function() {
+                // Obtener el valor del curso seleccionado
+                const cursoId = $(this).val();
+                // Agregar el valor como parámetro a la URL actual
+                const currentUrl = new URL(window.location.href);
+                currentUrl.searchParams.set('curso', cursoId);
+                // Recargar la página con el nuevo parámetro
+                window.location.href = currentUrl.toString();
+            });
+        }
+
+        function initializeChosenEventsAlumnos() {
+            
+            $('#alumnos_pagos_alumno').on('change', function() {
+                // Obtener el valor del alumno seleccionado
+                const id = $(this).val();
+                // Agregar el valor como parámetro a la URL actual
+                const currentUrl = new URL(window.location.href);
+                currentUrl.searchParams.set('id', id);
+                // Recargar la página con el nuevo parámetro
+                window.location.href = currentUrl.toString();
+            });
+        }
     });
 </script>

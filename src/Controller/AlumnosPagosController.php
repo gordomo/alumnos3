@@ -58,7 +58,7 @@ class AlumnosPagosController extends AbstractController
 
         // Obtener el instituto del usuario actual
         $instituto = $this->getUser()->getInstituto();
-        
+
         if ($alumnoId) {
             //$pagos = $alumnosPagosRepository->findByAlumno($alumnoId);
             $alumno = $alumnoRepository->find($alumnoId);
@@ -166,24 +166,11 @@ class AlumnosPagosController extends AbstractController
             'busqueda' => $busqueda,
             'sort' => $sort,
             'order' => $order,
+            'alumnoId' => $alumnoId,
             'total' => $pagination->getTotalItemCount()
         ]);
     }
 
-    /**
-     * @Route("/{id}", name="app_alumnos_pagos_show", methods={"GET"})
-     */
-    public function show(AlumnosPagos $pago): Response
-    {
-        $instituto = $this->getUser()->getInstituto();
-        
-        return $this->render('alumnos_pagos/show.html.twig', [
-            'alumnos_pago' => $pago,
-            'instituto' => $instituto
-        ]);
-    }
-
-    
     /**
      * Verifica los meses adeudados para un alumno y curso específico
      */
@@ -201,22 +188,61 @@ class AlumnosPagosController extends AbstractController
         $fechaActual = new \DateTime();
         $mesActual = (int)$fechaActual->format('n');
         $anoActual = (int)$fechaActual->format('Y');
+        $diaActual = (int)$fechaActual->format('d');
 
         $montoBase = $curso->getPrecio();
         $montoFinal = $montoBase;
         $porcentajeInteres = 0;
+        $motivoInteres = "Sin interés aplicado";
 
-        // Si hay meses adeudados, aplicar el máximo interés
+        // Ordenar vencimientos por día
+        $vencimientosOrdenados = [];
+        foreach ($vencimientos as $vencimiento) {
+            $vencimientosOrdenados[] = $vencimiento;
+        }
+        
+        usort($vencimientosOrdenados, function($a, $b) {
+            return $a->getDiaVencimiento() <=> $b->getDiaVencimiento();
+        });
+
+        // Si hay meses adeudados (deudas anteriores)
         if (!empty($mesesAdeudados)) {
-            // Buscar el máximo interés en los vencimientos
-            foreach ($vencimientos as $vencimiento) {
-                if ($vencimiento->getPorcentajeInteres() > $porcentajeInteres) {
-                    $porcentajeInteres = $vencimiento->getPorcentajeInteres();
+            // Para deudas de meses anteriores, aplicar el máximo interés configurado
+            $maxInteres = 0;
+            $vencimientoAplicado = null;
+            
+            foreach ($vencimientosOrdenados as $vencimiento) {
+                if ($vencimiento->getPorcentajeInteres() > $maxInteres) {
+                    $maxInteres = $vencimiento->getPorcentajeInteres();
+                    $vencimientoAplicado = $vencimiento;
                 }
             }
-        } else {
-            // Si no hay meses adeudados, calcular el interés según la fecha actual
-            $porcentajeInteres = $alumno->getPorcentajeInteresAplicable();
+            
+            $porcentajeInteres = $maxInteres;
+            $motivoInteres = "Máximo interés aplicado por deudas anteriores (" . count($mesesAdeudados) . " meses)";
+        } 
+        // Si es para el mes actual
+        else {
+            // Determinar el vencimiento aplicable según el día actual
+            $vencimientoAplicado = null;
+            
+            // Recorrer vencimientos ordenados por día (ascendente)
+            foreach ($vencimientosOrdenados as $vencimiento) {
+                // Si el día actual ya pasó este vencimiento
+                if ($diaActual > $vencimiento->getDiaVencimiento()) {
+                    $vencimientoAplicado = $vencimiento;
+                    // Seguimos iterando para encontrar el último vencimiento aplicable
+                } else {
+                    // Si encontramos un vencimiento que aún no pasó, salimos del bucle
+                    break;
+                }
+            }
+            
+            // Si existe un vencimiento aplicable, usamos su interés
+            if ($vencimientoAplicado) {
+                $porcentajeInteres = $vencimientoAplicado->getPorcentajeInteres();
+                $motivoInteres = "Interés del " . $porcentajeInteres . "% por pago después del día " . $vencimientoAplicado->getDiaVencimiento();
+            }
         }
 
         // Calcular el monto final con el interés correspondiente
@@ -228,15 +254,22 @@ class AlumnosPagosController extends AbstractController
             'monto' => $montoFinal,
             'montoBase' => $montoBase,
             'porcentajeInteres' => $porcentajeInteres,
+            'motivoInteres' => $motivoInteres,
             'mesesAdeudados' => array_values($mesesAdeudados)
         ];
     }
 
     /**
-     * @Route("/new/{id}", name="app_alumnos_pagos_new", methods={"GET", "POST"})
+     * @Route("/new", name="app_alumnos_pagos_new", methods={"GET", "POST"})
      */
-    public function new(Request $request, Alumno $alumno): Response
+    public function new(Request $request, AlumnoRepository $alumnoRepository): Response
     {
+        $alumnoId = $request->query->get('id');
+        if($alumnoId){
+            $alumno = $alumnoRepository->find($alumnoId);
+        } else {
+            $alumno = $alumnoRepository->findOneBy(['instituto' => $this->getUser()->getInstituto()]);
+        }
         $alumnosPago = new AlumnosPagos();
         $alumnosPago->setAlumno($alumno);
         $alumnosPago->setFecha(new \DateTime());
@@ -331,7 +364,22 @@ class AlumnosPagosController extends AbstractController
             'curso' => $cursoSeleccionado,
             'vencimientos' => $vencimientos,
             'is_general' => false,
-            'mesesAdeudados' => $mesesAdeudados
+            'mesesAdeudados' => $mesesAdeudados,
+            'motivoInteres' => isset($calculoMonto) ? $calculoMonto['motivoInteres'] : null,
+            'porcentajeInteres' => isset($calculoMonto) ? $calculoMonto['porcentajeInteres'] : 0
+        ]);
+    }
+
+    /**
+     * @Route("/{id}", name="app_alumnos_pagos_show", methods={"GET"})
+     */
+    public function show(AlumnosPagos $pago): Response
+    {
+        $instituto = $this->getUser()->getInstituto();
+        
+        return $this->render('alumnos_pagos/show.html.twig', [
+            'alumnos_pago' => $pago,
+            'instituto' => $instituto
         ]);
     }
 

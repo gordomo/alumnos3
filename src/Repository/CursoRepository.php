@@ -101,6 +101,20 @@ class CursoRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    /**
+     * @return Curso[] Returns an array of Curso objects
+     */
+    public function findByInstitutoSoloActivos($instituto): array
+    {
+        return $this->createQueryBuilder('c')
+            ->andWhere('c.instituto = :instituto')
+            ->andWhere('c.disabled = false')
+            ->setParameter('instituto', $instituto)
+            ->orderBy('c.nombre', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
     public function findByProfesor($profesor)
     {
         return $this->createQueryBuilder('c')

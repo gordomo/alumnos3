@@ -47,7 +47,7 @@ class AlumnosPagosType extends AbstractType
                 'label' => 'Alumno',
                 'label_attr' => ['class' => 'form-label'],
                 'required' => true,
-                'attr' => ['class' => 'form-control'],
+                'attr' => ['class' => 'form-control chosen-select'],
                 'constraints' => [
                     new NotBlank(['message' => 'El alumno es obligatorio'])
                 ]
@@ -83,7 +83,7 @@ class AlumnosPagosType extends AbstractType
                 'label' => 'Mes',
                 'label_attr' => ['class' => 'form-label'],
                 'required' => true,
-                'attr' => ['class' => 'form-control'],
+                'attr' => ['class' => 'form-control chosen-select'],
                 'constraints' => [
                     new NotBlank(['message' => 'El mes es obligatorio'])
                 ]
@@ -93,7 +93,7 @@ class AlumnosPagosType extends AbstractType
                 'label' => 'Año',
                 'label_attr' => ['class' => 'form-label'],
                 'required' => true,
-                'attr' => ['class' => 'form-control'],
+                'attr' => ['class' => 'form-control chosen-select'],
                 'constraints' => [
                     new NotBlank(['message' => 'El año es obligatorio'])
                 ]
@@ -108,7 +108,7 @@ class AlumnosPagosType extends AbstractType
                 'label' => 'Curso', 
                 'label_attr' => ['class' => 'form-label'],
                 'required' => true,
-                'attr' => ['class' => 'form-control'],
+                'attr' => ['class' => 'form-control chosen-select'],
                 'constraints' => [
                     new NotBlank(['message' => 'El curso es obligatorio'])
                 ]
@@ -135,7 +135,7 @@ class AlumnosPagosType extends AbstractType
                 'label' => 'Método de Pago',
                 'label_attr' => ['class' => 'form-label'],
                 'required' => true,
-                'attr' => ['class' => 'form-control'],
+                'attr' => ['class' => 'form-control chosen-select'],
                 'constraints' => [
                     new NotBlank(['message' => 'El método de pago es obligatorio'])
                 ]

@@ -84,7 +84,7 @@
                 <th>
                     <a href="{{ path('app_alumno_index', {'sort': 'nombre', 'order': sort == 'nombre' ? (order == 'asc' ? 'desc' : 'asc') : 'asc'}) }}" class="text-decoration-none text-dark">
                         Nombre
-                        <i class="bi bi-arrow-{{ sort == 'nombre' ? (order == 'asc' ? 'desc' : 'asc') : 'up-down' }}"></i>
+                        <i class="bi bi-arrow-{{ sort == 'nombre' ? (order == 'asc' ? 'up' : 'down') : 'up-down' }}"></i>
                     </a>
                 </th>
                 <th>Celular</th>

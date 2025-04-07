@@ -33,7 +33,7 @@ class ProfesorType extends AbstractType
                 'label_attr'=> ['class'=> 'form-label'],
                 'choice_label' => 'nombre',
                 'query_builder' => function (EntityRepository $er) use ($instituto) {
-                    $curso = $er->createQueryBuilder('c')->where('c.instituto = :instituto')->setParameter('instituto', $instituto);
+                    $curso = $er->createQueryBuilder('c')->where('c.instituto = :instituto')->andWhere('c.profesores IS EMPTY')->setParameter('instituto', $instituto);
                     return $curso;
                 },
                 'multiple' => true,

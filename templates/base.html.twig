@@ -85,6 +85,19 @@
                 return $(link).data('placement') || 'right';
             }});
 
+            // Inicialización global de Chosen para selectores
+            if ($.fn.chosen) {
+                // Inicializar todos los campos chosen-select
+                $(".chosen-select").chosen({
+                    no_results_text: "No se encontraron resultados para: ",
+                    placeholder_text_multiple: "Seleccione opciones",
+                    placeholder_text_single: "Seleccione una opción",
+                    width: "100%",
+                    search_contains: true,                // Permite búsqueda dentro del texto, no solo al principio
+                    enable_search_threshold: 5,           // Mostrar búsqueda cuando hay más de 5 opciones
+                    disable_search_threshold: 0           // Nunca deshabilitar la búsqueda
+                });
+            }
         });
     </script>
 {% endblock %}

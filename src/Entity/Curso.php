@@ -323,4 +323,15 @@ class Curso
         $this->fechaFin = $fechaFin;
         return $this;
     }
+
+    public function getDisabled(): ?bool
+    {
+        return $this->disabled;
+    }
+
+    public function setDisabled(bool $disabled): self   
+    {
+        $this->disabled = $disabled;
+        return $this;
+    }
 }

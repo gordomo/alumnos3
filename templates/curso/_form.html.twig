@@ -1,40 +1,33 @@
-{{ form_start(form, {'attr': {'class': 'form-horizontal'}}) }}
-<div class="form-group">
-    <div class="row g-3 mb-3">
-        {% for field in [
-            {form: form.nombre, label: 'Nombre', class: ''},
-            {form: form.precio, label: 'Precio', class: ''},
-            {form: form.fechaInicio, label: 'Fecha de Inicio', class: ''},
-            {form: form.fechaFin, label: 'Fecha de Fin', class: ''},
-            {form: form.horarioInicio, label: 'Horario de Inicio', class: ''},
-            {form: form.horarioFin, label: 'Horario de Fin', class: ''},
+{{ form_start(form) }}
+    <div class="row">
+        <div class="col-md-7">
+            {{ include('components/formGroup.html.twig', {form: form.nombre, label: 'Nombre', required: true}) }}
+        </div>
+        <div class="col-md-5">
+            {{ include('components/formGroup.html.twig', {form: form.precio, label: 'Precio', required: true}) }}
+        </div>
+
+        {% for formGroup in [
             {form: form.dias, label: 'Días', class: 'chosen-select'},
             {form: form.profesores, label: 'Profesores', class: 'chosen-select'}
         ] %}
             <div class="col-md-6">
-                {{ form_label(field.form, field.label) }}
-                {{ form_widget(field.form, {'attr': {'class': 'form-control ' ~ field.class}}) }}
-                <small class="form-error text-danger">
-                    {{ form_errors(field.form) }}
-                </small>
+                {{ include('components/formGroup.html.twig', formGroup) }}
             </div>
         {% endfor %}
-    </div>
-    <div class="row mb-3">
-        <div class="col text-end">
-            {{ include('components/back_button.html.twig', {'default_path': path('app_curso_index')}) }}
-            <button class="btn btn-success">{{ button_label|default('Guardar') }}</button>
+        <div class="col-md-6">
+            {{ include('components/formGroup.html.twig', {form: form.fechaInicio, label: 'Fecha de Inicio', required: true}) }}
+        </div>
+        <div class="col-md-6">
+            {{ include('components/formGroup.html.twig', {form: form.fechaFin, label: 'Fecha de Fin', required: true}) }}
+        </div>
+        <div class="col-md-6">
+            {{ include('components/formGroup.html.twig', {form: form.horarioInicio, label: 'Horario de Inicio', required: true}) }}
+        </div>
+        <div class="col-md-6">
+            {{ include('components/formGroup.html.twig', {form: form.horarioFin, label: 'Horario de Fin', required: true}) }}
         </div>
     </div>
-</div>
-{{ form_end(form) }}
 
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        $(".chosen-select").chosen({
-            width: "100%",
-            no_results_text: "No se encontraron coincidencias",
-            placeholder_text_single: "Seleccione una opción",
-        });
-    });
-</script>
+    <button class="btn btn-primary">{{ button_label|default('Guardar') }}</button>
+{{ form_end(form) }}
