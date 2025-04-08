@@ -48,7 +48,7 @@ class CursoController extends AbstractController
             'sort' => $sort,
             'totalCursos' => count($cursos),
             'cursosDeshabilitados' => $cursosDeshabilitados,
-            'totalcursosDeshabilitados' => count($cursosDeshabilitados),
+            'totalCursosDeshabilitados' => count($cursosDeshabilitados),
             'busqueda' => $busqueda,
         ]);
     }
