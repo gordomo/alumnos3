@@ -21,12 +21,6 @@
         </div>
     {% endfor %}
 </div>
-<div class="row mb-3">
-    <div class="col text-end">
-        {{ include('components/back_button.html.twig', {'default_path': path('app_profesor_index')}) }}
-        <button class="btn btn-success">{{ button_label|default('Guardar') }}</button>
-    </div>
-</div>
 
 {% if mostrar_confirmacion is defined and mostrar_confirmacion %}
     <div class="alert alert-warning mt-3">
@@ -40,5 +34,12 @@
         </div>
     </div>
 {% endif %}
+
+<div class="row mb-3">
+    <div class="col text-end">
+        {{ include('components/back_button.html.twig', {'default_path': path('app_profesor_index')}) }}
+        <button class="btn btn-success">{{ button_label|default('Guardar') }}</button>
+    </div>
+</div>
 
 {{ form_end(form) }}

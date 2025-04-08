@@ -348,7 +348,7 @@ class ProfesorController extends AbstractController
                             $cursosComenzados = true;
                             
                             // Verificar si hay asistencias registradas para este profesor en este curso
-                            $asistenciaProfesoresRepository = $entityManager->getRepository('App\Entity\AsistenciaProfesor');
+                            $asistenciaProfesoresRepository = $entityManager->getRepository('App\Entity\AsistenciaProfesores');
                             $asistencias = $asistenciaProfesoresRepository->findBy([
                                 'curso' => $curso,
                                 'profesor' => $profesor
