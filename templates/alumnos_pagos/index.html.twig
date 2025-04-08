@@ -3,7 +3,7 @@
 {% block title %}Pagos{% endblock %}
 
 {% block panelTitle %}
-    Pagos de {{ nombreAlumno }}
+    Pagos
     <a href="{{ path('app_alumnos_pagos_new', alumnoId ? {'alumnoId': alumnoId} : {}) }}" class="btn btn-success btn-sm">
         Nuevo Pago
     </a>
@@ -119,8 +119,8 @@
                     <td>{{ pago.mes }}</td>
                     <td>{{ pago.ano }}</td>
                     <td>
-                        <a href="{{ path('app_alumnos_pagos_show', {'id': pago.id}) }}" class="btn btn-sm btn-outline-primary" title="Ver" data-toggle="tooltip" data-placement="left">
-                            <i class="bi bi-eye"></i>
+                        <a href="{{ path('app_alumnos_pagos_show', {'id': pago.id}) }}" target="_blank" class="btn btn-sm btn-outline-primary" title="Imprimir" data-toggle="tooltip" data-placement="left">
+                            <i class="bi bi-printer"></i>
                         </a>
                         <a href="{{ path('app_alumnos_pagos_edit', {'id': pago.id}) }}" class="btn btn-sm btn-outline-secondary" title="Editar" data-toggle="tooltip" data-placement="top">
                                 <i class="bi bi-pencil"></i>

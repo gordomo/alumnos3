@@ -12,6 +12,8 @@ use Symfony\Component\Routing\Annotation\Route;
 use App\Helpers;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Psr\Log\LoggerInterface;
+use Doctrine\ORM\EntityManagerInterface;
+use App\Entity\AlumnoCursoHistorico;
 
 /**
  * @Route("/instituto/curso")
@@ -219,7 +221,7 @@ class CursoController extends AbstractController
     /**
      * @Route("/{id}/edit", name="app_curso_edit", methods={"GET", "POST"})
      */
-    public function edit(Request $request, Curso $curso, CursoRepository $cursoRepository): Response
+    public function edit(Request $request, Curso $curso, CursoRepository $cursoRepository, EntityManagerInterface $entityManager): Response
     {
         // Obtener el instituto del usuario actual
         $instituto = $this->getUser()->getInstituto();
@@ -227,6 +229,17 @@ class CursoController extends AbstractController
             $this->addFlash('danger', 'El curso no pertenece al instituto del usuario.');
             return $this->redirectToRoute('app_curso_index');
         }
+        
+        // Guardar fechas originales para comparar cambios
+        $fechaInicioOriginal = $curso->getFechaInicio();
+        $fechaFinOriginal = $curso->getFechaFin();
+        
+        // Guardar profesores originales para comparar cambios
+        $profesoresOriginales = [];
+        foreach ($curso->getProfesores() as $profesor) {
+            $profesoresOriginales[] = $profesor->getId();
+        }
+        
         $form = $this->createForm(CursoType::class, $curso, [
             'instituto' => $instituto
         ]);
@@ -241,10 +254,108 @@ class CursoController extends AbstractController
 
         if ($form->isSubmitted()) {
             if ($form->isValid()) {
+                // Verificar si se cambiaron los profesores
+                $profesoresNuevos = [];
+                foreach ($curso->getProfesores() as $profesor) {
+                    $profesoresNuevos[] = $profesor->getId();
+                }
+                
+                // Verificar si hay cambios en los profesores y si el curso ya ha comenzado
+                $profesoresCambiados = count(array_diff($profesoresOriginales, $profesoresNuevos)) > 0 || 
+                                      count(array_diff($profesoresNuevos, $profesoresOriginales)) > 0;
+                
+                $cursoComenzado = $curso->getFechaInicio() <= new \DateTime();
+                
+                // Si hay cambios en los profesores y el curso ya comenzó, verificar si hay asistencias registradas
+                if ($profesoresCambiados && $cursoComenzado) {
+                    // Obtener el repositorio de asistencia de profesores
+                    $asistenciaProfesoresRepository = $entityManager->getRepository('App\Entity\AsistenciaProfesores');
+                    
+                    // Buscar asistencias para los profesores actuales en este curso
+                    $asistenciasExistentes = false;
+                    foreach ($curso->getProfesores() as $profesor) {
+                        $asistencias = $asistenciaProfesoresRepository->findBy([
+                            'curso' => $curso,
+                            'profesor' => $profesor
+                        ]);
+                        
+                        if (count($asistencias) > 0) {
+                            $asistenciasExistentes = true;
+                            break;
+                        }
+                    }
+                    
+                    if ($asistenciasExistentes) {
+                        // Si hay asistencias y no se confirmó la acción, mostrar advertencia
+                        if (!$request->request->get('confirmar_cambio_profesor')) {
+                            $this->addFlash('warning', 'Este curso ya ha comenzado y tiene registros de asistencia para el profesor actual. 
+                            Si cambia el profesor, todas las asistencias registradas serán transferidas al nuevo profesor. 
+                            Si desea continuar, confirme la acción.');
+                            
+                            return $this->renderForm('curso/edit.html.twig', [
+                                'curso' => $curso,
+                                'form' => $form,
+                                'mostrar_confirmacion' => true,
+                            ]);
+                        } else {
+                            // El usuario confirmó la acción, actualizar las asistencias
+                            $profesoresAnteriores = $entityManager->getRepository('App\Entity\Profesor')->findBy([
+                                'id' => $profesoresOriginales
+                            ]);
+                            
+                            $profesoresActuales = $curso->getProfesores();
+                            
+                            if (count($profesoresActuales) > 0) {
+                                // Tomar el primer profesor nuevo como el que recibirá las asistencias
+                                $nuevoProfesor = $profesoresActuales[0];
+                                
+                                foreach ($profesoresAnteriores as $profesorAnterior) {
+                                    // Actualizar todas las asistencias del profesor anterior en este curso
+                                    $asistencias = $asistenciaProfesoresRepository->findBy([
+                                        'curso' => $curso,
+                                        'profesor' => $profesorAnterior
+                                    ]);
+                                    
+                                    foreach ($asistencias as $asistencia) {
+                                        $asistencia->setProfesor($nuevoProfesor);
+                                        $entityManager->persist($asistencia);
+                                    }
+                                }
+                                
+                                $this->addFlash('success', 'Se han transferido las asistencias al nuevo profesor.');
+                            }
+                        }
+                    }
+                }
+                
                 $curso->setHorarioInicio(new \DateTime($form->get('horarioInicio')->getData()));
                 $curso->setHorarioFin(new \DateTime($form->get('horarioFin')->getData()));
                 $curso->setDuracion($this->calcularDuracion($curso->getHorarioInicio(), $curso->getHorarioFin()));
+                
+                // Verificar si las fechas han cambiado
+                $fechasModificadas = ($fechaInicioOriginal != $curso->getFechaInicio() || 
+                                   $fechaFinOriginal != $curso->getFechaFin());
+                
+                // Si las fechas han cambiado, actualizar todos los registros en AlumnoCursoHistorico
+                if ($fechasModificadas) {
+                    // Obtener todos los registros históricos asociados a este curso
+                    $historicos = $entityManager->getRepository(AlumnoCursoHistorico::class)
+                        ->findBy(['curso' => $curso]);
+                    
+                    foreach ($historicos as $historico) {
+                        // Actualizar fechas en cada registro histórico
+                        $historico->setFechaInicio($curso->getFechaInicio());
+                        $historico->setFechaFin($curso->getFechaFin());
+                        $entityManager->persist($historico);
+                    }
+                    
+                    $this->addFlash('success', 'Se han actualizado ' . count($historicos) . ' registros históricos con las nuevas fechas del curso.');
+                }
+                
+                // Guardar los cambios en el curso
                 $cursoRepository->add($curso);
+                $entityManager->flush();
+
                 return $this->redirectToRoute('app_curso_index', [], Response::HTTP_SEE_OTHER);
             } else {
                 $errors = $form->getErrors(true);

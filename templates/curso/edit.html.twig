@@ -8,7 +8,24 @@
         <h1 class="mb-4 text-center">Editar Curso</h1>
         <div class="card shadow-sm">
             <div class="card-body">
-                {{ include('curso/_form.html.twig', {'button_label': 'Guardar'}) }}
+                {{ form_start(form) }}
+                    {{ form_widget(form) }}
+                    
+                    {% if mostrar_confirmacion is defined and mostrar_confirmacion %}
+                        <div class="alert alert-warning">
+                            <p><strong>Atención:</strong> Este curso ya ha comenzado y tiene registros de asistencia para el profesor actual.</p>
+                            <p>Si cambia el profesor, todas las asistencias registradas serán transferidas al nuevo profesor.</p>
+                            <div class="form-check mt-3">
+                                <input type="checkbox" class="form-check-input" id="confirmar_cambio_profesor" name="confirmar_cambio_profesor" value="1" required>
+                                <label class="form-check-label" for="confirmar_cambio_profesor">
+                                    Confirmo que deseo transferir todas las asistencias al nuevo profesor
+                                </label>
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    <button class="btn btn-primary">{{ button_label|default('Guardar') }}</button>
+                {{ form_end(form) }}
             </div>
         </div>
         <div class="mt-3 text-center">

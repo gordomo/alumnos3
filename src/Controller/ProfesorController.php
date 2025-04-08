@@ -287,17 +287,40 @@ class ProfesorController extends AbstractController
     /**
      * @Route("/{id}/edit", name="app_profesor_edit", methods={"GET", "POST"})
      */
-    public function edit(Request $request, Profesor $profesor, ProfesorRepository $profesorRepository, CursoRepository $cursoRepository): Response
+    public function edit(Request $request, Profesor $profesor, ProfesorRepository $profesorRepository, CursoRepository $cursoRepository, EntityManagerInterface $entityManager): Response
     {
+        // Obtener el instituto del usuario actual
         $instituto = $this->getUser()->getInstituto();
+        if ($profesor->getInstituto() !== $instituto) {
+            $this->addFlash('danger', 'El profesor no pertenece al instituto del usuario.');
+            return $this->redirectToRoute('app_profesor_index');
+        }
         
-        // Guardar los cursos actuales antes de modificar el profesor
+        // Guardar cursos originales para comparar cambios
+        $cursosOriginalesIds = [];
         $cursosOriginales = clone $profesor->getCursos();
+        foreach ($profesor->getCursos() as $curso) {
+            $cursosOriginalesIds[] = $curso->getId();
+        }
         
-        $form = $this->createForm(ProfesorType::class, $profesor, ['is_edit' => true, 'instituto' => $instituto, 'cursos' => $cursosOriginales]);
+        $form = $this->createForm(ProfesorType::class, $profesor, [
+            'is_edit' => true, 
+            'instituto' => $instituto, 
+            'cursos' => $cursosOriginales
+        ]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            // Verificar si se cambiaron los cursos
+            $cursosNuevosIds = [];
+            foreach ($profesor->getCursos() as $curso) {
+                $cursosNuevosIds[] = $curso->getId();
+            }
+            
+            // Verificar si hay cambios en los cursos
+            $cursosCambiados = count(array_diff($cursosOriginalesIds, $cursosNuevosIds)) > 0 || 
+                              count(array_diff($cursosNuevosIds, $cursosOriginalesIds)) > 0;
+            
             // Verificar que los cursos seleccionados no tengan otro profesor asignado
             foreach($profesor->getCursos() as $curso) {
                 foreach ($curso->getProfesores() as $profe) {
@@ -310,7 +333,54 @@ class ProfesorController extends AbstractController
                     }
                 }
             }
-
+            
+            // Verificar si hay cursos que ya comenzaron y tienen asistencias
+            $cursosComenzados = false;
+            $asistenciasExistentes = false;
+            
+            if ($cursosCambiados) {
+                // Verificar cursos eliminados que ya han comenzado
+                $cursosEliminados = array_diff($cursosOriginalesIds, $cursosNuevosIds);
+                if (count($cursosEliminados) > 0) {
+                    foreach ($cursosEliminados as $cursoId) {
+                        $curso = $cursoRepository->find($cursoId);
+                        if ($curso && $curso->getFechaInicio() <= new \DateTime()) {
+                            $cursosComenzados = true;
+                            
+                            // Verificar si hay asistencias registradas para este profesor en este curso
+                            $asistenciaProfesoresRepository = $entityManager->getRepository('App\Entity\AsistenciaProfesor');
+                            $asistencias = $asistenciaProfesoresRepository->findBy([
+                                'curso' => $curso,
+                                'profesor' => $profesor
+                            ]);
+                            
+                            if (count($asistencias) > 0) {
+                                $asistenciasExistentes = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            if ($cursosCambiados && $cursosComenzados && $asistenciasExistentes) {
+                // Si hay asistencias y no se confirmó la acción, mostrar advertencia
+                if (!$request->request->get('confirmar_cambio_cursos')) {
+                    $this->addFlash('warning', 'Algunos cursos ya han comenzado y tienen registros de asistencia para este profesor. 
+                    Si cambia los cursos asignados, se modificarán los registros de asistencia.
+                    Si desea continuar, confirme la acción.');
+                    
+                    return $this->renderForm('profesor/edit.html.twig', [
+                        'profesor' => $profesor,
+                        'form' => $form,
+                        'mostrar_confirmacion' => true,
+                    ]);
+                } else {
+                    // El usuario confirmó la acción, proceder a guardar los cambios
+                    $this->addFlash('success', 'Los cambios en los cursos han sido aplicados. Los registros de asistencia se han mantenido en el sistema.');
+                }
+            }
+            
             // Primero, remover al profesor de los cursos que ya no están asignados
             foreach($cursosOriginales as $curso) {
                 if (!$profesor->getCursos()->contains($curso)) {
@@ -326,7 +396,7 @@ class ProfesorController extends AbstractController
                     $cursoRepository->add($curso, true);
                 }
             }
-
+            
             // Finalmente, guardar el profesor
             $profesorRepository->add($profesor, true);
 

@@ -27,4 +27,18 @@
         <button class="btn btn-success">{{ button_label|default('Guardar') }}</button>
     </div>
 </div>
+
+{% if mostrar_confirmacion is defined and mostrar_confirmacion %}
+    <div class="alert alert-warning mt-3">
+        <p><strong>Atención:</strong> Algunos cursos ya han comenzado y tienen registros de asistencia para este profesor.</p>
+        <p>Si cambia los cursos asignados, podría afectar los registros de asistencia existentes.</p>
+        <div class="form-check mt-3">
+            <input type="checkbox" class="form-check-input" id="confirmar_cambio_cursos" name="confirmar_cambio_cursos" value="1" required>
+            <label class="form-check-label" for="confirmar_cambio_cursos">
+                Confirmo que deseo continuar con los cambios en los cursos asignados
+            </label>
+        </div>
+    </div>
+{% endif %}
+
 {{ form_end(form) }}
