@@ -31,7 +31,7 @@
                     <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button" role="tab" aria-controls="home" aria-selected="true">Activos</button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="false">Desabilitados</button>
+                    <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="false">Deshabilitados</button>
                 </li>
             </ul>
         </div>
@@ -146,11 +146,11 @@
                     <th>Fecha de Inicio</th>
                     <th>Fecha de Fin</th>
                     <th>Acciones</th>
-                    <th>Total: {{ totalCursosDesabilitados }}</th>
+                    <th>Total: {{ totalCursosDeshabilitados }}</th>
                 </tr>
                 </thead>
                 <tbody>
-                {% for curso in cursosDesabilitados %}
+                {% for curso in cursosDeshabilitados %}
                     <tr>
                         <td>{{ curso.nombre }}</td>
                         <td>

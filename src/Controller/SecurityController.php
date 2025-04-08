@@ -6,9 +6,40 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
+use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 class SecurityController extends AbstractController
 {
+    private $urlGenerator;
+    public function __construct(UrlGeneratorInterface $urlGenerator)
+    {
+        $this->urlGenerator = $urlGenerator;
+    }
+
+    /**
+     * @Route("/", name="app_start")
+     */
+    public function start(): Response
+    {
+        $user = $this->getUser();
+        if ($user) {
+            // Redirigir según el rol
+            if (in_array('ROLE_ADMIN', $user->getRoles())) {
+                return new RedirectResponse($this->urlGenerator->generate('admin_instituto_index'));
+            }
+            
+            if (in_array('ROLE_ADMIN_INSTITUTO', $user->getRoles())) {
+                return new RedirectResponse($this->urlGenerator->generate('dashboard_index'));
+            }
+            
+            if (in_array('ROLE_PROFESOR', $user->getRoles())) {
+                return new RedirectResponse($this->urlGenerator->generate('app_profesor_dashboard'));
+            }
+        }
+        return new RedirectResponse($this->urlGenerator->generate('app_login'));
+    }
+
     /**
      * @Route("/login", name="app_login")
      */

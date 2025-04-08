@@ -40,15 +40,15 @@ class CursoController extends AbstractController
 
         // Obtener cursos activos y deshabilitados
         $cursos = $this->createQuery($cursoRepository, $instituto, $sort, $order, false, $busqueda);
-        $cursosDesabilitados = $this->createQuery($cursoRepository, $instituto, $sort, $order, true, $busqueda);
+        $cursosDeshabilitados = $this->createQuery($cursoRepository, $instituto, $sort, $order, true, $busqueda);
 
         return $this->render('curso/index.html.twig', [
             'cursos' => $cursos,
             'order' => $order,
             'sort' => $sort,
             'totalCursos' => count($cursos),
-            'cursosDesabilitados' => $cursosDesabilitados,
-            'totalCursosDesabilitados' => count($cursosDesabilitados),
+            'cursosDeshabilitados' => $cursosDeshabilitados,
+            'totalcursosDeshabilitados' => count($cursosDeshabilitados),
             'busqueda' => $busqueda,
         ]);
     }

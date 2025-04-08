@@ -294,7 +294,7 @@ class ProfesorController extends AbstractController
         // Guardar los cursos actuales antes de modificar el profesor
         $cursosOriginales = clone $profesor->getCursos();
         
-        $form = $this->createForm(ProfesorType::class, $profesor, ['is_edit' => true, 'instituto' => $instituto]);
+        $form = $this->createForm(ProfesorType::class, $profesor, ['is_edit' => true, 'instituto' => $instituto, 'cursos' => $cursosOriginales]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {

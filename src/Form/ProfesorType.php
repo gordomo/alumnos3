@@ -19,6 +19,7 @@ class ProfesorType extends AbstractType
     {
         $isEdit = $options['is_edit'];
         $instituto = $options['instituto'];
+        $cursos = $options['cursos'];
         $builder
             ->add('nombre', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => !$isEdit, 'label_attr'=> ['class'=> 'form-label']])
             ->add('apellido', TextType::class, ['attr' => ['class' => 'form-control'], 'label_attr'=> ['class'=> 'form-label']])
@@ -29,12 +30,22 @@ class ProfesorType extends AbstractType
             ->add('viatico', NumberType::class, ['html5' => true,'attr' => ['class' => 'form-control'], 'required' => false, 'label_attr'=> ['class'=> 'form-label'],])
             ->add('cursos', EntityType::class, [
                 'class' => Curso::class,
-                'attr' => ['class' => 'form-control'],
+                'attr' => ['class' => 'form-control chosen-select'],
                 'label_attr'=> ['class'=> 'form-label'],
                 'choice_label' => 'nombre',
-                'query_builder' => function (EntityRepository $er) use ($instituto) {
-                    $curso = $er->createQueryBuilder('c')->where('c.instituto = :instituto')->andWhere('c.profesores IS EMPTY')->setParameter('instituto', $instituto);
-                    return $curso;
+                'query_builder' => function (EntityRepository $er) use ($instituto, $options) {
+                    $qb = $er->createQueryBuilder('c')
+                        ->where('c.instituto = :instituto')
+                        ->setParameter('instituto', $instituto);
+
+                    if ($options['is_edit'] && $options['data']) {
+                        $qb->andWhere('c.profesores IS EMPTY OR :profesor MEMBER OF c.profesores')
+                            ->setParameter('profesor', $options['data']);
+                    } else {
+                        $qb->andWhere('c.profesores IS EMPTY');
+                    }
+                    
+                    return $qb;
                 },
                 'multiple' => true,
                 'expanded' => false,
@@ -50,6 +61,7 @@ class ProfesorType extends AbstractType
             'data_class' => Profesor::class,
             'is_edit' => false,
             'instituto' => false,
+            'cursos' => [],
         ]);
     }
 }
