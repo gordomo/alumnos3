@@ -42,7 +42,7 @@ class AlumnosPagosType extends AbstractType
                 'class' => Alumno::class,
                 'choices' => $alumnos,
                 'choice_label' => function(Alumno $alumno) {
-                    return $alumno->getNombre() . ' ' . $alumno->getApellido();
+                    return  $alumno->getApellido() . ' ' . $alumno->getNombre();
                 },
                 'label' => 'Alumno',
                 'label_attr' => ['class' => 'form-label'],

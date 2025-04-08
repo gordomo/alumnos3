@@ -315,8 +315,10 @@ class AlumnosPagosController extends AbstractController
         }
 
         // Crear el formulario
+        $alumnos = $alumnoRepository->findBy(['instituto' => $this->getUser()->getInstituto()]);
+        
         $form = $this->createForm(AlumnosPagosType::class, $alumnosPago, [
-            'alumnos' => [$alumno],
+            'alumnos' => $alumnos,
             'cursos' => array_values($cursos),
             'vencimientos' => $vencimientos
         ]);
@@ -386,9 +388,20 @@ class AlumnosPagosController extends AbstractController
     /**
      * @Route("/{id}/edit", name="app_alumnos_pagos_edit", methods={"GET", "POST"})
      */
-    public function edit(Request $request, AlumnosPagos $pago, VencimientoRepository $vencimientoRepository, CursoRepository $cursoRepository): Response
+    public function edit(Request $request, AlumnosPagos $pago, VencimientoRepository $vencimientoRepository, CursoRepository $cursoRepository, AlumnoRepository $alumnoRepository): Response
     {
         $alumno = $pago->getAlumno();
+
+        $alumnoId = $request->query->get('id');
+        $cursoId = $request->query->get('curso');
+        if($alumnoId){
+            $alumno = $alumnoRepository->find($alumnoId);
+            $pago->setAlumno($alumno);
+        }
+        if($cursoId){
+            $curso = $cursoRepository->find($cursoId);
+            $pago->setCurso($curso);
+        }
         $instituto = $this->getUser()->getInstituto();
         
         // Obtener los cursos históricos del alumno
@@ -402,8 +415,9 @@ class AlumnosPagosController extends AbstractController
         $vencimientos = $instituto->getVencimientos();
 
         // Crear el formulario
+        $alumnos = $instituto->getAlumnos();
         $form = $this->createForm(AlumnosPagosType::class, $pago, [
-            'alumnos' => [$alumno],
+            'alumnos' => $alumnos,
             'cursos' => array_values($cursos),
             'vencimientos' => $vencimientos
         ]);
@@ -427,7 +441,9 @@ class AlumnosPagosController extends AbstractController
                     }
 
                     // Actualizar el pago en el historial
-                    $this->historialCursosService->actualizarPago($pago);
+                    //$this->historialCursosService->actualizarPago($pago);
+                    $this->entityManager->persist($pago);
+                    $this->entityManager->flush();
                     
                     $this->addFlash('success', 'Pago actualizado correctamente.');
                     return $this->redirectToRoute('app_alumnos_pagos_index', ['alumno' => $alumno->getId()]);
@@ -446,6 +462,7 @@ class AlumnosPagosController extends AbstractController
             'alumno' => $alumno,
             'cursos' => array_values($cursos),
             'curso' => $pago->getCurso(),
+            'pagoId' => $pago->getId(),
             'vencimientos' => $vencimientos,
             'is_general' => false
         ]);

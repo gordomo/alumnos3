@@ -118,13 +118,16 @@
                     <td>{{ pago.metodoPago }}</td>
                     <td>{{ pago.mes }}</td>
                     <td>{{ pago.ano }}</td>
-                    <td>
-                        <a href="{{ path('app_alumnos_pagos_show', {'id': pago.id}) }}" target="_blank" class="btn btn-sm btn-outline-primary" title="Imprimir" data-toggle="tooltip" data-placement="left">
+                    <td style="display: flex; gap: 5px;">
+                        <a href="{{ path('app_alumnos_pagos_show', {'id': pago.id}) }}" target="_blank" style="min-width: auto;width: 45px;" class="btn btn-sm btn-outline-primary" title="Imprimir" data-toggle="tooltip" data-placement="left">
                             <i class="bi bi-printer"></i>
                         </a>
-                        <a href="{{ path('app_alumnos_pagos_edit', {'id': pago.id}) }}" class="btn btn-sm btn-outline-secondary" title="Editar" data-toggle="tooltip" data-placement="top">
+                        <a href="{{ path('app_alumnos_pagos_edit', {'id': pago.id}) }}" style="min-width: auto;width: 45px;" class="btn btn-sm btn-outline-secondary" title="Editar" data-toggle="tooltip" data-placement="top">
                                 <i class="bi bi-pencil"></i>
-                            </a>
+                        </a>
+                        {{ include('alumnos_pagos/_delete_form.html.twig', {
+                            'pagoId': pago.id
+                        }) }}
                     </td>
                 </tr>
             {% else %}
