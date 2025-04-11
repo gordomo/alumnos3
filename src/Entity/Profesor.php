@@ -35,7 +35,7 @@ class Profesor
     private $dni;
 
     /**
-     * @ORM\Column(type="text", unique=true)
+      * @ORM\Column(type="string", length=191, unique=true)
      */
     private $email;
 
