@@ -1,0 +1,95 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Registrar Pago por Deuda{% endblock %}
+
+{% block body %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <h6>Registrar Pago por Deuda</h6>
+                </div>
+                <div class="card-body px-4 pt-0 pb-2">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Información de la Deuda</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table">
+                                            <tbody>
+                                                <tr>
+                                                    <th>Alumno:</th>
+                                                    <td>{{ deuda.alumno.nombre }} {{ deuda.alumno.apellido }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Curso:</th>
+                                                    <td>{{ deuda.curso.nombre }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Período:</th>
+                                                    <td>{{ deuda.periodo }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Monto Base:</th>
+                                                    <td>${{ deuda.monto|number_format(2, '.', ',') }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Interés:</th>
+                                                    <td>${{ deuda.interes|number_format(2, '.', ',') }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <th>Monto Total:</th>
+                                                    <td class="fw-bold">${{ montoTotal|number_format(2, '.', ',') }}</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Formulario de Pago</h6>
+                                </div>
+                                <div class="card-body">
+                                    <form method="post">
+                                        <div class="mb-3">
+                                            <label for="monto" class="form-label">Monto a Pagar</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">$</span>
+                                                <input type="number" id="monto" name="monto" class="form-control" step="0.01" min="0.01" required value="{{ montoTotal }}">
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="metodoPago" class="form-label">Método de Pago</label>
+                                            <select id="metodoPago" name="metodoPago" class="form-select" required>
+                                                <option value="">Seleccionar método...</option>
+                                                {% for metodo in metodosPago %}
+                                                    <option value="{{ metodo }}">{{ metodo }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="observacion" class="form-label">Observaciones</label>
+                                            <textarea id="observacion" name="observacion" class="form-control" rows="3"></textarea>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <a href="{{ path('app_alumnos_pagos_index', {'alumno': deuda.alumno.id}) }}" class="btn btn-secondary">Cancelar</a>
+                                            <button type="submit" class="btn btn-primary">Registrar Pago</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

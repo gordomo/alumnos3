@@ -34,12 +34,12 @@ class AlumnoCursoHistorico
     /**
      * @ORM\Column(type="date")
      */
-    private $fechaInicio;
+    private $fechaAlta;
 
     /**
      * @ORM\Column(type="date", nullable=true)
      */
-    private $fechaFin;
+    private $fechaBaja;
 
     /**
      * @ORM\Column(type="boolean")
@@ -83,25 +83,25 @@ class AlumnoCursoHistorico
         return $this;
     }
 
-    public function getFechaInicio(): ?\DateTimeInterface
+    public function getFechaAlta(): ?\DateTimeInterface
     {
-        return $this->fechaInicio;
+        return $this->fechaAlta;
     }
 
-    public function setFechaInicio(\DateTimeInterface $fechaInicio): self
+    public function setFechaAlta(\DateTimeInterface $fechaAlta): self
     {
-        $this->fechaInicio = $fechaInicio;
+        $this->fechaAlta = $fechaAlta;
         return $this;
     }
 
-    public function getFechaFin(): ?\DateTimeInterface
+    public function getFechaBaja(): ?\DateTimeInterface
     {
-        return $this->fechaFin;
+        return $this->fechaBaja;
     }
 
-    public function setFechaFin(?\DateTimeInterface $fechaFin): self
+    public function setFechaBaja(?\DateTimeInterface $fechaBaja): self
     {
-        $this->fechaFin = $fechaFin;
+        $this->fechaBaja = $fechaBaja;
         return $this;
     }
 
@@ -141,5 +141,21 @@ class AlumnoCursoHistorico
             }
         }
         return $this;
+    }
+
+    /**
+     * Obtiene la fecha de inicio del período académico (usa la fecha del curso)
+     */
+    public function getFechaInicioPeriodo(): ?\DateTimeInterface
+    {
+        return $this->curso->getFechaInicio();
+    }
+
+    /**
+     * Obtiene la fecha de fin del período académico (usa la fecha del curso)
+     */
+    public function getFechaFinPeriodo(): ?\DateTimeInterface
+    {
+        return $this->curso->getFechaFin();
     }
 } 

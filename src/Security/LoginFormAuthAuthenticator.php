@@ -16,10 +16,13 @@ use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Symfony\Component\Security\Http\Authenticator\AbstractLoginFormAuthenticator;
 use Symfony\Component\Security\Http\Authenticator\Passport\Badge\CsrfTokenBadge;
+use Symfony\Component\Security\Http\Authenticator\Passport\Badge\RememberMeBadge;
 use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
 use Symfony\Component\Security\Http\Authenticator\Passport\Credentials\PasswordCredentials;
 use Symfony\Component\Security\Http\Authenticator\Passport\Passport;
 use Symfony\Component\Security\Http\Util\TargetPathTrait;
+use Symfony\Component\Security\Http\EntryPoint\AuthenticationEntryPointInterface;
+use Symfony\Component\Security\Core\Exception\AuthenticationException;
 
 class LoginFormAuthAuthenticator extends AbstractLoginFormAuthenticator
 {
@@ -60,6 +63,7 @@ class LoginFormAuthAuthenticator extends AbstractLoginFormAuthenticator
             new PasswordCredentials($request->request->get('password', '')),
             [
                 new CsrfTokenBadge('authenticate', $request->request->get('_csrf_token')),
+                new RememberMeBadge(),
             ]
         );
     }
@@ -67,6 +71,11 @@ class LoginFormAuthAuthenticator extends AbstractLoginFormAuthenticator
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
     {
         $user = $token->getUser();
+        
+        // Si hay un target path en la sesión, redirigir allí
+        if ($targetPath = $this->getTargetPath($request->getSession(), $firewallName)) {
+            return new RedirectResponse($targetPath);
+        }
         
         // Redirigir según el rol
         if (in_array('ROLE_ADMIN', $user->getRoles())) {
@@ -83,6 +92,32 @@ class LoginFormAuthAuthenticator extends AbstractLoginFormAuthenticator
 
         // Si no tiene ningún rol específico, redirigir a la página principal
         return new RedirectResponse($this->urlGenerator->generate('app_instituto_index'));
+    }
+
+    /**
+     * Override to control what happens when the user hits a secure page
+     * but isn't logged in yet.
+     */
+    public function start(Request $request, AuthenticationException $authException = null): Response
+    {
+        // add a custom flash message and redirect to the login page
+        $request->getSession()->getFlashBag()->add('note', 'Debe iniciar sesión para acceder a esta página.');
+
+        return new RedirectResponse($this->urlGenerator->generate('app_login'));
+    }
+
+    /**
+     * Override to control what happens when authentication fails.
+     */
+    public function onAuthenticationFailure(Request $request, AuthenticationException $exception): Response
+    {
+        if ($request->hasSession()) {
+            $request->getSession()->set(Security::AUTHENTICATION_ERROR, $exception);
+        }
+
+        $url = $this->getLoginUrl($request);
+
+        return new RedirectResponse($url);
     }
 
     public function checkCredentials($credentials, PasswordAuthenticatedUserInterface $user){

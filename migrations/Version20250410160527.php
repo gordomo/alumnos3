@@ -1,0 +1,31 @@
+<?php
+
+declare(strict_types=1);
+
+namespace DoctrineMigrations;
+
+use Doctrine\DBAL\Schema\Schema;
+use Doctrine\Migrations\AbstractMigration;
+
+/**
+ * Auto-generated Migration: Please modify to your needs!
+ */
+final class Version20250410160527 extends AbstractMigration
+{
+    public function getDescription(): string
+    {
+        return 'Añade índice único a email en Profesor';
+    }
+
+    public function up(Schema $schema): void
+    {
+        // this up() migration is auto-generated, please modify it to your needs
+        $this->addSql('CREATE UNIQUE INDEX UNIQ_5B7406D9E7927C74 ON profesor (email(255))');
+    }
+
+    public function down(Schema $schema): void
+    {
+        // this down() migration is auto-generated, please modify it to your needs
+        $this->addSql('DROP INDEX UNIQ_5B7406D9E7927C74 ON profesor');
+    }
+}

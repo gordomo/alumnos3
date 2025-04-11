@@ -1,0 +1,296 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Informe de Asistencias{% endblock %}
+
+{% block body %}
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1>Informe de Asistencias</h1>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <form method="get" action="{{ path('app_instituto_asistencias_informe') }}" class="row g-3">
+                <div class="col-md-3">
+                    <label for="fecha" class="form-label">Fecha</label>
+                    <input type="date" class="form-control" id="fecha" name="fecha" value="{{ fecha }}" max="{{ "now"|date("Y-m-d") }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="curso" class="form-label">Curso</label>
+                    <select class="form-select chosen-select" id="curso" name="curso">
+                        <option value="">Seleccione un curso</option>
+                        {% for cursoOption in cursos %}
+                            <option value="{{ cursoOption.id }}" {% if curso and curso.id == cursoOption.id %}selected{% endif %}>
+                                {{ cursoOption.nombre }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="tipo" class="form-label">Tipo de Informe</label>
+                    <select class="form-select" id="tipo" name="tipo">
+                        <option value="dia" {% if tipoInforme == 'dia' %}selected{% endif %}>Diario</option>
+                        <option value="semana" {% if tipoInforme == 'semana' %}selected{% endif %}>Semanal</option>
+                        <option value="mes" {% if tipoInforme == 'mes' %}selected{% endif %}>Mensual</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary">Generar Informe</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% if curso %}
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            Informe de Asistencias - {{ curso.nombre }}
+                            {% if tipoInforme == 'dia' %}
+                                - {{ fecha|date('d/m/Y') }}
+                            {% elseif tipoInforme == 'semana' %}
+                                - Semana del {{ fechaInicio|date('d/m/Y') }} al {{ fechaFin|date('d/m/Y') }}
+                            {% elseif tipoInforme == 'mes' %}
+                                - {{ fechaInicio|date('F Y')|capitalize }}
+                            {% endif %}
+                        </h5>
+                        <div>
+                            <a href="{{ path('app_instituto_asistencias_exportar', {'formato': 'pdf', 'curso': curso.id, 'tipo': tipoInforme, 'fecha': fecha}) }}" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-file-pdf"></i> PDF
+                            </a>
+                            <a href="{{ path('app_instituto_asistencias_exportar', {'formato': 'excel', 'curso': curso.id, 'tipo': tipoInforme, 'fecha': fecha}) }}" class="btn btn-sm btn-outline-success">
+                                <i class="bi bi-file-excel"></i> Excel
+                            </a>
+                            <a href="{{ path('app_instituto_asistencias_exportar', {'formato': 'csv', 'curso': curso.id, 'tipo': tipoInforme, 'fecha': fecha}) }}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-file-text"></i> CSV
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            {% if tipoInforme == 'dia' %}
+                                {# Informe diario - similar a la vista normal #}
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Alumno</th>
+                                            <th>Estado</th>
+                                            <th>Observaciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% if informeAsistencias|length > 0 %}
+                                            {% for asistencia in informeAsistencias %}
+                                                <tr>
+                                                    <td>{{ asistencia.alumno.nombre }} {{ asistencia.alumno.apellido }}</td>
+                                                    <td>
+                                                        {% if asistencia.presente is not null %}
+                                                            {% if asistencia.presente %}
+                                                                <span class="badge bg-success">Presente</span>
+                                                            {% else %}
+                                                                <span class="badge bg-danger">Ausente</span>
+                                                            {% endif %}
+                                                        {% else %}
+                                                            <span class="badge bg-secondary">Sin registro</span>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>{{ asistencia.observaciones }}</td>
+                                                </tr>
+                                            {% endfor %}
+                                        {% else %}
+                                            <tr>
+                                                <td colspan="3" class="text-center">No hay registros para mostrar</td>
+                                            </tr>
+                                        {% endif %}
+                                    </tbody>
+                                </table>
+                            {% else %}
+                                {# Informes semanales y mensuales - tabla con todas las fechas #}
+                                <table class="table table-bordered table-striped table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Alumno</th>
+                                            {% for fecha in informeAsistencias.fechas %}
+                                                <th class="text-center">{{ fecha|date('d/m') }}</th>
+                                            {% endfor %}
+                                            <th class="text-center">Asistencia</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% if informeAsistencias.alumnos|length > 0 %}
+                                            {% for alumnoData in informeAsistencias.alumnos %}
+                                                <tr>
+                                                    <td>{{ alumnoData.alumno.nombre }} {{ alumnoData.alumno.apellido }}</td>
+                                                    {% set asistenciaCount = 0 %}
+                                                    {% set totalDias = informeAsistencias.fechas|length %}
+                                                    
+                                                    {% for fecha in informeAsistencias.fechas %}
+                                                        <td class="text-center">
+                                                            {% set asistenciaInfo = alumnoData.fechas[fecha] %}
+                                                            {% if asistenciaInfo.presente is not null %}
+                                                                {% if asistenciaInfo.presente %}
+                                                                    <span class="badge bg-success" title="{{ asistenciaInfo.observaciones }}">P</span>
+                                                                    {% set asistenciaCount = asistenciaCount + 1 %}
+                                                                {% else %}
+                                                                    <span class="badge bg-danger" title="{{ asistenciaInfo.observaciones }}">A</span>
+                                                                {% endif %}
+                                                            {% else %}
+                                                                <span class="badge bg-secondary">-</span>
+                                                            {% endif %}
+                                                        </td>
+                                                    {% endfor %}
+                                                    
+                                                    <td class="text-center">
+                                                        {% if totalDias > 0 %}
+                                                            {% set porcentaje = (asistenciaCount / totalDias) * 100 %}
+                                                            <div class="progress" style="height: 20px;">
+                                                                <div class="progress-bar bg-success" role="progressbar" 
+                                                                     style="width: {{ porcentaje }}%;" 
+                                                                     aria-valuenow="{{ porcentaje }}" 
+                                                                     aria-valuemin="0" 
+                                                                     aria-valuemax="100">
+                                                                    {{ porcentaje|round }}%
+                                                                </div>
+                                                            </div>
+                                                        {% else %}
+                                                            <span class="badge bg-secondary">Sin datos</span>
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        {% else %}
+                                            <tr>
+                                                <td colspan="{{ informeAsistencias.fechas|length + 2 }}" class="text-center">
+                                                    No hay alumnos registrados en este curso
+                                                </td>
+                                            </tr>
+                                        {% endif %}
+                                    </tbody>
+                                </table>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        {% if tipoInforme != 'dia' and informeAsistencias.alumnos|length > 0 %}
+            {# Gráfico para el resumen de asistencias (semanal y mensual) #}
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Resumen de Asistencias</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="asistenciasChart" width="400" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    {% else %}
+        <div class="row">
+            <div class="col-md-12">
+                <div class="alert alert-info">
+                    Seleccione un curso y un tipo de informe para ver las estadísticas de asistencia.
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    {% if curso and tipoInforme != 'dia' and informeAsistencias.alumnos|length > 0 %}
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Preparar datos para el gráfico
+                const fechas = [{% for fecha in informeAsistencias.fechas %}'{{ fecha|date('d/m') }}'{% if not loop.last %}, {% endif %}{% endfor %}];
+                const datasets = [
+                    {
+                        label: 'Presentes',
+                        backgroundColor: 'rgba(40, 167, 69, 0.6)',
+                        borderColor: 'rgba(40, 167, 69, 1)',
+                        borderWidth: 1,
+                        data: [
+                            {% for fecha in informeAsistencias.fechas %}
+                                {% set presentes = 0 %}
+                                {% for alumnoData in informeAsistencias.alumnos %}
+                                    {% if alumnoData.fechas[fecha].presente %}
+                                        {% set presentes = presentes + 1 %}
+                                    {% endif %}
+                                {% endfor %}
+                                {{ presentes }}{% if not loop.last %}, {% endif %}
+                            {% endfor %}
+                        ]
+                    },
+                    {
+                        label: 'Ausentes',
+                        backgroundColor: 'rgba(220, 53, 69, 0.6)',
+                        borderColor: 'rgba(220, 53, 69, 1)',
+                        borderWidth: 1,
+                        data: [
+                            {% for fecha in informeAsistencias.fechas %}
+                                {% set ausentes = 0 %}
+                                {% for alumnoData in informeAsistencias.alumnos %}
+                                    {% if alumnoData.fechas[fecha].presente is same as(false) %}
+                                        {% set ausentes = ausentes + 1 %}
+                                    {% endif %}
+                                {% endfor %}
+                                {{ ausentes }}{% if not loop.last %}, {% endif %}
+                            {% endfor %}
+                        ]
+                    }
+                ];
+
+                // Crear el gráfico
+                const ctx = document.getElementById('asistenciasChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: fechas,
+                        datasets: datasets
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Cantidad de Alumnos'
+                                },
+                                ticks: {
+                                    stepSize: 1
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Fecha'
+                                }
+                            }
+                        },
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Asistencias por Día'
+                            },
+                            legend: {
+                                position: 'top'
+                            }
+                        }
+                    }
+                });
+            });
+        </script>
+    {% endif %}
+{% endblock %} 

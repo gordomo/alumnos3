@@ -155,12 +155,30 @@ class Alumno
      */
     private $asistencias;
 
+    /**
+     * @ORM\OneToMany(targetEntity=DeudaAlumno::class, mappedBy="alumno", orphanRemoval=true)
+     */
+    private $deudas;
+
+    /**
+     * Variable para cachear el resultado de debeMes
+     * @var array
+     */
+    private $cacheDebeMes = [];
+
+    /**
+     * Variable estática para cachear los días de vencimiento por instituto
+     * @var array
+     */
+    private static $cacheDiasVencimiento = [];
+
     public function __construct()
     {
         $this->curso = new ArrayCollection();
         $this->pagos = new ArrayCollection();
         $this->cursosHistoricos = new ArrayCollection();
         $this->asistencias = new ArrayCollection();
+        $this->deudas = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -484,6 +502,8 @@ class Alumno
         if (!$this->pagos->contains($pago)) {
             $this->pagos[] = $pago;
             $pago->setAlumno($this);
+            // Limpiar caché de debeMes al añadir un pago
+            $this->limpiarCacheDebeMes();
         }
 
         return $this;
@@ -496,43 +516,64 @@ class Alumno
             if ($pago->getAlumno() === $this) {
                 $pago->setAlumno(null);
             }
+            // Limpiar caché de debeMes al eliminar un pago
+            $this->limpiarCacheDebeMes();
         }
 
         return $this;
     }
 
     /**
-     * Verifica si el alumno debe el mes actual
+     * Verifica si el alumno tiene deudas pendientes hasta la fecha especificada
+     * Método optimizado que utiliza la entidad DeudaAlumno
      */
-    public function debeMes(int $mes, int $ano, int $dia): bool
+    public function tieneDeudas(int $mes = null, int $ano = null): bool
     {
-        // Si el alumno no tiene cursos, no debe
-        if ($this->curso->isEmpty()) {
+        if (!$this->activo) {
             return false;
         }
 
-        // Obtener el historial de cursos activo para el mes actual
-        $historicoActivo = null;
-        foreach ($this->cursosHistoricos as $historico) {
-            $fechaInicio = $historico->getFechaInicio();
-            $fechaFin = $historico->getFechaFin();
-            
-            // Verificar si el mes actual está dentro del período del curso
-            if ($fechaInicio->format('Y-m') <= "$ano-$mes" && 
-                ($fechaFin === null || $fechaFin->format('Y-m') >= "$ano-$mes")) {
-                $historicoActivo = $historico;
-                break;
+        // Si no se especifican mes y año, usar la fecha actual
+        if ($mes === null || $ano === null) {
+            $fecha = new \DateTime();
+            $mes = (int)$fecha->format('n');
+            $ano = (int)$fecha->format('Y');
+        }
+
+        // Filtrar deudas no pagadas hasta la fecha especificada
+        foreach ($this->deudas as $deuda) {
+            if (!$deuda->isPagado()) {
+                // Comprobar si la deuda es anterior o igual a la fecha especificada
+                if ($deuda->getAno() < $ano || 
+                    ($deuda->getAno() == $ano && $deuda->getMes() <= $mes)) {
+                    return true;
+                }
             }
         }
 
-        // Si no hay historial activo para el mes actual, debe
-        if (!$historicoActivo) {
-            return true;
-        }
+        return false;
+    }
 
-        // Verificar si el mes está en los meses pagados
-        $mesActual = "$ano-$mes";
-        return !in_array($mesActual, $historicoActivo->getMesesPagados());
+    /**
+     * Verifica si el alumno debe algún mes hasta la fecha de consulta
+     * Para cada curso histórico, debe haber un pago correspondiente por cada mes
+     * entre la fecha de inicio y la fecha de fin (o la fecha de consulta, lo que ocurra primero)
+     * 
+     * @deprecated Use tieneDeudas() instead
+     */
+    public function debeMes(int $mes, int $ano, int $dia): bool
+    {
+        // Redirigir al nuevo método para mantener compatibilidad
+        return $this->tieneDeudas($mes, $ano);
+    }
+
+    /**
+     * Limpia la caché de verificación de deuda
+     * Llamar a este método después de añadir pagos o modificar cursos
+     */
+    public function limpiarCacheDebeMes(): void
+    {
+        $this->cacheDebeMes = [];
     }
 
     /**
@@ -595,6 +636,8 @@ class Alumno
         if (!$this->cursosHistoricos->contains($cursoHistorico)) {
             $this->cursosHistoricos[] = $cursoHistorico;
             $cursoHistorico->setAlumno($this);
+            // Limpiar caché de debeMes al añadir un curso histórico
+            $this->limpiarCacheDebeMes();
         }
         return $this;
     }
@@ -605,6 +648,8 @@ class Alumno
             if ($cursoHistorico->getAlumno() === $this) {
                 $cursoHistorico->setAlumno(null);
             }
+            // Limpiar caché de debeMes al eliminar un curso histórico  
+            $this->limpiarCacheDebeMes();
         }
         return $this;
     }
@@ -637,5 +682,154 @@ class Alumno
         }
 
         return $this;
+    }
+
+    /**
+     * @return Collection<int, DeudaAlumno>
+     */
+    public function getDeudas(): Collection
+    {
+        return $this->deudas;
+    }
+
+    public function addDeuda(DeudaAlumno $deuda): self
+    {
+        if (!$this->deudas->contains($deuda)) {
+            $this->deudas[] = $deuda;
+            $deuda->setAlumno($this);
+        }
+
+        return $this;
+    }
+
+    public function removeDeuda(DeudaAlumno $deuda): self
+    {
+        if ($this->deudas->removeElement($deuda)) {
+            // set the owning side to null (unless already changed)
+            if ($deuda->getAlumno() === $this) {
+                $deuda->setAlumno(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * Verifica si el alumno tiene deudas vencidas según los vencimientos del instituto
+     * Una deuda se considera vencida cuando la fecha actual supera la fecha de vencimiento del mes
+     */
+    public function tieneDeudasVencidas(): bool
+    {
+        if (!$this->activo) {
+            return false;
+        }
+
+        // Obtener la fecha actual
+        $fechaActual = new \DateTime();
+        $diaActual = (int)$fechaActual->format('d');
+        $mesActual = (int)$fechaActual->format('n');
+        $anoActual = (int)$fechaActual->format('Y');
+
+        // Obtener el día de vencimiento cacheado por instituto
+        $institutoId = $this->instituto->getId();
+        $primerDiaVencimiento = $this->getPrimerDiaVencimiento($institutoId);
+
+        // Verificar deudas de meses anteriores (siempre están vencidas)
+        for ($m = 1; $m < $mesActual; $m++) {
+            if ($this->tieneDeudas($m, $anoActual)) {
+                return true;
+            }
+        }
+        
+        // Verificar deudas de años anteriores (siempre están vencidas)
+        for ($a = $anoActual - 1; $a >= $anoActual - 2; $a--) {
+            for ($m = 1; $m <= 12; $m++) {
+                if ($this->tieneDeudas($m, $a)) {
+                    return true;
+                }
+            }
+        }
+        
+        // Verificar si la deuda del mes actual está vencida
+        if ($diaActual >= $primerDiaVencimiento && $this->tieneDeudas($mesActual, $anoActual)) {
+            return true;
+        }
+        
+        return false;
+    }
+
+    /**
+     * Obtiene el primer día de vencimiento configurado para el instituto
+     * Utiliza caché estática para evitar consultas repetidas
+     */
+    private function getPrimerDiaVencimiento(int $institutoId): int
+    {
+        // Si ya tenemos el valor en caché, lo devolvemos
+        if (isset(self::$cacheDiasVencimiento[$institutoId])) {
+            return self::$cacheDiasVencimiento[$institutoId];
+        }
+
+        // Obtener vencimientos ordenados del instituto
+        $vencimientos = $this->instituto->getVencimientos()->toArray();
+        
+        // Si no hay vencimientos configurados, usar día 5 como referencia por defecto
+        if (empty($vencimientos)) {
+            $diaVencimiento = 5; // Día predeterminado de vencimiento
+        } else {
+            // Ordenar vencimientos por orden
+            usort($vencimientos, function($a, $b) {
+                return $a->getOrden() <=> $b->getOrden();
+            });
+            
+            // Obtener el primer vencimiento (el que tiene el menor día del mes)
+            $primerVencimiento = reset($vencimientos);
+            $diaVencimiento = $primerVencimiento->getDiaVencimiento();
+        }
+        
+        // Almacenar en caché para futuras consultas
+        self::$cacheDiasVencimiento[$institutoId] = $diaVencimiento;
+        
+        return $diaVencimiento;
+    }
+
+    /**
+     * Obtiene las deudas vencidas y la del mes actual si corresponde
+     * @return array Array de deudas que deben mostrarse para pago
+     */
+    public function getDeudasParaPago(): array
+    {
+        if (!$this->activo) {
+            return [];
+        }
+
+        $deudasParaMostrar = [];
+        $fechaActual = new \DateTime();
+        $mesActual = (int)$fechaActual->format('n');
+        $anoActual = (int)$fechaActual->format('Y');
+        $diaActual = (int)$fechaActual->format('d');
+        
+        // Obtener el día de vencimiento cacheado
+        $institutoId = $this->instituto->getId();
+        $primerDiaVencimiento = $this->getPrimerDiaVencimiento($institutoId);
+        
+        // Filtrar deudas que deben mostrarse
+        foreach ($this->deudas as $deuda) {
+            if (!$deuda->isPagado()) {
+                $mesDeuda = $deuda->getMes();
+                $anoDeuda = $deuda->getAno();
+                
+                // Incluir deudas de meses pasados (siempre vencidas)
+                if ($anoDeuda < $anoActual || ($anoDeuda == $anoActual && $mesDeuda < $mesActual)) {
+                    $deudasParaMostrar[] = $deuda;
+                }
+                // Incluir deuda del mes actual solo si ya venció
+                elseif ($anoDeuda == $anoActual && $mesDeuda == $mesActual && $diaActual > $primerDiaVencimiento) {
+                    $deudasParaMostrar[] = $deuda;
+                }
+                // No incluir deudas de meses futuros
+            }
+        }
+        
+        return $deudasParaMostrar;
     }
 }

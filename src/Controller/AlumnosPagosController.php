@@ -19,6 +19,7 @@ use App\Repository\CursoRepository;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use App\Service\HistorialCursosService;
 use Knp\Component\Pager\PaginatorInterface;
+use App\Service\DeudaService;
 /**
  * @Route("/alumnos/pagos")
  */
@@ -26,11 +27,16 @@ class AlumnosPagosController extends AbstractController
 {
     private $entityManager;
     private $historialCursosService;
+    private $deudaService;
 
-    public function __construct(EntityManagerInterface $entityManager, HistorialCursosService $historialCursosService)
-    {
+    public function __construct(
+        EntityManagerInterface $entityManager, 
+        HistorialCursosService $historialCursosService,
+        DeudaService $deudaService
+    ) {
         $this->entityManager = $entityManager;
         $this->historialCursosService = $historialCursosService;
+        $this->deudaService = $deudaService;
     }
 
     /**
@@ -63,7 +69,26 @@ class AlumnosPagosController extends AbstractController
             //$pagos = $alumnosPagosRepository->findByAlumno($alumnoId);
             $alumno = $alumnoRepository->find($alumnoId);
             $nombreAlumno = $alumno->getNombre() . ' ' . $alumno->getApellido();
-            $mesesAdeudados = $this->historialCursosService->verificarMesesAdeudados($alumno);
+            // Usar el nuevo método getDeudasParaPago() en lugar de verificarMesesAdeudados()
+            $deudasParaPago = $alumno->getDeudasParaPago();
+            $mesesAdeudados = [];
+            $nombresMeses = [
+                1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril',
+                5 => 'Mayo', 6 => 'Junio', 7 => 'Julio', 8 => 'Agosto',
+                9 => 'Septiembre', 10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre'
+            ];
+            
+            foreach ($deudasParaPago as $deuda) {
+                $curso = $deuda->getCurso();
+                $mesesAdeudados[] = [
+                    'mes' => $deuda->getMes(),
+                    'ano' => $deuda->getAno(),
+                    'nombre' => $nombresMeses[$deuda->getMes()] . ' ' . $deuda->getAno(),
+                    'curso' => $curso->getNombre(),
+                    'curso_obj' => $curso,
+                    'monto' => $deuda->getMonto()
+                ];
+            }
         } else {
             //$pagos = $alumnosPagosRepository->findByInstituto($instituto);
             $nombreAlumno = $instituto->getNombre();
@@ -276,7 +301,25 @@ class AlumnosPagosController extends AbstractController
         $alumnosPago->setMetodoPago('Efectivo');
 
         // Obtener los meses adeudados para el componente
-        $mesesAdeudados = $this->historialCursosService->verificarMesesAdeudados($alumno);
+        $deudasParaPago = $alumno->getDeudasParaPago();
+        $mesesAdeudados = [];
+        $nombresMeses = [
+            1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril',
+            5 => 'Mayo', 6 => 'Junio', 7 => 'Julio', 8 => 'Agosto',
+            9 => 'Septiembre', 10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre'
+        ];
+        
+        foreach ($deudasParaPago as $deuda) {
+            $curso = $deuda->getCurso();
+            $mesesAdeudados[] = [
+                'mes' => $deuda->getMes(),
+                'ano' => $deuda->getAno(),
+                'nombre' => $nombresMeses[$deuda->getMes()] . ' ' . $deuda->getAno(),
+                'curso' => $curso->getNombre(),
+                'curso_obj' => $curso,
+                'monto' => $deuda->getMonto()
+            ];
+        }
         
         // Obtener el curso seleccionado si existe
         $cursoSeleccionado = null;
@@ -490,5 +533,105 @@ class AlumnosPagosController extends AbstractController
     {
         $mesesAdeudados = $pagosService->verificarMesesAdeudados($alumno);
         return $this->json(['mesesAdeudados' => $mesesAdeudados]);
+    }
+
+    /**
+     * @Route("/registrar-por-deuda/{id}", name="app_alumnos_pagos_por_deuda", methods={"GET", "POST"})
+     */
+    public function registrarPagoPorDeuda(
+        Request $request, 
+        \App\Entity\DeudaAlumno $deuda, 
+        \App\Service\DeudaService $deudaService,
+        ValidatorInterface $validator
+    ): Response {
+        // Verificar que la deuda no esté pagada
+        if ($deuda->isPagado()) {
+            $this->addFlash('warning', 'Esta deuda ya ha sido pagada.');
+            return $this->redirectToRoute('app_alumnos_pagos_index', ['alumno' => $deuda->getAlumno()->getId()]);
+        }
+        
+        // Verificar que el usuario tenga acceso a esta deuda
+        $instituto = $this->getUser()->getInstituto();
+        if ($deuda->getInstituto() !== $instituto) {
+            $this->addFlash('danger', 'No tiene acceso a esta deuda.');
+            return $this->redirectToRoute('app_alumnos_pagos_index');
+        }
+        
+        // Crear un nuevo pago con los datos de la deuda
+        if ($request->isMethod('POST')) {
+            // Obtener datos del formulario
+            $monto = $request->request->get('monto');
+            $metodoPago = $request->request->get('metodoPago');
+            $observacion = $request->request->get('observacion');
+            
+            if (!$monto) {
+                $this->addFlash('danger', 'El monto es obligatorio.');
+                return $this->redirectToRoute('app_alumnos_pagos_por_deuda', ['id' => $deuda->getId()]);
+            }
+            
+            if (!$metodoPago) {
+                $this->addFlash('danger', 'El método de pago es obligatorio.');
+                return $this->redirectToRoute('app_alumnos_pagos_por_deuda', ['id' => $deuda->getId()]);
+            }
+            
+            // Verificar si ya existe un pago para esta deuda
+            if ($deuda->getPago()) {
+                $this->addFlash('warning', 'Ya existe un pago registrado para esta deuda.');
+                return $this->redirectToRoute('app_alumnos_pagos_index', ['alumno' => $deuda->getAlumno()->getId()]);
+            }
+            
+            try {
+                // Registrar el pago a través del servicio
+                $pago = $deudaService->registrarPago($deuda, (float)$monto);
+                
+                // Actualizar metodo de pago y observaciones
+                $pago->setMetodoPago($metodoPago);
+                $pago->setObservacion($observacion);
+                
+                // Validar el pago creado
+                $errores = $validator->validate($pago);
+                if (count($errores) > 0) {
+                    $this->addFlash('danger', 'Error al validar el pago: ' . $errores[0]->getMessage());
+                    return $this->redirectToRoute('app_alumnos_pagos_por_deuda', ['id' => $deuda->getId()]);
+                }
+                
+                // Confirmar cambios
+                $this->entityManager->flush();
+                
+                $this->addFlash('success', sprintf(
+                    'Pago registrado correctamente para %s %s, curso %s, periodo %s.', 
+                    $deuda->getAlumno()->getNombre(), 
+                    $deuda->getAlumno()->getApellido(),
+                    $deuda->getCurso()->getNombre(),
+                    $deuda->getPeriodo()
+                ));
+                
+                return $this->redirectToRoute('app_alumnos_pagos_index', ['alumno' => $deuda->getAlumno()->getId()]);
+            } catch (\Exception $e) {
+                $this->addFlash('danger', 'Error al registrar el pago: ' . $e->getMessage());
+            }
+        }
+        
+        // Obtener los métodos de pago disponibles
+        $metodosPago = $this->entityManager->getRepository(AlumnosPagos::class)
+            ->createQueryBuilder('p')
+            ->select('DISTINCT p.metodoPago')
+            ->getQuery()
+            ->getSingleColumnResult();
+        
+        // Si no hay métodos registrados, definir los métodos predeterminados
+        if (empty($metodosPago)) {
+            $metodosPago = ['Efectivo', 'Transferencia', 'Débito', 'Crédito'];
+        }
+        
+        // Calcular el monto total (incluyendo intereses si aplica)
+        $montoTotal = $deuda->getMontoTotal();
+        
+        // Renderizar formulario
+        return $this->render('alumnos_pagos/registrar_por_deuda.html.twig', [
+            'deuda' => $deuda,
+            'montoTotal' => $montoTotal,
+            'metodosPago' => $metodosPago
+        ]);
     }
 }

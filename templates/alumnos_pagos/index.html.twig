@@ -7,6 +7,11 @@
     <a href="{{ path('app_alumnos_pagos_new', alumnoId ? {'alumnoId': alumnoId} : {}) }}" class="btn btn-success btn-sm">
         Nuevo Pago
     </a>
+    {% if alumnoId %}
+        <a href="{{ path('app_alumno_deudas', {'id': alumnoId}) }}" class="btn btn-warning btn-sm">
+            Gestionar Deudas
+        </a>
+    {% endif %}
 {% endblock %}
 
 {% block body %}

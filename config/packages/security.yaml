@@ -45,18 +45,21 @@ security:
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
     access_control:
-        # Public routes
-        - { path: ^/, roles: PUBLIC_ACCESS }
-        - { path: ^/login, roles: PUBLIC_ACCESS }
-        - { path: ^/logout, roles: PUBLIC_ACCESS }
-        - { path: ^/register, roles: PUBLIC_ACCESS }
+        # Public routes (only essential public routes)
+        - { path: ^/login$, roles: PUBLIC_ACCESS }
+        - { path: ^/logout$, roles: PUBLIC_ACCESS }
+        - { path: ^/register$, roles: PUBLIC_ACCESS }
         - { path: ^/reset-password, roles: PUBLIC_ACCESS }
+        - { path: ^/assets/, roles: PUBLIC_ACCESS }
+        - { path: ^/css/, roles: PUBLIC_ACCESS }
+        - { path: ^/js/, roles: PUBLIC_ACCESS }
+        - { path: ^/images/, roles: PUBLIC_ACCESS }
         
         # Profesor routes
         - { path: ^/profesor/dashboard, roles: [ROLE_PROFESOR, ROLE_ADMIN] }
         - { path: ^/profesor/asistencia, roles: [ROLE_PROFESOR, ROLE_ADMIN] }
         - { path: ^/profesor/curso, roles: [ROLE_PROFESOR, ROLE_ADMIN] }
-        - { path: ^/asistencias/alumnos, roles: [ROLE_PROFESOR, ROLE_ADMIN] }
+        - { path: ^/asistencias/alumnos, roles: [ROLE_PROFESOR, ROLE_ADMIN, ROLE_ADMIN_INSTITUTO] }
         
         # Admin routes
         - { path: ^/admin, roles: [ROLE_ADMIN] }
@@ -68,12 +71,13 @@ security:
         - { path: ^/instituto/profesor, roles: [ROLE_ADMIN_INSTITUTO, ROLE_ADMIN] }
         - { path: ^/instituto/curso, roles: [ROLE_ADMIN_INSTITUTO, ROLE_ADMIN] }
         - { path: ^/instituto/alumno, roles: [ROLE_ADMIN_INSTITUTO, ROLE_ADMIN] }
-        - { path: ^/instituto/asistencia, roles: [ROLE_ADMIN_INSTITUTO, ROLE_ADMIN] }
+        - { path: ^/instituto/asistencia, roles: [ROLE_ADMIN_INSTITUTO, ROLE_ADMIN, ROLE_PROFESOR] }
 
         # Alumno routes
         - { path: ^/alumnos/, roles: [ROLE_ADMIN_INSTITUTO, ROLE_ADMIN] }
         
-        
+        # Default - require authentication for all other routes
+        - { path: ^/, roles: IS_AUTHENTICATED_FULLY }
 
 when@test:
     security:

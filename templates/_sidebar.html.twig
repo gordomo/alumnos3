@@ -74,6 +74,7 @@
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item {% if app.request.get('_route') == 'app_alumno_index' %}active{% endif %}" href="{{ path('app_alumno_index') }}">Listado</a></li>
                         <li><a class="dropdown-item {% if app.request.get('_route') == 'app_instituto_asistencias_index' %}active{% endif %}" href="{{ path('app_instituto_asistencias_index') }}">Asistencias</a></li>
+                        <li><a class="dropdown-item {% if app.request.get('_route') == 'app_instituto_asistencias_informe' %}active{% endif %}" href="{{ path('app_instituto_asistencias_informe') }}">Informes de Asistencia</a></li>
                     </ul>
                 </li>
             </ul>

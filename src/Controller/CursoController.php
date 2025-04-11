@@ -14,6 +14,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Psr\Log\LoggerInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\AlumnoCursoHistorico;
+use App\Service\DeudaService;
 
 /**
  * @Route("/instituto/curso")
@@ -221,7 +222,7 @@ class CursoController extends AbstractController
     /**
      * @Route("/{id}/edit", name="app_curso_edit", methods={"GET", "POST"})
      */
-    public function edit(Request $request, Curso $curso, CursoRepository $cursoRepository, EntityManagerInterface $entityManager): Response
+    public function edit(Request $request, Curso $curso, CursoRepository $cursoRepository, EntityManagerInterface $entityManager, \App\Service\DeudaService $deudaService): Response
     {
         // Obtener el instituto del usuario actual
         $instituto = $this->getUser()->getInstituto();
@@ -338,18 +339,25 @@ class CursoController extends AbstractController
                 
                 // Si las fechas han cambiado, actualizar todos los registros en AlumnoCursoHistorico
                 if ($fechasModificadas) {
-                    // Obtener todos los registros históricos asociados a este curso
-                    $historicos = $entityManager->getRepository(AlumnoCursoHistorico::class)
-                        ->findBy(['curso' => $curso]);
+                    // No necesitamos actualizar el histórico ya que ahora usamos las fechas del curso directamente
+                    // Solo regeneramos las deudas usando las nuevas fechas del curso
                     
-                    foreach ($historicos as $historico) {
-                        // Actualizar fechas en cada registro histórico
-                        $historico->setFechaInicio($curso->getFechaInicio());
-                        $historico->setFechaFin($curso->getFechaFin());
-                        $entityManager->persist($historico);
-                    }
+                    // Actualizar las deudas asociadas a este curso
+                    $resultadoActualizacionDeudas = $deudaService->actualizarDeudasPorCambioFechas(
+                        $curso,
+                        $fechaInicioOriginal,
+                        $fechaFinOriginal,
+                        $curso->getFechaInicio(),
+                        $curso->getFechaFin()
+                    );
                     
-                    $this->addFlash('success', 'Se han actualizado ' . count($historicos) . ' registros históricos con las nuevas fechas del curso.');
+                    $mensajeDeudas = sprintf(
+                        'Se han actualizado las deudas: %d creadas, %d eliminadas.',
+                        $resultadoActualizacionDeudas['creadas'],
+                        $resultadoActualizacionDeudas['eliminadas']
+                    );
+                    
+                    $this->addFlash('success', $mensajeDeudas);
                 }
                 
                 // Guardar los cambios en el curso
@@ -397,7 +405,7 @@ class CursoController extends AbstractController
     /**
      * @Route("/habilitar/{id}", name="app_curso_habilitar", methods={"GET"})
      */
-    public function habilitar(Request $request, Curso $curso, CursoRepository $cursoRepository): Response
+    public function habilitar(Request $request, Curso $curso, CursoRepository $cursoRepository, \App\Service\DeudaService $deudaService, EntityManagerInterface $entityManager): Response
     {
         // Obtener el instituto del usuario actual
         $instituto = $this->getUser()->getInstituto();
@@ -405,8 +413,79 @@ class CursoController extends AbstractController
             $this->addFlash('danger', 'El curso no pertenece al instituto del usuario.');
             return $this->redirectToRoute('app_curso_index');
         }
+        
+        // Habilitar el curso
         $cursoRepository->habilitar($curso);
+        
+        // Verificar y generar deudas para todos los alumnos del curso
+        $totalDeudas = 0;
+        $alumnosAfectados = 0;
+        
+        foreach ($curso->getAlumnos() as $alumno) {
+            // Buscar el histórico activo para este alumno y curso
+            $historico = $entityManager->getRepository('App\Entity\AlumnoCursoHistorico')
+                ->findOneBy([
+                    'alumno' => $alumno,
+                    'curso' => $curso,
+                    'activo' => true
+                ]);
+                
+            // Si no hay histórico activo, crear uno nuevo
+            if (!$historico) {
+                $historico = new AlumnoCursoHistorico();
+                $historico->setAlumno($alumno);
+                $historico->setCurso($curso);
+                $historico->setFechaAlta(new \DateTime());
+                $historico->setActivo(true);
+                $entityManager->persist($historico);
+            }
+            
+            // Generar deudas usando las fechas del curso
+            $resultado = $deudaService->generarDeudasParaHistorico($historico);
+            
+            $totalDeudas += $resultado['creadas'];
+            if ($resultado['creadas'] > 0) {
+                $alumnosAfectados++;
+            }
+        }
+        
+        if ($totalDeudas > 0) {
+            $this->addFlash('success', sprintf(
+                'Se han generado %d deudas para %d alumnos inscritos en el curso %s', 
+                $totalDeudas, 
+                $alumnosAfectados,
+                $curso->getNombre()
+            ));
+        }
 
+        return $this->redirectToRoute('app_curso_index', [], Response::HTTP_SEE_OTHER);
+    }
+
+    /**
+     * @Route("/deshabilitar/{id}", name="app_curso_deshabilitar", methods={"GET"})
+     */
+    public function deshabilitar(Request $request, Curso $curso, CursoRepository $cursoRepository, \App\Service\DeudaService $deudaService): Response
+    {
+        // Obtener el instituto del usuario actual
+        $instituto = $this->getUser()->getInstituto();
+        if ($curso->getInstituto() !== $instituto) {
+            $this->addFlash('danger', 'El curso no pertenece al instituto del usuario.');
+            return $this->redirectToRoute('app_curso_index');
+        }
+        
+        // Deshabilitar el curso (usando el método remove que en realidad lo marca como deshabilitado)
+        $cursoRepository->remove($curso);
+        
+        // Calcular fecha actual para cancelar solo deudas futuras
+        $fechaActual = new \DateTime();
+        
+        // Actualizar las deudas por finalización del curso
+        $deudasCanceladas = $deudaService->actualizarDeudasPorFinalizacionCurso($curso, $fechaActual);
+        
+        if ($deudasCanceladas > 0) {
+            $this->addFlash('success', sprintf('Se han cancelado %d deudas futuras para el curso %s', $deudasCanceladas, $curso->getNombre()));
+        }
+        
         return $this->redirectToRoute('app_curso_index', [], Response::HTTP_SEE_OTHER);
     }
 

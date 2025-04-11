@@ -1,0 +1,79 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Cancelar Deuda{% endblock %}
+
+{% block body %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <h6>Confirmar Cancelación de Deuda</h6>
+                </div>
+                <div class="card-body px-4 pt-0 pb-2">
+                    <div class="alert alert-warning mt-3">
+                        <h5 class="alert-heading"><i class="bi bi-exclamation-triangle-fill"></i> ¡Atención!</h5>
+                        <p>Está a punto de cancelar una deuda pendiente. Esta acción <strong>eliminará permanentemente</strong> el registro de deuda y no podrá ser recuperado.</p>
+                        <hr>
+                        <p class="mb-0">Para confirmar, revise los detalles y haga clic en "Cancelar Deuda".</p>
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-md-6 mx-auto">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Detalles de la Deuda</h6>
+                                </div>
+                                <div class="card-body">
+                                    <table class="table table-sm">
+                                        <tbody>
+                                            <tr>
+                                                <th>Alumno:</th>
+                                                <td>{{ deuda.alumno.nombre }} {{ deuda.alumno.apellido }}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Curso:</th>
+                                                <td>{{ deuda.curso.nombre }}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Período:</th>
+                                                <td>{{ deuda.periodo }}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Monto:</th>
+                                                <td>${{ deuda.monto|number_format(2, '.', ',') }}</td>
+                                            </tr>
+                                            {% if deuda.interes > 0 %}
+                                            <tr>
+                                                <th>Interés:</th>
+                                                <td>${{ deuda.interes|number_format(2, '.', ',') }}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Total:</th>
+                                                <td>${{ deuda.montoTotal|number_format(2, '.', ',') }}</td>
+                                            </tr>
+                                            {% endif %}
+                                        </tbody>
+                                    </table>
+                                    
+                                    <div class="d-flex justify-content-between mt-4">
+                                        <a href="{{ path('app_deuda_alumno_index', {'id': deuda.alumno.id}) }}" class="btn btn-secondary">
+                                            <i class="bi bi-arrow-left"></i> Volver
+                                        </a>
+                                        <form method="post">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('cancel' ~ deuda.id) }}">
+                                            <button type="submit" class="btn btn-danger">
+                                                <i class="bi bi-x-circle"></i> Cancelar Deuda
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

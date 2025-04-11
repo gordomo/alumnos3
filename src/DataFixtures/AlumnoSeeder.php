@@ -96,7 +96,7 @@ class AlumnoSeeder extends Fixture implements DependentFixtureInterface
                 $historico->setAlumno($alumno);
                 $historico->setCurso($curso);
                 $historico->setFechaInicio($curso->getFechaInicio());
-                $historico->setFechaFin($curso->getFechaFin());
+                $historico->setFechaBaja($curso->getFechaFin());
                 $historico->setPrecioMensual($curso->getPrecio());
                 
                 // Generar algunos meses adeudados aleatorios

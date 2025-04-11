@@ -1,7 +1,7 @@
 {% if mesesAdeudados is defined and mesesAdeudados|length > 0 %}
     <div class="alert alert-warning">
         <h5 class="alert-heading">Meses adeudados</h5>
-        <p>Existen meses adeudados anteriores al mes actual:</p>
+        <p>Existen meses adeudados anteriores o vencidos al mes actual:</p>
         {% set cursos = {} %}
         {% for mes in mesesAdeudados %}
             {% if not cursos[mes.curso] is defined %}

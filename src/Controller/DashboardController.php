@@ -14,14 +14,19 @@ use Symfony\Component\Routing\Annotation\Route;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\Alumno;
 use App\Service\HistorialCursosService;
+use App\Service\DeudaService;
 
 class DashboardController extends AbstractController
 {
     private $historialCursosService;
+    private $deudaService;
 
-    public function __construct(HistorialCursosService $historialCursosService)
-    {
+    public function __construct(
+        HistorialCursosService $historialCursosService,
+        DeudaService $deudaService
+    ) {
         $this->historialCursosService = $historialCursosService;
+        $this->deudaService = $deudaService;
     }
 
     /**

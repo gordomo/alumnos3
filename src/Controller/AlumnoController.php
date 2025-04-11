@@ -15,6 +15,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use App\Service\HistorialCursosService;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Repository\AsistenciaAlumnosRepository;
+use App\Service\DeudaService;
 
 /**
  * @Route("/instituto/alumno")
@@ -23,11 +24,16 @@ class AlumnoController extends AbstractController
 {
     private $entityManager;
     private $historialCursosService;
+    private $deudaService;
 
-    public function __construct(EntityManagerInterface $entityManager, HistorialCursosService $historialCursosService)
-    {
+    public function __construct(
+        EntityManagerInterface $entityManager, 
+        HistorialCursosService $historialCursosService,
+        DeudaService $deudaService
+    ) {
         $this->entityManager = $entityManager;
         $this->historialCursosService = $historialCursosService;
+        $this->deudaService = $deudaService;
     }
 
     /**
@@ -114,7 +120,7 @@ class AlumnoController extends AbstractController
     /**
      * @Route("/new", name="app_alumno_new", methods={"GET", "POST"})
      */
-    public function new(Request $request, AlumnoRepository $alumnoRepository): Response
+    public function new(Request $request, AlumnoRepository $alumnoRepository, DeudaService $deudaService): Response
     {
         $alumno = new Alumno();
         $instituto = $this->getUser()->getInstituto();
@@ -130,9 +136,22 @@ class AlumnoController extends AbstractController
                     // Guardar el alumno
                     $alumnoRepository->add($alumno);
                     
-                    // Crear historial para cada curso seleccionado
+                    // Crear historial para cada curso seleccionado y generar deudas
                     foreach ($alumno->getCurso() as $curso) {
-                        $this->historialCursosService->crearHistorial($alumno, $curso);
+                        // Utilizamos el método mejorado, que ya maneja la generación de deudas básicas
+                        $historico = $this->historialCursosService->crearHistorialConDeudasHastaFinDeAno($alumno, $curso);
+                        
+                        // Asegurarnos de generar las deudas hasta fin de año
+                        $fechaActual = new \DateTime();
+                        $finDeAno = new \DateTime($fechaActual->format('Y') . '-12-31');
+                        $deudaService->generarDeudasParaPeriodo(
+                            $alumno,
+                            $curso,
+                            $historico,
+                            $fechaActual,
+                            $finDeAno,
+                            false // No sobrescribir deudas existentes
+                        );
                     }
                     
                     $this->setearHermandad($request, $alumno, $alumnoRepository);
@@ -142,7 +161,7 @@ class AlumnoController extends AbstractController
                     if (strpos($e->getMessage(), 'UNIQ_') !== false) {
                         $this->addFlash('danger', 'Ya existe un alumno con ese DNI.');
                     } else {
-                        $this->addFlash('danger', 'Ocurrió un error al crear el alumno.');
+                        $this->addFlash('danger', 'Ocurrió un error al crear el alumno. ' . $e->getMessage());
                     }
                 }
             } else {
@@ -240,10 +259,11 @@ class AlumnoController extends AbstractController
     /**
      * @Route("/{id}/edit", name="app_alumno_edit", methods={"GET", "POST"})
      */
-    public function edit(Request $request, Alumno $alumno, AlumnoRepository $alumnoRepository): Response
+    public function edit(Request $request, Alumno $alumno, AlumnoRepository $alumnoRepository, DeudaService $deudaService): Response
     {
         $instituto = $this->getUser()->getInstituto();
         $cursosActuales = $alumno->getCurso()->toArray();
+        $estadoActivoPrevio = $alumno->getActivo();
         
         $form = $this->createForm(AlumnoType::class, $alumno, ['is_edit' => true, 'instituto' => $instituto]);
         $form->handleRequest($request);
@@ -251,6 +271,34 @@ class AlumnoController extends AbstractController
         if ($form->isSubmitted()) {
             if ($form->isValid()) {
                 try {
+                    // Verificar si el alumno pasó de activo a inactivo
+                    if ($estadoActivoPrevio && !$alumno->getActivo()) {
+                        // Verificar si tiene deudas pendientes
+                        $infoDeudasPendientes = $deudaService->verificarDeudasPendientesAlumnoInactivo($alumno);
+                        
+                        if ($infoDeudasPendientes['totalDeudas'] > 0) {
+                            // Mostrar advertencia pero permitir la operación
+                            $this->addFlash('warning', sprintf(
+                                'El alumno ha sido desactivado pero tiene %d deudas pendientes por un total de $%.2f. ' .
+                                'Estas deudas se mantendrán en el sistema hasta que sean pagadas o canceladas manualmente.',
+                                $infoDeudasPendientes['totalDeudas'],
+                                $infoDeudasPendientes['montoPendiente']
+                            ));
+                            
+                            // Si hay muchas deudas, mostrar detalle por curso
+                            if (count($infoDeudasPendientes['deudasPorCurso']) > 0) {
+                                foreach ($infoDeudasPendientes['deudasPorCurso'] as $deudaCurso) {
+                                    $this->addFlash('info', sprintf(
+                                        'Curso %s: %d cuotas pendientes por $%.2f',
+                                        $deudaCurso['nombre'],
+                                        $deudaCurso['cantidad'],
+                                        $deudaCurso['monto']
+                                    ));
+                                }
+                            }
+                        }
+                    }
+                    
                     // Obtener los cursos seleccionados
                     $cursosNuevos = $alumno->getCurso()->toArray();
                     
@@ -261,8 +309,15 @@ class AlumnoController extends AbstractController
                             $historico = $this->historialCursosService->buscarHistorial($alumno, $curso, new \DateTime());
                             if ($historico) {
                                 $historico->setActivo(false);
-                                $historico->setFechaFin(new \DateTime());
+                                $historico->setFechaBaja(new \DateTime());
                             }
+                            
+                            // Cancelar deudas pendientes (mes actual y futuras)
+                            $deudasCanceladas = $deudaService->cancelarDeudasPendientesAlumnoCurso($alumno, $curso, true);
+                            if ($deudasCanceladas > 0) {
+                                $this->addFlash('info', sprintf('Se han cancelado %d deudas pendientes para el curso %s', $deudasCanceladas, $curso->getNombre()));
+                            }
+                            
                             $alumno->removeCurso($curso);
                         }
                     }
@@ -271,8 +326,28 @@ class AlumnoController extends AbstractController
                     foreach ($cursosNuevos as $curso) {
                         if (!in_array($curso, $cursosActuales)) {
                             $alumno->addCurso($curso);
-                            // Crear nuevo historial
-                            $this->historialCursosService->crearHistorial($alumno, $curso);
+                            // Crear nuevo historial y generar deudas
+                            $historico = $this->historialCursosService->crearHistorialConDeudasHastaFinDeAno($alumno, $curso);
+                            // Generar deudas hasta fin de año con DeudaService
+                            $fechaActual = new \DateTime();
+                            $finDeAno = new \DateTime($fechaActual->format('Y') . '-12-31');
+                            
+                            // Si el curso tiene fecha de finalización, usarla como límite
+                            if (method_exists($curso, 'getFechaFin') && $curso->getFechaFin() !== null) {
+                                $fechaFinCurso = $curso->getFechaFin();
+                                if ($fechaFinCurso < $finDeAno) {
+                                    $finDeAno = $fechaFinCurso;
+                                }
+                            }
+                            
+                            $deudaService->generarDeudasParaPeriodo(
+                                $alumno,
+                                $curso,
+                                $historico,
+                                $curso->getFechaInicio() ?: $fechaActual, // Usar fecha de inicio del curso o actual si no tiene
+                                $finDeAno,
+                                false
+                            );
                         }
                     }
                     
@@ -284,7 +359,7 @@ class AlumnoController extends AbstractController
                     if (strpos($e->getMessage(), 'UNIQ_') !== false && strpos($e->getMessage(), 'dni') !== false) {
                         $this->addFlash('danger', 'Ya existe un alumno con ese DNI.');
                     } else {
-                        $this->addFlash('danger', 'Ocurrió un error al actualizar el alumno.');
+                        $this->addFlash('danger', 'Ocurrió un error al actualizar el alumno: ' . $e->getMessage());
                     }
                 }
             } else {
@@ -304,11 +379,13 @@ class AlumnoController extends AbstractController
     /**
      * @Route("/{id}", name="app_alumno_delete", methods={"POST"})
      */
-    public function delete(Request $request, Alumno $alumno, AlumnoRepository $alumnoRepository): Response
+    public function delete(Request $request, Alumno $alumno, AlumnoRepository $alumnoRepository, DeudaService $deudaService): Response
     {
         if ($this->isCsrfTokenValid('delete'.$alumno->getId(), $request->request->get('_token'))) {
             // Remover relaciones con cursos
             foreach ($alumno->getCurso() as $curso) {
+                // Cancelar todas las deudas pendientes
+                $deudaService->cancelarDeudasPendientesAlumnoCurso($alumno, $curso, false);
                 $alumno->removeCurso($curso);
             }
 
@@ -384,7 +461,7 @@ class AlumnoController extends AbstractController
     /**
      * @Route("/{id}/update-cursos", name="app_alumno_update_cursos", methods={"POST"})
      */
-    public function updateCursos(Request $request, Alumno $alumno, CursoRepository $cursoRepository, HistorialCursosService $historialCursosService): JsonResponse
+    public function updateCursos(Request $request, Alumno $alumno, CursoRepository $cursoRepository, HistorialCursosService $historialCursosService, DeudaService $deudaService): JsonResponse
     {
         $instituto = $this->getUser()->getInstituto();
         $cursoIds = $request->request->get('cursos', []);
@@ -395,6 +472,8 @@ class AlumnoController extends AbstractController
         // Obtener los cursos actuales del alumno
         $cursosActuales = $alumno->getCurso();
         
+        $mensajes = [];
+        
         // Cursos a remover
         foreach ($cursosActuales as $curso) {
             if (!in_array($curso, $cursosSeleccionados)) {
@@ -402,8 +481,15 @@ class AlumnoController extends AbstractController
                 $historico = $historialCursosService->buscarHistorial($alumno, $curso, new \DateTime());
                 if ($historico) {
                     $historico->setActivo(false);
-                    $historico->setFechaFin(new \DateTime());
+                    $historico->setFechaBaja(new \DateTime());
                 }
+                
+                // Cancelar deudas pendientes (mes actual y futuras)
+                $deudasCanceladas = $deudaService->cancelarDeudasPendientesAlumnoCurso($alumno, $curso, true);
+                if ($deudasCanceladas > 0) {
+                    $mensajes[] = sprintf('Se han cancelado %d deudas pendientes para el curso %s', $deudasCanceladas, $curso->getNombre());
+                }
+                
                 $alumno->removeCurso($curso);
             }
         }
@@ -412,8 +498,44 @@ class AlumnoController extends AbstractController
         foreach ($cursosSeleccionados as $curso) {
             if (!$cursosActuales->contains($curso)) {
                 $alumno->addCurso($curso);
-                // Crear nuevo historial
-                $historico = $historialCursosService->crearHistorial($alumno, $curso);
+                // Crear nuevo historial y generar deudas
+                $historico = $historialCursosService->crearHistorialConDeudasHastaFinDeAno($alumno, $curso);
+                
+                // Determinar la fecha límite para generar deudas
+                $fechaActual = new \DateTime();
+                $finDeAno = new \DateTime($fechaActual->format('Y') . '-12-31');
+                
+                // Si el curso tiene fecha de finalización, usar la más cercana
+                if (method_exists($curso, 'getFechaFin') && $curso->getFechaFin() !== null) {
+                    $fechaFinCurso = $curso->getFechaFin();
+                    if ($fechaFinCurso < $finDeAno) {
+                        $finDeAno = $fechaFinCurso;
+                    }
+                }
+                
+                // Generar deudas hasta la fecha límite
+                $resultado = $deudaService->generarDeudasParaPeriodo(
+                    $alumno,
+                    $curso,
+                    $historico,
+                    $curso->getFechaInicio() ?: $fechaActual, // Usar fecha de inicio del curso o actual si no tiene
+                    $finDeAno,
+                    false
+                );
+                
+                $detallesMensaje = sprintf(
+                    'Se ha inscrito al alumno en el curso %s y generado %d deudas mensuales',
+                    $curso->getNombre(),
+                    $resultado['creadas']
+                );
+                
+                if (method_exists($curso, 'getFechaFin') && $curso->getFechaFin() !== null) {
+                    $detallesMensaje .= sprintf(' hasta %s (fecha fin del curso)', $curso->getFechaFin()->format('d/m/Y'));
+                } else {
+                    $detallesMensaje .= sprintf(' hasta %s (fin del año)', $finDeAno->format('d/m/Y'));
+                }
+                
+                $mensajes[] = $detallesMensaje;
             }
         }
         
@@ -421,9 +543,171 @@ class AlumnoController extends AbstractController
         
         return new JsonResponse([
             'success' => true,
-            'message' => 'Cursos actualizados correctamente'
+            'message' => 'Cursos actualizados correctamente',
+            'detalles' => $mensajes
         ]);
     }
 
+    /**
+     * @Route("/{id}/deudas", name="app_alumno_deudas", methods={"GET"})
+     */
+    public function verDeudas(Alumno $alumno, CursoRepository $cursoRepository): Response
+    {
+        // Verificar que el alumno pertenece al instituto del usuario actual
+        $instituto = $this->getUser()->getInstituto();
+        if ($alumno->getInstituto() !== $instituto) {
+            $this->addFlash('danger', 'No tiene acceso a este alumno.');
+            return $this->redirectToRoute('app_alumno_index');
+        }
+        
+        // Obtener todas las deudas pendientes del alumno
+        $deudasPendientes = $this->deudaService->getDeudasPendientesPorAlumno($alumno);
+        
+        // Agrupar las deudas por curso
+        $deudasPorCurso = [];
+        foreach ($deudasPendientes as $deuda) {
+            $cursoId = $deuda->getCurso()->getId();
+            if (!isset($deudasPorCurso[$cursoId])) {
+                $deudasPorCurso[$cursoId] = [
+                    'curso' => $deuda->getCurso(),
+                    'deudas' => []
+                ];
+            }
+            $deudasPorCurso[$cursoId]['deudas'][] = $deuda;
+        }
+        
+        return $this->render('alumno/deudas.html.twig', [
+            'alumno' => $alumno,
+            'deudasPorCurso' => $deudasPorCurso,
+            'cursos' => $cursoRepository->findBy(['instituto' => $instituto])
+        ]);
+    }
+
+    /**
+     * @Route("/{id}/cancelar-deuda/{deudaId}", name="app_alumno_cancelar_deuda", methods={"POST"})
+     */
+    public function cancelarDeuda(Alumno $alumno, int $deudaId, Request $request): Response
+    {
+        // Verificar token CSRF
+        if (!$this->isCsrfTokenValid('cancelar-deuda'.$deudaId, $request->request->get('_token'))) {
+            $this->addFlash('danger', 'Token CSRF inválido.');
+            return $this->redirectToRoute('app_alumno_deudas', ['id' => $alumno->getId()]);
+        }
+        
+        // Verificar que el alumno pertenece al instituto del usuario actual
+        $instituto = $this->getUser()->getInstituto();
+        if ($alumno->getInstituto() !== $instituto) {
+            $this->addFlash('danger', 'No tiene acceso a este alumno.');
+            return $this->redirectToRoute('app_alumno_index');
+        }
+        
+        // Obtener la deuda
+        $deuda = $this->entityManager->getRepository('App\Entity\DeudaAlumno')->find($deudaId);
+        
+        // Verificar que la deuda existe y pertenece al alumno
+        if (!$deuda || $deuda->getAlumno() !== $alumno) {
+            $this->addFlash('danger', 'La deuda no existe o no pertenece a este alumno.');
+            return $this->redirectToRoute('app_alumno_deudas', ['id' => $alumno->getId()]);
+        }
+        
+        // Verificar que la deuda no está pagada
+        if ($deuda->isPagado()) {
+            $this->addFlash('danger', 'Esta deuda ya está pagada.');
+            return $this->redirectToRoute('app_alumno_deudas', ['id' => $alumno->getId()]);
+        }
+        
+        try {
+            // Eliminar la deuda
+            $this->entityManager->remove($deuda);
+            $this->entityManager->flush();
+            
+            $this->addFlash('success', sprintf(
+                'Se ha cancelado la deuda de %s para el curso %s, periodo %s %s.', 
+                $alumno->getNombreApellido(),
+                $deuda->getCurso()->getNombre(),
+                $this->getNombreMes($deuda->getMes()),
+                $deuda->getAno()
+            ));
+        } catch (\Exception $e) {
+            $this->addFlash('danger', 'Ocurrió un error al cancelar la deuda: ' . $e->getMessage());
+        }
+        
+        return $this->redirectToRoute('app_alumno_deudas', ['id' => $alumno->getId()]);
+    }
+
+    /**
+     * @Route("/{id}/cancelar-deudas-curso/{cursoId}", name="app_alumno_cancelar_deudas_curso", methods={"POST"})
+     */
+    public function cancelarDeudasCurso(Alumno $alumno, int $cursoId, Request $request): Response
+    {
+        // Verificar token CSRF
+        if (!$this->isCsrfTokenValid('cancelar-deudas-curso'.$cursoId, $request->request->get('_token'))) {
+            $this->addFlash('danger', 'Token CSRF inválido.');
+            return $this->redirectToRoute('app_alumno_deudas', ['id' => $alumno->getId()]);
+        }
+        
+        // Verificar que el alumno pertenece al instituto del usuario actual
+        $instituto = $this->getUser()->getInstituto();
+        if ($alumno->getInstituto() !== $instituto) {
+            $this->addFlash('danger', 'No tiene acceso a este alumno.');
+            return $this->redirectToRoute('app_alumno_index');
+        }
+        
+        // Obtener el curso
+        $curso = $this->entityManager->getRepository('App\Entity\Curso')->find($cursoId);
+        
+        // Verificar que el curso existe y pertenece al instituto
+        if (!$curso || $curso->getInstituto() !== $instituto) {
+            $this->addFlash('danger', 'El curso no existe o no pertenece a este instituto.');
+            return $this->redirectToRoute('app_alumno_deudas', ['id' => $alumno->getId()]);
+        }
+        
+        try {
+            // Cancelar todas las deudas pendientes del alumno para este curso
+            $soloFuturas = $request->request->get('solo_futuras', false);
+            $deudasCanceladas = $this->deudaService->cancelarDeudasPendientesAlumnoCurso($alumno, $curso, $soloFuturas);
+            
+            if ($deudasCanceladas > 0) {
+                $this->addFlash('success', sprintf(
+                    'Se han cancelado %d deudas %s para el curso %s.', 
+                    $deudasCanceladas,
+                    $soloFuturas ? 'futuras' : 'pendientes',
+                    $curso->getNombre()
+                ));
+            } else {
+                $this->addFlash('info', sprintf(
+                    'No se encontraron deudas %s para cancelar en el curso %s.', 
+                    $soloFuturas ? 'futuras' : 'pendientes',
+                    $curso->getNombre()
+                ));
+            }
+        } catch (\Exception $e) {
+            $this->addFlash('danger', 'Ocurrió un error al cancelar las deudas: ' . $e->getMessage());
+        }
+        
+        return $this->redirectToRoute('app_alumno_deudas', ['id' => $alumno->getId()]);
+    }
     
+    /**
+     * Obtiene el nombre del mes según su número
+     */
+    private function getNombreMes(int $mes): string
+    {
+        $meses = [
+            1 => 'Enero',
+            2 => 'Febrero',
+            3 => 'Marzo',
+            4 => 'Abril',
+            5 => 'Mayo',
+            6 => 'Junio',
+            7 => 'Julio',
+            8 => 'Agosto',
+            9 => 'Septiembre',
+            10 => 'Octubre',
+            11 => 'Noviembre',
+            12 => 'Diciembre'
+        ];
+        
+        return $meses[$mes] ?? 'Desconocido';
+    }
 }

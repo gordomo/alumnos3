@@ -59,4 +59,26 @@ class AsistenciaAlumnosRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+    
+    /**
+     * Busca asistencias por curso y rango de fechas
+     * 
+     * @param mixed $curso El curso a buscar
+     * @param \DateTime $fechaInicio Fecha de inicio del rango
+     * @param \DateTime $fechaFin Fecha de fin del rango
+     * @return AsistenciaAlumnos[] Retorna un array de entidades AsistenciaAlumnos
+     */
+    public function findByDateRange($curso, \DateTime $fechaInicio, \DateTime $fechaFin)
+    {
+        return $this->createQueryBuilder('a')
+            ->where('a.curso = :curso')
+            ->andWhere('a.fecha BETWEEN :fechaInicio AND :fechaFin')
+            ->setParameter('curso', $curso)
+            ->setParameter('fechaInicio', $fechaInicio)
+            ->setParameter('fechaFin', $fechaFin)
+            ->orderBy('a.fecha', 'ASC')
+            ->addOrderBy('a.alumno', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
 } 

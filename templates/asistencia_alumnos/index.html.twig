@@ -19,7 +19,7 @@
                 </div>
                 <div class="col-md-4">
                     <label for="curso" class="form-label">Curso</label>
-                    <select class="form-select" id="curso" name="curso">
+                    <select class="form-select chosen-select" id="curso" name="curso">
                         <option value="">Seleccione un curso</option>
                         {% for curso in cursos %}
                             <option value="{{ curso.id }}" {% if cursoSeleccionado and cursoSeleccionado.id == curso.id %}selected{% endif %}>
@@ -35,75 +35,7 @@
         </div>
     </div>
 
-    {% if cursoSeleccionado %}
-        <div class="row">
-            <div class="col-md-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="card-title mb-0">Asistencias - {{ cursoSeleccionado.nombre }} - {{ fecha|date('d/m/Y') }}</h5>
-                    </div>
-                    <div class="card-body">
-                        <form method="post" action="{{ path('app_asistencia_alumnos_index', {'fecha': fecha, 'curso': cursoSeleccionado.id}) }}">
-                            <div class="table-responsive">
-                                <table class="table table-striped">
-                                    <thead>
-                                        <tr>
-                                            <th>Alumno</th>
-                                            <th>Estado</th>
-                                            <th>Observaciones</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% if asistenciasPorAlumno|length > 0 %}
-                                            {% for asistencia in asistenciasPorAlumno %}
-                                                <tr>
-                                                    <td>{{ asistencia.alumno.nombre }} {{ asistencia.alumno.apellido }}</td>
-                                                    <td>
-                                                        <div class="form-check form-switch">
-                                                            <input class="form-check-input" type="checkbox" 
-                                                                   name="asistencias[{{ asistencia.alumno.id }}]" 
-                                                                   value="1" 
-                                                                   {% if asistencia.presente %}checked{% endif %}>
-                                                            <label class="form-check-label">
-                                                                {% if asistencia.presente %}
-                                                                    <span class="badge bg-success">Presente</span>
-                                                                {% else %}
-                                                                    <span class="badge bg-danger">Ausente</span>
-                                                                {% endif %}
-                                                            </label>
-                                                        </div>
-                                                    </td>
-                                                    <td>
-                                                        <input type="text" class="form-control" 
-                                                               name="observaciones[{{ asistencia.alumno.id }}]" 
-                                                               value="{{ asistencia.observaciones }}">
-                                                    </td>
-                                                </tr>
-                                            {% endfor %}
-                                        {% else %}
-                                            <tr>
-                                                <td colspan="3" class="text-center">No hay alumnos registrados en este curso</td>
-                                            </tr>
-                                        {% endif %}
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div class="mt-3">
-                                <button type="submit" class="btn btn-primary">Guardar Asistencias</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-    {% else %}
-        <div class="row">
-            <div class="col-md-12">
-                <div class="alert alert-info">
-                    Seleccione un curso para ver y tomar las asistencias del día.
-                </div>
-            </div>
-        </div>
-    {% endif %}
+    {% set rutaForm = 'app_asistencia_alumnos_index' %}
+    {% include 'asistencia/_form.html.twig' %}
 </div>
 {% endblock %} 

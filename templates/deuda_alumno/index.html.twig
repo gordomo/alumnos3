@@ -1,0 +1,151 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Deudas de {{ alumno.nombre }} {{ alumno.apellido }}{% endblock %}
+
+{% block body %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header pb-0 d-flex justify-content-between align-items-center">
+                    <h6>Deudas de {{ alumno.nombre }} {{ alumno.apellido }}</h6>
+                    <a href="{{ path('app_alumno_show', {'id': alumno.id}) }}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-arrow-left"></i> Volver al Alumno
+                    </a>
+                </div>
+                <div class="card-body px-4 pt-0 pb-2">
+                    <!-- Filtros -->
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <form method="get" class="row g-3 align-items-end">
+                                <div class="col-md-3">
+                                    <label for="curso" class="form-label">Curso</label>
+                                    <select name="curso" id="curso" class="form-select">
+                                        <option value="">Todos los cursos</option>
+                                        {% for curso in cursos %}
+                                            <option value="{{ curso.id }}" {% if cursoId == curso.id %}selected{% endif %}>
+                                                {{ curso.nombre }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="estado" class="form-label">Estado</label>
+                                    <select name="estado" id="estado" class="form-select">
+                                        <option value="pendientes" {% if estadoDeuda == 'pendientes' %}selected{% endif %}>Pendientes</option>
+                                        <option value="pagadas" {% if estadoDeuda == 'pagadas' %}selected{% endif %}>Pagadas</option>
+                                        <option value="todas" {% if estadoDeuda == 'todas' %}selected{% endif %}>Todas</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="sort" class="form-label">Ordenar por</label>
+                                    <div class="input-group">
+                                        <select name="sort" id="sort" class="form-select">
+                                            <option value="fecha" {% if sort == 'fecha' %}selected{% endif %}>Fecha</option>
+                                            <option value="curso" {% if sort == 'curso' %}selected{% endif %}>Curso</option>
+                                            <option value="monto" {% if sort == 'monto' %}selected{% endif %}>Monto</option>
+                                        </select>
+                                        <select name="order" id="order" class="form-select">
+                                            <option value="asc" {% if order == 'asc' %}selected{% endif %}>Ascendente</option>
+                                            <option value="desc" {% if order == 'desc' %}selected{% endif %}>Descendente</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <button type="submit" class="btn btn-primary w-100">Filtrar</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <!-- Tabla de deudas -->
+                    <div class="table-responsive">
+                        <table class="table align-items-center mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Período</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Curso</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Monto</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Estado</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Fecha Pago</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if deudas|length > 0 %}
+                                    {% for deuda in deudas %}
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex px-2 py-1">
+                                                    <div class="d-flex flex-column justify-content-center">
+                                                        <h6 class="mb-0 text-sm">{{ deuda.periodo }}</h6>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <p class="text-sm font-weight-bold mb-0">{{ deuda.curso.nombre }}</p>
+                                            </td>
+                                            <td>
+                                                <p class="text-sm font-weight-bold mb-0">${{ deuda.montoTotal|number_format(2, '.', ',') }}</p>
+                                                {% if deuda.interes > 0 %}
+                                                    <p class="text-xs text-muted mb-0">
+                                                        Base: ${{ deuda.monto|number_format(2, '.', ',') }} + 
+                                                        Interés: ${{ deuda.interes|number_format(2, '.', ',') }}
+                                                    </p>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if deuda.pagado %}
+                                                    <span class="badge badge-sm bg-success">Pagado</span>
+                                                {% else %}
+                                                    <span class="badge badge-sm bg-warning">Pendiente</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if deuda.fechaPago %}
+                                                    <p class="text-sm font-weight-bold mb-0">{{ deuda.fechaPago|date('d/m/Y') }}</p>
+                                                {% else %}
+                                                    <p class="text-sm text-muted mb-0">-</p>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div class="d-flex">
+                                                    {% if deuda.pagado %}
+                                                        {% if deuda.pago %}
+                                                            <a href="{{ path('app_alumnos_pagos_show', {'id': deuda.pago.id}) }}" class="btn btn-outline-info btn-sm me-2" title="Ver pago">
+                                                                <i class="bi bi-eye"></i>
+                                                            </a>
+                                                        {% endif %}
+                                                    {% else %}
+                                                        <a href="{{ path('app_alumnos_pagos_por_deuda', {'id': deuda.id}) }}" class="btn btn-primary btn-sm me-2" title="Registrar pago">
+                                                            <i class="bi bi-cash"></i> Pagar
+                                                        </a>
+                                                        <a href="{{ path('app_deuda_alumno_cancelar', {'id': deuda.id}) }}" class="btn btn-danger btn-sm" title="Cancelar deuda">
+                                                            <i class="bi bi-x-circle"></i>
+                                                        </a>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="6" class="text-center py-3">
+                                            <p class="text-muted mb-0">No se encontraron deudas con los filtros seleccionados.</p>
+                                        </td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Paginación -->
+                    <div class="navigation mt-4">
+                        {{ knp_pagination_render(deudas) }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

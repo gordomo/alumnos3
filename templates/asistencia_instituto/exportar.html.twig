@@ -1,0 +1,17 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Exportar Asistencias{% endblock %}
+
+{% block body %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-12 text-center">
+            <div class="alert alert-info">
+                <h4>Exportación de Asistencias</h4>
+                <p>{{ mensaje }}</p>
+                <a href="{{ app.request.headers.get('referer') }}" class="btn btn-primary mt-3">Volver</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
