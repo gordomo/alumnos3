@@ -69,6 +69,11 @@ class Instituto
      */
     private $alumnos;
 
+    /**
+     * @ORM\OneToOne(targetEntity=InstitutoConfiguracion::class, mappedBy="instituto", cascade={"persist", "remove"})
+     */
+    private $configuracion;
+
     // Métodos de inicialización y getters/setters
 
     public function __construct()
@@ -255,6 +260,28 @@ class Instituto
                 $alumno->setInstituto(null);
             }
         }
+        return $this;
+    }
+
+    public function getConfiguracion(): ?InstitutoConfiguracion
+    {
+        return $this->configuracion;
+    }
+
+    public function setConfiguracion(?InstitutoConfiguracion $configuracion): self
+    {
+        // unset the owning side of the relation if necessary
+        if ($configuracion === null && $this->configuracion !== null) {
+            $this->configuracion->setInstituto(null);
+        }
+
+        // set the owning side of the relation if necessary
+        if ($configuracion !== null && $configuracion->getInstituto() !== $this) {
+            $configuracion->setInstituto($this);
+        }
+
+        $this->configuracion = $configuracion;
+
         return $this;
     }
 }

@@ -70,6 +70,62 @@
                                 </div>
                             </div>
                         </div>
+                        
+                        <hr class="my-4">
+                        
+                        <h4 class="mb-3">Configuración de Descuentos</h4>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="descuentoEfectivo" class="form-label">Descuento por pago en efectivo (%)</label>
+                                    <input type="number" 
+                                           class="form-control" 
+                                           id="descuentoEfectivo" 
+                                           name="descuentoEfectivo" 
+                                           min="0"
+                                           max="100"
+                                           step="0.01"
+                                           value="{{ configuracion.descuentoEfectivo }}">
+                                    <small class="form-text text-muted">
+                                        Porcentaje de descuento aplicado cuando se paga en efectivo. Dejar en blanco para no aplicar descuento.
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="descuentoHermanos" class="form-label">Descuento por hermanos (%)</label>
+                                    <input type="number" 
+                                           class="form-control" 
+                                           id="descuentoHermanos" 
+                                           name="descuentoHermanos" 
+                                           min="0"
+                                           max="100"
+                                           step="0.01"
+                                           value="{{ configuracion.descuentoHermanos }}">
+                                    <small class="form-text text-muted">
+                                        Porcentaje de descuento aplicado a alumnos con hermanos en el instituto. Dejar en blanco para no aplicar descuento.
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-check mb-3">
+                                    <input type="checkbox" 
+                                           class="form-check-input" 
+                                           id="deshabilitarDescuentosEnDeuda" 
+                                           name="deshabilitarDescuentosEnDeuda"
+                                           {% if configuracion.deshabilitarDescuentosEnDeuda %}checked{% endif %}>
+                                    <label class="form-check-label" for="deshabilitarDescuentosEnDeuda">
+                                        Deshabilitar descuentos para alumnos con deudas
+                                    </label>
+                                    <div class="form-text text-muted">
+                                        Si se activa esta opción, los alumnos con deudas no podrán beneficiarse de los descuentos configurados.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
                         <div class="text-center mt-4">
                             <button type="submit" class="btn btn-primary">
                                 <i class="fas fa-save"></i> Guardar Cambios

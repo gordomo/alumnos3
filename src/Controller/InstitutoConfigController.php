@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Instituto;
 use App\Entity\Vencimiento;
 use App\Repository\VencimientoRepository;
+use App\Repository\InstitutoConfiguracionRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -22,23 +23,26 @@ class InstitutoConfigController extends AbstractController
     /**
      * @Route("/", name="instituto_config_index", methods={"GET"})
      */
-    public function index(VencimientoRepository $vencimientoRepository): Response
+    public function index(VencimientoRepository $vencimientoRepository, InstitutoConfiguracionRepository $configuracionRepository): Response
     {
         $instituto = $this->getUser()->getInstituto();
         $vencimientos = $vencimientoRepository->findByInstitutoOrdered($instituto);
+        $configuracion = $configuracionRepository->findOrCreateByInstituto($instituto);
         
         return $this->render('instituto_config/index.html.twig', [
             'instituto' => $instituto,
-            'vencimientos' => $vencimientos
+            'vencimientos' => $vencimientos,
+            'configuracion' => $configuracion
         ]);
     }
 
     /**
      * @Route("/edit", name="instituto_config_edit", methods={"GET", "POST"})
      */
-    public function edit(Request $request, EntityManagerInterface $entityManager, SluggerInterface $slugger, ValidatorInterface $validator): Response
+    public function edit(Request $request, EntityManagerInterface $entityManager, SluggerInterface $slugger, ValidatorInterface $validator, InstitutoConfiguracionRepository $configuracionRepository): Response
     {
         $instituto = $this->getUser()->getInstituto();
+        $configuracion = $configuracionRepository->findOrCreateByInstituto($instituto);
         
         if ($request->isMethod('POST')) {
             $instituto->setNombre($request->request->get('nombre'));
@@ -53,6 +57,15 @@ class InstitutoConfigController extends AbstractController
             $instituto->setTel($tel);
             
             $instituto->setDir($request->request->get('dir'));
+
+            // Configuración de descuentos
+            $descuentoEfectivo = $request->request->get('descuentoEfectivo');
+            $descuentoHermanos = $request->request->get('descuentoHermanos');
+            $deshabilitarDescuentosEnDeuda = $request->request->has('deshabilitarDescuentosEnDeuda');
+            
+            $configuracion->setDescuentoEfectivo($descuentoEfectivo !== '' ? (float)$descuentoEfectivo : null);
+            $configuracion->setDescuentoHermanos($descuentoHermanos !== '' ? (float)$descuentoHermanos : null);
+            $configuracion->setDeshabilitarDescuentosEnDeuda($deshabilitarDescuentosEnDeuda);
 
             // Manejo del logo
             if ($request->files->has('logo')) {
@@ -86,7 +99,10 @@ class InstitutoConfigController extends AbstractController
 
             try {
                 $errors = $validator->validate($instituto); 
-                if (count($errors) === 0) {
+                $errorsConfig = $validator->validate($configuracion);
+                
+                if (count($errors) === 0 && count($errorsConfig) === 0) {
+                    $entityManager->persist($configuracion);
                     $entityManager->flush();
                     $this->addFlash('success', 'La configuración se ha actualizado correctamente.');
                     return $this->redirectToRoute('instituto_config_index');
@@ -94,15 +110,18 @@ class InstitutoConfigController extends AbstractController
                     foreach ($errors as $error) {
                         $this->addFlash('danger', $error->getMessage());
                     }
+                    foreach ($errorsConfig as $error) {
+                        $this->addFlash('danger', $error->getMessage());
+                    }
                 }
             } catch (\Exception $e) {
-                dd($e);
-                $this->addFlash('danger', 'Ocurrió un error al guardar los cambios. Por favor, verifica los datos ingresados.');
+                $this->addFlash('danger', 'Ocurrió un error al guardar los cambios: ' . $e->getMessage());
             }
         }
 
         return $this->render('instituto_config/edit.html.twig', [
             'instituto' => $instituto,
+            'configuracion' => $configuracion
         ]);
     }
 

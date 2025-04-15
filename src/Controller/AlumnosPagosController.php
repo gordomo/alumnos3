@@ -219,6 +219,8 @@ class AlumnosPagosController extends AbstractController
         $montoFinal = $montoBase;
         $porcentajeInteres = 0;
         $motivoInteres = "Sin interés aplicado";
+        $descuentosAplicados = [];
+        $porcentajeDescuentoTotal = 0;
 
         // Ordenar vencimientos por día
         $vencimientosOrdenados = [];
@@ -270,9 +272,50 @@ class AlumnosPagosController extends AbstractController
             }
         }
 
-        // Calcular el monto final con el interés correspondiente
+        // Calcular el monto con el interés correspondiente
         if ($porcentajeInteres > 0) {
             $montoFinal = $montoBase * (1 + ($porcentajeInteres / 100));
+        }
+        
+        // Obtener la configuración del instituto para aplicar descuentos
+        $instituto = $alumno->getInstituto();
+        $configuracion = $instituto->getConfiguracion();
+        
+        // Verificar si podemos aplicar descuentos
+        $puedeRecibirDescuentos = true;
+        
+        // Si está configurado para deshabilitar descuentos en deuda
+        if ($configuracion && $configuracion->getDeshabilitarDescuentosEnDeuda()) {
+            // Verificar si el alumno tiene deudas vencidas
+            if ($alumno->tieneDeudasVencidas()) {
+                $puedeRecibirDescuentos = false;
+                $descuentosAplicados[] = "No se aplican descuentos porque el alumno tiene deudas vencidas";
+            }
+        }
+        
+        if ($puedeRecibirDescuentos && $configuracion) {
+            // Aplicar descuento por pago en efectivo si corresponde
+            if ($configuracion->getDescuentoEfectivo() && $configuracion->getDescuentoEfectivo() > 0) {
+                $porcentajeDescuentoEfectivo = (float)$configuracion->getDescuentoEfectivo();
+                $porcentajeDescuentoTotal += $porcentajeDescuentoEfectivo;
+                $descuentosAplicados[] = "Descuento del " . $porcentajeDescuentoEfectivo . "% por pago en efectivo";
+            }
+            
+            // Aplicar descuento por hermanos si corresponde
+            if ($configuracion->getDescuentoHermanos() && $configuracion->getDescuentoHermanos() > 0) {
+                // Verificar si el alumno tiene hermanos en el instituto
+                $hermanos = $alumno->getHermanos();
+                if (!empty($hermanos)) {
+                    $porcentajeDescuentoHermanos = (float)$configuracion->getDescuentoHermanos();
+                    $porcentajeDescuentoTotal += $porcentajeDescuentoHermanos;
+                    $descuentosAplicados[] = "Descuento del " . $porcentajeDescuentoHermanos . "% por tener " . count($hermanos) . " hermano(s) en el instituto";
+                }
+            }
+            
+            // Aplicar los descuentos al monto final
+            if ($porcentajeDescuentoTotal > 0) {
+                $montoFinal = $montoFinal * (1 - ($porcentajeDescuentoTotal / 100));
+            }
         }
         
         return [
@@ -280,7 +323,9 @@ class AlumnosPagosController extends AbstractController
             'montoBase' => $montoBase,
             'porcentajeInteres' => $porcentajeInteres,
             'motivoInteres' => $motivoInteres,
-            'mesesAdeudados' => array_values($mesesAdeudados)
+            'mesesAdeudados' => array_values($mesesAdeudados),
+            'descuentosAplicados' => $descuentosAplicados,
+            'porcentajeDescuentoTotal' => $porcentajeDescuentoTotal
         ];
     }
 
@@ -345,6 +390,7 @@ class AlumnosPagosController extends AbstractController
         }   
 
         // Calcular el monto sugerido si hay un curso seleccionado
+        $calculoMonto = null;
         if ($cursoSeleccionado) {
             $mesesAdeudadosCurso = $this->historialCursosService->verificarMesesAdeudadosPorCurso($alumno, $cursoSeleccionado);
             $calculoMonto = $this->calcularMonto($alumno, $cursoSeleccionado, $vencimientos, $mesesAdeudadosCurso);
@@ -411,7 +457,9 @@ class AlumnosPagosController extends AbstractController
             'is_general' => false,
             'mesesAdeudados' => $mesesAdeudados,
             'motivoInteres' => isset($calculoMonto) ? $calculoMonto['motivoInteres'] : null,
-            'porcentajeInteres' => isset($calculoMonto) ? $calculoMonto['porcentajeInteres'] : 0
+            'porcentajeInteres' => isset($calculoMonto) ? $calculoMonto['porcentajeInteres'] : 0,
+            'descuentosAplicados' => isset($calculoMonto) ? $calculoMonto['descuentosAplicados'] : [],
+            'porcentajeDescuentoTotal' => isset($calculoMonto) ? $calculoMonto['porcentajeDescuentoTotal'] : 0
         ]);
     }
 

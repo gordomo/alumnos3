@@ -26,6 +26,27 @@
         </div>
     </div>
 
+    {% if motivoInteres is defined and motivoInteres %}
+        <div class="alert alert-info mt-4">
+            <h5>Interés por vencimiento:</h5>
+            <p>{{ motivoInteres }}</p>
+        </div>
+    {% endif %}
+
+    {% if descuentosAplicados is defined and descuentosAplicados|length > 0 %}
+        <div class="alert alert-success mt-4">
+            <h5>Descuentos aplicados:</h5>
+            <ul class="mb-0">
+                {% for descuento in descuentosAplicados %}
+                    <li>{{ descuento }}</li>
+                {% endfor %}
+            </ul>
+            {% if porcentajeDescuentoTotal is defined and porcentajeDescuentoTotal > 0 %}
+                <p class="mt-2 mb-0"><strong>Total descuentos aplicados: {{ porcentajeDescuentoTotal }}%</strong></p>
+            {% endif %}
+        </div>
+    {% endif %}
+
     {% if vencimientos is defined and vencimientos|length > 0 %}
         <div class="alert alert-info mt-4">
             <h5>Vencimientos Configurados:</h5>

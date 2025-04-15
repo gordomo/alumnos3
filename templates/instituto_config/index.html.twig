@@ -60,6 +60,45 @@
                             </div>
                         </div>
 
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h4 class="card-title mb-0">Configuración de Descuentos</h4>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <table class="table">
+                                            <tr>
+                                                <th>Descuento por pago en efectivo:</th>
+                                                <td>{{ configuracion.descuentoEfectivo is not null ? configuracion.descuentoEfectivo ~ '%' : 'No configurado' }}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Descuento por hermanos:</th>
+                                                <td>{{ configuracion.descuentoHermanos is not null ? configuracion.descuentoHermanos ~ '%' : 'No configurado' }}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Deshabilitar descuentos en deuda:</th>
+                                                <td>
+                                                    {% if configuracion.deshabilitarDescuentosEnDeuda %}
+                                                        <span class="badge bg-warning">Sí</span> 
+                                                        <small class="text-muted">(Los alumnos con deudas no reciben descuentos)</small>
+                                                    {% else %}
+                                                        <span class="badge bg-success">No</span>
+                                                        <small class="text-muted">(Los alumnos con deudas reciben descuentos normalmente)</small>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="text-center mt-4">
+                                    <a href="{{ path('instituto_config_edit') }}" class="btn btn-primary">
+                                        <i class="bi bi-pencil"></i> Editar Configuración de Descuentos
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="card">
                             <div class="card-header">
                                 <h4 class="card-title mb-0">Vencimientos</h4>

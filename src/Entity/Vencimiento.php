@@ -50,6 +50,11 @@ class Vencimiento
      */
     private $instituto;
 
+    /**
+     * @ORM\ManyToOne(targetEntity=InstitutoConfiguracion::class, inversedBy="vencimientos")
+     */
+    private $configuracion;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -96,6 +101,17 @@ class Vencimiento
     public function setInstituto(?Instituto $instituto): self
     {
         $this->instituto = $instituto;
+        return $this;
+    }
+
+    public function getConfiguracion(): ?InstitutoConfiguracion
+    {
+        return $this->configuracion;
+    }
+
+    public function setConfiguracion(?InstitutoConfiguracion $configuracion): self
+    {
+        $this->configuracion = $configuracion;
         return $this;
     }
 } 

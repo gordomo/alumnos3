@@ -13,49 +13,36 @@ use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Security;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
-use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
+use Symfony\Component\Security\Core\User\UserProviderInterface;
+use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Http\Authenticator\AbstractLoginFormAuthenticator;
 use Symfony\Component\Security\Http\Authenticator\Passport\Badge\CsrfTokenBadge;
-use Symfony\Component\Security\Http\Authenticator\Passport\Badge\RememberMeBadge;
 use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
+use Symfony\Component\Security\Http\Authenticator\Passport\Badge\RememberMeBadge;
 use Symfony\Component\Security\Http\Authenticator\Passport\Credentials\PasswordCredentials;
 use Symfony\Component\Security\Http\Authenticator\Passport\Passport;
 use Symfony\Component\Security\Http\Util\TargetPathTrait;
 use Symfony\Component\Security\Http\EntryPoint\AuthenticationEntryPointInterface;
-use Symfony\Component\Security\Core\Exception\AuthenticationException;
+use Symfony\Component\HttpFoundation\Session\Flash\FlashBagInterface;
 
-class LoginFormAuthAuthenticator extends AbstractLoginFormAuthenticator
+class LoginFormAuthAuthenticator extends AbstractLoginFormAuthenticator implements AuthenticationEntryPointInterface
 {
     use TargetPathTrait;
 
     public const LOGIN_ROUTE = 'app_login';
 
-    private $urlGenerator;
-    /**
-     * @var EntityManagerInterface
-     */
-    private $entityManager;
-    /**
-     * @var CsrfTokenManagerInterface
-     */
-    private $csrfTokenManager;
-    /**
-     * @var UserPasswordHasherInterface
-     */
-    private $passwordEncoder;
+    private UrlGeneratorInterface $urlGenerator;
+    private FlashBagInterface $flashBag;
 
-    public function __construct(EntityManagerInterface $entityManager, UrlGeneratorInterface $urlGenerator, CsrfTokenManagerInterface $csrfTokenManager, UserPasswordHasherInterface $passwordEncoder)
+    public function __construct(UrlGeneratorInterface $urlGenerator, FlashBagInterface $flashBag)
     {
-        $this->entityManager = $entityManager;
         $this->urlGenerator = $urlGenerator;
-        $this->csrfTokenManager = $csrfTokenManager;
-        $this->passwordEncoder = $passwordEncoder;
+        $this->flashBag = $flashBag;
     }
 
     public function authenticate(Request $request): Passport
     {
         $email = $request->request->get('email', '');
-
         $request->getSession()->set(Security::LAST_USERNAME, $email);
 
         return new Passport(
@@ -70,45 +57,29 @@ class LoginFormAuthAuthenticator extends AbstractLoginFormAuthenticator
 
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
     {
-        $user = $token->getUser();
-        
-        // Si hay un target path en la sesión, redirigir allí
+        // Intentar obtener la URL objetivo almacenada en la sesión
         if ($targetPath = $this->getTargetPath($request->getSession(), $firewallName)) {
             return new RedirectResponse($targetPath);
         }
         
-        // Redirigir según el rol
-        if (in_array('ROLE_ADMIN', $user->getRoles())) {
-            return new RedirectResponse($this->urlGenerator->generate('admin_instituto_index'));
+        // Si no hay URL objetivo, redirigir según el rol
+        $user = $token->getUser();
+        if ($user instanceof User) {
+            if ($user->hasRole('ROLE_ADMIN')) {
+                return new RedirectResponse($this->urlGenerator->generate('admin_dashboard'));
+            }
+            if ($user->hasRole('ROLE_ADMIN_INSTITUTO')) {
+                return new RedirectResponse($this->urlGenerator->generate('instituto_dashboard'));
+            }
+            if ($user->hasRole('ROLE_PROFESOR')) {
+                return new RedirectResponse($this->urlGenerator->generate('profesor_dashboard'));
+            }
         }
         
-        if (in_array('ROLE_ADMIN_INSTITUTO', $user->getRoles())) {
-            return new RedirectResponse($this->urlGenerator->generate('dashboard_index'));
-        }
-        
-        if (in_array('ROLE_PROFESOR', $user->getRoles())) {
-            return new RedirectResponse($this->urlGenerator->generate('app_profesor_dashboard'));
-        }
-
-        // Si no tiene ningún rol específico, redirigir a la página principal
-        return new RedirectResponse($this->urlGenerator->generate('app_instituto_index'));
+        // Ruta por defecto
+        return new RedirectResponse($this->urlGenerator->generate('dashboard'));
     }
 
-    /**
-     * Override to control what happens when the user hits a secure page
-     * but isn't logged in yet.
-     */
-    public function start(Request $request, AuthenticationException $authException = null): Response
-    {
-        // add a custom flash message and redirect to the login page
-        $request->getSession()->getFlashBag()->add('note', 'Debe iniciar sesión para acceder a esta página.');
-
-        return new RedirectResponse($this->urlGenerator->generate('app_login'));
-    }
-
-    /**
-     * Override to control what happens when authentication fails.
-     */
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): Response
     {
         if ($request->hasSession()) {
@@ -120,8 +91,18 @@ class LoginFormAuthAuthenticator extends AbstractLoginFormAuthenticator
         return new RedirectResponse($url);
     }
 
-    public function checkCredentials($credentials, PasswordAuthenticatedUserInterface $user){
-        return $this->passwordEncoder->isPasswordValid($user, $credentials);
+    /**
+     * Llamado cuando se necesita una autenticación (usuario no autenticado intentando acceder a ruta protegida)
+     */
+    public function start(Request $request, AuthenticationException $authException = null): Response
+    {
+        // Guardar la URL que el usuario estaba intentando acceder
+        $this->saveTargetPath($request->getSession(), 'main', $request->getUri());
+        
+        // Agregar un mensaje flash informativo
+        $this->flashBag->add('note', 'Debes iniciar sesión para acceder a esta página');
+        
+        return new RedirectResponse($this->urlGenerator->generate(self::LOGIN_ROUTE));
     }
 
     protected function getLoginUrl(Request $request): string
