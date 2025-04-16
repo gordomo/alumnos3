@@ -65,14 +65,17 @@ class LoginFormAuthAuthenticator extends AbstractLoginFormAuthenticator implemen
         // Si no hay URL objetivo, redirigir según el rol
         $user = $token->getUser();
         if ($user instanceof User) {
-            if ($user->hasRole('ROLE_ADMIN')) {
-                return new RedirectResponse($this->urlGenerator->generate('admin_dashboard'));
+            // Redirigir según el rol
+            if (in_array('ROLE_ADMIN', $user->getRoles())) {
+                return new RedirectResponse($this->urlGenerator->generate('admin_instituto_index'));
             }
-            if ($user->hasRole('ROLE_ADMIN_INSTITUTO')) {
-                return new RedirectResponse($this->urlGenerator->generate('instituto_dashboard'));
+            
+            if (in_array('ROLE_ADMIN_INSTITUTO', $user->getRoles())) {
+                return new RedirectResponse($this->urlGenerator->generate('dashboard_index'));
             }
-            if ($user->hasRole('ROLE_PROFESOR')) {
-                return new RedirectResponse($this->urlGenerator->generate('profesor_dashboard'));
+            
+            if (in_array('ROLE_PROFESOR', $user->getRoles())) {
+                return new RedirectResponse($this->urlGenerator->generate('app_profesor_dashboard'));
             }
         }
         
