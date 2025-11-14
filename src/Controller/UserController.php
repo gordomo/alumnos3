@@ -33,17 +33,32 @@ class UserController extends AbstractController
      */
     public function new(Request $request, UserRepository $userRepository, UserPasswordHasherInterface $passwordEncoder): Response
     {
-        $instituto = $this->getUser()->getInstituto();
+        $usuarioActual = $this->getUser();
+        $instituto = $usuarioActual->getInstituto();
         $user = new User();
         $user->setInstituto($instituto);
 
-        $form = $this->createForm(UserType::class, $user, ['is_edit' => false]);
+        $isSuperAdmin = $usuarioActual && in_array('ROLE_SUPER_ADMIN', $usuarioActual->getRoles());
+        
+        $form = $this->createForm(UserType::class, $user, [
+            'is_edit' => false,
+            'allow_admin_role' => $isSuperAdmin
+        ]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
             $newEmail = $form->get('email')->getData();
             $newPassword = $form->get('password')->getData();
             $roles = $form->get('roles')->getData();
+
+            // Validar que solo SUPER_ADMIN puede asignar ROLE_ADMIN
+            if (in_array('ROLE_ADMIN', $roles) && !$isSuperAdmin) {
+                $this->addFlash('danger', 'No tienes permisos para crear usuarios con rol ADMIN.');
+                return $this->renderForm('user/new.html.twig', [
+                    'user' => $user,
+                    'form' => $form,
+                ]);
+            }
 
             $user->setPassword($passwordEncoder->hashPassword($user, $newPassword));
             $user->setEmail($newEmail);

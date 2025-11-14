@@ -40,7 +40,7 @@ class Alumno
     private $f_nac;
 
     /**
-     * @ORM\Column(type="text")
+     * @ORM\Column(type="string", length=191)
      */
     private $email;
 

@@ -24,7 +24,11 @@ class SecurityController extends AbstractController
     {
         $user = $this->getUser();
         if ($user) {
-            // Redirigir según el rol
+            // Redirigir según el rol (SUPER_ADMIN tiene prioridad)
+            if (in_array('ROLE_SUPER_ADMIN', $user->getRoles())) {
+                return new RedirectResponse($this->urlGenerator->generate('admin_instituto_index'));
+            }
+            
             if (in_array('ROLE_ADMIN', $user->getRoles())) {
                 return new RedirectResponse($this->urlGenerator->generate('admin_instituto_index'));
             }

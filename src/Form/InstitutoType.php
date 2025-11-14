@@ -20,38 +20,42 @@ class InstitutoType extends AbstractType
         $builder
             ->add('nombre', TextType::class, [
                 'label' => 'Nombre',
-            ])->add('tel', TextType::class, [
+            ])
+            ->add('tel', TextType::class, [
                 'label' => 'Teléfono',
                 'required' => !$isEdit
-            ])->add('email', TextType::class, [
-                'label' => 'email',
-                'required' => !$isEdit])
-            ->add('password', PasswordType::class, [
-                'label' => 'Password',
-                'mapped' => false,
-                'required' => !$isEdit,
-            ])->add('dir', TextType::class, [
+            ])
+            ->add('email', TextType::class, [
+                'label' => 'Email',
+                'required' => !$isEdit
+            ])
+            ->add('dir', TextType::class, [
                 'label' => 'Dirección',
                 'required' => !$isEdit,
-            ])->add('logo', FileType::class, [
-                'label' => 'Logo',
+            ])
+            ->add('password', PasswordType::class, [
+                'label' => 'Contraseña',
                 'mapped' => false,
                 'required' => !$isEdit,
+                'empty_data' => '',
+                'help' => $isEdit ? 'Dejar en blanco para mantener la contraseña actual' : 'Contraseña inicial para el usuario del instituto'
+            ])
+            ->add('logo', FileType::class, [
+                'label' => 'Logo',
+                'mapped' => false,
+                'required' => false,
                 'constraints' => [
                     new File([
-                        'maxSize' => '5024000k',
+                        'maxSize' => '1024k',
                         'mimeTypes' => [
                             'image/jpeg',
-                            'image/jpg',
                             'image/png',
-                            'image/gif',
-                            'image/bmp',
-                            'image/webp',
                         ],
-                        'mimeTypesMessage' => 'Por favor, sube una imagen válida. Los formatos permitidos son JPG, PNG, GIF, BMP o WEBP.',
+                        'mimeTypesMessage' => 'Por favor sube una imagen válida (JPG o PNG)',
                     ])
                 ],
-            ]);
+            ])
+        ;
     }
 
     public function configureOptions(OptionsResolver $resolver): void

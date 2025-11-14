@@ -21,28 +21,30 @@ class InstitutoRepository extends ServiceEntityRepository
         parent::__construct($registry, Instituto::class);
     }
 
-//    /**
-//     * @return Instituto[] Returns an array of Instituto objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('i')
-//            ->andWhere('i.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('i.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
-
-//    public function findOneBySomeField($value): ?Instituto
-//    {
-//        return $this->createQueryBuilder('i')
-//            ->andWhere('i.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+    /**
+     * Encuentra todos los institutos que un usuario puede ver según su rol
+     * 
+     * @param \App\Entity\User|null $usuario
+     * @return Instituto[]
+     */
+    public function findAllForUser(?\App\Entity\User $usuario = null): array
+    {
+        $qb = $this->createQueryBuilder('i');
+        
+        // Si el usuario tiene ROLE_SUPER_ADMIN, mostrar todos los institutos
+        if ($usuario && in_array('ROLE_SUPER_ADMIN', $usuario->getRoles())) {
+            return $qb->orderBy('i.nombre', 'ASC')->getQuery()->getResult();
+        }
+        
+        // Si el usuario tiene ROLE_ADMIN, mostrar solo los que tiene asignados (activos)
+        if ($usuario && in_array('ROLE_ADMIN', $usuario->getRoles())) {
+            $qb->innerJoin('i.admins', 'ia')
+               ->andWhere('ia.user = :usuario')
+               ->andWhere('ia.activo = :activo')
+               ->setParameter('usuario', $usuario)
+               ->setParameter('activo', true);
+        }
+        
+        return $qb->orderBy('i.nombre', 'ASC')->getQuery()->getResult();
+    }
 }

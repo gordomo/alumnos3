@@ -30,18 +30,8 @@ services:
     App\Command\SeedDatabaseCommand:
         tags: ['console.command']
 
-    App\DataFixtures\InstitutoSeeder:
+    App\DataFixtures\UserSeeder:
         tags: ['doctrine.fixture.orm']
         public: true
-
-    App\DataFixtures\CursoSeeder:
-        tags: ['doctrine.fixture.orm']
-        public: true
-
-    App\DataFixtures\ProfesorSeeder:
-        tags: ['doctrine.fixture.orm']
-        public: true
-
-    App\DataFixtures\AlumnoSeeder:
-        tags: ['doctrine.fixture.orm']
-        public: true
+        arguments:
+            $passwordHasher: '@security.password_hasher'

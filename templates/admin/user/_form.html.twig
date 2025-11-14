@@ -1,0 +1,29 @@
+{{ form_start(form, {'attr': {'class': 'form-horizontal'}}) }}
+<div class="form-group">
+    <div class="row mb-3">
+        <div class="col-md-6">
+            {{ form_label(form.email, 'Email', {'label_attr': {'class': 'form-label'}}) }}
+            {{ form_widget(form.email, {'attr': {'class': 'form-control'}}) }}
+            <small class="form-error text-danger">
+                {{ form_errors(form.email) }}
+            </small>
+        </div>
+        <div class="col-md-6">
+            {{ form_label(form.password, 'Contraseña', {'label_attr': {'class': 'form-label'}}) }}
+            {{ form_widget(form.password, {'attr': {'class': 'form-control'}}) }}
+            {% if form.password.vars.help %}
+                <small class="form-text text-muted">{{ form.password.vars.help }}</small>
+            {% endif %}
+            <small class="form-error text-danger">
+                {{ form_errors(form.password) }}
+            </small>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col text-end">
+            {{ include('components/back_button.html.twig', {'default_path': path('admin_user_index')}) }}
+            <button class="btn btn-success">{{ button_label|default('Guardar') }}</button>
+        </div>
+    </div>
+</div>
+{{ form_end(form) }}

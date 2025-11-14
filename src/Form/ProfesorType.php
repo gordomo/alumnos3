@@ -25,7 +25,7 @@ class ProfesorType extends AbstractType
             ->add('apellido', TextType::class, ['attr' => ['class' => 'form-control'], 'label_attr'=> ['class'=> 'form-label']])
             ->add('dni', NumberType::class, ['attr' => ['class' => 'form-control'], 'label_attr'=> ['class'=> 'form-label'],])
             ->add('email', EmailType::class, ['attr' => ['class' => 'form-control'], 'label_attr'=> ['class'=> 'form-label'],])
-            ->add('tel', NumberType::class, ['attr' => ['class' => 'form-control'], 'label_attr'=> ['class'=> 'form-label'],])
+            ->add('tel', NumberType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'label_attr'=> ['class'=> 'form-label'],])
             ->add('precioHora', NumberType::class, ['html5' => true,'attr' => ['class' => 'form-control'], 'label_attr'=> ['class'=> 'form-label'],])
             ->add('viatico', NumberType::class, ['html5' => true,'attr' => ['class' => 'form-control'], 'required' => false, 'label_attr'=> ['class'=> 'form-label'],])
             ->add('cursos', EntityType::class, [

@@ -74,6 +74,11 @@ class Instituto
      */
     private $configuracion;
 
+    /**
+     * @ORM\OneToMany(targetEntity=InstitutoAdmin::class, mappedBy="instituto", cascade={"persist", "remove"})
+     */
+    private $admins;
+
     // Métodos de inicialización y getters/setters
 
     public function __construct()
@@ -83,6 +88,7 @@ class Instituto
         $this->cursos = new ArrayCollection();
         $this->profesores = new ArrayCollection();
         $this->alumnos = new ArrayCollection();
+        $this->admins = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -282,6 +288,33 @@ class Instituto
 
         $this->configuracion = $configuracion;
 
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, InstitutoAdmin>
+     */
+    public function getAdmins(): Collection
+    {
+        return $this->admins;
+    }
+
+    public function addAdmin(InstitutoAdmin $admin): self
+    {
+        if (!$this->admins->contains($admin)) {
+            $this->admins[] = $admin;
+            $admin->setInstituto($this);
+        }
+        return $this;
+    }
+
+    public function removeAdmin(InstitutoAdmin $admin): self
+    {
+        if ($this->admins->removeElement($admin)) {
+            if ($admin->getInstituto() === $this) {
+                $admin->setInstituto(null);
+            }
+        }
         return $this;
     }
 }

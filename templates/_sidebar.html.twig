@@ -1,8 +1,14 @@
 <!-- Sidebar -->
 <div class="d-flex" id="wrapper">
     <div class="bg-light border-right" id="sidebar-wrapper">
-        {% if is_granted('ROLE_USER') or is_granted('ROLE_ADMIN') or is_granted('ROLE_ADMIN_INSTITUTO') or is_granted('ROLE_PROFESOR')%}
-            <div class="sidebar-heading ps-4">{{ app.user.instituto.nombre }}</div>
+        {% if is_granted('ROLE_USER') or is_granted('ROLE_ADMIN') or is_granted('ROLE_ADMIN_INSTITUTO') or is_granted('ROLE_PROFESOR') or is_granted('ROLE_SUPER_ADMIN') %}
+            <div class="sidebar-heading ps-4">
+                {% if app.user.instituto %}
+                    {{ app.user.instituto.nombre }}
+                {% else %}
+                    Super Admin
+                {% endif %}
+            </div>
             <div class="sidebar-headings small text-muted ps-4">{{ app.user.email }}</div>
             <hr class="my-0">
         {% endif %}
@@ -96,11 +102,21 @@
             </ul>
         {% endif %}
 
-        {% if is_granted('ROLE_ADMIN') %}
+        {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_SUPER_ADMIN') %}
             <ul class="nav nav-tabs sidebar-dropdown-ul">
                 <li class="nav-item">
                     <a class="list-group-item list-group-item-action bg-light {% if app.request.get('_route') == 'admin_instituto_index' %}active{% endif %}" href="{{ path('admin_instituto_index') }}">
                         <i class="bi bi-building"></i> Institutos
+                    </a>
+                </li>
+            </ul>
+        {% endif %}
+
+        {% if is_granted('ROLE_SUPER_ADMIN') %}
+            <ul class="nav nav-tabs sidebar-dropdown-ul">
+                <li class="nav-item">
+                    <a class="list-group-item list-group-item-action bg-light {% if app.request.get('_route') starts with 'admin_user_' %}active{% endif %}" href="{{ path('admin_user_index') }}">
+                        <i class="bi bi-people"></i> Usuarios Administradores
                     </a>
                 </li>
             </ul>

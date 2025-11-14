@@ -388,6 +388,12 @@ class HistorialCursosService
             9 => 'Septiembre', 10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre'
         ];
 
+        // Obtener fecha actual
+        $fechaActual = new \DateTime();
+        $mesActual = (int)$fechaActual->format('n');
+        $anoActual = (int)$fechaActual->format('Y');
+        $diaActual = (int)$fechaActual->format('d');
+
         // Obtener todas las deudas no pagadas del alumno
         $deudas = $this->entityManager->getRepository(DeudaAlumno::class)
             ->findBy([
@@ -396,15 +402,58 @@ class HistorialCursosService
             ], ['ano' => 'ASC', 'mes' => 'ASC']);
 
         foreach ($deudas as $deuda) {
+            $mes = $deuda->getMes();
+            $ano = $deuda->getAno();
             $curso = $deuda->getCurso();
-            $mesesAdeudados[] = [
-                'mes' => $deuda->getMes(),
-                'ano' => $deuda->getAno(),
-                'nombre' => $nombresMeses[$deuda->getMes()] . ' ' . $deuda->getAno(),
-                'curso' => $curso->getNombre(),
-                'curso_obj' => $curso,
-                'monto' => $deuda->getMonto()
-            ];
+            
+            // Determinar si este mes debe incluirse según la lógica de vencimientos
+            $debeIncluirse = false;
+            $razonIncluido = "";
+            
+            if ($ano < $anoActual) {
+                $debeIncluirse = true;
+                $razonIncluido = "Mes de año anterior";
+            } elseif ($ano == $anoActual) {
+                if ($mes < $mesActual) {
+                    $debeIncluirse = true;
+                    $razonIncluido = "Mes anterior al actual";
+                } elseif ($mes == $mesActual) {
+                    // Para el mes actual, verificar vencimientos
+                    $vencimientos = $alumno->getInstituto()->getVencimientos();
+                    if ($vencimientos->isEmpty()) {
+                        // Si no hay vencimientos configurados, considerar el mes como adeudado
+                        $debeIncluirse = true;
+                        $razonIncluido = "Mes actual sin vencimientos configurados";
+                    } else {
+                        // Ordenar vencimientos por día (ascendente)
+                        $vencimientosOrdenados = $vencimientos->toArray();
+                        usort($vencimientosOrdenados, function($a, $b) {
+                            return $a->getDiaVencimiento() <=> $b->getDiaVencimiento();
+                        });
+                        
+                        // Verificar si ya pasó algún vencimiento
+                        foreach ($vencimientosOrdenados as $vencimiento) {
+                            if ($diaActual > $vencimiento->getDiaVencimiento()) {
+                                $debeIncluirse = true;
+                                $razonIncluido = "Mes actual con vencimiento del día " . $vencimiento->getDiaVencimiento() . " ya pasado";
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            if ($debeIncluirse) {
+                $mesesAdeudados[] = [
+                    'mes' => $mes,
+                    'ano' => $ano,
+                    'nombre' => $nombresMeses[$mes] . ' ' . $ano,
+                    'curso' => $curso->getNombre(),
+                    'curso_obj' => $curso,
+                    'monto' => $deuda->getMonto(),
+                    'razon' => $razonIncluido
+                ];
+            }
         }
 
         return $mesesAdeudados;

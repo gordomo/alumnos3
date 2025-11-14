@@ -74,6 +74,24 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
             ->getOneOrNullResult();
     }
 
+    /**
+     * Encuentra todos los usuarios con rol ROLE_ADMIN o ROLE_SUPER_ADMIN
+     * Excluye ROLE_ADMIN_INSTITUTO
+     * 
+     * @return User[]
+     */
+    public function findAdminUsers(): array
+    {
+        return $this->createQueryBuilder('u')
+            ->where('(u.roles LIKE :role_admin AND u.roles NOT LIKE :role_admin_instituto) OR u.roles LIKE :role_super_admin')
+            ->setParameter('role_admin', '%"ROLE_ADMIN"%')
+            ->setParameter('role_admin_instituto', '%ROLE_ADMIN_INSTITUTO%')
+            ->setParameter('role_super_admin', '%"ROLE_SUPER_ADMIN"%')
+            ->orderBy('u.email', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
     // /**
     //  * @return User[] Returns an array of User objects
     //  */

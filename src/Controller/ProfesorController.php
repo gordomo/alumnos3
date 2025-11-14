@@ -8,6 +8,7 @@ use App\Form\ProfesorType;
 use App\Repository\AsistenciaProfesoresRepository;
 use App\Repository\CursoRepository;
 use App\Repository\ProfesorRepository;
+use App\Repository\UserRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -16,6 +17,8 @@ use Symfony\Component\Routing\Annotation\Route;
 use App\Helpers;
 use Knp\Component\Pager\PaginatorInterface;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
+use Doctrine\DBAL\Exception\DriverException;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use App\Entity\User;
 
@@ -217,6 +220,7 @@ class ProfesorController extends AbstractController
     public function new(
         Request $request, 
         ProfesorRepository $profesorRepository,
+        UserRepository $userRepository,
         EntityManagerInterface $entityManager,
         UserPasswordHasherInterface $passwordHasher
     ): Response
@@ -230,10 +234,32 @@ class ProfesorController extends AbstractController
 
         if ($form->isSubmitted()) {
             if ($form->isValid()) {
+                $email = $profesor->getEmail();
+                
+                // Verificar si el email ya existe en usuarios
+                $usuarioExistente = $userRepository->findOneBy(['email' => $email]);
+                if ($usuarioExistente) {
+                    $this->addFlash('danger', 'El correo electrónico "' . $email . '" ya está registrado en el sistema.');
+                    return $this->renderForm('profesor/new.html.twig', [
+                        'profesor' => $profesor,
+                        'form' => $form,
+                    ]);
+                }
+                
+                // Verificar si el email ya existe en profesores
+                $profesorExistente = $profesorRepository->findOneBy(['email' => $email]);
+                if ($profesorExistente) {
+                    $this->addFlash('danger', 'El correo electrónico "' . $email . '" ya está registrado para otro profesor.');
+                    return $this->renderForm('profesor/new.html.twig', [
+                        'profesor' => $profesor,
+                        'form' => $form,
+                    ]);
+                }
+
                 // Verificar que los cursos seleccionados no tengan profesor asignado
                 foreach($profesor->getCursos() as $curso) {
                     if(count($curso->getProfesores()) > 0) {
-                        $this->addFlash('danger', 'El curso ' . $curso->getNombre() . ' ya tiene un profesor asignado.');
+                        $this->addFlash('danger', 'El curso "' . $curso->getNombre() . '" ya tiene un profesor asignado.');
                         return $this->renderForm('profesor/new.html.twig', [
                             'profesor' => $profesor,
                             'form' => $form,
@@ -241,35 +267,68 @@ class ProfesorController extends AbstractController
                     }
                 }
 
-                // Crear el usuario para el profesor
-                $user = new User();
-                $user->setEmail($profesor->getEmail());
-                $user->setRoles(['ROLE_PROFESOR']);
-                $user->setInstituto($instituto);
-                
-                // Generar una contraseña temporal
-                $plainPassword = bin2hex(random_bytes(4)); // Genera una contraseña aleatoria de 8 caracteres
-                $hashedPassword = $passwordHasher->hashPassword($user, $plainPassword);
-                $user->setPassword($hashedPassword);
+                try {
+                    // Crear el usuario para el profesor
+                    $user = new User();
+                    $user->setEmail($email);
+                    $user->setRoles(['ROLE_PROFESOR']);
+                    $user->setInstituto($instituto);
+                    
+                    // Generar una contraseña temporal
+                    $plainPassword = bin2hex(random_bytes(4)); // Genera una contraseña aleatoria de 8 caracteres
+                    $hashedPassword = $passwordHasher->hashPassword($user, $plainPassword);
+                    $user->setPassword($hashedPassword);
 
-                // Establecer la relación bidireccional
-                $user->setProfesor($profesor);
-                $profesor->setUser($user);
+                    // Establecer la relación bidireccional
+                    $user->setProfesor($profesor);
+                    $profesor->setUser($user);
 
-                // Guardar el usuario y el profesor
-                $entityManager->persist($user);
-                $entityManager->persist($profesor);
-                $entityManager->flush();
+                    // Guardar el usuario y el profesor
+                    $entityManager->persist($user);
+                    $entityManager->persist($profesor);
+                    $entityManager->flush();
 
-                // Asegurar que la relación bidireccional se establezca con los cursos
-                foreach($profesor->getCursos() as $curso) {
-                    $curso->addProfesor($profesor);
+                    // Asegurar que la relación bidireccional se establezca con los cursos
+                    foreach($profesor->getCursos() as $curso) {
+                        $curso->addProfesor($profesor);
+                    }
+                    $entityManager->flush();
+
+                    // Mostrar mensaje con la contraseña temporal
+                    $this->addFlash('success', 'Profesor creado exitosamente. La contraseña temporal es: ' . $plainPassword);
+
+                    return $this->redirectToRoute('app_profesor_index', [], Response::HTTP_SEE_OTHER);
+                    
+                } catch (UniqueConstraintViolationException $e) {
+                    // Capturar errores de restricción única de base de datos
+                    $this->addFlash('danger', 'El correo electrónico "' . $email . '" ya está registrado en el sistema.');
+                    return $this->renderForm('profesor/new.html.twig', [
+                        'profesor' => $profesor,
+                        'form' => $form,
+                    ]);
+                } catch (DriverException $e) {
+                    // Capturar errores de driver de base de datos (incluye violaciones de restricción única)
+                    if ($e->getErrorCode() === 1062 || strpos($e->getMessage(), 'Duplicate entry') !== false || strpos($e->getMessage(), 'E7927C74') !== false) {
+                        $this->addFlash('danger', 'El correo electrónico "' . $email . '" ya está registrado en el sistema.');
+                    } else {
+                        $this->addFlash('danger', 'Error al crear el profesor. Por favor, verifique los datos e intente nuevamente.');
+                    }
+                    return $this->renderForm('profesor/new.html.twig', [
+                        'profesor' => $profesor,
+                        'form' => $form,
+                    ]);
+                } catch (\Exception $e) {
+                    // Capturar cualquier otro error
+                    if (strpos($e->getMessage(), 'Duplicate entry') !== false || strpos($e->getMessage(), 'E7927C74') !== false || strpos($e->getMessage(), 'UNIQ_') !== false) {
+                        $this->addFlash('danger', 'El correo electrónico "' . $email . '" ya está registrado en el sistema.');
+                    } else {
+                        $this->addFlash('danger', 'Error inesperado al crear el profesor. Por favor, intente nuevamente.');
+                    }
+                    return $this->renderForm('profesor/new.html.twig', [
+                        'profesor' => $profesor,
+                        'form' => $form,
+                    ]);
                 }
-
-                // Mostrar mensaje con la contraseña temporal
-                $this->addFlash('success', 'Profesor creado exitosamente');
-
-                return $this->redirectToRoute('app_profesor_index', [], Response::HTTP_SEE_OTHER);
             } else {
                 $errors = $form->getErrors(true);
                 foreach ($errors as $error) {
@@ -287,7 +346,7 @@ class ProfesorController extends AbstractController
     /**
      * @Route("/{id}/edit", name="app_profesor_edit", methods={"GET", "POST"})
      */
-    public function edit(Request $request, Profesor $profesor, ProfesorRepository $profesorRepository, CursoRepository $cursoRepository, EntityManagerInterface $entityManager): Response
+    public function edit(Request $request, Profesor $profesor, ProfesorRepository $profesorRepository, UserRepository $userRepository, CursoRepository $cursoRepository, EntityManagerInterface $entityManager): Response
     {
         // Obtener el instituto del usuario actual
         $instituto = $this->getUser()->getInstituto();
@@ -303,6 +362,9 @@ class ProfesorController extends AbstractController
             $cursosOriginalesIds[] = $curso->getId();
         }
         
+        // Guardar el email original antes de que el formulario lo modifique
+        $emailOriginal = $profesor->getEmail();
+        
         $form = $this->createForm(ProfesorType::class, $profesor, [
             'is_edit' => true, 
             'instituto' => $instituto, 
@@ -311,6 +373,31 @@ class ProfesorController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $email = $profesor->getEmail();
+            
+            // Verificar si el email cambió y si el nuevo email ya existe
+            if ($email !== $emailOriginal) {
+                // Verificar si el nuevo email ya existe en usuarios
+                $usuarioExistente = $userRepository->findOneBy(['email' => $email]);
+                if ($usuarioExistente && (!$profesor->getUser() || $usuarioExistente->getId() !== $profesor->getUser()->getId())) {
+                    $this->addFlash('danger', 'El correo electrónico "' . $email . '" ya está registrado en el sistema.');
+                    return $this->renderForm('profesor/edit.html.twig', [
+                        'profesor' => $profesor,
+                        'form' => $form,
+                    ]);
+                }
+                
+                // Verificar si el nuevo email ya existe en otros profesores
+                $profesorExistente = $profesorRepository->findOneBy(['email' => $email]);
+                if ($profesorExistente && $profesorExistente->getId() !== $profesor->getId()) {
+                    $this->addFlash('danger', 'El correo electrónico "' . $email . '" ya está registrado para otro profesor.');
+                    return $this->renderForm('profesor/edit.html.twig', [
+                        'profesor' => $profesor,
+                        'form' => $form,
+                    ]);
+                }
+            }
+            
             // Verificar si se cambiaron los cursos
             $cursosNuevosIds = [];
             foreach ($profesor->getCursos() as $curso) {
@@ -325,7 +412,7 @@ class ProfesorController extends AbstractController
             foreach($profesor->getCursos() as $curso) {
                 foreach ($curso->getProfesores() as $profe) {
                     if ($profe->getId() != $profesor->getId()) {
-                        $this->addFlash('danger', 'El curso ' . $curso->getNombre() . ' ya tiene un profesor asignado.');
+                        $this->addFlash('danger', 'El curso "' . $curso->getNombre() . '" ya tiene un profesor asignado.');
                         return $this->renderForm('profesor/edit.html.twig', [
                             'profesor' => $profesor,
                             'form' => $form,
@@ -381,26 +468,61 @@ class ProfesorController extends AbstractController
                 }
             }
             
-            // Primero, remover al profesor de los cursos que ya no están asignados
-            foreach($cursosOriginales as $curso) {
-                if (!$profesor->getCursos()->contains($curso)) {
-                    $curso->removeProfesor($profesor);
-                    $cursoRepository->add($curso, true);
+            try {
+                // Actualizar el email del usuario si cambió
+                if ($email !== $emailOriginal && $profesor->getUser()) {
+                    $profesor->getUser()->setEmail($email);
                 }
-            }
-
-            // Luego, agregar al profesor a los nuevos cursos
-            foreach($profesor->getCursos() as $curso) {
-                if (!$cursosOriginales->contains($curso)) {
-                    $curso->addProfesor($profesor);
-                    $cursoRepository->add($curso, true);
+                
+                // Primero, remover al profesor de los cursos que ya no están asignados
+                foreach($cursosOriginales as $curso) {
+                    if (!$profesor->getCursos()->contains($curso)) {
+                        $curso->removeProfesor($profesor);
+                        $cursoRepository->add($curso, true);
+                    }
                 }
-            }
-            
-            // Finalmente, guardar el profesor
-            $profesorRepository->add($profesor, true);
 
-            return $this->redirectToRoute('app_profesor_index', [], Response::HTTP_SEE_OTHER);
+                // Luego, agregar al profesor a los nuevos cursos
+                foreach($profesor->getCursos() as $curso) {
+                    if (!$cursosOriginales->contains($curso)) {
+                        $curso->addProfesor($profesor);
+                        $cursoRepository->add($curso, true);
+                    }
+                }
+                
+                // Finalmente, guardar el profesor
+                $profesorRepository->add($profesor, true);
+
+                $this->addFlash('success', 'Profesor actualizado exitosamente.');
+                return $this->redirectToRoute('app_profesor_index', [], Response::HTTP_SEE_OTHER);
+                
+            } catch (UniqueConstraintViolationException $e) {
+                $this->addFlash('danger', 'El correo electrónico "' . $email . '" ya está registrado en el sistema.');
+                return $this->renderForm('profesor/edit.html.twig', [
+                    'profesor' => $profesor,
+                    'form' => $form,
+                ]);
+            } catch (DriverException $e) {
+                if ($e->getErrorCode() === 1062 || strpos($e->getMessage(), 'Duplicate entry') !== false || strpos($e->getMessage(), 'E7927C74') !== false) {
+                    $this->addFlash('danger', 'El correo electrónico "' . $email . '" ya está registrado en el sistema.');
+                } else {
+                    $this->addFlash('danger', 'Error al actualizar el profesor. Por favor, verifique los datos e intente nuevamente.');
+                }
+                return $this->renderForm('profesor/edit.html.twig', [
+                    'profesor' => $profesor,
+                    'form' => $form,
+                ]);
+            } catch (\Exception $e) {
+                if (strpos($e->getMessage(), 'Duplicate entry') !== false || strpos($e->getMessage(), 'E7927C74') !== false || strpos($e->getMessage(), 'UNIQ_') !== false) {
+                    $this->addFlash('danger', 'El correo electrónico "' . $email . '" ya está registrado en el sistema.');
+                } else {
+                    $this->addFlash('danger', 'Error inesperado al actualizar el profesor. Por favor, intente nuevamente.');
+                }
+                return $this->renderForm('profesor/edit.html.twig', [
+                    'profesor' => $profesor,
+                    'form' => $form,
+                ]);
+            }
         }
 
         return $this->renderForm('profesor/edit.html.twig', [

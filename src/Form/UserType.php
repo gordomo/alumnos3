@@ -15,12 +15,22 @@ class UserType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $isEdit = $options['is_edit'];
+        $allowAdminRole = $options['allow_admin_role'] ?? false;
+        
+        // Construir opciones de roles según permisos
+        $roleChoices = [
+            'Operador' => "ROLE_USER",
+        ];
+        
+        // Solo SUPER_ADMIN puede asignar ROLE_ADMIN
+        if ($allowAdminRole) {
+            $roleChoices['Administrador'] = "ROLE_ADMIN";
+        }
+        
         $builder
             ->add('email', TextType::class, ['label' => 'Email', 'attr' => ['class' => 'form-control'], 'required' => !$isEdit])
-            ->add('roles', ChoiceType::class, ['choices'  => [
-                    'Administrador' => "ROLE_ADMIN",
-                    'Operador' => "ROLE_USER",
-                ],
+            ->add('roles', ChoiceType::class, [
+                'choices' => $roleChoices,
                 'choice_attr' => function($choice, $key, $value) {
                     return ['class' => 'form-check-input'];
                 },
@@ -37,6 +47,7 @@ class UserType extends AbstractType
         $resolver->setDefaults([
             'data_class' => User::class,
             'is_edit' => false, // Valor por defecto
+            'allow_admin_role' => false, // Por defecto no permitir crear ADMIN
         ]);
     }
 }

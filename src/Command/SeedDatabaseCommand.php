@@ -2,10 +2,7 @@
 
 namespace App\Command;
 
-use App\DataFixtures\AlumnoSeeder;
-use App\DataFixtures\CursoSeeder;
-use App\DataFixtures\InstitutoSeeder;
-use App\DataFixtures\ProfesorSeeder;
+use App\DataFixtures\UserSeeder;
 use Doctrine\Bundle\FixturesBundle\Loader\SymfonyFixturesLoader;
 use Doctrine\Common\DataFixtures\Executor\ORMExecutor;
 use Doctrine\Common\DataFixtures\Purger\ORMPurger;
@@ -14,57 +11,52 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class SeedDatabaseCommand extends Command
 {
     protected static $defaultName = 'app:seed-database';
+    protected static $defaultDescription = 'Seed the database with initial data';
 
-    private $container;
     private $entityManager;
-    private $io;
+    private $userSeeder;
 
-    public function __construct(ContainerInterface $container, EntityManagerInterface $entityManager)
-    {
+    public function __construct(
+        EntityManagerInterface $entityManager,
+        UserSeeder $userSeeder
+    ) {
         parent::__construct();
-        $this->container = $container;
         $this->entityManager = $entityManager;
+        $this->userSeeder = $userSeeder;
     }
 
-    protected function configure()
+    protected function configure(): void
     {
-        $this->setDescription('Seeds the database with initial data');
+        $this
+            ->setDescription(self::$defaultDescription)
+        ;
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $this->io = new SymfonyStyle($input, $output);
-        $this->io->title('Starting database seeding...');
+        $io = new SymfonyStyle($input, $output);
 
-        // Crear el loader
-        $loader = new SymfonyFixturesLoader($this->container);
+        try {
+            // Crear el purger y el executor
+            $purger = new ORMPurger($this->entityManager);
+            $executor = new ORMExecutor($this->entityManager, $purger);
 
-        // Obtener las instancias de los seeders con sus dependencias
-        $institutoSeeder = $this->container->get(InstitutoSeeder::class);
-        $cursoSeeder = $this->container->get(CursoSeeder::class);
-        $profesorSeeder = $this->container->get(ProfesorSeeder::class);
-        $alumnoSeeder = $this->container->get(AlumnoSeeder::class);
+            // Cargar el seeder
+            $loader = new SymfonyFixturesLoader($this->getApplication()->getKernel()->getContainer());
+            $loader->addFixture($this->userSeeder);
 
-        // Registrar los fixtures
-        $loader->addFixture($institutoSeeder);
-        $loader->addFixture($cursoSeeder);
-        $loader->addFixture($profesorSeeder);
-        $loader->addFixture($alumnoSeeder);
+            // Ejecutar los seeders
+            $executor->execute($loader->getFixtures());
 
-        // Crear el purger y el executor
-        $purger = new ORMPurger($this->entityManager);
-        $executor = new ORMExecutor($this->entityManager, $purger);
-
-        // Ejecutar los fixtures
-        $this->io->section('Creating institute and admin user...');
-        $executor->execute($loader->getFixtures(), true);
-
-        $this->io->success('Database seeded successfully!');
-        return Command::SUCCESS;
+            $io->success('Database seeded successfully!');
+            return Command::SUCCESS;
+        } catch (\Exception $e) {
+            $io->error('Error seeding database: ' . $e->getMessage());
+            return Command::FAILURE;
+        }
     }
 } 

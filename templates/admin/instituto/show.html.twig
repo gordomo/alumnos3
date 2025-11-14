@@ -5,43 +5,248 @@
 {% endblock %}
 
 {% block body %}
-<div class="container mt-5">
-    <div class="row">
-        <div class="col-md-6">
-            <h2>Detalles del Instituto</h2>
-            <ul class="list-group">
-                <li class="list-group-item"><strong>Nombre:</strong> {{ instituto.nombre }}</li>
-                <li class="list-group-item"><strong>Dirección:</strong> {{ instituto.dir }}</li>
-                <li class="list-group-item"><strong>Teléfono:</strong> {{ instituto.tel }}</li>
-                <li class="list-group-item"><strong>Email:</strong> {{ instituto.email }}</li>
-                <li class="list-group-item"><strong>Usuarios:</strong> 
-                    <ul class="list-group">
-                    {% for usuario in instituto.usuarios %}
-                        {% if 'ROLE_ADMIN_INSTITUTO' in usuario.roles %}
-                        {% else %}
-                            <li class="list-group-item" style="border: 0;">
-                                {{ usuario.email }}
-                            </li>
-                        {% endif %}
-                    {% endfor %}
-                    </ul>
-                </li>
-                <!-- Agrega más detalles según lo que tiene la entidad Instituto -->
-            </ul>
+<div class="container mt-4">
+    {# Header con título y botón volver #}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            <i class="fas fa-building text-primary"></i> {{ instituto.nombre }}
+        </h1>
+        {{ include('components/back_button.html.twig', {'default_path': path('admin_instituto_index')}) }}
+    </div>
+
+    {# Información principal del instituto #}
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white border-bottom">
+                    <h4 class="mb-0">
+                        <i class="fas fa-info-circle text-primary"></i> Información del Instituto
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex align-items-start">
+                                <i class="fas fa-building text-muted me-3" style="font-size: 1.2em; margin-top: 0.25rem;"></i>
+                                <div class="flex-grow-1">
+                                    <small class="text-muted d-block mb-1">Nombre</small>
+                                    <strong class="d-block">{{ instituto.nombre }}</strong>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex align-items-start">
+                                <i class="fas fa-map-marker-alt text-muted me-3" style="font-size: 1.2em; margin-top: 0.25rem;"></i>
+                                <div class="flex-grow-1">
+                                    <small class="text-muted d-block mb-1">Dirección</small>
+                                    <strong class="d-block">{{ instituto.dir ?: 'No especificada' }}</strong>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex align-items-start">
+                                <i class="fas fa-phone text-muted me-3" style="font-size: 1.2em; margin-top: 0.25rem;"></i>
+                                <div class="flex-grow-1">
+                                    <small class="text-muted d-block mb-1">Teléfono</small>
+                                    <strong class="d-block">{{ instituto.tel ?: 'No especificado' }}</strong>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex align-items-start">
+                                <i class="fas fa-envelope text-muted me-3" style="font-size: 1.2em; margin-top: 0.25rem;"></i>
+                                <div class="flex-grow-1">
+                                    <small class="text-muted d-block mb-1">Email</small>
+                                    <strong class="d-block">{{ instituto.email ?: 'No especificado' }}</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
         
-        <div class="col-md-6">
-            <h2>Logo del Instituto</h2>
-            {% if instituto.logo %}
-                <img src="{{ asset('uploads/logos/' ~ instituto.logo) }}" alt="Logo de {{ instituto.nombre }}" class="img-thumbnail">
-            {% else %}
-                <p>No se ha subido un logo.</p>
-            {% endif %}
+        <div class="col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white border-bottom">
+                    <h4 class="mb-0">
+                        <i class="fas fa-image text-primary"></i> Logo
+                    </h4>
+                </div>
+                <div class="card-body text-center">
+                    {% if instituto.logo %}
+                        <img src="{{ asset('uploads/logos/' ~ instituto.logo) }}" 
+                             alt="Logo de {{ instituto.nombre }}" 
+                             class="img-fluid rounded shadow-sm" 
+                             style="max-height: 200px; max-width: 100%;">
+                    {% else %}
+                        <div class="py-5">
+                            <i class="fas fa-image fa-4x text-muted mb-3"></i>
+                            <p class="text-muted mb-0">No se ha subido un logo</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
         </div>
     </div>
 
-    <div class="mt-5">
-        {{ include('components/back_button.html.twig', {'default_path': path('admin_instituto_index')}) }}
+    {# Lista de usuarios #}
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white border-bottom">
+                    <h4 class="mb-0">
+                        <i class="fas fa-user-friends text-primary"></i> Usuarios del Instituto
+                    </h4>
+                </div>
+                <div class="card-body">
+                    {% if instituto.usuarios|length > 0 %}
+                        <div class="row">
+                            {% for usuario in instituto.usuarios %}
+                                <div class="col-md-12 {% if instituto.usuarios|length == 2 %}col-md-6{% elseif instituto.usuarios|length == 1 %}col-md-6 col-lg-4{% else %}col-sm-6 col-md-4 col-lg-3{% endif %} mb-3">
+                                    <div class="border rounded p-3 h-100">
+                                        <div class="d-flex align-items-start">
+                                            <div class="flex-shrink-0 me-3">
+                                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                    <i class="fas fa-user"></i>
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1 overflow-hidden" style="min-width: 0;">
+                                                <div class="mb-2">
+                                                    <strong class="d-block text-truncate" title="{{ usuario.email }}" style="font-size: 0.95rem;">{{ usuario.email }}</strong>
+                                                </div>
+                                                <div>
+                                                    {% if 'ROLE_ADMIN_INSTITUTO' in usuario.roles %}
+                                                        <span class="badge bg-primary">Administrador</span>
+                                                    {% elseif 'ROLE_PROFESOR' in usuario.roles %}
+                                                        <span class="badge bg-success">Profesor</span>
+                                                    {% else %}
+                                                        <span class="badge bg-secondary">Usuario</span>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted mb-0 text-center py-3">
+                            <i class="fas fa-info-circle"></i> No hay usuarios registrados para este instituto.
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
     </div>
+
+    {# Estadísticas - Solo visible para Super Admin #}
+    {% if is_granted('ROLE_ADMIN') %}
+    <div class="row mb-4">
+        {# Estadísticas de Alumnos #}
+        <div class="col-md-12 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">
+                        <i class="fas fa-users"></i> Estadísticas de Alumnos
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="card bg-info text-white shadow-sm border-0 h-100">
+                                <div class="card-body text-center d-flex flex-column justify-content-center" style="min-height: 140px;">
+                                    <h2 class="mb-3" style="font-size: 2.5rem;">{{ total_alumnos }}</h2>
+                                    <p class="mb-0">
+                                        <i class="fas fa-users"></i> Total de Alumnos
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-success text-white shadow-sm border-0 h-100">
+                                <div class="card-body text-center d-flex flex-column justify-content-center" style="min-height: 140px;">
+                                    <h2 class="mb-3" style="font-size: 2.5rem;">{{ alumnos_activos }}</h2>
+                                    <p class="mb-0">
+                                        <i class="fas fa-user-check"></i> Alumnos Activos
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-secondary text-white shadow-sm border-0 h-100">
+                                <div class="card-body text-center d-flex flex-column justify-content-center" style="min-height: 140px;">
+                                    <h2 class="mb-3" style="font-size: 2.5rem;">{{ alumnos_inactivos }}</h2>
+                                    <p class="mb-0">
+                                        <i class="fas fa-user-times"></i> Alumnos Inactivos
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="alert alert-info mt-3 mb-0 shadow-sm">
+                        <i class="fas fa-info-circle"></i> 
+                        <strong>Información de facturación:</strong> Este instituto tiene <strong>{{ total_alumnos }}</strong> alumno(s) registrado(s) en total.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# Estadísticas de Usuarios #}
+        <div class="col-md-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h3 class="mb-0">
+                        <i class="fas fa-user-shield"></i> Estadísticas de Usuarios
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <div class="card bg-dark text-white shadow-sm border-0 h-100">
+                                <div class="card-body text-center d-flex flex-column justify-content-center" style="min-height: 140px;">
+                                    <h2 class="mb-3" style="font-size: 2.5rem;">{{ total_usuarios }}</h2>
+                                    <p class="mb-0">
+                                        <i class="fas fa-users"></i> Total de Usuarios
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-primary text-white shadow-sm border-0 h-100">
+                                <div class="card-body text-center d-flex flex-column justify-content-center" style="min-height: 140px;">
+                                    <h2 class="mb-3" style="font-size: 2.5rem;">{{ usuarios_admin }}</h2>
+                                    <p class="mb-0">
+                                        <i class="fas fa-user-cog"></i> Administradores
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-success text-white shadow-sm border-0 h-100">
+                                <div class="card-body text-center d-flex flex-column justify-content-center" style="min-height: 140px;">
+                                    <h2 class="mb-3" style="font-size: 2.5rem;">{{ usuarios_profesor }}</h2>
+                                    <p class="mb-0">
+                                        <i class="fas fa-chalkboard-teacher"></i> Profesores
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-secondary text-white shadow-sm border-0 h-100">
+                                <div class="card-body text-center d-flex flex-column justify-content-center" style="min-height: 140px;">
+                                    <h2 class="mb-3" style="font-size: 2.5rem;">{{ otros_usuarios }}</h2>
+                                    <p class="mb-0">
+                                        <i class="fas fa-user"></i> Otros Usuarios
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}
