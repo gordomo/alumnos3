@@ -70,7 +70,13 @@ class ResetPasswordController extends AbstractController
                     $timeLeft .= $interval->i . ' minuto' . ($interval->i != 1 ? 's' : '');
                     
                     $this->addFlash('reset_password_error', 'Ya se ha enviado un correo de recuperación. Por favor, revisa tu bandeja de entrada. El enlace expirará en ' . $timeLeft . '.');
-                    return $this->redirectToRoute('app_reset_password');
+                    
+                    // Pasar el token al template para mostrar el botón de reenvío
+                    return $this->render('reset_password/request.html.twig', [
+                        'has_valid_token' => true,
+                        'token' => $user->getResetToken(),
+                        'email' => $email
+                    ]);
                 }
 
                 // Si el token existe pero ha expirado, lo limpiamos
@@ -100,7 +106,9 @@ class ResetPasswordController extends AbstractController
             return $this->redirectToRoute('app_login');
         }
 
-        return $this->render('reset_password/request.html.twig');
+        return $this->render('reset_password/request.html.twig', [
+            'has_valid_token' => false
+        ]);
     }
 
     /**
@@ -128,6 +136,12 @@ class ResetPasswordController extends AbstractController
             return $this->redirectToRoute('app_reset_password');
         }
 
+        // Pasar el usuario al template para mostrar información
+        $templateData = [
+            'token' => $token,
+            'user' => $user
+        ];
+
         if ($request->isMethod('POST')) {
             $password = $request->request->get('password');
             $confirmPassword = $request->request->get('confirm_password');
@@ -135,14 +149,16 @@ class ResetPasswordController extends AbstractController
             if (strlen($password) < 8) {
                 $this->addFlash('reset_password_error', 'La contraseña debe tener al menos 8 caracteres.');
                 return $this->render('reset_password/reset.html.twig', [
-                    'token' => $token
+                    'token' => $token,
+                    'user' => $user
                 ]);
             }
 
             if ($password !== $confirmPassword) {
                 $this->addFlash('reset_password_error', 'Las contraseñas no coinciden.');
                 return $this->render('reset_password/reset.html.twig', [
-                    'token' => $token
+                    'token' => $token,
+                    'user' => $user
                 ]);
             }
 
@@ -164,8 +180,58 @@ class ResetPasswordController extends AbstractController
         }
 
         // Si no es POST, mostrar el formulario de cambio de contraseña
-        return $this->render('reset_password/reset.html.twig', [
-            'token' => $token
-        ]);
+        return $this->render('reset_password/reset.html.twig', $templateData);
+    }
+
+    /**
+     * @Route("/resend/{token}", name="app_reset_password_resend")
+     */
+    public function resend(string $token, UserRepository $userRepository, TokenGeneratorInterface $tokenGenerator, Request $request): Response
+    {
+        try {
+            $limiter = $this->limiter->create($request->getClientIp());
+            $limiter->consume(1);
+        } catch (RateLimitExceededException $e) {
+            $this->addFlash('reset_password_error', 'Demasiados intentos. Por favor, espera unos minutos antes de intentar de nuevo.');
+            return $this->redirectToRoute('app_reset_password_confirm', ['token' => $token]);
+        }
+
+        $user = $userRepository->findOneBy(['resetToken' => $token]);
+
+        if (!$user) {
+            $this->addFlash('reset_password_error', 'El enlace de recuperación de contraseña no es válido.');
+            return $this->redirectToRoute('app_reset_password');
+        }
+
+        // Generar un nuevo token y extender la expiración
+        $newToken = $tokenGenerator->generateToken();
+        $user->setResetToken($newToken);
+        $user->setResetTokenExpiresAt(new \DateTime('+1 hour'));
+        
+        $userRepository->add($user);
+
+        try {
+            $this->emailService->sendPasswordResetEmail(
+                $user->getEmail(),
+                $newToken,
+                $user->getEmail()
+            );
+
+            $this->addFlash('success', 'Se ha reenviado el correo con las instrucciones para recuperar tu contraseña.');
+        } catch (\Exception $e) {
+            dd($e->getMessage());
+            // Log del error para debugging
+            error_log('Error al enviar correo de recuperación: ' . $e->getMessage());
+            
+            // Mensaje más específico si es un error de SSL
+            $errorMessage = 'Error al enviar el correo. Por favor, intenta de nuevo más tarde.';
+            if (strpos($e->getMessage(), 'certificate') !== false || strpos($e->getMessage(), 'SSL') !== false || strpos($e->getMessage(), 'TLS') !== false) {
+                $errorMessage = 'Error de conexión con el servidor de correo. Por favor, contacta al administrador.';
+            }
+            
+            $this->addFlash('reset_password_error', $errorMessage);
+        }
+
+        return $this->redirectToRoute('app_reset_password_confirm', ['token' => $newToken]);
     }
 } 
