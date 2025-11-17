@@ -16,24 +16,31 @@ use App\Service\HistorialCursosService;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Repository\AsistenciaAlumnosRepository;
 use App\Service\DeudaService;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+use App\Entity\User;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 /**
  * @Route("/instituto/alumno")
  */
+#[IsGranted('ROLE_ADMIN_INSTITUTO')]
 class AlumnoController extends AbstractController
 {
     private $entityManager;
     private $historialCursosService;
     private $deudaService;
+    private $passwordHasher;
 
     public function __construct(
         EntityManagerInterface $entityManager, 
         HistorialCursosService $historialCursosService,
-        DeudaService $deudaService
+        DeudaService $deudaService,
+        UserPasswordHasherInterface $passwordHasher
     ) {
         $this->entityManager = $entityManager;
         $this->historialCursosService = $historialCursosService;
         $this->deudaService = $deudaService;
+        $this->passwordHasher = $passwordHasher;
     }
 
     /**
@@ -51,7 +58,12 @@ class AlumnoController extends AbstractController
         $totalAgregados = $request->get('totalAgregados', '');
         $alumnosQueNoGuardadamos = $request->get('alumnosQueNoGuardadamos', []);
 
-        $instituto = $this->getUser()->getInstituto();
+        $user = $this->getUser();
+        if (!$user || !$user->getInstituto()) {
+            $this->addFlash('danger', 'No tienes un instituto asignado.');
+            return $this->redirectToRoute('app_login');
+        }
+        $instituto = $user->getInstituto();
         
         $alumnosQuery = $this->createQuery($alumnoRepository, $instituto, $sort, $order, $busqueda, $activo, $cursoSelected);
 
@@ -122,8 +134,13 @@ class AlumnoController extends AbstractController
      */
     public function new(Request $request, AlumnoRepository $alumnoRepository, DeudaService $deudaService): Response
     {
+        $user = $this->getUser();
+        if (!$user || !$user->getInstituto()) {
+            $this->addFlash('danger', 'No tienes un instituto asignado.');
+            return $this->redirectToRoute('app_login');
+        }
+        $instituto = $user->getInstituto();
         $alumno = new Alumno();
-        $instituto = $this->getUser()->getInstituto();
         $alumno->setInstituto($instituto);
 
         $form = $this->createForm(AlumnoType::class, $alumno, ['is_edit' => false, 'instituto' => $instituto]);
@@ -133,6 +150,38 @@ class AlumnoController extends AbstractController
         if ($form->isSubmitted()) {
             if ($form->isValid()) {
                 try {
+                    $email = $alumno->getEmail();
+                    
+                    // Verificar si el email ya existe en usuarios
+                    $usuarioExistente = $this->entityManager->getRepository(User::class)->findOneBy(['email' => $email]);
+                    if ($usuarioExistente) {
+                        $this->addFlash('danger', 'El correo electrónico "' . $email . '" ya está registrado en el sistema.');
+                        return $this->renderForm('alumno/new.html.twig', [
+                            'alumno' => $alumno,
+                            'form' => $form,
+                            'hermanos' => $alumno->getHermanos()
+                        ]);
+                    }
+                    
+                    // Crear el usuario para el alumno (opcional - solo si se quiere permitir login)
+                    // Por ahora lo creamos pero sin rol específico, se puede activar después
+                    $user = new User();
+                    $user->setEmail($email);
+                    $user->setRoles(['ROLE_ALUMNO']); // Rol para alumnos
+                    $user->setInstituto($instituto);
+                    
+                    // Generar una contraseña temporal (se puede cambiar después)
+                    $plainPassword = bin2hex(random_bytes(4)); // Genera una contraseña aleatoria de 8 caracteres
+                    $hashedPassword = $this->passwordHasher->hashPassword($user, $plainPassword);
+                    $user->setPassword($hashedPassword);
+
+                    // Establecer la relación bidireccional
+                    $user->setAlumno($alumno);
+                    $alumno->setUser($user);
+
+                    // Guardar el usuario primero
+                    $this->entityManager->persist($user);
+                    
                     // Guardar el alumno
                     $alumnoRepository->add($alumno);
                     
@@ -155,7 +204,11 @@ class AlumnoController extends AbstractController
                     }
                     
                     $this->setearHermandad($request, $alumno, $alumnoRepository);
-                    $this->addFlash('success', 'Alumno creado correctamente.');
+                    
+                    // Guardar todo
+                    $this->entityManager->flush();
+                    
+                    $this->addFlash('success', 'Alumno creado correctamente. La contraseña temporal para acceso es: ' . $plainPassword);
                     return $this->redirectToRoute('app_alumno_index', [], Response::HTTP_SEE_OTHER);
                 } catch (\Exception $e) {
                     if (strpos($e->getMessage(), 'UNIQ_') !== false) {
@@ -243,6 +296,18 @@ class AlumnoController extends AbstractController
      */
     public function show(Alumno $alumno, AlumnoRepository $alumnoRepository): Response
     {
+        $user = $this->getUser();
+        if (!$user || !$user->getInstituto()) {
+            $this->addFlash('danger', 'No tienes un instituto asignado.');
+            return $this->redirectToRoute('app_login');
+        }
+        
+        // Verificar que el alumno pertenece al instituto del usuario
+        if ($alumno->getInstituto() !== $user->getInstituto()) {
+            $this->addFlash('danger', 'No tienes acceso a este alumno.');
+            return $this->redirectToRoute('app_alumno_index');
+        }
+        
         $hermanos = [];
         foreach ($alumno->getHermanos() as $hermanoId) {
             $hermano = $alumnoRepository->find($hermanoId);
@@ -261,7 +326,18 @@ class AlumnoController extends AbstractController
      */
     public function edit(Request $request, Alumno $alumno, AlumnoRepository $alumnoRepository, DeudaService $deudaService): Response
     {
-        $instituto = $this->getUser()->getInstituto();
+        $user = $this->getUser();
+        if (!$user || !$user->getInstituto()) {
+            $this->addFlash('danger', 'No tienes un instituto asignado.');
+            return $this->redirectToRoute('app_login');
+        }
+        $instituto = $user->getInstituto();
+        
+        // Verificar que el alumno pertenece al instituto del usuario
+        if ($alumno->getInstituto() !== $instituto) {
+            $this->addFlash('danger', 'No tienes acceso a este alumno.');
+            return $this->redirectToRoute('app_alumno_index');
+        }
         $cursosActuales = $alumno->getCurso()->toArray();
         $estadoActivoPrevio = $alumno->getActivo();
         

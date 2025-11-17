@@ -44,4 +44,20 @@ class InstitutoAdminRepository extends ServiceEntityRepository
         
         return $admin !== null;
     }
+
+    /**
+     * Obtiene todos los institutos creados por un usuario
+     * 
+     * @param \App\Entity\User $usuario
+     * @return InstitutoAdmin[]
+     */
+    public function findInstitutosCreadosPorUsuario(\App\Entity\User $usuario): array
+    {
+        return $this->createQueryBuilder('ia')
+            ->where('ia.user = :usuario')
+            ->setParameter('usuario', $usuario)
+            ->orderBy('ia.id', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
 }

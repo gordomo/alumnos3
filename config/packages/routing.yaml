@@ -4,9 +4,13 @@ framework:
 
         # Configure how to generate URLs in non-HTTP contexts, such as CLI commands.
         # See https://symfony.com/doc/current/routing.html#generating-urls-in-commands
-        #default_uri: http://localhost
+        # Esto es necesario para que las URLs absolutas funcionen en emails
+        # Por defecto usa localhost:8000 para desarrollo
+        default_uri: http://localhost:8000
 
 when@prod:
     framework:
         router:
             strict_requirements: null
+            # En producción, configura APP_URL en tu .env.prod
+            default_uri: '%env(APP_URL)%'

@@ -161,6 +161,12 @@ class Alumno
     private $deudas;
 
     /**
+     * @ORM\OneToOne(targetEntity=User::class, inversedBy="alumno")
+     * @ORM\JoinColumn(name="user_id", referencedColumnName="id", nullable=true)
+     */
+    private $user;
+
+    /**
      * Variable para cachear el resultado de debeMes
      * @var array
      */
@@ -831,5 +837,16 @@ class Alumno
         }
         
         return $deudasParaMostrar;
+    }
+
+    public function getUser(): ?User
+    {
+        return $this->user;
+    }
+
+    public function setUser(?User $user): self
+    {
+        $this->user = $user;
+        return $this;
     }
 }

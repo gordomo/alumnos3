@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\User;
 use App\Form\AdminUserType;
 use App\Repository\UserRepository;
+use App\Repository\InstitutoAdminRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -89,7 +90,7 @@ class AdminUserController extends AbstractController
     /**
      * @Route("/{id}", name="admin_user_show", methods={"GET"})
      */
-    public function show(User $user, UserRepository $userRepository): Response
+    public function show(User $user, UserRepository $userRepository, InstitutoAdminRepository $institutoAdminRepository): Response
     {
         $usuarioActual = $this->getUser();
         
@@ -105,8 +106,12 @@ class AdminUserController extends AbstractController
             return $this->redirectToRoute('admin_user_index');
         }
 
+        // Obtener los institutos creados por este usuario
+        $institutosCreados = $institutoAdminRepository->findInstitutosCreadosPorUsuario($user);
+
         return $this->render('admin/user/show.html.twig', [
             'user' => $user,
+            'institutosCreados' => $institutosCreados,
         ]);
     }
 

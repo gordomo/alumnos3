@@ -1,0 +1,70 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Usuarios del Instituto{% endblock %}
+
+{% block panelTitle %}
+    Usuarios del Instituto <a href="{{ path('instituto_user_new') }}" class="btn btn-success btn-sm">Crear Nuevo</a>
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid mt-4">
+    <div class="row mb-3">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Email</th>
+                        <th>Roles</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% set role_names = {
+                        'ROLE_USER': 'Usuario',
+                        'ROLE_PROFESOR': 'Profesor',
+                        'ROLE_ADMIN_INSTITUTO': 'Administrador del Instituto'
+                    } %}
+                    {% for user in users %}
+                        <tr>
+                            <td>{{ user.id }}</td>
+                            <td>{{ user.email }}</td>
+                            <td>
+                                {% if user.roles %}
+                                    {% for role in user.roles %}
+                                        {% if role in role_names|keys %}
+                                            <span class="badge bg-primary me-1">{{ role_names[role] }}</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary me-1">{{ role }}</span>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{{ path('instituto_user_show', {'id': user.id}) }}" 
+                                   class="btn btn-sm btn-outline-info" 
+                                   title="Ver" 
+                                   data-toggle="tooltip">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{{ path('instituto_user_edit', {'id': user.id}) }}" 
+                                   class="btn btn-sm btn-outline-primary" 
+                                   title="Editar" 
+                                   data-toggle="tooltip">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                {{ include('instituto/user/_delete_form.html.twig', {'user': user}) }}
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted">No se encontraron usuarios.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

@@ -1,7 +1,7 @@
 <!-- Sidebar -->
 <div class="d-flex" id="wrapper">
     <div class="bg-light border-right" id="sidebar-wrapper">
-        {% if is_granted('ROLE_USER') or is_granted('ROLE_ADMIN') or is_granted('ROLE_ADMIN_INSTITUTO') or is_granted('ROLE_PROFESOR') or is_granted('ROLE_SUPER_ADMIN') %}
+        {% if is_granted('ROLE_USER') or is_granted('ROLE_ADMIN') or is_granted('ROLE_ADMIN_INSTITUTO') or is_granted('ROLE_PROFESOR') or is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_ALUMNO') %}
             <div class="sidebar-heading ps-4">
                 {% if app.user.instituto %}
                     {{ app.user.instituto.nombre }}
@@ -14,6 +14,16 @@
         {% endif %}
         
         <div class="list-group list-group-flush">
+        {% if is_granted('ROLE_ALUMNO') %}
+            <ul class="nav nav-tabs sidebar-dropdown-ul">
+                <li class="nav-item">
+                    <a class="list-group-item list-group-item-action bg-light {% if app.request.get('_route') == 'app_alumno_dashboard' %}active{% endif %}" href="{{ path('app_alumno_dashboard') }}">
+                        <i class="bi bi-house"></i> Mi Dashboard
+                    </a>
+                </li>
+            </ul>
+        {% endif %}
+
         {% if is_granted('ROLE_PROFESOR') %} 
             <ul class="nav nav-tabs sidebar-dropdown-ul">
                 <li class="nav-item">
@@ -89,6 +99,14 @@
                 <li class="nav-item">
                     <a class="list-group-item list-group-item-action bg-light {% if app.request.get('_route') == 'app_alumnos_pagos_index' %}active{% endif %}" href="{{ path('app_alumnos_pagos_index') }}">
                         <i class="bi bi-cash"></i> Pagos
+                    </a>
+                </li>
+            </ul>
+
+            <ul class="nav nav-tabs sidebar-dropdown-ul">
+                <li class="nav-item">
+                    <a class="list-group-item list-group-item-action bg-light {% if app.request.get('_route') starts with 'instituto_user_' %}active{% endif %}" href="{{ path('instituto_user_index') }}">
+                        <i class="bi bi-people"></i> Usuarios
                     </a>
                 </li>
             </ul>

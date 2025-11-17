@@ -81,6 +81,10 @@ class LoginFormAuthAuthenticator extends AbstractLoginFormAuthenticator implemen
             if (in_array('ROLE_PROFESOR', $user->getRoles())) {
                 return new RedirectResponse($this->urlGenerator->generate('app_profesor_dashboard'));
             }
+            
+            if (in_array('ROLE_ALUMNO', $user->getRoles())) {
+                return new RedirectResponse($this->urlGenerator->generate('app_alumno_dashboard'));
+            }
         }
         
         // Ruta por defecto

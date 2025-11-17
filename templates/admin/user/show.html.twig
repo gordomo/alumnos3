@@ -40,7 +40,56 @@
                         </tr>
                     </tbody>
                 </table>
-                <div class="text-end">
+
+                {% if institutosCreados is defined and institutosCreados|length > 0 %}
+                    <div class="mt-4">
+                        <h4 class="mb-3">Institutos Creados</h4>
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Nombre</th>
+                                        <th>Email</th>
+                                        <th>Estado</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for institutoAdmin in institutosCreados %}
+                                        <tr>
+                                            <td>{{ institutoAdmin.instituto.id }}</td>
+                                            <td>
+                                                <a href="{{ path('admin_instituto_show', {'id': institutoAdmin.instituto.id}) }}">
+                                                    {{ institutoAdmin.instituto.nombre }}
+                                                </a>
+                                            </td>
+                                            <td>{{ institutoAdmin.instituto.email }}</td>
+                                            <td>
+                                                {% if institutoAdmin.activo %}
+                                                    <span class="badge bg-success">Activo</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">Inactivo</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <a href="{{ path('admin_instituto_show', {'id': institutoAdmin.instituto.id}) }}" class="btn btn-sm btn-primary">
+                                                    Ver
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="mt-4">
+                        <p class="text-muted">Este usuario no ha creado ningún instituto.</p>
+                    </div>
+                {% endif %}
+
+                <div class="text-end mt-4">
                     <a href="{{ path('admin_user_index') }}" class="btn btn-secondary">Volver</a>
                     <a href="{{ path('admin_user_edit', {'id': user.id}) }}" class="btn btn-primary">Editar</a>
                 </div>

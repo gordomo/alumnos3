@@ -14,10 +14,12 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
  * @Route("/asistencias/alumnos")
  */
+#[IsGranted('ROLE_PROFESOR')]
 class AsistenciaAlumnosController extends AbstractController
 {
     /**
@@ -31,7 +33,12 @@ class AsistenciaAlumnosController extends AbstractController
         EntityManagerInterface $entityManager
     ): Response
     {
-        $instituto = $this->getUser()->getInstituto();
+        $user = $this->getUser();
+        if (!$user) {
+            throw $this->createAccessDeniedException('Debes estar autenticado.');
+        }
+        
+        $instituto = $user->getInstituto();
         
         // Obtener fecha del formulario o usar la fecha actual
         $fecha = $request->get('fecha', date('Y-m-d'));

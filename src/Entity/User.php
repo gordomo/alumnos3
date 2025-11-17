@@ -52,13 +52,38 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private $resetTokenExpiresAt;
 
     /**
+     * @ORM\Column(type="datetime", nullable=true)
+     */
+    private $resetTokenSentAt;
+
+    /**
      * @ORM\OneToOne(targetEntity=Profesor::class, mappedBy="user")
      */
     private $profesor;
 
+    /**
+     * @ORM\OneToOne(targetEntity=Alumno::class, mappedBy="user")
+     */
+    private $alumno;
+
     public function getInstituto(): ?Instituto
     {
-        return $this->instituto;
+        // Si tiene instituto directo, retornarlo
+        if ($this->instituto) {
+            return $this->instituto;
+        }
+        
+        // Si es profesor, obtener el instituto del profesor
+        if ($this->profesor && $this->profesor->getInstituto()) {
+            return $this->profesor->getInstituto();
+        }
+        
+        // Si es alumno, obtener el instituto del alumno
+        if ($this->alumno && $this->alumno->getInstituto()) {
+            return $this->alumno->getInstituto();
+        }
+        
+        return null;
     }
 
     public function setInstituto(?Instituto $instituto): self
@@ -178,6 +203,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    public function getResetTokenSentAt(): ?\DateTimeInterface
+    {
+        return $this->resetTokenSentAt;
+    }
+
+    public function setResetTokenSentAt(?\DateTimeInterface $resetTokenSentAt): self
+    {
+        $this->resetTokenSentAt = $resetTokenSentAt;
+        return $this;
+    }
+
     public function getProfesor(): ?Profesor
     {
         return $this->profesor;
@@ -186,6 +222,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setProfesor(?Profesor $profesor): self
     {
         $this->profesor = $profesor;
+        return $this;
+    }
+
+    public function getAlumno(): ?Alumno
+    {
+        return $this->alumno;
+    }
+
+    public function setAlumno(?Alumno $alumno): self
+    {
+        $this->alumno = $alumno;
         return $this;
     }
 }

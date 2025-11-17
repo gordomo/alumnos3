@@ -1,0 +1,60 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Ver Usuario{% endblock %}
+
+{% block panelTitle %}
+    Detalle del Usuario
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <table class="table table-bordered">
+                        <tbody>
+                            <tr>
+                                <th>ID</th>
+                                <td>{{ user.id }}</td>
+                            </tr>
+                            <tr>
+                                <th>Email</th>
+                                <td>{{ user.email }}</td>
+                            </tr>
+                            <tr>
+                                <th>Roles</th>
+                                <td>
+                                    {% set role_names = {
+                                        'ROLE_USER': 'Usuario',
+                                        'ROLE_PROFESOR': 'Profesor',
+                                        'ROLE_ADMIN_INSTITUTO': 'Administrador del Instituto'
+                                    } %}
+                                    {% if user.roles %}
+                                        {% for role in user.roles %}
+                                            {% if role in role_names|keys %}
+                                                <span class="badge bg-primary me-1">{{ role_names[role] }}</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary me-1">{{ role }}</span>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Instituto</th>
+                                <td>{{ user.instituto ? user.instituto.nombre : '-' }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="text-end">
+                        <a href="{{ path('instituto_user_index') }}" class="btn btn-secondary">Volver</a>
+                        <a href="{{ path('instituto_user_edit', {'id': user.id}) }}" class="btn btn-primary">Editar</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

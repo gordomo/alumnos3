@@ -21,10 +21,12 @@ use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\DBAL\Exception\DriverException;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use App\Entity\User;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
  * @Route("/instituto/profesor")
  */
+#[IsGranted('ROLE_ADMIN_INSTITUTO')]
 class ProfesorController extends AbstractController
 {
     /**
@@ -38,7 +40,12 @@ class ProfesorController extends AbstractController
         $order = $request->get('order', 'asc');
         $sort = $request->get('sort', 'apellido');
         
-        $instituto = $this->getUser()->getInstituto();
+        $user = $this->getUser();
+        if (!$user || !$user->getInstituto()) {
+            $this->addFlash('danger', 'No tienes un instituto asignado.');
+            return $this->redirectToRoute('app_login');
+        }
+        $instituto = $user->getInstituto();
         
         $profesorsQuery = $this->createQuery($profesorRepository, $instituto, $sort, $order, $busqueda);
 
@@ -536,6 +543,18 @@ class ProfesorController extends AbstractController
      */
     public function show(Profesor $profesor): Response
     {
+        $user = $this->getUser();
+        if (!$user || !$user->getInstituto()) {
+            $this->addFlash('danger', 'No tienes un instituto asignado.');
+            return $this->redirectToRoute('app_login');
+        }
+        
+        // Verificar que el profesor pertenece al instituto del usuario
+        if ($profesor->getInstituto() !== $user->getInstituto()) {
+            $this->addFlash('danger', 'No tienes acceso a este profesor.');
+            return $this->redirectToRoute('app_profesor_index');
+        }
+        
         return $this->render('profesor/show.html.twig', [
             'profesor' => $profesor,
         ]);

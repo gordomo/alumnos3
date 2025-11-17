@@ -11,6 +11,7 @@ use App\Repository\InstitutoAdminRepository;
 use App\Repository\InstitutoRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\HttpFoundation\Request;
@@ -35,13 +36,50 @@ class InstitutoAdminController extends AbstractController
     /**
      * @Route("/", name="admin_instituto_index", methods={"GET"})
      */
-    public function index(InstitutoRepository $institutoRepository): Response
-    {
+    public function index(
+        Request $request,
+        InstitutoRepository $institutoRepository,
+        UserRepository $userRepository,
+        PaginatorInterface $paginator
+    ): Response {
         $usuario = $this->getUser();
-        $institutos = $institutoRepository->findAllForUser($usuario);
+        
+        // Obtener parámetros de filtrado
+        $nombre = $request->query->get('nombre', '');
+        $usuarioCreadorId = $request->query->get('usuarioCreador', '');
+        $page = $request->query->getInt('page', 1);
+        
+        // Obtener el usuario creador si se especificó
+        $usuarioCreador = null;
+        if ($usuarioCreadorId) {
+            $usuarioCreador = $userRepository->find($usuarioCreadorId);
+        }
+        
+        // Crear query con filtros
+        $queryBuilder = $institutoRepository->createQueryBuilderWithFilters(
+            $usuario,
+            $nombre,
+            $usuarioCreador
+        );
+        
+        // Paginar resultados
+        $institutos = $paginator->paginate(
+            $queryBuilder->getQuery(),
+            $page,
+            10 // 10 items por página
+        );
+        
+        // Obtener lista de usuarios admin para el desplegable (solo si es SUPER_ADMIN)
+        $usuariosAdmin = [];
+        if ($usuario && in_array('ROLE_SUPER_ADMIN', $usuario->getRoles())) {
+            $usuariosAdmin = $userRepository->findAdminUsers();
+        }
 
         return $this->render('admin/instituto/index.html.twig', [
             'institutos' => $institutos,
+            'nombre' => $nombre,
+            'usuarioCreadorId' => $usuarioCreadorId,
+            'usuariosAdmin' => $usuariosAdmin,
         ]);
     }
 

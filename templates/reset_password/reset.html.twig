@@ -48,9 +48,12 @@
             </button>
 
             <div class="text-center mt-3">
-                <a href="{{ path('app_reset_password_resend', {'token': token}) }}" class="btn btn-link text-decoration-none">
-                    Reenviar correo
-                </a>
+                <form method="post" action="{{ path('app_reset_password_resend') }}" style="display: inline;">
+                    <input type="hidden" name="email" value="{{ user.email }}">
+                    <button type="submit" class="btn btn-link text-decoration-none border-0 bg-transparent p-0" style="color: #007bff; cursor: pointer;">
+                        Reenviar correo
+                    </button>
+                </form>
             </div>
 
             <div class="text-center mt-2">

@@ -119,3 +119,6 @@ th     { background:#eee; }
 .toast-custom.fade-out {
     opacity: 0;
 }
+.bg-warning {
+    background-color: #ff4b4b !important;
+}

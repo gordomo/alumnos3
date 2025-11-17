@@ -15,7 +15,9 @@ use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\Alumno;
 use App\Service\HistorialCursosService;
 use App\Service\DeudaService;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
+#[IsGranted('ROLE_ADMIN_INSTITUTO')]
 class DashboardController extends AbstractController
 {
     private $historialCursosService;
@@ -42,7 +44,12 @@ class DashboardController extends AbstractController
         $sort = $request->get('sort', 'alumnoNombre');
 
         // Obtener el instituto del usuario actual
-        $instituto = $this->getUser()->getInstituto();
+        $user = $this->getUser();
+        if (!$user || !$user->getInstituto()) {
+            $this->addFlash('danger', 'No tienes un instituto asignado.');
+            return $this->redirectToRoute('app_login');
+        }
+        $instituto = $user->getInstituto();
 
         // Obtener QueryBuilder para alumnos del instituto del usuario actual
         $alumnosQuery = $alumnoRepository->createQueryBuilder('a')

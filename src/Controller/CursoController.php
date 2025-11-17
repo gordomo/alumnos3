@@ -15,10 +15,12 @@ use Psr\Log\LoggerInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\AlumnoCursoHistorico;
 use App\Service\DeudaService;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
  * @Route("/instituto/curso")
  */
+#[IsGranted('ROLE_ADMIN_INSTITUTO')]
 class CursoController extends AbstractController
 {
     private $logger;
@@ -39,7 +41,12 @@ class CursoController extends AbstractController
         $sort = $request->get('sort', 'nombre');
 
         // Get current user's institute
-        $instituto = $this->getUser()->getInstituto();
+        $user = $this->getUser();
+        if (!$user || !$user->getInstituto()) {
+            $this->addFlash('danger', 'No tienes un instituto asignado.');
+            return $this->redirectToRoute('app_login');
+        }
+        $instituto = $user->getInstituto();
 
         // Obtener cursos activos y deshabilitados
         $cursos = $this->createQuery($cursoRepository, $instituto, $sort, $order, false, $busqueda);

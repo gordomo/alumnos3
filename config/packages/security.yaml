@@ -45,6 +45,7 @@ security:
 
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
+    # IMPORTANT: Order matters! More specific routes must come first
     access_control:
         # Public routes (only essential public routes)
         - { path: ^/login$, roles: PUBLIC_ACCESS }
@@ -56,27 +57,31 @@ security:
         - { path: ^/js/, roles: PUBLIC_ACCESS }
         - { path: ^/images/, roles: PUBLIC_ACCESS }
         
-        # Profesor routes
-        - { path: ^/profesor/dashboard, roles: [ROLE_PROFESOR, ROLE_ADMIN] }
-        - { path: ^/profesor/asistencia, roles: [ROLE_PROFESOR, ROLE_ADMIN] }
-        - { path: ^/profesor/curso, roles: [ROLE_PROFESOR, ROLE_ADMIN] }
-        - { path: ^/asistencias/alumnos, roles: [ROLE_PROFESOR, ROLE_ADMIN, ROLE_ADMIN_INSTITUTO] }
+        # SUPER_ADMIN only routes (must come before general /admin routes)
+        - { path: ^/admin/admin-user, roles: ROLE_SUPER_ADMIN }
         
-        # Admin routes
-        - { path: ^/admin, roles: [ROLE_ADMIN, ROLE_SUPER_ADMIN] }
+        # Admin routes (SUPER_ADMIN and ADMIN can access)
         - { path: ^/admin/instituto, roles: [ROLE_ADMIN, ROLE_SUPER_ADMIN] }
-        - { path: ^/admin/admin-user, roles: [ROLE_SUPER_ADMIN] }
-
-        # Instituto routes
-        - { path: ^/instituto, roles: [ROLE_ADMIN_INSTITUTO, ROLE_ADMIN] }
-        - { path: ^/instituto/config, roles: [ROLE_ADMIN_INSTITUTO, ROLE_ADMIN] }
-        - { path: ^/instituto/profesor, roles: [ROLE_ADMIN_INSTITUTO, ROLE_ADMIN] }
-        - { path: ^/instituto/curso, roles: [ROLE_ADMIN_INSTITUTO, ROLE_ADMIN] }
-        - { path: ^/instituto/alumno, roles: [ROLE_ADMIN_INSTITUTO, ROLE_ADMIN] }
-        - { path: ^/instituto/asistencia, roles: [ROLE_ADMIN_INSTITUTO, ROLE_ADMIN, ROLE_PROFESOR] }
+        - { path: ^/admin, roles: [ROLE_ADMIN, ROLE_SUPER_ADMIN] }
+        
+        # Profesor routes (only PROFESOR role)
+        - { path: ^/profesor, roles: ROLE_PROFESOR }
+        - { path: ^/asistencias/alumnos, roles: [ROLE_PROFESOR, ROLE_ADMIN_INSTITUTO] }
+        
+        # Instituto routes (only ADMIN_INSTITUTO - removed ROLE_ADMIN to prevent unauthorized access)
+        - { path: ^/instituto/config, roles: ROLE_ADMIN_INSTITUTO }
+        - { path: ^/instituto/profesor, roles: ROLE_ADMIN_INSTITUTO }
+        - { path: ^/instituto/curso, roles: ROLE_ADMIN_INSTITUTO }
+        - { path: ^/instituto/alumno, roles: ROLE_ADMIN_INSTITUTO }
+        - { path: ^/instituto/asistencia, roles: [ROLE_ADMIN_INSTITUTO, ROLE_PROFESOR] }
+        - { path: ^/instituto/user, roles: ROLE_ADMIN_INSTITUTO }
+        - { path: ^/instituto, roles: ROLE_ADMIN_INSTITUTO }
+        
+        # Dashboard route (ADMIN_INSTITUTO only)
+        - { path: ^/instituto$, roles: ROLE_ADMIN_INSTITUTO }
 
         # Alumno routes
-        - { path: ^/alumnos/, roles: [ROLE_ADMIN_INSTITUTO, ROLE_ADMIN] }
+        - { path: ^/alumno, roles: ROLE_ALUMNO }
         
         # Default - require authentication for all other routes
         - { path: ^/, roles: IS_AUTHENTICATED_FULLY }

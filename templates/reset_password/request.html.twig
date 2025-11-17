@@ -22,35 +22,44 @@
             <div class="alert alert-success" role="alert">{{ flash_success }}</div>
         {% endfor %}
 
-        <form method="post" class="login-form" id="resetPasswordForm">
-            <div class="form-group">
-                <input type="email" 
-                       name="email" 
-                       id="inputEmail" 
-                       class="form-control" 
-                       placeholder="Correo electrónico"
-                       autocomplete="email" 
-                       required 
-                       autofocus
-                       {% if email is defined %}value="{{ email }}"{% endif %}>
-            </div>
-
-            <button class="btn btn-primary" type="submit">
-                Enviar instrucciones
-            </button>
-
-            {% if has_valid_token is defined and has_valid_token and token is defined %}
-                <div class="text-center mt-3">
-                    <a href="{{ path('app_reset_password_resend', {'token': token}) }}" class="btn btn-link text-decoration-none">
-                        Reenviar correo
-                    </a>
+        {% if has_valid_token is defined and has_valid_token %}
+            {# Si hay un token válido, mostrar solo el botón de reenvío #}
+            <form method="post" action="{{ path('app_reset_password_resend') }}" class="login-form">
+                <input type="hidden" name="email" value="{{ email|default('') }}">
+                <div class="form-group">
+                    <p class="text-muted">Se ha enviado un correo de recuperación a <strong>{{ email }}</strong></p>
                 </div>
-            {% endif %}
+                <button class="btn btn-primary" type="submit">
+                    Reenviar correo
+                </button>
+                <div class="text-center mt-3">
+                    {{ include('components/back_button.html.twig', {'default_path': path('app_login')}) }}
+                </div>
+            </form>
+        {% else %}
+            {# Si no hay token válido, mostrar el formulario de solicitud #}
+            <form method="post" class="login-form" id="resetPasswordForm">
+                <div class="form-group">
+                    <input type="email" 
+                           name="email" 
+                           id="inputEmail" 
+                           class="form-control" 
+                           placeholder="Correo electrónico"
+                           autocomplete="email" 
+                           required 
+                           autofocus
+                           {% if email is defined %}value="{{ email }}"{% endif %}>
+                </div>
 
-            <div class="text-center {% if has_valid_token is defined and has_valid_token %}mt-2{% else %}mt-3{% endif %}">
-                {{ include('components/back_button.html.twig', {'default_path': path('app_login')}) }}
-            </div>
-        </form>
+                <button class="btn btn-primary" type="submit">
+                    Enviar instrucciones
+                </button>
+
+                <div class="text-center mt-3">
+                    {{ include('components/back_button.html.twig', {'default_path': path('app_login')}) }}
+                </div>
+            </form>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
