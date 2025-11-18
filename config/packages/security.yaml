@@ -79,6 +79,9 @@ security:
         
         # Dashboard route (ADMIN_INSTITUTO only)
         - { path: ^/instituto$, roles: ROLE_ADMIN_INSTITUTO }
+        
+        # Alumnos pagos routes (ADMIN_INSTITUTO can access)
+        - { path: ^/alumnos/pagos, roles: ROLE_ADMIN_INSTITUTO }
 
         # Alumno routes
         - { path: ^/alumno, roles: ROLE_ALUMNO }
