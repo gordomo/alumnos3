@@ -127,11 +127,15 @@ class AsistenciaAlumnosController extends AbstractController
                 ];
             }
             
+            // Validar si la fecha está configurada para el curso
+            $fechaValida = $this->validarFechaCurso($curso, $fecha);
+            
             return $this->render('asistencia_alumnos/index.html.twig', [
                 'asistenciasPorAlumno' => $asistenciasPorAlumno,
                 'fecha' => $fecha,
                 'cursos' => $cursos,
-                'cursoSeleccionado' => $curso
+                'cursoSeleccionado' => $curso,
+                'fechaValida' => $fechaValida
             ]);
         }
         
@@ -209,5 +213,105 @@ class AsistenciaAlumnosController extends AbstractController
 
         $this->addFlash('success', 'Asistencias guardadas correctamente');
         return $this->redirectToRoute('app_asistencia_alumnos_index');
+    }
+
+    /**
+     * Valida si una fecha está configurada para un curso
+     * Verifica que la fecha esté dentro del rango del curso y que coincida con los días configurados
+     * 
+     * @param \App\Entity\Curso $curso
+     * @param string $fecha Fecha en formato Y-m-d
+     * @return array ['valida' => bool, 'mensaje' => string]
+     */
+    private function validarFechaCurso($curso, string $fecha): array
+    {
+        $fechaObj = new \DateTime($fecha);
+        
+        // Verificar si el curso tiene configuración de fechas
+        if (!$curso->getFechaInicio() || !$curso->getFechaFin()) {
+            return [
+                'valida' => false,
+                'mensaje' => 'El curso no tiene fechas de inicio y fin configuradas.'
+            ];
+        }
+        
+        // Verificar si la fecha está dentro del rango del curso
+        if ($fechaObj < $curso->getFechaInicio() || $fechaObj > $curso->getFechaFin()) {
+            return [
+                'valida' => false,
+                'mensaje' => sprintf(
+                    'La fecha seleccionada está fuera del rango del curso (del %s al %s).',
+                    $curso->getFechaInicio()->format('d/m/Y'),
+                    $curso->getFechaFin()->format('d/m/Y')
+                )
+            ];
+        }
+        
+        // Verificar si el curso tiene días configurados
+        $diasCurso = $curso->getDias();
+        if (empty($diasCurso)) {
+            return [
+                'valida' => false,
+                'mensaje' => 'El curso no tiene días de la semana configurados.'
+            ];
+        }
+        
+        // Mapeo de días de la semana en español
+        $diasSemana = [
+            'Domingo' => 0,
+            'Lunes' => 1,
+            'Martes' => 2,
+            'Miercoles' => 3,
+            'Jueves' => 4,
+            'Viernes' => 5,
+            'Sabado' => 6
+        ];
+        
+        // Obtener el día de la semana de la fecha (0 = Domingo, 1 = Lunes, etc.)
+        $diaSemanaFecha = (int)$fechaObj->format('w');
+        
+        // Convertir los días del curso a números
+        $diasCursoNumeros = array_map(function($dia) use ($diasSemana) {
+            return $diasSemana[$dia] ?? null;
+        }, $diasCurso);
+        
+        // Verificar si el día de la semana de la fecha está en los días configurados
+        if (!in_array($diaSemanaFecha, $diasCursoNumeros)) {
+            $diasTexto = implode(', ', $diasCurso);
+            return [
+                'valida' => false,
+                'mensaje' => sprintf(
+                    'La fecha seleccionada (%s) no coincide con los días configurados para este curso (%s).',
+                    $this->obtenerNombreDia($diaSemanaFecha),
+                    $diasTexto
+                )
+            ];
+        }
+        
+        return [
+            'valida' => true,
+            'mensaje' => ''
+        ];
+    }
+
+    /**
+     * Obtiene el nombre del día de la semana en español
+     * 
+     * @param int $diaSemana 0 = Domingo, 1 = Lunes, etc.
+     * @return string
+     */
+    private function obtenerNombreDia(int $diaSemana): string
+    {
+        $dias = [
+            0 => 'Domingo',
+            1 => 'Lunes',
+            2 => 'Martes',
+            3 => 'Miércoles',
+            4 => 'Jueves',
+            5 => 'Viernes',
+            6 => 'Sábado'
+        ];
+        
+        return $dias[$diaSemana] ?? 'Desconocido';
     }
 } 

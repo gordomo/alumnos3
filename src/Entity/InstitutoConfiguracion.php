@@ -7,6 +7,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
+use App\Entity\DescuentoPromocional;
 
 /**
  * @ORM\Entity(repositoryClass=InstitutoConfiguracionRepository::class)
@@ -52,14 +53,25 @@ class InstitutoConfiguracion
     private $deshabilitarDescuentosEnDeuda = false;
     
     /**
+     * @ORM\Column(type="string", length=50, options={"default": "interes_primero"})
+     */
+    private $ordenCalculoInteresesDescuentos = 'interes_primero';
+    
+    /**
      * @ORM\OneToMany(targetEntity=Vencimiento::class, mappedBy="configuracion", orphanRemoval=true, cascade={"persist"})
      * @ORM\OrderBy({"orden" = "ASC"})
      */
     private $vencimientos;
     
+    /**
+     * @ORM\OneToMany(targetEntity=DescuentoPromocional::class, mappedBy="configuracion", orphanRemoval=true, cascade={"persist", "remove"})
+     */
+    private $descuentosPromocionales;
+    
     public function __construct()
     {
         $this->vencimientos = new ArrayCollection();
+        $this->descuentosPromocionales = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -111,6 +123,17 @@ class InstitutoConfiguracion
         return $this;
     }
     
+    public function getOrdenCalculoInteresesDescuentos(): string
+    {
+        return $this->ordenCalculoInteresesDescuentos ?? 'interes_primero';
+    }
+    
+    public function setOrdenCalculoInteresesDescuentos(string $ordenCalculoInteresesDescuentos): self
+    {
+        $this->ordenCalculoInteresesDescuentos = $ordenCalculoInteresesDescuentos;
+        return $this;
+    }
+    
     /**
      * @return Collection<int, Vencimiento>
      */
@@ -136,6 +159,36 @@ class InstitutoConfiguracion
                 $vencimiento->setConfiguracion(null);
             }
         }
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, DescuentoPromocional>
+     */
+    public function getDescuentosPromocionales(): Collection
+    {
+        return $this->descuentosPromocionales;
+    }
+
+    public function addDescuentosPromocionale(DescuentoPromocional $descuentosPromocionale): self
+    {
+        if (!$this->descuentosPromocionales->contains($descuentosPromocionale)) {
+            $this->descuentosPromocionales[] = $descuentosPromocionale;
+            $descuentosPromocionale->setConfiguracion($this);
+        }
+
+        return $this;
+    }
+
+    public function removeDescuentosPromocionale(DescuentoPromocional $descuentosPromocionale): self
+    {
+        if ($this->descuentosPromocionales->removeElement($descuentosPromocionale)) {
+            // set the owning side to null (unless already changed)
+            if ($descuentosPromocionale->getConfiguracion() === $this) {
+                $descuentosPromocionale->setConfiguracion(null);
+            }
+        }
+
         return $this;
     }
 } 

@@ -1,0 +1,76 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Editar Descuento Promocional{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h1 class="h3 mb-0">Editar Descuento Promocional</h1>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        <div class="mb-3">
+                            <label for="nombre" class="form-label">Nombre del Descuento</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="nombre" 
+                                   name="nombre" 
+                                   required
+                                   maxlength="255"
+                                   value="{{ descuentoPromocional.nombre }}">
+                            <small class="form-text text-muted">
+                                Nombre descriptivo del descuento promocional
+                            </small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="porcentaje" class="form-label">Porcentaje de Descuento (%)</label>
+                            <input type="number" 
+                                   class="form-control" 
+                                   id="porcentaje" 
+                                   name="porcentaje" 
+                                   required
+                                   min="0"
+                                   max="100"
+                                   step="0.01"
+                                   value="{{ descuentoPromocional.porcentaje }}">
+                            <small class="form-text text-muted">
+                                Porcentaje de descuento que se aplicará al total del pago (0-100)
+                            </small>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input type="checkbox" 
+                                       class="form-check-input" 
+                                       id="activo" 
+                                       name="activo"
+                                       {% if descuentoPromocional.activo %}checked{% endif %}>
+                                <label class="form-check-label" for="activo">
+                                    Activo
+                                </label>
+                                <small class="form-text text-muted d-block">
+                                    Si está activo, el descuento estará disponible en el formulario de pagos
+                                </small>
+                            </div>
+                        </div>
+
+                        <div class="text-center mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Guardar Cambios
+                            </button>
+                            <a href="{{ path('instituto_config_index') }}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

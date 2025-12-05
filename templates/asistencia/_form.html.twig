@@ -5,9 +5,19 @@
                 <div class="card-header">
                     <h5 class="card-title mb-0">Asistencias - {{ cursoSeleccionado.nombre }} - {{ fecha|date('d/m/Y') }}</h5>
                 </div>
+                {% if fechaValida is defined and fechaValida.valida == false %}
+                    <div class="alert alert-warning mb-0 border-0 border-bottom rounded-0" role="alert">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            <div>
+                                <strong>Advertencia:</strong> {{ fechaValida.mensaje }}
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
                 <div class="card-body">
                     {% if soloLectura is not defined or not soloLectura %}
-                        <form method="post" action="{{ path(rutaForm, {'fecha': fecha, 'curso': cursoSeleccionado.id}) }}">
+                        <form method="post" action="{{ path(rutaForm, {'fecha': fecha, 'curso': cursoSeleccionado.id}) }}" id="form-asistencias">
                     {% endif %}
                         <div class="table-responsive">
                             <table class="table table-striped">
@@ -32,9 +42,10 @@
                                                         {% endif %}
                                                     {% else %}
                                                         <div class="form-check form-switch">
-                                                            <input class="form-check-input" type="checkbox" 
+                                                            <input class="form-check-input asistencia-checkbox" type="checkbox" 
                                                                    name="asistencias[{{ asistencia.alumno.id }}]" 
                                                                    value="1" 
+                                                                   data-alumno-id="{{ asistencia.alumno.id }}"
                                                                    {% if asistencia.presente %}checked{% endif %}>
                                                             <label class="form-check-label">
                                                                 {% if asistencia.presente %}
@@ -50,9 +61,10 @@
                                                     {% if soloLectura is defined and soloLectura %}
                                                         {{ asistencia.observaciones }}
                                                     {% else %}
-                                                        <input type="text" class="form-control" 
+                                                        <input type="text" class="form-control observaciones-input" 
                                                                name="observaciones[{{ asistencia.alumno.id }}]" 
-                                                               value="{{ asistencia.observaciones }}">
+                                                               value="{{ asistencia.observaciones }}"
+                                                               data-alumno-id="{{ asistencia.alumno.id }}">
                                                     {% endif %}
                                                 </td>
                                             </tr>
@@ -71,10 +83,7 @@
                                 </tbody>
                             </table>
                         </div>
-                        {% if soloLectura is not defined or not soloLectura %}
-                            <div class="mt-3">
-                                <button type="submit" class="btn btn-primary">Guardar Asistencias</button>
-                            </div>
+                    {% if soloLectura is not defined or not soloLectura %}
                         </form>
                     {% endif %}
                 </div>
@@ -89,4 +98,70 @@
             </div>
         </div>
     </div>
+{% endif %}
+
+{% if soloLectura is not defined or not soloLectura %}
+<script>
+    // Auto-guardar cuando cambie un checkbox de asistencia
+    document.addEventListener('DOMContentLoaded', function() {
+        const formAsistencias = document.getElementById('form-asistencias');
+        const checkboxes = document.querySelectorAll('.asistencia-checkbox');
+        let guardadoTimeout = null;
+        let guardando = false;
+        
+        if (formAsistencias && checkboxes.length > 0) {
+            // Función para actualizar el label del badge según el estado del checkbox
+            function actualizarBadge(checkbox) {
+                const label = checkbox.closest('.form-check').querySelector('.form-check-label');
+                const badge = label.querySelector('.badge');
+                if (badge) {
+                    if (checkbox.checked) {
+                        badge.className = 'badge bg-success';
+                        badge.textContent = 'Presente';
+                    } else {
+                        badge.className = 'badge bg-danger';
+                        badge.textContent = 'Ausente';
+                    }
+                }
+            }
+            
+            // Función para deshabilitar/habilitar checkboxes durante el guardado
+            function setCheckboxesEnabled(enabled) {
+                checkboxes.forEach(function(checkbox) {
+                    checkbox.disabled = !enabled;
+                });
+            }
+            
+            // Actualizar badges al cargar la página
+            checkboxes.forEach(function(checkbox) {
+                actualizarBadge(checkbox);
+            });
+            
+            // Auto-guardar cuando cambie un checkbox (con debounce para evitar múltiples submits)
+            checkboxes.forEach(function(checkbox) {
+                checkbox.addEventListener('change', function() {
+                    // Si ya se está guardando, ignorar el cambio
+                    if (guardando) {
+                        return;
+                    }
+                    
+                    // Actualizar el badge visualmente
+                    actualizarBadge(checkbox);
+                    
+                    // Limpiar timeout anterior si existe
+                    if (guardadoTimeout) {
+                        clearTimeout(guardadoTimeout);
+                    }
+                    
+                    // Guardar después de un pequeño delay (300ms) para evitar múltiples submits
+                    guardadoTimeout = setTimeout(function() {
+                        guardando = true;
+                        setCheckboxesEnabled(false);
+                        formAsistencias.submit();
+                    }, 300);
+                });
+            });
+        }
+    });
+</script>
 {% endif %} 

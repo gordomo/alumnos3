@@ -255,7 +255,17 @@ class HistorialCursosService
                     'ano' => $ano
                 ]);
 
-            if (!$deudaExistente) {
+            // Verificar si ya existe un pago para este mes/año/curso
+            $pagoExistente = $this->entityManager->getRepository(AlumnosPagos::class)
+                ->findOneBy([
+                    'alumno' => $alumno,
+                    'curso' => $curso,
+                    'mes' => $mes,
+                    'ano' => $ano
+                ]);
+
+            // Solo crear deuda si no existe ni deuda ni pago
+            if (!$deudaExistente && !$pagoExistente) {
                 // Crear nueva deuda
                 $deuda = new DeudaAlumno();
                 $deuda->setAlumno($alumno);
@@ -284,6 +294,21 @@ class HistorialCursosService
                     $deuda->setInstituto($instituto);
                 }
 
+                $this->entityManager->persist($deuda);
+            } elseif ($pagoExistente && !$deudaExistente) {
+                // Si existe un pago pero no una deuda, crear la deuda como pagada
+                $deuda = new DeudaAlumno();
+                $deuda->setAlumno($alumno);
+                $deuda->setCurso($curso);
+                $deuda->setCursoHistorico($historico);
+                $deuda->setMes($mes);
+                $deuda->setAno($ano);
+                $deuda->setPagado(true);
+                $deuda->setPago($pagoExistente);
+                $deuda->setMonto($pagoExistente->getMonto());
+                $deuda->setFechaPago($pagoExistente->getFecha());
+                $deuda->setInstituto($alumno->getInstituto());
+                
                 $this->entityManager->persist($deuda);
             }
 
@@ -316,26 +341,42 @@ class HistorialCursosService
         $this->entityManager->persist($pago);
 
         // Marcar la deuda correspondiente como pagada
-        $deuda = $this->entityManager->getRepository(DeudaAlumno::class)
-            ->findOneBy([
+        $mesBuscado = (int)$fechaPago->format('n');
+        $anoBuscado = (int)$fechaPago->format('Y');
+        
+        error_log("DEBUG registrarPago - Buscando deuda: Alumno={$alumno->getId()}, Curso={$curso->getId()}, Mes={$mesBuscado}, Año={$anoBuscado}");
+        
+        // Buscar TODAS las deudas para este mes/curso (puede haber múltiples)
+        $deudas = $this->entityManager->getRepository(DeudaAlumno::class)
+            ->findBy([
                 'alumno' => $alumno,
                 'curso' => $curso,
-                'mes' => (int)$fechaPago->format('n'),
-                'ano' => (int)$fechaPago->format('Y')
+                'mes' => $mesBuscado,
+                'ano' => $anoBuscado
             ]);
-
-        if ($deuda) {
+        
+        error_log("DEBUG registrarPago - Deudas encontradas: " . count($deudas));
+        
+        // Marcar todas las deudas encontradas como pagadas
+        foreach ($deudas as $deuda) {
+            error_log("DEBUG registrarPago - Deuda encontrada: ID={$deuda->getId()}, Pagado antes={$deuda->isPagado()}");
             $deuda->setPagado(true);
             $deuda->setPago($pago);
             $deuda->setFechaPago(new \DateTime());
-        } else {
+            error_log("DEBUG registrarPago - Deuda marcada como pagada: ID={$deuda->getId()}");
+        }
+        
+        $deuda = !empty($deudas) ? $deudas[0] : null;
+
+        if (!$deuda) {
+            error_log("DEBUG registrarPago - Deuda NO encontrada, creando nueva");
             // Si no existe la deuda, crearla como pagada
             $deuda = new DeudaAlumno();
             $deuda->setAlumno($alumno);
             $deuda->setCurso($curso);
             $deuda->setCursoHistorico($historico);
-            $deuda->setMes((int)$fechaPago->format('n'));
-            $deuda->setAno((int)$fechaPago->format('Y'));
+            $deuda->setMes($mesBuscado);
+            $deuda->setAno($anoBuscado);
             $deuda->setPagado(true);
             $deuda->setPago($pago);
             $deuda->setMonto($pago->getMonto());
@@ -346,6 +387,22 @@ class HistorialCursosService
         }
 
         $this->entityManager->flush();
+        
+        // Refrescar la entidad del alumno para que la relación de deudas se actualice
+        $this->entityManager->refresh($alumno);
+        
+        // Verificar después del flush
+        $deudasVerificadas = $this->entityManager->getRepository(DeudaAlumno::class)
+            ->findBy([
+                'alumno' => $alumno,
+                'curso' => $curso,
+                'mes' => $mesBuscado,
+                'ano' => $anoBuscado
+            ]);
+        error_log("DEBUG registrarPago - Verificación post-flush: " . count($deudasVerificadas) . " deudas encontradas");
+        foreach ($deudasVerificadas as $deudaVerificada) {
+            error_log("DEBUG registrarPago - Deuda ID={$deudaVerificada->getId()}, Pagado={$deudaVerificada->isPagado()}");
+        }
     }
 
     /**

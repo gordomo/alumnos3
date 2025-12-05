@@ -118,6 +118,24 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Manejar clicks en enlaces usando delegación de eventos
     document.addEventListener('click', function(e) {
+        const target = e.target;
+        
+        // No mostrar loading para clics en el calendario de FullCalendar
+        const isCalendarElement = target.closest('#calendar') || 
+                                 target.closest('.fc-day') || 
+                                 target.closest('.fc-event') ||
+                                 target.closest('.fc-button') ||
+                                 target.closest('.fc-toolbar') ||
+                                 target.closest('.fc-view-harness');
+        
+        if (isCalendarElement) {
+            // Ocultar el spinner si está visible (por si se mostró por error)
+            setTimeout(function() {
+                hideLoading();
+            }, 100);
+            return;
+        }
+        
         const link = e.target.closest('a');
         if (link && isNavigationLink(link)) {
             showLoading();

@@ -82,11 +82,11 @@ class AlumnosPagosType extends AbstractType
                 ],
                 'label' => 'Mes',
                 'label_attr' => ['class' => 'form-label'],
-                'required' => true,
-                'attr' => ['class' => 'form-control chosen-select'],
-                'constraints' => [
-                    new NotBlank(['message' => 'El mes es obligatorio'])
-                ]
+                'required' => false,
+                'multiple' => true,
+                'expanded' => false,
+                'mapped' => false, // No mapear directamente a la entidad
+                'attr' => ['class' => 'form-control mes-select-multiple', 'size' => '5'],
             ])
             ->add('ano', ChoiceType::class, [
                 'choices' => $this->getYearChoices(),

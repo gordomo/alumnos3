@@ -88,6 +88,18 @@
                                                     {% endif %}
                                                 </td>
                                             </tr>
+                                            <tr>
+                                                <th>Orden de cálculo:</th>
+                                                <td>
+                                                    {% set ordenTexto = {
+                                                        'interes_primero': 'Interés primero, luego descuentos',
+                                                        'descuento_primero': 'Descuentos primero, luego interés',
+                                                        'neto': 'Neto (diferencia entre intereses y descuentos)',
+                                                        'descuentos_solo_base': 'Descuentos sobre base, interés sobre base original'
+                                                    } %}
+                                                    <span class="badge bg-primary">{{ ordenTexto[configuracion.ordenCalculoInteresesDescuentos] ?? 'Interés primero, luego descuentos' }}</span>
+                                                </td>
+                                            </tr>
                                         </table>
                                     </div>
                                 </div>
@@ -95,6 +107,62 @@
                                     <a href="{{ path('instituto_config_edit') }}" class="btn btn-primary">
                                         <i class="bi bi-pencil"></i> Editar Configuración de Descuentos
                                     </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h4 class="card-title mb-0">Descuentos Promocionales</h4>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <a href="{{ path('instituto_config_descuento_promocional_new') }}" class="btn btn-primary">
+                                        <i class="bi bi-plus"></i> Nuevo Descuento Promocional
+                                    </a>
+                                </div>
+
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Nombre</th>
+                                                <th>Porcentaje</th>
+                                                <th>Estado</th>
+                                                <th>Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for descuento in descuentosPromocionales %}
+                                                <tr>
+                                                    <td>{{ descuento.nombre }}</td>
+                                                    <td>{{ descuento.porcentaje }}%</td>
+                                                    <td>
+                                                        {% if descuento.activo %}
+                                                            <span class="badge bg-success">Activo</span>
+                                                        {% else %}
+                                                            <span class="badge bg-secondary">Inactivo</span>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        <a href="{{ path('instituto_config_descuento_promocional_edit', {'id': descuento.id}) }}" class="btn btn-sm btn-outline-primary">
+                                                            <i class="bi bi-pencil"></i>
+                                                        </a>
+                                                        <form method="post" action="{{ path('instituto_config_descuento_promocional_delete', {'id': descuento.id}) }}" onsubmit="return confirm('¿Está seguro que desea eliminar este descuento promocional?');" style="display: inline-block;">
+                                                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ descuento.id) }}">
+                                                            <button class="btn btn-sm btn-outline-danger">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        </form>
+                                                    </td>
+                                                </tr>
+                                            {% else %}
+                                                <tr>
+                                                    <td colspan="4" class="text-center">No se encontraron descuentos promocionales configurados</td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                         </div>

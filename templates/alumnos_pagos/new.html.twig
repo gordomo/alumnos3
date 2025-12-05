@@ -4,9 +4,9 @@
 
 {% block body %}
     <div class="container mt-4">
-        <div class="card">
-            <div class="card-header">
-                <h1 class="h3 mb-0">Nuevo Pago</h1>
+        <div class="card shadow-sm">
+            <div class="card-header bg-white border-bottom">
+                <h1 class="h3 mb-0 text-dark">Nuevo Pago</h1>
             </div>
             <div class="card-body">
                 {% for message in app.flashes('error') %}
@@ -21,28 +21,908 @@
                     </div>
                 {% endfor %}
 
-                {{ include('components/meses_adeudados.html.twig') }}
+                {# MÓDULO 1: INFORMACIÓN DE ESTADO #}
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-header" style="background-color: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+                        <h4 class="mb-0 text-dark">
+                            <i class="bi bi-info-circle" style="color: #0d6efd;"></i> Información de Estado
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        {# Meses adeudados #}
+                        {% if mesesAdeudados is defined and mesesAdeudados|length > 0 %}
+                            <div class="mb-4" style="border-left: 4px solid #ffc107; background-color: #fffbf0; padding: 1rem; border-radius: 4px;">
+                                <h5 class="mb-3 text-dark">
+                                    <i class="bi bi-exclamation-circle" style="color: #ff9800;"></i> Meses Adeudados
+                                </h5>
+                                <p class="text-muted mb-3">Seleccione los meses que desea pagar (puede seleccionar múltiples):</p>
+                                {% set cursos = {} %}
+                                {% for mes in mesesAdeudados %}
+                                    {% if not cursos[mes.curso] is defined %}
+                                        {% set cursos = cursos|merge({(mes.curso): []}) %}
+                                    {% endif %}
+                                    {% set cursos = cursos|merge({(mes.curso): cursos[mes.curso]|merge([mes])}) %}
+                                {% endfor %}
+                                
+                                <div class="row">
+                                    {% for curso, meses in cursos %}
+                                        <div class="col-md-12 mb-3">
+                                            <div class="card border-0" style="background-color: #ffffff;">
+                                                <div class="card-body">
+                                                    <h6 class="card-title text-dark mb-3">
+                                                        <strong>{{ curso }}</strong>
+                                                        <button type="button" class="btn btn-sm btn-outline-primary ms-2 seleccionar-todos-btn" data-curso="{{ curso }}">
+                                                            Seleccionar todos
+                                                        </button>
+                                                    </h6>
+                                                    <div class="row">
+                                                        {% for mes in meses %}
+                                                            <div class="col-md-3 mb-2">
+                                                                <div class="mes-adeudado-checkbox-container position-relative" 
+                                                                     style="background-color: #f8f9fa; border: 2px solid #dee2e6; border-radius: 8px; padding: 1rem; cursor: pointer; transition: all 0.2s ease; user-select: none;"
+                                                                     data-mes-checkbox-id="mes_{{ mes.mes }}_{{ mes.ano }}_{{ mes.curso_obj.id }}">
+                                                                    <input type="checkbox" 
+                                                                           class="mes-adeudado-checkbox position-absolute" 
+                                                                           style="opacity: 0; position: absolute; pointer-events: none;"
+                                                                           id="mes_{{ mes.mes }}_{{ mes.ano }}_{{ mes.curso_obj.id }}" 
+                                                                           name="meses_adeudados[]"
+                                                                           value="{{ mes.mes }}_{{ mes.ano }}_{{ mes.curso_obj.id }}"
+                                                                           data-mes="{{ mes.mes }}"
+                                                                           data-ano="{{ mes.ano }}"
+                                                                           data-curso-id="{{ mes.curso_obj.id }}"
+                                                                           data-curso-nombre="{{ mes.curso }}"
+                                                                           data-monto-base="{{ mes.monto }}"
+                                                                           form="alumnos_pagos">
+                                                                    <div class="d-flex align-items-center justify-content-between">
+                                                                        <div>
+                                                                            <strong class="d-block text-dark">{{ mes.nombre }}</strong>
+                                                                            <small class="text-muted">${{ mes.monto | number_format(2, ',', '.') }}</small>
+                                                                        </div>
+                                                                        <div class="mes-check-icon" style="width: 24px; height: 24px; border: 2px solid #dee2e6; border-radius: 4px; display: flex; align-items: center; justify-content: center; background-color: white; transition: all 0.2s ease;">
+                                                                            <i class="bi bi-check" style="color: white; font-size: 16px; display: none;"></i>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        {% endfor %}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endif %}
 
-                {% if verificacion is defined and verificacion.mesInicio is defined %}
-                    <div class="alert alert-info">
-                        <h5 class="alert-heading">Período del curso </h5>
-                        <p>El curso se dicta desde {{ curso.fechaInicio | date('d/m/Y') }} hasta {{ curso.fechaFin | date('d/m/Y') }}.</p>
-                        <h6 class="alert-heading">{{ curso.nombre }} - precio: ${{ curso.precio | number_format(2, ',', '.')}}</h6>
+                        {# Información de los cursos con deudas #}
+                        {% if mesesAdeudados is defined and mesesAdeudados|length > 0 %}
+                            {# Agrupar cursos únicos por ID para evitar duplicados usando un enfoque más robusto #}
+                            {% set cursosUnicosArray = [] %}
+                            {% set cursosIdsVistos = [] %}
+                            {% for mes in mesesAdeudados %}
+                                {% set cursoId = mes.curso_obj.id %}
+                                {% set yaVisto = false %}
+                                {% for idVisto in cursosIdsVistos %}
+                                    {% if idVisto == cursoId %}
+                                        {% set yaVisto = true %}
+                                    {% endif %}
+                                {% endfor %}
+                                {% if not yaVisto %}
+                                    {% set cursosIdsVistos = cursosIdsVistos|merge([cursoId]) %}
+                                    {% set cursosUnicosArray = cursosUnicosArray|merge([mes.curso_obj]) %}
+                                {% endif %}
+                            {% endfor %}
+                            
+                            <div style="border-left: 4px solid #0d6efd; background-color: #e7f1ff; padding: 1rem; border-radius: 4px;">
+                                <h5 class="mb-3 text-dark">
+                                    <i class="bi bi-book" style="color: #0d6efd;"></i> Información de los Cursos
+                                </h5>
+                                <div class="row">
+                                    {% for cursoObj in cursosUnicosArray %}
+                                        <div class="col-md-{% if cursosUnicosArray|length > 1 %}6{% else %}12{% endif %} mb-3">
+                                            <div class="card border-0" style="background-color: #ffffff; border-left: 3px solid #0d6efd !important;">
+                                                <div class="card-body">
+                                                    <h6 class="card-title text-dark mb-2">
+                                                        <strong>{{ cursoObj.nombre }}</strong>
+                                                    </h6>
+                                                    <p class="mb-1 text-muted small">
+                                                        <strong>Precio base:</strong> <span class="text-dark">${{ cursoObj.precio | number_format(2, ',', '.')}}</span>
+                                                    </p>
+                                                    <p class="mb-0 text-muted small">
+                                                        <strong>Período:</strong> {{ cursoObj.fechaInicio | date('d/m/Y') }} - {{ cursoObj.fechaFin | date('d/m/Y') }}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% elseif curso is defined and curso %}
+                            {# Fallback: mostrar información de un solo curso si no hay meses adeudados #}
+                            <div style="border-left: 4px solid #0d6efd; background-color: #e7f1ff; padding: 1rem; border-radius: 4px;">
+                                <h5 class="mb-2 text-dark">
+                                    <i class="bi bi-book" style="color: #0d6efd;"></i> Información del Curso
+                                </h5>
+                                <p class="mb-1"><strong class="text-dark">{{ curso.nombre }}</strong></p>
+                                <p class="mb-0 text-muted">
+                                    Precio base: <strong class="text-dark">${{ curso.precio | number_format(2, ',', '.')}}</strong> | 
+                                    Período: {{ curso.fechaInicio | date('d/m/Y') }} - {{ curso.fechaFin | date('d/m/Y') }}
+                                </p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {# MÓDULO 2: CÁLCULO DEL PAGO #}
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-header" style="background-color: #e7f1ff; border-bottom: 2px solid #0d6efd;">
+                        <h4 class="mb-0 text-dark">
+                            <i class="bi bi-calculator" style="color: #0d6efd;"></i> Cálculo del Pago
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        {# Regla de cálculo aplicada #}
+                        {% set ordenTexto = {
+                            'interes_primero': 'Interés primero, luego descuentos',
+                            'descuento_primero': 'Descuentos primero, luego interés',
+                            'neto': 'Neto (diferencia entre intereses y descuentos)',
+                            'descuentos_solo_base': 'Descuentos sobre base, interés sobre base original'
+                        } %}
+                        {% set ordenDescripcion = {
+                            'interes_primero': 'Se aplica el interés sobre el monto base, luego los descuentos sobre el resultado.',
+                            'descuento_primero': 'Se aplican los descuentos sobre el monto base, luego el interés sobre el resultado.',
+                            'neto': 'Ambos se calculan sobre la base y se hace la diferencia.',
+                            'descuentos_solo_base': 'Los descuentos se aplican sobre la base, el interés se suma sobre la base original.'
+                        } %}
+                        <div id="regla-calculo-container" class="mb-3" style="border-left: 4px solid #6c757d; background-color: #f8f9fa; padding: 0.75rem 1rem; border-radius: 4px;">
+                            <h6 class="mb-1 text-dark">
+                                <i class="bi bi-info-circle" style="color: #6c757d;"></i> Regla de Cálculo Aplicada
+                            </h6>
+                            <p class="mb-1" id="regla-calculo-texto">
+                                <strong class="text-dark">{{ ordenTexto[ordenCalculo] ?? 'Interés primero, luego descuentos' }}</strong>
+                            </p>
+                            <small class="text-muted" id="regla-calculo-descripcion">{{ ordenDescripcion[ordenCalculo] ?? 'Se aplica el interés sobre el monto base, luego los descuentos sobre el resultado.' }}</small>
+                        </div>
+                        
+                        {# Resumen de meses seleccionados (oculto inicialmente) #}
+                        <div id="resumen-meses-seleccionados" class="mb-3" style="display: none;">
+                            <div class="card border-info">
+                                <div class="card-body">
+                                    <h6 class="card-title">Meses seleccionados para pago:</h6>
+                                    <div id="lista-meses-seleccionados" class="d-flex flex-wrap gap-2"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {# Interés por vencimiento #}
+                        {% if motivoInteres is defined and motivoInteres and porcentajeInteres is defined and porcentajeInteres > 0 %}
+                            <div class="mb-3" style="border-left: 4px solid #ffc107; background-color: #fffbf0; padding: 1rem; border-radius: 4px;">
+                                <h6 class="mb-2 text-dark">
+                                    <i class="bi bi-clock-history" style="color: #ff9800;"></i> Interés por Vencimiento
+                                </h6>
+                                <p class="mb-1 text-muted">{{ motivoInteres }}</p>
+                                <p class="mb-0">
+                                    <strong class="text-dark">Interés aplicado: {{ porcentajeInteres }}%</strong>
+                                </p>
+                            </div>
+                        {% else %}
+                            <div class="mb-3" style="border-left: 4px solid #198754; background-color: #d1e7dd; padding: 0.75rem 1rem; border-radius: 4px;">
+                                <i class="bi bi-check-circle" style="color: #198754;"></i> <span class="text-muted">Sin interés aplicado</span>
                     </div>
                 {% endif %}
 
+                        {# Descuentos Promocionales Disponibles #}
+                        {% if descuentosPromocionales is defined and descuentosPromocionales|length > 0 %}
+                            <div class="mb-3" style="border-left: 4px solid #0dcaf0; background-color: #cff4fc; padding: 1rem; border-radius: 4px;">
+                                <h6 class="mb-2 text-dark">
+                                    <i class="bi bi-tag" style="color: #0dcaf0;"></i> Descuentos Promocionales Disponibles
+                                </h6>
+                                <p class="text-muted small mb-3">Seleccione los descuentos que desea aplicar:</p>
+                                <div class="row">
+                                    {% for descuento in descuentosPromocionales %}
+                                        <div class="col-md-6 mb-2">
+                                            <div class="form-check ps-4 py-2">
+                                                <input type="checkbox" 
+                                                       class="form-check-input descuento-promocional-checkbox" 
+                                                       id="descuento_{{ descuento.id }}" 
+                                                       name="descuentos_promocionales[]"
+                                                       value="{{ descuento.id }}"
+                                                       data-porcentaje="{{ descuento.porcentaje }}"
+                                                       style="margin-left: -1.5rem;"
+                                                       {% if descuentosPromocionalesSeleccionados is defined and descuento in descuentosPromocionalesSeleccionados %}checked{% endif %}>
+                                                <label class="form-check-label ms-2" for="descuento_{{ descuento.id }}">
+                                                    <strong class="text-dark">{{ descuento.nombre }}</strong> 
+                                                    <span class="badge ms-2" style="background-color: #0dcaf0; color: white;">{{ descuento.porcentaje }}%</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endif %}
 
-    
+                        {# Descuentos aplicados #}
+                        {% if descuentosAplicados is defined and descuentosAplicados|length > 0 %}
+                            <div class="mb-3" style="border-left: 4px solid #198754; background-color: #d1e7dd; padding: 1rem; border-radius: 4px;">
+                                <h6 class="mb-2 text-dark">
+                                    <i class="bi bi-check-circle" style="color: #198754;"></i> Descuentos Aplicados
+                                </h6>
+                                <ul class="mb-2 text-muted">
+                                    {% for descuento in descuentosAplicados %}
+                                        <li>{{ descuento }}</li>
+                                    {% endfor %}
+                                </ul>
+                                {% if porcentajeDescuentoTotal is defined and porcentajeDescuentoTotal > 0 %}
+                                    <p class="mb-0">
+                                        <strong class="text-dark">Total descuentos: {{ porcentajeDescuentoTotal }}%</strong>
+                                    </p>
+                                {% endif %}
+                            </div>
+                        {% endif %}
 
+                        {# PRECIO FINAL #}
+                        {% if calculoMonto is defined and calculoMonto %}
+                            <div class="border-0" id="precio-final-container" style="background: linear-gradient(135deg, #d1e7dd 0%, #ffffff 100%); border-left: 4px solid #198754 !important; padding: 2rem; border-radius: 4px;">
+                                <div class="text-center">
+                                    <h4 class="mb-3" style="color: #198754;">Precio a Cobrar</h4>
+                                    <div class="display-3 fw-bold mb-2" id="precio-final" style="color: #198754; letter-spacing: -1px;">
+                                        ${{ calculoMonto.monto | number_format(2, ',', '.') }}
+                                    </div>
+                                    {% if calculoMonto.montoBase != calculoMonto.monto %}
+                                        <small class="text-muted">
+                                            Precio base: ${{ calculoMonto.montoBase | number_format(2, ',', '.') }}
+                                        </small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {# MÓDULO 3: REGISTRO DEL PAGO #}
+                <div class="card shadow-sm">
+                    <div class="card-header" style="background-color: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+                        <h4 class="mb-0 text-dark">
+                            <i class="bi bi-pencil-square" style="color: #0d6efd;"></i> Registro del Pago
+                        </h4>
+                    </div>
+                    <div class="card-body">
                 {{ include('alumnos_pagos/_form.html.twig', {
-                    'button_label': 'Guardar',
+                            'button_label': 'Guardar Pago',
                     'alumno': alumno,
                     'alumnos': alumnos is defined ? alumnos : [alumno],
                     'cursos': cursos,
                     'vencimientos': vencimientos,
-                    'is_general': is_general
+                            'is_general': is_general,
+                            'calculoMonto': calculoMonto is defined ? calculoMonto : null
                 }) }}
+                    </div>
+                </div>
             </div>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const modoPagoMultiple = document.getElementById('modo-pago-multiple');
+            const mesesCheckboxes = document.querySelectorAll('.mes-adeudado-checkbox');
+            const mesesContainers = document.querySelectorAll('.mes-adeudado-checkbox-container');
+            const resumenMeses = document.getElementById('resumen-meses-seleccionados');
+            const listaMeses = document.getElementById('lista-meses-seleccionados');
+            const precioFinalElement = document.getElementById('precio-final');
+            const campoMonto = document.querySelector('.monto-input-field') || document.querySelector('input[name="alumnos_pagos[monto]"]');
+            const reglaCalculoTexto = document.getElementById('regla-calculo-texto');
+            const reglaCalculoDescripcion = document.getElementById('regla-calculo-descripcion');
+            
+            // Función para actualizar la regla de cálculo
+            function actualizarReglaCalculo(texto, descripcion) {
+                if (reglaCalculoTexto && texto) {
+                    reglaCalculoTexto.innerHTML = '<strong class="text-dark">' + texto + '</strong>';
+                }
+                if (reglaCalculoDescripcion && descripcion) {
+                    reglaCalculoDescripcion.textContent = descripcion;
+                }
+            }
+            
+            // Función para actualizar el estilo visual del contenedor según el estado del checkbox
+            function actualizarEstiloMes(container, checkbox) {
+                const checkIcon = container.querySelector('.mes-check-icon');
+                const checkIconInner = container.querySelector('.mes-check-icon i');
+                
+                if (checkbox.checked) {
+                    container.style.backgroundColor = '#e7f1ff';
+                    container.style.borderColor = '#0d6efd';
+                    container.style.boxShadow = '0 2px 4px rgba(13, 110, 253, 0.2)';
+                    if (checkIcon) {
+                        checkIcon.style.backgroundColor = '#0d6efd';
+                        checkIcon.style.borderColor = '#0d6efd';
+                        if (checkIconInner) {
+                            checkIconInner.style.display = 'block';
+                        }
+                    }
+                } else {
+                    container.style.backgroundColor = '#f8f9fa';
+                    container.style.borderColor = '#dee2e6';
+                    container.style.boxShadow = 'none';
+                    if (checkIcon) {
+                        checkIcon.style.backgroundColor = 'white';
+                        checkIcon.style.borderColor = '#dee2e6';
+                        if (checkIconInner) {
+                            checkIconInner.style.display = 'none';
+                        }
+                    }
+                }
+            }
+            
+            // Función para inicializar los contenedores de meses
+            function inicializarContenedoresMeses() {
+                mesesContainers.forEach(function(container) {
+                    const checkboxId = container.dataset.mesCheckboxId;
+                    const checkbox = document.getElementById(checkboxId);
+                    if (checkbox) {
+                        // Inicializar estilo
+                        actualizarEstiloMes(container, checkbox);
+                        
+                        // Hacer el contenedor clickeable
+                        container.addEventListener('click', function(e) {
+                            // Prevenir el comportamiento por defecto pero permitir que el checkbox cambie
+                            e.preventDefault();
+                            e.stopPropagation();
+                            
+                            // Solo procesar si el checkbox no está deshabilitado
+                            if (checkbox.disabled) {
+                                return;
+                            }
+                            
+                            // Cambiar el estado del checkbox
+                            checkbox.checked = !checkbox.checked;
+                            
+                            // Disparar evento change manualmente para que otros listeners lo detecten
+                            const changeEvent = new Event('change',   { bubbles: true });
+                            checkbox.dispatchEvent(changeEvent);
+                            
+                            // Actualizar estilo visual inmediatamente
+                            actualizarEstiloMes(container, checkbox);
+                            
+                            // Actualizar resumen (no sincronizar con select en modo múltiple)
+                            actualizarResumenMeses();
+                        });
+                        
+                        // Efectos hover
+                        container.addEventListener('mouseenter', function() {
+                            if (!checkbox.checked && !checkbox.disabled) {
+                                container.style.backgroundColor = '#e9ecef';
+                                container.style.borderColor = '#adb5bd';
+                                container.style.transform = 'translateY(-2px)';
+                                container.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+                            }
+                        });
+                        
+                        container.addEventListener('mouseleave', function() {
+                            if (!checkbox.checked) {
+                                actualizarEstiloMes(container, checkbox);
+                                container.style.transform = 'translateY(0)';
+                            }
+                        });
+                        
+                        // Efecto active (click)
+                        container.addEventListener('mousedown', function() {
+                            if (!checkbox.disabled) {
+                                container.style.transform = 'translateY(0)';
+                                container.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.1)';
+                            }
+                        });
+                        
+                        container.addEventListener('mouseup', function() {
+                            if (!checkbox.disabled) {
+                                actualizarEstiloMes(container, checkbox);
+                            }
+                        });
+                    }
+                });
+            }
+            
+            // Si hay meses adeudados, activar modo múltiple automáticamente
+            const hayMesesAdeudados = mesesCheckboxes.length > 0;
+            let modoMultipleActivo = hayMesesAdeudados;
+            
+            // Inicializar contenedores de meses ANTES de habilitar checkboxes
+            inicializarContenedoresMeses();
+            
+            // Actualizar estilos cuando cambia el checkbox directamente (por ejemplo, con "Seleccionar todos")
+            mesesCheckboxes.forEach(function(checkbox) {
+                checkbox.addEventListener('change', function() {
+                    const container = document.querySelector(`[data-mes-checkbox-id="${this.id}"]`);
+                    if (container) {
+                        actualizarEstiloMes(container, this);
+                    }
+                });
+            });
+            
+            // Función para calcular el total de meses seleccionados
+            function calcularTotalMesesSeleccionados() {
+                let total = 0;
+                const mesesSeleccionados = [];
+                
+                mesesCheckboxes.forEach(function(checkbox) {
+                    if (checkbox.checked) {
+                        const montoBase = parseFloat(checkbox.dataset.montoBase) || 0;
+                        total += montoBase;
+                        mesesSeleccionados.push({
+                            mes: checkbox.dataset.mes,
+                            ano: checkbox.dataset.ano,
+                            cursoId: checkbox.dataset.cursoId,
+                            cursoNombre: checkbox.dataset.cursoNombre,
+                            monto: montoBase
+                        });
+                    }
+                });
+                
+                // Debug: Log para ver qué meses se están calculando
+                console.log('DEBUG calcularTotalMesesSeleccionados:', {
+                    total: total,
+                    cantidadMeses: mesesSeleccionados.length,
+                    meses: mesesSeleccionados
+                });
+                
+                return { total, mesesSeleccionados };
+            }
+            
+            // Función para calcular el monto total con descuentos e intereses
+            function calcularMontoTotalConDescuentos() {
+                const { total, mesesSeleccionados } = calcularTotalMesesSeleccionados();
+                
+                if (mesesSeleccionados.length === 0) {
+                    return Promise.resolve({ monto: 0, montoBase: 0 });
+                }
+                
+                // Obtener descuentos promocionales seleccionados
+                const descuentosIds = Array.from(document.querySelectorAll('.descuento-promocional-checkbox:checked'))
+                    .map(cb => cb.value);
+                
+                // Debug: Log para ver qué se está enviando
+                console.log('DEBUG calcularMontoTotalConDescuentos:', {
+                    mesesSeleccionados: mesesSeleccionados,
+                    total: total,
+                    descuentosIds: descuentosIds
+                });
+                
+                // Preparar datos para enviar
+                const formData = new URLSearchParams();
+                formData.append('alumno_id', document.getElementById('alumnos_pagos_alumno')?.value || '');
+                mesesSeleccionados.forEach(function(mes) {
+                    formData.append('meses_seleccionados[]', mes.mes + '_' + mes.ano + '_' + mes.cursoId);
+                });
+                descuentosIds.forEach(id => {
+                    formData.append('descuentos_promocionales[]', id);
+                });
+                
+                // Llamar al endpoint AJAX
+                return fetch('{{ path("app_alumnos_pagos_calcular_monto") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        console.error('Error:', data.error);
+                        return { monto: total, montoBase: total };
+                    }
+                    return data;
+                })
+                .catch(error => {
+                    console.error('Error al calcular monto:', error);
+                    return { monto: total, montoBase: total };
+                });
+            }
+            
+            // Función para actualizar el resumen de meses seleccionados
+            function actualizarResumenMeses() {
+                const { total, mesesSeleccionados } = calcularTotalMesesSeleccionados();
+                
+                if (mesesSeleccionados.length > 0) {
+                    if (resumenMeses) {
+                        resumenMeses.style.display = 'block';
+                    }
+                    if (listaMeses) {
+                        listaMeses.innerHTML = '';
+                        
+                        mesesSeleccionados.forEach(function(mes) {
+                            const badge = document.createElement('span');
+                            badge.className = 'badge bg-primary me-2 mb-2';
+                            const montoFormateado = mes.monto.toLocaleString('es-AR', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            });
+                            badge.textContent = mes.cursoNombre + ' - ' + mes.mes + '/' + mes.ano + ' ($' + montoFormateado + ')';
+                            listaMeses.appendChild(badge);
+                        });
+                    }
+                    
+                    // Calcular monto total con descuentos e intereses
+                    if (modoMultipleActivo) {
+                        calcularMontoTotalConDescuentos().then(function(data) {
+                            const montoFinal = data.monto || total;
+                            
+                            // Actualizar precio final
+                            if (precioFinalElement) {
+                                const montoFormateado = montoFinal.toLocaleString('es-AR', {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2
+                                });
+                                precioFinalElement.textContent = '$' + montoFormateado;
+                            }
+                            
+                            // Actualizar campo de monto sin disparar eventos (para evitar conflictos con listeners)
+                            if (campoMonto) {
+                                // Marcar que la actualización es programática
+                                campoMonto.dataset.updatingProgrammatically = 'true';
+                                campoMonto.value = montoFinal.toFixed(2);
+                                // Remover la marca después de un pequeño delay
+                                setTimeout(function() {
+                                    delete campoMonto.dataset.updatingProgrammatically;
+                                }, 100);
+                            }
+                            
+                            // Actualizar regla de cálculo si viene en la respuesta
+                            if (data.ordenCalculoTexto && data.ordenCalculoDescripcion) {
+                                actualizarReglaCalculo(data.ordenCalculoTexto, data.ordenCalculoDescripcion);
+                            }
+                        });
+                    }
+                } else {
+                    // Si no hay meses seleccionados, mostrar $0.00
+                    if (resumenMeses) {
+                        resumenMeses.style.display = 'none';
+                    }
+                    if (precioFinalElement) {
+                        precioFinalElement.textContent = '$0,00';
+                    }
+                    if (campoMonto) {
+                        campoMonto.dataset.updatingProgrammatically = 'true';
+                        campoMonto.value = '0.00';
+                        setTimeout(function() {
+                            delete campoMonto.dataset.updatingProgrammatically;
+                        }, 100);
+                    }
+                }
+            }
+            
+            // Obtener el select múltiple de meses del formulario
+            const selectMesMultiple = document.querySelector('select[name="alumnos_pagos[mes][]"], select[name="alumnos_pagos[mes]"]');
+            
+            // Función para sincronizar checkboxes con el select múltiple
+            // NOTA: En modo múltiple, esta función NO debe usarse porque el select no puede distinguir entre cursos
+            function sincronizarCheckboxesConSelect() {
+                if (!selectMesMultiple || modoMultipleActivo) return; // No sincronizar en modo múltiple
+                
+                const valoresSeleccionados = Array.from(selectMesMultiple.selectedOptions).map(opt => parseInt(opt.value));
+                
+                mesesCheckboxes.forEach(function(checkbox) {
+                    const mesCheckbox = parseInt(checkbox.dataset.mes);
+                    const mesEnSelect = valoresSeleccionados.includes(mesCheckbox);
+                    
+                    if (mesEnSelect && !checkbox.checked) {
+                        checkbox.checked = true;
+                    } else if (!mesEnSelect && checkbox.checked) {
+                        checkbox.checked = false;
+                    }
+                    
+                    // Actualizar estilo visual
+                    const container = document.querySelector(`[data-mes-checkbox-id="${checkbox.id}"]`);
+                    if (container) {
+                        actualizarEstiloMes(container, checkbox);
+                    }
+                });
+                
+                actualizarResumenMeses();
+            }
+            
+            // Función para sincronizar select múltiple con checkboxes
+            // NOTA: En modo múltiple, esta función NO debe usarse porque el select no puede distinguir entre cursos
+            function sincronizarSelectConCheckboxes() {
+                if (!selectMesMultiple || modoMultipleActivo) return; // No sincronizar en modo múltiple
+                
+                const mesesSeleccionados = new Set();
+                mesesCheckboxes.forEach(function(checkbox) {
+                    if (checkbox.checked) {
+                        mesesSeleccionados.add(parseInt(checkbox.dataset.mes));
+                    }
+                });
+                
+                // Actualizar el select múltiple
+                Array.from(selectMesMultiple.options).forEach(function(option) {
+                    option.selected = mesesSeleccionados.has(parseInt(option.value));
+                });
+            }
+            
+            // Event listener para el switch de modo múltiple (si existe)
+            const modoPagoMultipleHidden = document.getElementById('modo-pago-multiple-hidden');
+            if (modoPagoMultiple) {
+                modoPagoMultiple.addEventListener('change', function() {
+                    modoMultipleActivo = this.checked;
+                    if (this.checked) {
+                        // Habilitar checkboxes de meses
+                        mesesCheckboxes.forEach(function(checkbox) {
+                            checkbox.disabled = false;
+                        });
+                        // Mostrar y habilitar el select múltiple
+                        if (selectMesMultiple) {
+                            const colMes = selectMesMultiple.closest('.col-md-4');
+                            if (colMes) {
+                                colMes.style.display = 'block';
+                                // Cambiar el label si existe
+                                const labelMes = colMes.querySelector('label');
+                                if (labelMes) {
+                                    const small = labelMes.querySelector('small');
+                                    if (!small) {
+                                        const smallEl = document.createElement('small');
+                                        smallEl.className = 'text-muted d-block';
+                                        smallEl.textContent = 'Puede seleccionar múltiples meses';
+                                        labelMes.appendChild(smallEl);
+                                    }
+                                }
+                            }
+                            selectMesMultiple.multiple = true;
+                            selectMesMultiple.size = 5;
+                            selectMesMultiple.style.display = 'block';
+                            selectMesMultiple.setAttribute('name', 'alumnos_pagos[mes][]');
+                        }
+                        // Ocultar campo de mes, año y curso (no necesarios en modo múltiple)
+                        const campoMesContainer = document.getElementById('campo-mes-container');
+                        if (campoMesContainer) {
+                            campoMesContainer.style.display = 'none';
+                        }
+                        const campoAno = document.querySelector('select[name="alumnos_pagos[ano]"]');
+                        if (campoAno) {
+                            const colAno = campoAno.closest('.col-md-4');
+                            if (colAno) colAno.style.display = 'none';
+                        }
+                        const campoCursoContainer = document.getElementById('campo-curso-container');
+                        if (campoCursoContainer) {
+                            campoCursoContainer.style.display = 'none';
+                        }
+                        // Actualizar campo oculto
+                        if (modoPagoMultipleHidden) modoPagoMultipleHidden.value = '1';
+                        // No sincronizar con select en modo múltiple
+                        actualizarResumenMeses();
+                    } else {
+                        modoMultipleActivo = false;
+                        // Deshabilitar checkboxes de meses
+                        mesesCheckboxes.forEach(function(checkbox) {
+                            checkbox.checked = false;
+                            checkbox.disabled = true;
+                        });
+                        if (resumenMeses) resumenMeses.style.display = 'none';
+                        // Resetear el select múltiple
+                        if (selectMesMultiple) {
+                            Array.from(selectMesMultiple.options).forEach(opt => opt.selected = false);
+                            selectMesMultiple.multiple = false;
+                            selectMesMultiple.size = 1;
+                            selectMesMultiple.setAttribute('name', 'alumnos_pagos[mes]');
+                        }
+                        // Mostrar campo de mes, año y curso (necesarios en modo simple)
+                        const campoMesContainer = document.getElementById('campo-mes-container');
+                        if (campoMesContainer) {
+                            campoMesContainer.style.display = 'block';
+                        }
+                        const campoAno = document.querySelector('select[name="alumnos_pagos[ano]"]');
+                        if (campoAno) {
+                            const colAno = campoAno.closest('.col-md-4');
+                            if (colAno) colAno.style.display = 'block';
+                        }
+                        const campoCursoContainer = document.getElementById('campo-curso-container');
+                        if (campoCursoContainer) {
+                            campoCursoContainer.style.display = 'block';
+                        }
+                        // Actualizar campo oculto
+                        if (modoPagoMultipleHidden) modoPagoMultipleHidden.value = '0';
+                    }
+                });
+            }
+            
+            // Event listeners para checkboxes de meses
+            mesesCheckboxes.forEach(function(checkbox) {
+                checkbox.addEventListener('change', function() {
+                    if (modoMultipleActivo) {
+                        // Actualizar estilo visual
+                        const container = document.querySelector(`[data-mes-checkbox-id="${this.id}"]`);
+                        if (container) {
+                            actualizarEstiloMes(container, this);
+                        }
+                        // No sincronizar con select en modo múltiple
+                        actualizarResumenMeses();
+                    }
+                });
+            });
+            
+            // Event listeners para descuentos promocionales (cuando cambian, recalcular total)
+            const descuentosPromocionalesCheckboxes = document.querySelectorAll('.descuento-promocional-checkbox');
+            descuentosPromocionalesCheckboxes.forEach(function(checkbox) {
+                checkbox.addEventListener('change', function(e) {
+                    // Prevenir que otros listeners procesen este evento en modo múltiple
+                    if (modoMultipleActivo) {
+                        e.stopImmediatePropagation();
+                        e.preventDefault();
+                        // Debug: Ver qué checkboxes de meses están marcados
+                        const mesesMarcados = Array.from(mesesCheckboxes).filter(cb => cb.checked);
+                        console.log('DEBUG cambio descuento (modo múltiple) - meses marcados:', mesesMarcados.length, mesesMarcados.map(cb => ({
+                            mes: cb.dataset.mes,
+                            ano: cb.dataset.ano,
+                            cursoId: cb.dataset.cursoId,
+                            montoBase: cb.dataset.montoBase
+                        })));
+                        actualizarResumenMeses();
+                    }
+                }, true); // Usar capture phase para ejecutarse antes que otros listeners
+            });
+            
+            // Event listener para el select múltiple de meses
+            // NOTA: En modo múltiple, no sincronizamos porque el select no puede distinguir entre cursos
+            if (selectMesMultiple && !modoMultipleActivo) {
+                selectMesMultiple.addEventListener('change', function() {
+                    sincronizarCheckboxesConSelect();
+                });
+            }
+            
+            // Botones "Seleccionar todos"
+            document.querySelectorAll('.seleccionar-todos-btn').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    const cursoNombre = this.dataset.curso;
+                    const checkboxesCurso = Array.from(mesesCheckboxes).filter(function(cb) {
+                        return cb.dataset.cursoNombre === cursoNombre;
+                    });
+                    
+                    const todosMarcados = checkboxesCurso.every(function(cb) { return cb.checked; });
+                    
+                    checkboxesCurso.forEach(function(checkbox) {
+                        if (modoMultipleActivo && !checkbox.disabled) {
+                            checkbox.checked = !todosMarcados;
+                            // Actualizar estilo visual
+                            const container = document.querySelector(`[data-mes-checkbox-id="${checkbox.id}"]`);
+                            if (container) {
+                                actualizarEstiloMes(container, checkbox);
+                            }
+                        }
+                    });
+                    
+                    if (modoMultipleActivo) {
+                        // No sincronizar con select en modo múltiple
+                        actualizarResumenMeses();
+                    }
+                });
+            });
+            
+            // Función para seleccionar el mes más antiguo del primer curso
+            function seleccionarMesMasAntiguo() {
+                if (mesesCheckboxes.length === 0) return;
+                
+                // Agrupar meses por curso
+                const mesesPorCurso = {};
+                mesesCheckboxes.forEach(function(checkbox) {
+                    const cursoId = checkbox.dataset.cursoId;
+                    if (!mesesPorCurso[cursoId]) {
+                        mesesPorCurso[cursoId] = [];
+                    }
+                    mesesPorCurso[cursoId].push({
+                        checkbox: checkbox,
+                        mes: parseInt(checkbox.dataset.mes),
+                        ano: parseInt(checkbox.dataset.ano),
+                        cursoId: cursoId
+                    });
+                });
+                
+                // Obtener el primer curso (orden de aparición)
+                const primerCursoId = Object.keys(mesesPorCurso)[0];
+                if (!primerCursoId) return;
+                
+                // Encontrar el mes más antiguo del primer curso
+                const mesesPrimerCurso = mesesPorCurso[primerCursoId];
+                let mesMasAntiguo = mesesPrimerCurso[0];
+                
+                mesesPrimerCurso.forEach(function(mes) {
+                    // Comparar por año primero, luego por mes
+                    if (mes.ano < mesMasAntiguo.ano || 
+                        (mes.ano === mesMasAntiguo.ano && mes.mes < mesMasAntiguo.mes)) {
+                        mesMasAntiguo = mes;
+                    }
+                });
+                
+                // Seleccionar el checkbox del mes más antiguo
+                if (mesMasAntiguo.checkbox) {
+                    mesMasAntiguo.checkbox.checked = true;
+                    const container = document.querySelector(`[data-mes-checkbox-id="${mesMasAntiguo.checkbox.id}"]`);
+                    if (container) {
+                        actualizarEstiloMes(container, mesMasAntiguo.checkbox);
+                    }
+                }
+            }
+            
+            // Inicializar estado al final: habilitar checkboxes si hay meses adeudados
+            if (hayMesesAdeudados) {
+                // Habilitar checkboxes automáticamente
+                mesesCheckboxes.forEach(function(checkbox) {
+                    checkbox.disabled = false;
+                });
+                
+                // Configurar select múltiple
+                if (selectMesMultiple) {
+                    const colMes = selectMesMultiple.closest('.col-md-4');
+                    if (colMes) colMes.style.display = 'block';
+                    selectMesMultiple.multiple = true;
+                    selectMesMultiple.size = 5;
+                    selectMesMultiple.style.display = 'block';
+                    selectMesMultiple.setAttribute('name', 'alumnos_pagos[mes][]');
+                }
+                
+                // Ocultar campo de mes, año y curso (no necesarios en modo múltiple)
+                const campoMesContainer = document.getElementById('campo-mes-container');
+                if (campoMesContainer) {
+                    campoMesContainer.style.display = 'none';
+                }
+                const campoAno = document.querySelector('select[name="alumnos_pagos[ano]"]');
+                if (campoAno) {
+                    const colAno = campoAno.closest('.col-md-4');
+                    if (colAno) colAno.style.display = 'none';
+                }
+                const campoCursoContainer = document.getElementById('campo-curso-container');
+                if (campoCursoContainer) {
+                    campoCursoContainer.style.display = 'none';
+                }
+                
+                // Actualizar campo oculto
+                if (modoPagoMultipleHidden) modoPagoMultipleHidden.value = '1';
+                
+                // Seleccionar automáticamente el mes más antiguo del primer curso
+                seleccionarMesMasAntiguo();
+                
+                // Actualizar resumen para calcular el monto inicial
+                // NOTA: No sincronizamos con el select múltiple porque no puede distinguir entre cursos
+                actualizarResumenMeses();
+            } else {
+                // Si no hay meses adeudados, deshabilitar checkboxes
+                mesesCheckboxes.forEach(function(checkbox) {
+                    checkbox.disabled = true;
+                });
+                if (modoPagoMultipleHidden) modoPagoMultipleHidden.value = '0';
+            }
+            
+            // Validación del formulario: no permitir enviar sin meses seleccionados en modo múltiple
+            const form = document.querySelector('form[name="alumnos_pagos"]');
+            if (form && hayMesesAdeudados) {
+                form.addEventListener('submit', function(e) {
+                    const mesesMarcados = Array.from(mesesCheckboxes).filter(cb => cb.checked);
+                    
+                    // Asegurar que el campo oculto esté establecido correctamente
+                    if (modoPagoMultipleHidden) {
+                        modoPagoMultipleHidden.value = mesesMarcados.length > 0 ? '1' : '0';
+                    }
+                    
+                    // Debug: Log para ver qué se está enviando
+                    console.log('DEBUG submit - meses marcados:', mesesMarcados.length);
+                    console.log('DEBUG submit - valores:', mesesMarcados.map(cb => cb.value));
+                    console.log('DEBUG submit - modo_pago_multiple:', modoPagoMultipleHidden ? modoPagoMultipleHidden.value : 'no encontrado');
+                    
+                    if (mesesMarcados.length === 0) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        alert('Por favor, seleccione al menos un mes para registrar el pago.');
+                        return false;
+                    }
+                    
+                    // Verificar que el monto sea mayor a 0
+                    const montoValue = parseFloat(campoMonto ? campoMonto.value : 0);
+                    if (montoValue <= 0) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        alert('El monto debe ser mayor a $0.00 para registrar el pago.');
+                        return false;
+                    }
+                });
+            }
+        });
+    </script>
 {% endblock %}

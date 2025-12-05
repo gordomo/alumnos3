@@ -114,6 +114,20 @@
                 </tr>
             </thead>
             <tbody>
+            {% set nombresMeses = {
+                1: 'Enero',
+                2: 'Febrero',
+                3: 'Marzo',
+                4: 'Abril',
+                5: 'Mayo',
+                6: 'Junio',
+                7: 'Julio',
+                8: 'Agosto',
+                9: 'Septiembre',
+                10: 'Octubre',
+                11: 'Noviembre',
+                12: 'Diciembre'
+            } %}
             {% for pago in pagos %}
                 <tr>
                     <td>{{ pago.fecha|date('d/m/Y') }}</td>
@@ -121,7 +135,7 @@
                     <td>{{ pago.curso.nombre }}</td>
                     <td>${{ pago.monto|number_format(2, ',', '.') }}</td>
                     <td>{{ pago.metodoPago }}</td>
-                    <td>{{ pago.mes }}</td>
+                    <td>{{ nombresMeses[pago.mes] ?? pago.mes }}</td>
                     <td>{{ pago.ano }}</td>
                     <td style="display: flex; gap: 5px;">
                         <a href="{{ path('app_alumnos_pagos_show', {'id': pago.id}) }}" target="_blank" style="min-width: auto;width: 45px;" class="btn btn-sm btn-outline-primary" title="Imprimir" data-toggle="tooltip" data-placement="left">

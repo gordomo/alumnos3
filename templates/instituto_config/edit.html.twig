@@ -125,6 +125,35 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label for="ordenCalculoInteresesDescuentos" class="form-label">Orden de cálculo de intereses y descuentos</label>
+                                    <select class="form-select" 
+                                            id="ordenCalculoInteresesDescuentos" 
+                                            name="ordenCalculoInteresesDescuentos">
+                                        <option value="interes_primero" {% if configuracion.ordenCalculoInteresesDescuentos == 'interes_primero' %}selected{% endif %}>
+                                            Interés primero, luego descuentos (recomendado)
+                                        </option>
+                                        <option value="descuento_primero" {% if configuracion.ordenCalculoInteresesDescuentos == 'descuento_primero' %}selected{% endif %}>
+                                            Descuentos primero, luego interés
+                                        </option>
+                                        <option value="neto" {% if configuracion.ordenCalculoInteresesDescuentos == 'neto' %}selected{% endif %}>
+                                            Neto (diferencia entre intereses y descuentos)
+                                        </option>
+                                        <option value="descuentos_solo_base" {% if configuracion.ordenCalculoInteresesDescuentos == 'descuentos_solo_base' %}selected{% endif %}>
+                                            Descuentos sobre base, interés sobre base original
+                                        </option>
+                                    </select>
+                                    <div class="form-text text-muted">
+                                        <strong>Interés primero:</strong> Se aplica el interés sobre el monto base, luego los descuentos sobre el resultado. Ejemplo: Base $100, Interés 10% = $110, Descuento 10% = $99.<br>
+                                        <strong>Descuento primero:</strong> Se aplican los descuentos sobre el monto base, luego el interés sobre el resultado. Ejemplo: Base $100, Descuento 10% = $90, Interés 10% = $99.<br>
+                                        <strong>Neto:</strong> Ambos se calculan sobre la base y se hace la diferencia. Ejemplo: Base $100, Interés +$10, Descuento -$10 = $100.<br>
+                                        <strong>Descuentos solo base:</strong> Los descuentos se aplican sobre la base, el interés se suma sobre la base original. Ejemplo: Base $100, Descuento 10% = $90, Interés +$10 = $100.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         
                         <div class="text-center mt-4">
                             <button type="submit" class="btn btn-primary">

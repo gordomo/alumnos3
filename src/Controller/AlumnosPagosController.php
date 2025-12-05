@@ -9,6 +9,7 @@ use App\Form\AlumnosPagosType;
 use App\Repository\AlumnosPagosRepository;
 use App\Repository\VencimientoRepository;
 use App\Repository\AlumnoRepository;
+use App\Repository\DescuentoPromocionalRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -69,6 +70,8 @@ class AlumnosPagosController extends AbstractController
             //$pagos = $alumnosPagosRepository->findByAlumno($alumnoId);
             $alumno = $alumnoRepository->find($alumnoId);
             $nombreAlumno = $alumno->getNombre() . ' ' . $alumno->getApellido();
+            // Refrescar la entidad del alumno para asegurar que la relación de deudas esté actualizada
+            $this->entityManager->refresh($alumno);
             // Usar el nuevo método getDeudasParaPago() en lugar de verificarMesesAdeudados()
             $deudasParaPago = $alumno->getDeudasParaPago();
             $mesesAdeudados = [];
@@ -207,7 +210,7 @@ class AlumnosPagosController extends AbstractController
     /**
      * Calcula el monto sugerido para un pago
      */
-    private function calcularMonto(Alumno $alumno, Curso $curso, $vencimientos, array $mesesAdeudados): array
+    private function calcularMonto(Alumno $alumno, Curso $curso, $vencimientos, array $mesesAdeudados, array $descuentosPromocionalesSeleccionados = []): array
     {
         // Obtener fecha actual
         $fechaActual = new \DateTime();
@@ -272,14 +275,10 @@ class AlumnosPagosController extends AbstractController
             }
         }
 
-        // Calcular el monto con el interés correspondiente
-        if ($porcentajeInteres > 0) {
-            $montoFinal = $montoBase * (1 + ($porcentajeInteres / 100));
-        }
-        
-        // Obtener la configuración del instituto para aplicar descuentos
+        // Obtener la configuración del instituto
         $instituto = $alumno->getInstituto();
         $configuracion = $instituto->getConfiguracion();
+        $ordenCalculo = $configuracion ? $configuracion->getOrdenCalculoInteresesDescuentos() : 'interes_primero';
         
         // Verificar si podemos aplicar descuentos
         $puedeRecibirDescuentos = true;
@@ -293,6 +292,7 @@ class AlumnosPagosController extends AbstractController
             }
         }
         
+        // Calcular porcentajes de descuento (sin aplicar aún)
         if ($puedeRecibirDescuentos && $configuracion) {
             // Aplicar descuento por pago en efectivo si corresponde
             if ($configuracion->getDescuentoEfectivo() && $configuracion->getDescuentoEfectivo() > 0) {
@@ -312,10 +312,53 @@ class AlumnosPagosController extends AbstractController
                 }
             }
             
-            // Aplicar los descuentos al monto final
+            // Aplicar descuentos promocionales seleccionados
+            foreach ($descuentosPromocionalesSeleccionados as $descuentoPromocional) {
+                $porcentajeDescuentoPromocional = (float)$descuentoPromocional->getPorcentaje();
+                $porcentajeDescuentoTotal += $porcentajeDescuentoPromocional;
+                $descuentosAplicados[] = "Descuento promocional: " . $descuentoPromocional->getNombre() . " (" . $porcentajeDescuentoPromocional . "%)";
+            }
+        }
+        
+        // Aplicar intereses y descuentos según el orden configurado
+        switch ($ordenCalculo) {
+            case 'descuento_primero':
+                // Descuentos primero, luego interés
+                if ($porcentajeDescuentoTotal > 0) {
+                    $montoFinal = $montoBase * (1 - ($porcentajeDescuentoTotal / 100));
+                }
+                if ($porcentajeInteres > 0) {
+                    $montoFinal = $montoFinal * (1 + ($porcentajeInteres / 100));
+                }
+                break;
+                
+            case 'neto':
+                // Ambos sobre base, diferencia neta
+                $montoInteres = $porcentajeInteres > 0 ? $montoBase * ($porcentajeInteres / 100) : 0;
+                $montoDescuento = $porcentajeDescuentoTotal > 0 ? $montoBase * ($porcentajeDescuentoTotal / 100) : 0;
+                $montoFinal = $montoBase + $montoInteres - $montoDescuento;
+                break;
+                
+            case 'descuentos_solo_base':
+                // Descuentos sobre base, interés sobre base original
+                if ($porcentajeDescuentoTotal > 0) {
+                    $montoFinal = $montoBase * (1 - ($porcentajeDescuentoTotal / 100));
+                }
+                if ($porcentajeInteres > 0) {
+                    $montoFinal = $montoFinal + ($montoBase * ($porcentajeInteres / 100));
+                }
+                break;
+                
+            case 'interes_primero':
+            default:
+                // Interés primero, luego descuentos (comportamiento actual)
+                if ($porcentajeInteres > 0) {
+                    $montoFinal = $montoBase * (1 + ($porcentajeInteres / 100));
+                }
             if ($porcentajeDescuentoTotal > 0) {
                 $montoFinal = $montoFinal * (1 - ($porcentajeDescuentoTotal / 100));
             }
+                break;
         }
         
         return [
@@ -332,7 +375,7 @@ class AlumnosPagosController extends AbstractController
     /**
      * @Route("/new", name="app_alumnos_pagos_new", methods={"GET", "POST"})
      */
-    public function new(Request $request, AlumnoRepository $alumnoRepository): Response
+    public function new(Request $request, AlumnoRepository $alumnoRepository, DescuentoPromocionalRepository $descuentoPromocionalRepository): Response
     {
         $alumnoId = $request->query->get('id');
         if($alumnoId){
@@ -344,6 +387,9 @@ class AlumnosPagosController extends AbstractController
         $alumnosPago->setAlumno($alumno);
         $alumnosPago->setFecha(new \DateTime());
         $alumnosPago->setMetodoPago('Efectivo');
+
+        // Refrescar la entidad del alumno para asegurar que la relación de deudas esté actualizada
+        $this->entityManager->refresh($alumno);
 
         // Obtener los meses adeudados para el componente
         $deudasParaPago = $alumno->getDeudasParaPago();
@@ -375,6 +421,10 @@ class AlumnosPagosController extends AbstractController
 
         // Obtener los vencimientos
         $vencimientos = $alumno->getInstituto()->getVencimientos();
+        
+        // Obtener los descuentos promocionales activos
+        $configuracion = $alumno->getInstituto()->getConfiguracion();
+        $descuentosPromocionales = $descuentoPromocionalRepository->findActivosByConfiguracion($configuracion);
 
         // Si hay meses adeudados y no hay curso seleccionado, establecer valores por defecto
         if (!empty($mesesAdeudados) && !$cursoSeleccionado) {
@@ -389,11 +439,25 @@ class AlumnosPagosController extends AbstractController
             $alumnosPago->setCurso($cursoSeleccionado);
         }   
 
+        // Obtener descuentos promocionales seleccionados del request
+        $descuentosPromocionalesSeleccionados = [];
+        if ($request->query->has('descuentos_promocionales')) {
+            $descuentosIds = $request->query->get('descuentos_promocionales');
+            if (is_array($descuentosIds)) {
+                foreach ($descuentosIds as $id) {
+                    $descuento = $descuentoPromocionalRepository->find($id);
+                    if ($descuento && $descuento->getActivo()) {
+                        $descuentosPromocionalesSeleccionados[] = $descuento;
+                    }
+                }
+            }
+        }   
+
         // Calcular el monto sugerido si hay un curso seleccionado
         $calculoMonto = null;
         if ($cursoSeleccionado) {
             $mesesAdeudadosCurso = $this->historialCursosService->verificarMesesAdeudadosPorCurso($alumno, $cursoSeleccionado);
-            $calculoMonto = $this->calcularMonto($alumno, $cursoSeleccionado, $vencimientos, $mesesAdeudadosCurso);
+            $calculoMonto = $this->calcularMonto($alumno, $cursoSeleccionado, $vencimientos, $mesesAdeudadosCurso, $descuentosPromocionalesSeleccionados);
             $alumnosPago->setMonto($calculoMonto['monto']);
         }
 
@@ -415,8 +479,253 @@ class AlumnosPagosController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted()) {
-            if ($form->isValid()) {
+            // Verificar si está en modo pago múltiple
+            $modoPagoMultiple = $request->request->get('modo_pago_multiple') === '1';
+            $mesesAdeudadosSeleccionados = $request->request->get('meses_adeudados', []);
+            $mesesSeleccionadosForm = $request->request->get('alumnos_pagos')['mes'] ?? [];
+            
+            // Debug: Log para ver qué se está recibiendo
+            error_log('DEBUG submit - modo_pago_multiple: ' . ($modoPagoMultiple ? '1' : '0'));
+            error_log('DEBUG submit - meses_adeudados recibidos: ' . json_encode($mesesAdeudadosSeleccionados));
+            error_log('DEBUG submit - meses del formulario: ' . json_encode($mesesSeleccionadosForm));
+            
+            // Priorizar checkboxes de meses_adeudados sobre el select múltiple
+            // Si hay meses seleccionados en los checkboxes, usar esos (ya tienen formato mes_ano_cursoId)
+            if (!empty($mesesAdeudadosSeleccionados) && is_array($mesesAdeudadosSeleccionados)) {
+                $modoPagoMultiple = true;
+                // Los valores ya están en el formato correcto: mes_ano_cursoId
+                error_log('DEBUG submit - Usando checkboxes, modo múltiple activado');
+            }
+            // Si no hay checkboxes pero hay meses en el select múltiple, convertir esos
+            elseif (!empty($mesesSeleccionadosForm) && is_array($mesesSeleccionadosForm)) {
+                $modoPagoMultiple = true;
+                // Convertir meses del formulario a formato meses_adeudados
+                $mesesAdeudadosSeleccionados = [];
+                $anoSeleccionado = $request->request->get('alumnos_pagos')['ano'] ?? date('Y');
+                $cursoSeleccionadoId = $request->request->get('alumnos_pagos')['curso'] ?? null;
+                
+                // Si no hay curso en el formulario, intentar obtenerlo del primer mes adeudado
+                if (!$cursoSeleccionadoId && !empty($mesesAdeudados)) {
+                    $primerMes = $mesesAdeudados[0];
+                    $cursoSeleccionadoId = $primerMes['curso_obj']->getId();
+                }
+                
+                foreach ($mesesSeleccionadosForm as $mes) {
+                    if ($cursoSeleccionadoId) {
+                        $mesesAdeudadosSeleccionados[] = $mes . '_' . $anoSeleccionado . '_' . $cursoSeleccionadoId;
+                    }
+                }
+                error_log('DEBUG submit - Usando select múltiple, meses convertidos: ' . json_encode($mesesAdeudadosSeleccionados));
+            }
+            
+            error_log('DEBUG submit - Final: modoPagoMultiple=' . ($modoPagoMultiple ? 'true' : 'false') . ', mesesAdeudadosSeleccionados count=' . count($mesesAdeudadosSeleccionados));
+            
+            // Si está en modo múltiple, saltar la validación del formulario normal
+            if ($modoPagoMultiple && !empty($mesesAdeudadosSeleccionados)) {
+                // Procesar múltiples pagos
                 try {
+                    $descuentosPromocionalesIds = $request->request->get('descuentos_promocionales', []);
+                    if (!is_array($descuentosPromocionalesIds)) {
+                        $descuentosPromocionalesIds = [];
+                    }
+                    
+                    // Obtener descuentos promocionales seleccionados
+                    $descuentosPromocionalesSeleccionados = [];
+                    foreach ($descuentosPromocionalesIds as $id) {
+                        $descuento = $descuentoPromocionalRepository->find($id);
+                        if ($descuento && $descuento->getActivo()) {
+                            $descuentosPromocionalesSeleccionados[] = $descuento;
+                        }
+                    }
+                    
+                    // Calcular el monto total con descuentos aplicados sobre el total
+                    $montoTotalBase = 0;
+                    $mesesInfo = [];
+                    $maxInteres = 0;
+                    $motivoInteres = "Sin interés aplicado";
+                    
+                    // Primero, calcular monto base total y determinar interés máximo
+                    foreach ($mesesAdeudadosSeleccionados as $mesAdeudado) {
+                        list($mes, $ano, $cursoId) = explode('_', $mesAdeudado);
+                        $curso = $this->entityManager->getRepository(Curso::class)->find($cursoId);
+                        
+                        if (!$curso) {
+                            continue;
+                        }
+                        
+                        $montoBaseCurso = $curso->getPrecio();
+                        $montoTotalBase += $montoBaseCurso;
+                        
+                        $mesesInfo[] = [
+                            'mes' => (int)$mes,
+                            'ano' => (int)$ano,
+                            'curso' => $curso,
+                            'montoBase' => $montoBaseCurso
+                        ];
+                        
+                        // Verificar meses adeudados para determinar interés
+                        $mesesAdeudadosCurso = $this->historialCursosService->verificarMesesAdeudadosPorCurso($alumno, $curso);
+                        if (!empty($mesesAdeudadosCurso)) {
+                            $calculoTemporal = $this->calcularMonto($alumno, $curso, $vencimientos, $mesesAdeudadosCurso, []);
+                            if ($calculoTemporal['porcentajeInteres'] > $maxInteres) {
+                                $maxInteres = $calculoTemporal['porcentajeInteres'];
+                                $motivoInteres = $calculoTemporal['motivoInteres'];
+                            }
+                        }
+                    }
+                    
+                    $porcentajeInteres = $maxInteres;
+                    
+                    // Obtener configuración del orden de cálculo
+                    $configuracion = $alumno->getInstituto()->getConfiguracion();
+                    $ordenCalculo = $configuracion ? $configuracion->getOrdenCalculoInteresesDescuentos() : 'interes_primero';
+                    
+                    // Calcular porcentajes de descuento promocional
+                    $porcentajeDescuentoTotal = 0;
+                    $descuentosAplicados = [];
+                    foreach ($descuentosPromocionalesSeleccionados as $descuentoPromocional) {
+                        $porcentajeDescuentoPromocional = (float)$descuentoPromocional->getPorcentaje();
+                        $porcentajeDescuentoTotal += $porcentajeDescuentoPromocional;
+                        $descuentosAplicados[] = "Descuento promocional: " . $descuentoPromocional->getNombre() . " (" . $porcentajeDescuentoPromocional . "%)";
+                    }
+                    
+                    // Aplicar intereses y descuentos según el orden configurado
+                    switch ($ordenCalculo) {
+                        case 'descuento_primero':
+                            // Descuentos primero, luego interés
+                            $montoTotalFinal = $montoTotalBase;
+                            if ($porcentajeDescuentoTotal > 0) {
+                                $montoTotalFinal = $montoTotalBase * (1 - ($porcentajeDescuentoTotal / 100));
+                            }
+                            if ($porcentajeInteres > 0) {
+                                $montoTotalFinal = $montoTotalFinal * (1 + ($porcentajeInteres / 100));
+                            }
+                            break;
+                            
+                        case 'neto':
+                            // Ambos sobre base, diferencia neta
+                            $montoInteres = $porcentajeInteres > 0 ? $montoTotalBase * ($porcentajeInteres / 100) : 0;
+                            $montoDescuento = $porcentajeDescuentoTotal > 0 ? $montoTotalBase * ($porcentajeDescuentoTotal / 100) : 0;
+                            $montoTotalFinal = $montoTotalBase + $montoInteres - $montoDescuento;
+                            break;
+                            
+                        case 'descuentos_solo_base':
+                            // Descuentos sobre base, interés sobre base original
+                            $montoTotalFinal = $montoTotalBase;
+                            if ($porcentajeDescuentoTotal > 0) {
+                                $montoTotalFinal = $montoTotalBase * (1 - ($porcentajeDescuentoTotal / 100));
+                            }
+                            if ($porcentajeInteres > 0) {
+                                $montoTotalFinal = $montoTotalFinal + ($montoTotalBase * ($porcentajeInteres / 100));
+                            }
+                            break;
+                            
+                        case 'interes_primero':
+                        default:
+                            // Interés primero, luego descuentos (comportamiento actual)
+                            $montoTotalConInteres = $montoTotalBase;
+                            if ($porcentajeInteres > 0) {
+                                $montoTotalConInteres = $montoTotalBase * (1 + ($porcentajeInteres / 100));
+                            }
+                            $montoTotalFinal = $montoTotalConInteres;
+                            if ($porcentajeDescuentoTotal > 0) {
+                                $montoTotalFinal = $montoTotalConInteres * (1 - ($porcentajeDescuentoTotal / 100));
+                            }
+                            break;
+                    }
+                    
+                    // Distribuir el monto total proporcionalmente entre los meses
+                    $pagosCreados = 0;
+                    $errores = [];
+                    
+                    foreach ($mesesInfo as $mesInfo) {
+                        // Verificar si ya existe un pago para este mes/año/curso
+                        $pagoExistente = $this->entityManager->getRepository(AlumnosPagos::class)->findOneBy([
+                            'alumno' => $alumno,
+                            'curso' => $mesInfo['curso'],
+                            'mes' => $mesInfo['mes'],
+                            'ano' => $mesInfo['ano']
+                        ]);
+                        
+                        if ($pagoExistente) {
+                            $errores[] = "Ya existe un pago para {$mesInfo['mes']}/{$mesInfo['ano']} en {$mesInfo['curso']->getNombre()}";
+                            continue;
+                        }
+                        
+                        // Calcular monto proporcional para este mes
+                        $proporcion = $mesInfo['montoBase'] / $montoTotalBase;
+                        $montoMes = $montoTotalFinal * $proporcion;
+                        
+                        // Crear nuevo pago
+                        $nuevoPago = new AlumnosPagos();
+                        $nuevoPago->setAlumno($alumno);
+                        $nuevoPago->setCurso($mesInfo['curso']);
+                        $nuevoPago->setFecha($alumnosPago->getFecha());
+                        $nuevoPago->setMes($mesInfo['mes']);
+                        $nuevoPago->setAno($mesInfo['ano']);
+                        $nuevoPago->setMonto($montoMes);
+                        $nuevoPago->setMetodoPago($alumnosPago->getMetodoPago());
+                        $nuevoPago->setObservacion($alumnosPago->getObservacion());
+                        
+                        // Registrar el pago
+                        $this->historialCursosService->registrarPago($nuevoPago);
+                        $pagosCreados++;
+                    }
+                    
+                    if ($pagosCreados > 0) {
+                        $this->addFlash('success', "Se crearon $pagosCreados pago(s) correctamente.");
+                        if (!empty($errores)) {
+                            $this->addFlash('warning', 'Algunos pagos no pudieron ser procesados: ' . implode(', ', $errores));
+                        }
+                        return $this->redirectToRoute('app_alumnos_pagos_index', ['alumno' => $alumno->getId()]);
+                    } else {
+                        $this->addFlash('danger', 'No se pudo crear ningún pago. ' . implode(', ', $errores));
+                    }
+                } catch (\Exception $e) {
+                    $this->addFlash('danger', 'Ocurrió un error al crear los pagos: ' . $e->getMessage());
+                }
+            } elseif ($form->isValid() || ($modoPagoMultiple && empty($mesesAdeudadosSeleccionados))) {
+                // Procesar pago único (lógica existente)
+                // Si está en modo múltiple pero no hay meses seleccionados, mostrar error
+                if ($modoPagoMultiple && empty($mesesAdeudadosSeleccionados)) {
+                    $this->addFlash('danger', 'Debe seleccionar al menos un mes para pagar.');
+                } else {
+                    try {
+                        // Obtener mes y año del formulario (puede venir como array o valor único)
+                        $mesForm = $request->request->get('alumnos_pagos')['mes'] ?? null;
+                        $anoForm = $request->request->get('alumnos_pagos')['ano'] ?? null;
+                        
+                        // Si mes viene como array, tomar el primero (modo único)
+                        if (is_array($mesForm) && !empty($mesForm)) {
+                            $alumnosPago->setMes((int)$mesForm[0]);
+                        } elseif ($mesForm) {
+                            $alumnosPago->setMes((int)$mesForm);
+                        }
+                        
+                        if ($anoForm) {
+                            $alumnosPago->setAno((int)$anoForm);
+                        }
+                        
+                        // Obtener descuentos promocionales seleccionados del formulario
+                        $descuentosPromocionalesIds = $request->request->get('descuentos_promocionales', []);
+                        if (!is_array($descuentosPromocionalesIds)) {
+                            $descuentosPromocionalesIds = [];
+                        }
+                        
+                        // Recalcular el monto con los descuentos promocionales seleccionados
+                        if ($alumnosPago->getCurso()) {
+                            $mesesAdeudadosCurso = $this->historialCursosService->verificarMesesAdeudadosPorCurso($alumno, $alumnosPago->getCurso());
+                            $descuentosPromocionalesSeleccionados = [];
+                            foreach ($descuentosPromocionalesIds as $id) {
+                                $descuento = $descuentoPromocionalRepository->find($id);
+                                if ($descuento && $descuento->getActivo()) {
+                                    $descuentosPromocionalesSeleccionados[] = $descuento;
+                                }
+                            }
+                            $calculoMonto = $this->calcularMonto($alumno, $alumnosPago->getCurso(), $vencimientos, $mesesAdeudadosCurso, $descuentosPromocionalesSeleccionados);
+                            $alumnosPago->setMonto($calculoMonto['monto']);
+                        }
+                        
                     // Verificar si ya existe un pago para este alumno, curso, mes y año
                     $pagoExistente = $this->entityManager->getRepository(AlumnosPagos::class)->findOneBy([
                         'alumno' => $alumnosPago->getAlumno(),
@@ -439,7 +748,8 @@ class AlumnosPagosController extends AbstractController
                     $this->addFlash('success', 'Pago creado correctamente.');
                     return $this->redirectToRoute('app_alumnos_pagos_index', ['alumno' => $alumno->getId()]);
                 } catch (\Exception $e) {
-                    $this->addFlash('danger', 'Ocurrió un error al crear el pago.');
+                        $this->addFlash('danger', 'Ocurrió un error al crear el pago: ' . $e->getMessage());
+                    }
                 }
             } else {
                 foreach ($form->getErrors(true) as $error) {
@@ -447,6 +757,10 @@ class AlumnosPagosController extends AbstractController
                 }
             }
         }
+
+        // Obtener configuración del orden de cálculo
+        $configuracion = $alumno->getInstituto()->getConfiguracion();
+        $ordenCalculo = $configuracion ? $configuracion->getOrdenCalculoInteresesDescuentos() : 'interes_primero';
 
         return $this->render('alumnos_pagos/new.html.twig', [
             'form' => $form->createView(),
@@ -459,7 +773,221 @@ class AlumnosPagosController extends AbstractController
             'motivoInteres' => isset($calculoMonto) ? $calculoMonto['motivoInteres'] : null,
             'porcentajeInteres' => isset($calculoMonto) ? $calculoMonto['porcentajeInteres'] : 0,
             'descuentosAplicados' => isset($calculoMonto) ? $calculoMonto['descuentosAplicados'] : [],
-            'porcentajeDescuentoTotal' => isset($calculoMonto) ? $calculoMonto['porcentajeDescuentoTotal'] : 0
+            'porcentajeDescuentoTotal' => isset($calculoMonto) ? $calculoMonto['porcentajeDescuentoTotal'] : 0,
+            'descuentosPromocionales' => $descuentosPromocionales,
+            'descuentosPromocionalesSeleccionados' => $descuentosPromocionalesSeleccionados,
+            'calculoMonto' => $calculoMonto,
+            'ordenCalculo' => $ordenCalculo
+        ]);
+    }
+
+    /**
+     * @Route("/calcular-monto", name="app_alumnos_pagos_calcular_monto", methods={"POST"})
+     */
+    public function calcularMontoAjax(
+        Request $request,
+        AlumnoRepository $alumnoRepository,
+        DescuentoPromocionalRepository $descuentoPromocionalRepository
+    ): JsonResponse {
+        $alumnoId = $request->request->get('alumno_id');
+        $cursoId = $request->request->get('curso_id');
+        $mesesSeleccionados = $request->request->get('meses_seleccionados', []); // Array de meses en formato "mes_ano_cursoId"
+        $descuentosPromocionalesIds = $request->request->get('descuentos_promocionales', []);
+        
+        if (!$alumnoId) {
+            return new JsonResponse(['error' => 'Falta el ID del alumno'], 400);
+        }
+        
+        $alumno = $alumnoRepository->find($alumnoId);
+        if (!$alumno) {
+            return new JsonResponse(['error' => 'Alumno no encontrado'], 404);
+        }
+        
+        // Verificar que el usuario tiene acceso al instituto
+        $institutoUsuario = $this->getUser()->getInstituto();
+        if ($alumno->getInstituto() !== $institutoUsuario) {
+            return new JsonResponse(['error' => 'No tiene acceso a este instituto'], 403);
+        }
+        
+        // Obtener descuentos promocionales seleccionados
+        $descuentosPromocionalesSeleccionados = [];
+        if (is_array($descuentosPromocionalesIds)) {
+            foreach ($descuentosPromocionalesIds as $id) {
+                $descuento = $descuentoPromocionalRepository->find($id);
+                if ($descuento && $descuento->getActivo() && $descuento->getConfiguracion()->getInstituto() === $alumno->getInstituto()) {
+                    $descuentosPromocionalesSeleccionados[] = $descuento;
+                }
+            }
+        }
+        
+        $vencimientos = $alumno->getInstituto()->getVencimientos();
+        
+        // Si hay múltiples meses seleccionados, calcular el total
+        if (!empty($mesesSeleccionados) && is_array($mesesSeleccionados)) {
+            $montoTotalBase = 0;
+            $montoTotalConInteres = 0;
+            $porcentajeInteres = 0;
+            $motivoInteres = "Sin interés aplicado";
+            $descuentosAplicados = [];
+            $porcentajeDescuentoTotal = 0;
+            
+            // Debug: Log para ver qué se está recibiendo
+            error_log('DEBUG calcularMontoAjax - mesesSeleccionados: ' . json_encode($mesesSeleccionados));
+            error_log('DEBUG calcularMontoAjax - descuentosPromocionalesIds: ' . json_encode($descuentosPromocionalesIds));
+            
+            // Agrupar meses por curso para calcular intereses correctamente
+            $mesesPorCurso = [];
+            foreach ($mesesSeleccionados as $mesData) {
+                list($mes, $ano, $cursoId) = explode('_', $mesData);
+                if (!isset($mesesPorCurso[$cursoId])) {
+                    $mesesPorCurso[$cursoId] = [];
+                }
+                $mesesPorCurso[$cursoId][] = ['mes' => $mes, 'ano' => $ano];
+            }
+            
+            // Debug: Log para ver cómo se agruparon los meses
+            error_log('DEBUG calcularMontoAjax - mesesPorCurso: ' . json_encode($mesesPorCurso));
+            
+            // Calcular monto base total y determinar interés máximo
+            $maxInteres = 0;
+            foreach ($mesesPorCurso as $cursoId => $meses) {
+                $curso = $this->entityManager->getRepository(Curso::class)->find($cursoId);
+                if (!$curso) continue;
+                
+                $montoBaseCurso = $curso->getPrecio();
+                $montoTotalBase += $montoBaseCurso * count($meses);
+                
+                // Debug: Log para ver el cálculo del monto base
+                error_log("DEBUG calcularMontoAjax - Curso ID: $cursoId, Precio: $montoBaseCurso, Meses: " . count($meses) . ", Subtotal: " . ($montoBaseCurso * count($meses)));
+                
+                // Verificar meses adeudados para este curso
+                $mesesAdeudadosCurso = $this->historialCursosService->verificarMesesAdeudadosPorCurso($alumno, $curso);
+                if (!empty($mesesAdeudadosCurso)) {
+                    // Calcular interés para este curso
+                    $calculoTemporal = $this->calcularMonto($alumno, $curso, $vencimientos, $mesesAdeudadosCurso, []);
+                    if ($calculoTemporal['porcentajeInteres'] > $maxInteres) {
+                        $maxInteres = $calculoTemporal['porcentajeInteres'];
+                        $motivoInteres = $calculoTemporal['motivoInteres'];
+                    }
+                }
+            }
+            
+            $porcentajeInteres = $maxInteres;
+            
+            // Obtener configuración del orden de cálculo
+            $configuracion = $alumno->getInstituto()->getConfiguracion();
+            $ordenCalculo = $configuracion ? $configuracion->getOrdenCalculoInteresesDescuentos() : 'interes_primero';
+            
+            // Calcular porcentajes de descuento promocional
+            $porcentajeDescuentoTotal = 0;
+            foreach ($descuentosPromocionalesSeleccionados as $descuentoPromocional) {
+                $porcentajeDescuentoPromocional = (float)$descuentoPromocional->getPorcentaje();
+                $porcentajeDescuentoTotal += $porcentajeDescuentoPromocional;
+                $descuentosAplicados[] = "Descuento promocional: " . $descuentoPromocional->getNombre() . " (" . $porcentajeDescuentoPromocional . "%)";
+            }
+            
+            // Aplicar intereses y descuentos según el orden configurado
+            $montoTotalConInteres = $montoTotalBase;
+            switch ($ordenCalculo) {
+                case 'descuento_primero':
+                    // Descuentos primero, luego interés
+                    $montoFinal = $montoTotalBase;
+                    if ($porcentajeDescuentoTotal > 0) {
+                        $montoFinal = $montoTotalBase * (1 - ($porcentajeDescuentoTotal / 100));
+                    }
+                    if ($porcentajeInteres > 0) {
+                        $montoFinal = $montoFinal * (1 + ($porcentajeInteres / 100));
+                        $montoTotalConInteres = $montoFinal;
+                    }
+                    break;
+                    
+                case 'neto':
+                    // Ambos sobre base, diferencia neta
+                    $montoInteres = $porcentajeInteres > 0 ? $montoTotalBase * ($porcentajeInteres / 100) : 0;
+                    $montoDescuento = $porcentajeDescuentoTotal > 0 ? $montoTotalBase * ($porcentajeDescuentoTotal / 100) : 0;
+                    $montoFinal = $montoTotalBase + $montoInteres - $montoDescuento;
+                    $montoTotalConInteres = $montoTotalBase + $montoInteres;
+                    break;
+                    
+                case 'descuentos_solo_base':
+                    // Descuentos sobre base, interés sobre base original
+                    $montoFinal = $montoTotalBase;
+                    if ($porcentajeDescuentoTotal > 0) {
+                        $montoFinal = $montoTotalBase * (1 - ($porcentajeDescuentoTotal / 100));
+                    }
+                    if ($porcentajeInteres > 0) {
+                        $montoFinal = $montoFinal + ($montoTotalBase * ($porcentajeInteres / 100));
+                        $montoTotalConInteres = $montoTotalBase * (1 + ($porcentajeInteres / 100));
+                    }
+                    break;
+                    
+                case 'interes_primero':
+                default:
+                    // Interés primero, luego descuentos (comportamiento actual)
+                    if ($porcentajeInteres > 0) {
+                        $montoTotalConInteres = $montoTotalBase * (1 + ($porcentajeInteres / 100));
+                    }
+                    $montoFinal = $montoTotalConInteres;
+                    if ($porcentajeDescuentoTotal > 0) {
+                        $montoFinal = $montoTotalConInteres * (1 - ($porcentajeDescuentoTotal / 100));
+                    }
+                    break;
+            }
+            
+            // Obtener texto descriptivo del orden de cálculo
+            $ordenTexto = [
+                'interes_primero' => 'Interés primero, luego descuentos',
+                'descuento_primero' => 'Descuentos primero, luego interés',
+                'neto' => 'Neto (diferencia entre intereses y descuentos)',
+                'descuentos_solo_base' => 'Descuentos sobre base, interés sobre base original'
+            ];
+            $ordenDescripcion = [
+                'interes_primero' => 'Se aplica el interés sobre el monto base, luego los descuentos sobre el resultado.',
+                'descuento_primero' => 'Se aplican los descuentos sobre el monto base, luego el interés sobre el resultado.',
+                'neto' => 'Ambos se calculan sobre la base y se hace la diferencia.',
+                'descuentos_solo_base' => 'Los descuentos se aplican sobre la base, el interés se suma sobre la base original.'
+            ];
+            
+            return new JsonResponse([
+                'monto' => $montoFinal,
+                'montoBase' => $montoTotalBase,
+                'montoConInteres' => $montoTotalConInteres,
+                'porcentajeInteres' => $porcentajeInteres,
+                'motivoInteres' => $motivoInteres,
+                'descuentosAplicados' => $descuentosAplicados,
+                'porcentajeDescuentoTotal' => $porcentajeDescuentoTotal,
+                'ordenCalculo' => $ordenCalculo,
+                'ordenCalculoTexto' => $ordenTexto[$ordenCalculo] ?? 'Interés primero, luego descuentos',
+                'ordenCalculoDescripcion' => $ordenDescripcion[$ordenCalculo] ?? 'Se aplica el interés sobre el monto base, luego los descuentos sobre el resultado.'
+            ]);
+        }
+        
+        // Lógica original para un solo curso
+        if (!$cursoId) {
+            return new JsonResponse(['error' => 'Falta el ID del curso'], 400);
+        }
+        
+        $curso = $this->entityManager->getRepository(Curso::class)->find($cursoId);
+        if (!$curso) {
+            return new JsonResponse(['error' => 'Curso no encontrado'], 404);
+        }
+        
+        // Verificar que el alumno y curso pertenecen al mismo instituto
+        if ($alumno->getInstituto() !== $curso->getInstituto()) {
+            return new JsonResponse(['error' => 'El alumno y curso no pertenecen al mismo instituto'], 400);
+        }
+        
+        // Calcular el monto
+        $mesesAdeudadosCurso = $this->historialCursosService->verificarMesesAdeudadosPorCurso($alumno, $curso);
+        $calculoMonto = $this->calcularMonto($alumno, $curso, $vencimientos, $mesesAdeudadosCurso, $descuentosPromocionalesSeleccionados);
+        
+        return new JsonResponse([
+            'monto' => $calculoMonto['monto'],
+            'montoBase' => $calculoMonto['montoBase'],
+            'porcentajeInteres' => $calculoMonto['porcentajeInteres'],
+            'motivoInteres' => $calculoMonto['motivoInteres'],
+            'descuentosAplicados' => $calculoMonto['descuentosAplicados'],
+            'porcentajeDescuentoTotal' => $calculoMonto['porcentajeDescuentoTotal']
         ]);
     }
 

@@ -65,6 +65,10 @@
                 height:'auto',
                 events: {{ eventos|raw }},
                 eventClick: function(info) {
+                    // Ocultar el spinner si está visible
+                    if (typeof hideLoading === 'function') {
+                        hideLoading();
+                    }
                     var props = info.event.extendedProps;
                     alert(
                         'Curso: ' + info.event.title + '\n' +
@@ -72,9 +76,43 @@
                         'Duración: ' + props.duracion + ' horas\n' +
                         'Precio: $' + props.precio
                     );
+                },
+                dateClick: function(info) {
+                    // Ocultar el spinner cuando se hace clic en un día
+                    if (typeof hideLoading === 'function') {
+                        hideLoading();
+                    }
+                },
+                viewDidMount: function() {
+                    // Ocultar el spinner cuando cambia la vista del calendario
+                    if (typeof hideLoading === 'function') {
+                        hideLoading();
+                    }
                 }
             });
             calendar.render();
+            
+            // Ocultar el spinner después de que el calendario se renderice
+            if (typeof hideLoading === 'function') {
+                hideLoading();
+            }
+            
+            // Prevenir que los clics en el calendario muestren el spinner
+            calendarEl.addEventListener('click', function(e) {
+                // Si el clic es en un elemento del calendario (no en un enlace de navegación)
+                const target = e.target;
+                const isCalendarElement = target.closest('.fc-day') || 
+                                         target.closest('.fc-event') ||
+                                         target.closest('.fc-button') ||
+                                         target.closest('.fc-toolbar');
+                
+                if (isCalendarElement && typeof hideLoading === 'function') {
+                    // Ocultar el spinner después de un pequeño delay para asegurar que se procese el clic
+                    setTimeout(function() {
+                        hideLoading();
+                    }, 100);
+                }
+            }, true); // Usar capture phase para interceptar antes que el listener de loading
         });
     </script>
 {% endblock %}

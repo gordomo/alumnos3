@@ -1,84 +1,435 @@
-{{ form_start(form) }}
-    <div class="row">
+{{ form_start(form, {'attr': {'id': 'alumnos_pagos', 'name': 'alumnos_pagos'}}) }}
+    {# Campo oculto para modo pago múltiple #}
+    <input type="hidden" name="modo_pago_multiple" id="modo-pago-multiple-hidden" value="0">
+    
+    {# Información del Alumno y Curso #}
+    <div class="row mb-3">
         <div class="col-md-6">
-            {{ include('components/formGroup.html.twig', {form: form.alumno, label: 'Alumno', required: true}) }}
+            <div class="mb-2">
+                <label for="{{ form.alumno.vars.id }}" class="form-label fw-semibold text-dark">
+                    Alumno <span class="text-danger">*</span>
+                </label>
+                {{ form_widget(form.alumno, {'attr': {'class': 'form-control'}}) }}
+                {{ form_errors(form.alumno) }}
+            </div>
         </div>
-        <div class="col-md-6">
-            {{ include('components/formGroup.html.twig', {form: form.curso, label: 'Curso', required: true}) }}
-        </div>
-        <div class="col-md-4">
-            {{ include('components/formGroup.html.twig', {form: form.fecha, label: 'Fecha de Pago', required: true}) }}
-        </div>
-        <div class="col-md-4">
-            {{ include('components/formGroup.html.twig', {form: form.mes, label: 'Mes', required: true}) }}
-        </div>
-        <div class="col-md-4">
-            {{ include('components/formGroup.html.twig', {form: form.ano, label: 'Año', required: true}) }}
-        </div>
-        <div class="col-md-6">
-            {{ include('components/formGroup.html.twig', {form: form.monto, label: 'Monto', required: true}) }}
-        </div>
-        <div class="col-md-6">
-            {{ include('components/formGroup.html.twig', {form: form.metodoPago, label: 'Método de Pago', required: true}) }}
-        </div>
-        <div class="col-md-12">
-            {{ include('components/formGroup.html.twig', {form: form.observacion, label: 'Observaciones'}) }}
+        {# Campo Curso oculto en modo múltiple - se determina automáticamente por los meses seleccionados #}
+        <div class="col-md-6" id="campo-curso-container">
+            <div class="mb-2">
+                <label for="{{ form.curso.vars.id }}" class="form-label fw-semibold text-dark">
+                    Curso <span class="text-danger">*</span>
+                </label>
+                {{ form_widget(form.curso, {'attr': {'class': 'form-control'}}) }}
+                {{ form_errors(form.curso) }}
+            </div>
         </div>
     </div>
 
-    {% if motivoInteres is defined and motivoInteres %}
-        <div class="alert alert-info mt-4">
-            <h5>Interés por vencimiento:</h5>
-            <p>{{ motivoInteres }}</p>
+    {# Información del Pago #}
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <div class="mb-2">
+                <label for="{{ form.fecha.vars.id }}" class="form-label fw-semibold text-dark">
+                    Fecha de Pago <span class="text-danger">*</span>
+                </label>
+                {{ form_widget(form.fecha, {'attr': {'class': 'form-control'}}) }}
+                {{ form_errors(form.fecha) }}
+            </div>
         </div>
-    {% endif %}
+        {# Campo Mes oculto - se sincroniza con los checkboxes de meses adeudados #}
+        <div class="col-md-4" id="campo-mes-container" style="display: none;">
+            <div class="mb-2">
+                <label for="{{ form.mes.vars.id }}" class="form-label fw-semibold text-dark">
+                    Mes <span class="text-danger">*</span>
+                </label>
+                <small class="text-muted d-block mb-1">Puede seleccionar múltiples meses</small>
+                {{ form_widget(form.mes, {'attr': {'class': 'form-control mes-select-multiple', 'size': '5'}}) }}
+                {{ form_errors(form.mes) }}
+            </div>
+        </div>
+        {# Campo Año oculto en modo múltiple - se oculta cuando hay meses adeudados #}
+        <div class="col-md-4" id="campo-ano-container">
+            <div class="mb-2">
+                <label for="{{ form.ano.vars.id }}" class="form-label fw-semibold text-dark">
+                    Año <span class="text-danger">*</span>
+                </label>
+                {{ form_widget(form.ano, {'attr': {'class': 'form-control'}}) }}
+                {{ form_errors(form.ano) }}
+            </div>
+        </div>
+    </div>
 
-    {% if descuentosAplicados is defined and descuentosAplicados|length > 0 %}
-        <div class="alert alert-success mt-4">
-            <h5>Descuentos aplicados:</h5>
-            <ul class="mb-0">
-                {% for descuento in descuentosAplicados %}
-                    <li>{{ descuento }}</li>
-                {% endfor %}
-            </ul>
-            {% if porcentajeDescuentoTotal is defined and porcentajeDescuentoTotal > 0 %}
-                <p class="mt-2 mb-0"><strong>Total descuentos aplicados: {{ porcentajeDescuentoTotal }}%</strong></p>
-            {% endif %}
+    {# Monto y Método de Pago #}
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <div class="mb-2">
+                <label for="{{ form.monto.vars.id }}" class="form-label fw-semibold text-dark">
+                    Monto <span class="text-danger">*</span>
+                </label>
+                <small class="text-muted d-block mb-1">Puede modificar el monto sugerido</small>
+                {{ form_widget(form.monto, {'attr': {'class': 'form-control monto-input-field'}}) }}
+                {{ form_errors(form.monto) }}
+            </div>
         </div>
-    {% endif %}
+        <div class="col-md-6">
+            <div class="mb-2">
+                <label for="{{ form.metodoPago.vars.id }}" class="form-label fw-semibold text-dark">
+                    Método de Pago <span class="text-danger">*</span>
+                </label>
+                <small class="text-muted d-block mb-1" style="visibility: hidden;">&nbsp;</small>
+                {{ form_widget(form.metodoPago, {'attr': {'class': 'form-control'}}) }}
+                {{ form_errors(form.metodoPago) }}
+            </div>
+        </div>
+    </div>
 
-    {% if vencimientos is defined and vencimientos|length > 0 %}
-        <div class="alert alert-info mt-4">
-            <h5>Vencimientos Configurados:</h5>
-            <ul class="mb-0">
-                {% for vencimiento in vencimientos %}
-                    <li>Día {{ vencimiento.diaVencimiento }} - {{ vencimiento.porcentajeInteres }}% de interés</li>
-                {% endfor %}
-            </ul>
+    {# Observaciones #}
+    <div class="row mb-3">
+        <div class="col-md-12">
+            <div class="mb-2">
+                <label for="{{ form.observacion.vars.id }}" class="form-label fw-semibold text-dark">
+                    Observaciones
+                </label>
+                {{ form_widget(form.observacion, {'attr': {'class': 'form-control', 'rows': 3}}) }}
+                {{ form_errors(form.observacion) }}
+            </div>
         </div>
-    {% endif %}
+    </div>
 
-    <div class="form-group row mt-3">
-        <div class="col-sm-12">
-            <button type="submit" class="btn btn-primary">
-                <i class="fas fa-save"></i> {{ button_label|default('Guardar') }}
-            </button>
-            {% if is_general %}
-                <a href="{{ path('app_alumnos_pagos_index') }}" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left"></i> Volver
-                </a>
-            {% else %}
-                <a href="{{ path('app_alumno_index') }}" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left"></i> Volver
-                </a>
-            {% endif %}
-        </div>
+    {# Botones de Acción #}
+    <div class="d-flex gap-2 mt-3 pt-2 border-top">
+        <button type="submit" class="btn btn-primary">
+            <i class="bi bi-save"></i> {{ button_label|default('Guardar Pago') }}
+        </button>
+        {% if is_general %}
+            <a href="{{ path('app_alumnos_pagos_index') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Volver
+            </a>
+        {% else %}
+            <a href="{{ path('app_alumno_index') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Volver
+            </a>
+        {% endif %}
     </div>
 {{ form_end(form) }}
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Método 1: Usar el evento chosen:ready de Chosen
+        const precioFinalContainer = document.getElementById('precio-final-container');
+        const precioFinalElement = document.getElementById('precio-final');
+        const descuentosCheckboxes = document.querySelectorAll('.descuento-promocional-checkbox');
+        
+        // Obtener IDs del formulario
+        const alumnoSelect = document.getElementById('alumnos_pagos_alumno');
+        const cursoSelect = document.getElementById('alumnos_pagos_curso');
+        
+        // Función para encontrar el campo de monto de forma robusta
+        function encontrarCampoMonto() {
+            // Primero intentar por clase CSS (más confiable)
+            let campoMonto = document.querySelector('.monto-input-field');
+            
+            if (!campoMonto) {
+                // Buscar por nombre del campo de Symfony
+                campoMonto = document.querySelector('input[name="alumnos_pagos[monto]"]');
+            }
+            
+            if (!campoMonto) {
+                // Buscar por el atributo for del label
+                const montoLabel = document.querySelector('label[for*="monto"]');
+                if (montoLabel) {
+                    const labelFor = montoLabel.getAttribute('for');
+                    campoMonto = document.getElementById(labelFor);
+                }
+            }
+            
+            if (!campoMonto) {
+                // Buscar por ID generado por Symfony
+                campoMonto = document.getElementById('{{ form.monto.vars.id }}');
+            }
+            
+            if (!campoMonto) {
+                // Último intento: buscar cualquier input number cerca de un label que contenga "Monto"
+                const labels = document.querySelectorAll('label');
+                labels.forEach(label => {
+                    if (label.textContent.includes('Monto') && label.getAttribute('for')) {
+                        const inputId = label.getAttribute('for');
+                        const input = document.getElementById(inputId);
+                        if (input && (input.type === 'number' || input.type === 'text')) {
+                            campoMonto = input;
+                        }
+                    }
+                });
+            }
+            
+            return campoMonto;
+        }
+        
+        // Función para calcular el monto dinámicamente
+        function calcularMontoDinamico() {
+            const alumnoId = alumnoSelect ? alumnoSelect.value : null;
+            const cursoId = cursoSelect ? cursoSelect.value : null;
+            
+            if (!alumnoId || !cursoId) {
+                console.log('Faltan alumno o curso seleccionado');
+                return;
+            }
+            
+            // Obtener descuentos promocionales seleccionados
+            const descuentosIds = Array.from(descuentosCheckboxes)
+                .filter(cb => cb.checked)
+                .map(cb => cb.value);
+            
+            // Mostrar loading
+            if (precioFinalElement) {
+                precioFinalElement.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Calculando...';
+            }
+            
+            // Preparar datos para enviar
+            const formData = new URLSearchParams();
+            formData.append('alumno_id', alumnoId);
+            formData.append('curso_id', cursoId);
+            descuentosIds.forEach(id => {
+                formData.append('descuentos_promocionales[]', id);
+            });
+            
+            // Llamar al endpoint AJAX
+            fetch('{{ path("app_alumnos_pagos_calcular_monto") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    console.error('Error:', data.error);
+                    if (precioFinalElement) {
+                        precioFinalElement.textContent = 'Error: ' + data.error;
+                    }
+                    return;
+                }
+                
+                const montoCalculado = parseFloat(data.monto);
+                
+                // Actualizar el precio final
+                if (precioFinalElement) {
+                    precioFinalElement.textContent = '$' + montoCalculado.toLocaleString('es-AR', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    });
+                }
+                
+                // Actualizar el campo de monto del formulario
+                const campoMonto = encontrarCampoMonto();
+                
+                if (campoMonto) {
+                    // Formatear el número con punto como separador decimal (formato estándar para inputs number)
+                    const nuevoValor = montoCalculado.toFixed(2);
+                    // Marcar que la actualización es programática
+                    campoMonto.dataset.updatingProgrammatically = 'true';
+                    campoMonto.value = nuevoValor;
+                    // Remover la marca después de un pequeño delay
+                    setTimeout(function() {
+                        delete campoMonto.dataset.updatingProgrammatically;
+                    }, 100);
+                    
+                    // Disparar eventos para notificar el cambio (pero los listeners los ignorarán si tienen la marca)
+                    campoMonto.dispatchEvent(new Event('input', { bubbles: true }));
+                    campoMonto.dispatchEvent(new Event('change', { bubbles: true }));
+                    
+                    // Forzar actualización visual
+                    campoMonto.style.backgroundColor = '#e8f5e9';
+                    setTimeout(() => {
+                        campoMonto.style.backgroundColor = '';
+                    }, 500);
+                    
+                    console.log('Monto actualizado en el campo:', nuevoValor, 'Campo encontrado:', campoMonto.id || campoMonto.name);
+                } else {
+                    console.warn('No se encontró el campo de monto. Buscando todos los inputs disponibles...');
+                    const todosLosInputs = document.querySelectorAll('input[type="number"]');
+                    console.log('Inputs number encontrados:', Array.from(todosLosInputs).map(i => ({id: i.id, name: i.name, value: i.value})));
+                    
+                    // Intentar una vez más después de un pequeño delay
+                    setTimeout(() => {
+                        const campoMontoRetry = encontrarCampoMonto();
+                        if (campoMontoRetry) {
+                            const nuevoValor = montoCalculado.toFixed(2);
+                            // Marcar que la actualización es programática
+                            campoMontoRetry.dataset.updatingProgrammatically = 'true';
+                            campoMontoRetry.value = nuevoValor;
+                            // Remover la marca después de un pequeño delay
+                            setTimeout(function() {
+                                delete campoMontoRetry.dataset.updatingProgrammatically;
+                            }, 100);
+                            campoMontoRetry.dispatchEvent(new Event('input', { bubbles: true }));
+                            campoMontoRetry.dispatchEvent(new Event('change', { bubbles: true }));
+                            console.log('Monto actualizado en el campo (retry):', nuevoValor);
+                        } else {
+                            console.error('No se pudo encontrar el campo de monto después de múltiples intentos');
+                        }
+                    }, 200);
+                }
+                
+                // Actualizar la sección de descuentos aplicados si existe
+                actualizarDescuentosAplicados(data);
+            })
+            .catch(error => {
+                console.error('Error al calcular monto:', error);
+                if (precioFinalElement) {
+                    precioFinalElement.textContent = 'Error al calcular';
+                }
+            });
+        }
+        
+        // Función para actualizar la sección de descuentos aplicados
+        function actualizarDescuentosAplicados(data) {
+            // Esta función puede actualizar dinámicamente la sección de descuentos
+            // Por ahora solo actualizamos el precio
+        }
+        
+        // Función para actualizar el precio final mostrado cuando se modifica el campo de monto
+        function actualizarPrecioFinalDesdeInput() {
+            const campoMonto = encontrarCampoMonto();
+            const precioFinalElement = document.getElementById('precio-final');
+            
+            if (campoMonto && precioFinalElement) {
+                let valor = campoMonto.value;
+                // Reemplazar coma por punto para parseFloat
+                valor = valor.replace(',', '.');
+                
+                if (valor && !isNaN(valor) && parseFloat(valor) > 0) {
+                    const montoFormateado = parseFloat(valor).toLocaleString('es-AR', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    });
+                    precioFinalElement.textContent = '$' + montoFormateado;
+                    console.log('Precio final actualizado desde input:', montoFormateado);
+                }
+            } else {
+                console.warn('No se pudo encontrar campoMonto o precioFinalElement para actualizar');
+            }
+        }
+        
+        // Event listeners para checkboxes de descuentos promocionales
+        descuentosCheckboxes.forEach(function(checkbox) {
+            checkbox.addEventListener('change', function(e) {
+                // Verificar si estamos en modo múltiple (hay meses adeudados seleccionados)
+                const mesesCheckboxesMarcados = document.querySelectorAll('.mes-adeudado-checkbox:checked');
+                const modoMultipleActivo = mesesCheckboxesMarcados.length > 0;
+                
+                // Si estamos en modo múltiple, NO hacer nada aquí (el listener en new.html.twig se encarga)
+                // También verificar si el evento ya fue manejado por otro listener
+                if (modoMultipleActivo || e.defaultPrevented) {
+                    console.log('DEBUG _form.html.twig - Ignorando cambio de descuento (modo múltiple activo o evento ya manejado)');
+                    return;
+                }
+                
+                // Si hay curso y alumno seleccionados, calcular dinámicamente (modo simple)
+                const alumnoId = alumnoSelect ? alumnoSelect.value : null;
+                const cursoId = cursoSelect ? cursoSelect.value : null;
+                
+                if (alumnoId && cursoId) {
+                    calcularMontoDinamico();
+                } else {
+                    // Si no hay curso/alumno, recargar página manteniendo checkboxes
+                    const currentUrl = new URL(window.location.href);
+                    mantenerDescuentosPromocionales(currentUrl);
+                    window.location.href = currentUrl.toString();
+                }
+            });
+        });
+        
+        // Event listeners para el campo de monto - usar setTimeout para asegurar que el DOM esté listo
+        setTimeout(function() {
+            const campoMonto = encontrarCampoMonto();
+            if (campoMonto) {
+                console.log('Campo de monto encontrado, agregando event listeners:', campoMonto.id || campoMonto.name);
+                
+                // Event listener para input (tiempo real mientras se escribe)
+                campoMonto.addEventListener('input', function(e) {
+                    // Ignorar si la actualización es programática (viene de AJAX)
+                    if (e.target.dataset.updatingProgrammatically === 'true') {
+                        return;
+                    }
+                    console.log('Evento input detectado, valor:', e.target.value);
+                    actualizarPrecioFinalDesdeInput();
+                });
+                
+                // Event listener para change (cuando se pierde el foco)
+                campoMonto.addEventListener('change', function(e) {
+                    // Ignorar si la actualización es programática (viene de AJAX)
+                    if (e.target.dataset.updatingProgrammatically === 'true') {
+                        return;
+                    }
+                    console.log('Evento change detectado, valor:', e.target.value);
+                    actualizarPrecioFinalDesdeInput();
+                });
+                
+                // También escuchar eventos keyup para capturar cambios
+                campoMonto.addEventListener('keyup', function(e) {
+                    console.log('Evento keyup detectado, valor:', e.target.value);
+                    actualizarPrecioFinalDesdeInput();
+                });
+            } else {
+                console.error('No se pudo encontrar el campo de monto para agregar event listeners');
+                // Intentar nuevamente después de un delay
+                setTimeout(function() {
+                    const campoMontoRetry = encontrarCampoMonto();
+                    if (campoMontoRetry) {
+                        campoMontoRetry.addEventListener('input', actualizarPrecioFinalDesdeInput);
+                        campoMontoRetry.addEventListener('change', actualizarPrecioFinalDesdeInput);
+                        campoMontoRetry.addEventListener('keyup', actualizarPrecioFinalDesdeInput);
+                        console.log('Event listeners agregados en retry');
+                    }
+                }, 500);
+            }
+        }, 100);
+        
+        // Event listeners para cambios en alumno y curso
+        if (alumnoSelect) {
+            alumnoSelect.addEventListener('change', function() {
+                // Recargar página con nuevo alumno
+                const currentUrl = new URL(window.location.href);
+                currentUrl.searchParams.set('id', this.value);
+                mantenerDescuentosPromocionales(currentUrl);
+                window.location.href = currentUrl.toString();
+            });
+        }
+        
+        if (cursoSelect) {
+            cursoSelect.addEventListener('change', function() {
+                // Recargar página con nuevo curso
+                const currentUrl = new URL(window.location.href);
+                currentUrl.searchParams.set('curso', this.value);
+                mantenerDescuentosPromocionales(currentUrl);
+                window.location.href = currentUrl.toString();
+            });
+        }
+        
+        // Función para mantener los descuentos promocionales seleccionados en la URL
+        function mantenerDescuentosPromocionales(url) {
+            // Eliminar todos los parámetros de descuentos existentes
+            const paramsToDelete = [];
+            url.searchParams.forEach((value, key) => {
+                if (key.startsWith('descuentos_promocionales')) {
+                    paramsToDelete.push(key);
+                }
+            });
+            paramsToDelete.forEach(key => url.searchParams.delete(key));
+            
+            // Agregar solo los checkboxes marcados
+            const checkboxes = document.querySelectorAll('.descuento-promocional-checkbox:checked');
+            if (checkboxes.length > 0) {
+                const descuentosIds = Array.from(checkboxes).map(cb => cb.value);
+                descuentosIds.forEach(id => {
+                    url.searchParams.append('descuentos_promocionales[]', id);
+                });
+            }
+        }
+        
+        // Inicializar Chosen si existe
+        if (typeof $ !== 'undefined' && $.fn.chosen) {
         $('#alumnos_pagos_curso').on('chosen:ready', function() {
             initializeChosenEventsCursos();
         });
@@ -86,33 +437,37 @@
         $('#alumnos_pagos_alumno').on('chosen:ready', function() {
             initializeChosenEventsAlumnos();
         });
-    
+        }
         
-        // Función para inicializar los eventos una vez que Chosen esté listo
         function initializeChosenEventsCursos() {
-            // Usar jQuery para detectar cambios en los selects originales
             $('#alumnos_pagos_curso').on('change', function() {
-                // Obtener el valor del curso seleccionado
                 const cursoId = $(this).val();
-                // Agregar el valor como parámetro a la URL actual
                 const currentUrl = new URL(window.location.href);
                 currentUrl.searchParams.set('curso', cursoId);
-                // Recargar la página con el nuevo parámetro
+                mantenerDescuentosPromocionales(currentUrl);
                 window.location.href = currentUrl.toString();
             });
         }
 
         function initializeChosenEventsAlumnos() {
-            
             $('#alumnos_pagos_alumno').on('change', function() {
-                // Obtener el valor del alumno seleccionado
                 const id = $(this).val();
-                // Agregar el valor como parámetro a la URL actual
                 const currentUrl = new URL(window.location.href);
                 currentUrl.searchParams.set('id', id);
-                // Recargar la página con el nuevo parámetro
+                mantenerDescuentosPromocionales(currentUrl);
                 window.location.href = currentUrl.toString();
             });
         }
     });
 </script>
+
+<style>
+    .spin {
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+</style>

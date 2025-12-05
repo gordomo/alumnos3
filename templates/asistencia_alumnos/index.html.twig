@@ -12,12 +12,12 @@
 
     <div class="row mb-4">
         <div class="col-12">
-            <form method="get" action="{{ path('app_asistencia_alumnos_index') }}" class="row g-3">
-                <div class="col-md-4">
+            <form method="get" action="{{ path('app_asistencia_alumnos_index') }}" class="row g-3" id="form-filtro-asistencias">
+                <div class="col-md-6">
                     <label for="fecha" class="form-label">Fecha</label>
                     <input type="date" class="form-control" id="fecha" name="fecha" value="{{ fecha }}" max="{{ "now"|date("Y-m-d") }}">
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <label for="curso" class="form-label">Curso</label>
                     <select class="form-select chosen-select" id="curso" name="curso">
                         <option value="">Seleccione un curso</option>
@@ -28,12 +28,32 @@
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-md-4 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary">Filtrar</button>
-                </div>
             </form>
         </div>
     </div>
+
+    <script>
+        // Auto-filtrar cuando cambien la fecha o el curso
+        document.addEventListener('DOMContentLoaded', function() {
+            const formFiltro = document.getElementById('form-filtro-asistencias');
+            const inputFecha = document.getElementById('fecha');
+            const selectCurso = document.getElementById('curso');
+            
+            if (formFiltro && inputFecha && selectCurso) {
+                // Auto-submit cuando cambie la fecha
+                inputFecha.addEventListener('change', function() {
+                    if (selectCurso.value) {
+                        formFiltro.submit();
+                    }
+                });
+                
+                // Auto-submit cuando cambie el curso
+                selectCurso.addEventListener('change', function() {
+                    formFiltro.submit();
+                });
+            }
+        });
+    </script>
 
     {% set rutaForm = 'app_asistencia_alumnos_index' %}
     {% include 'asistencia/_form.html.twig' %}

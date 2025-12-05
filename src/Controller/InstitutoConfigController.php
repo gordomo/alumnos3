@@ -4,8 +4,10 @@ namespace App\Controller;
 
 use App\Entity\Instituto;
 use App\Entity\Vencimiento;
+use App\Entity\DescuentoPromocional;
 use App\Repository\VencimientoRepository;
 use App\Repository\InstitutoConfiguracionRepository;
+use App\Repository\DescuentoPromocionalRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -23,16 +25,18 @@ class InstitutoConfigController extends AbstractController
     /**
      * @Route("/", name="instituto_config_index", methods={"GET"})
      */
-    public function index(VencimientoRepository $vencimientoRepository, InstitutoConfiguracionRepository $configuracionRepository): Response
+    public function index(VencimientoRepository $vencimientoRepository, InstitutoConfiguracionRepository $configuracionRepository, DescuentoPromocionalRepository $descuentoPromocionalRepository): Response
     {
         $instituto = $this->getUser()->getInstituto();
         $vencimientos = $vencimientoRepository->findByInstitutoOrdered($instituto);
         $configuracion = $configuracionRepository->findOrCreateByInstituto($instituto);
+        $descuentosPromocionales = $descuentoPromocionalRepository->findByConfiguracion($configuracion);
         
         return $this->render('instituto_config/index.html.twig', [
             'instituto' => $instituto,
             'vencimientos' => $vencimientos,
-            'configuracion' => $configuracion
+            'configuracion' => $configuracion,
+            'descuentosPromocionales' => $descuentosPromocionales
         ]);
     }
 
@@ -62,10 +66,12 @@ class InstitutoConfigController extends AbstractController
             $descuentoEfectivo = $request->request->get('descuentoEfectivo');
             $descuentoHermanos = $request->request->get('descuentoHermanos');
             $deshabilitarDescuentosEnDeuda = $request->request->has('deshabilitarDescuentosEnDeuda');
+            $ordenCalculoInteresesDescuentos = $request->request->get('ordenCalculoInteresesDescuentos', 'interes_primero');
             
             $configuracion->setDescuentoEfectivo($descuentoEfectivo !== '' ? (float)$descuentoEfectivo : null);
             $configuracion->setDescuentoHermanos($descuentoHermanos !== '' ? (float)$descuentoHermanos : null);
             $configuracion->setDeshabilitarDescuentosEnDeuda($deshabilitarDescuentosEnDeuda);
+            $configuracion->setOrdenCalculoInteresesDescuentos($ordenCalculoInteresesDescuentos);
 
             // Manejo del logo
             if ($request->files->has('logo')) {
@@ -212,6 +218,107 @@ class InstitutoConfigController extends AbstractController
             $entityManager->remove($vencimiento);
             $entityManager->flush();
             $this->addFlash('success', 'Vencimiento eliminado correctamente.');
+        }
+
+        return $this->redirectToRoute('instituto_config_index');
+    }
+
+    /**
+     * @Route("/descuento-promocional/new", name="instituto_config_descuento_promocional_new", methods={"GET", "POST"})
+     */
+    public function newDescuentoPromocional(Request $request, EntityManagerInterface $entityManager, ValidatorInterface $validator, InstitutoConfiguracionRepository $configuracionRepository): Response
+    {
+        $instituto = $this->getUser()->getInstituto();
+        $configuracion = $configuracionRepository->findOrCreateByInstituto($instituto);
+        $descuentoPromocional = new DescuentoPromocional();
+        $descuentoPromocional->setConfiguracion($configuracion);
+
+        if ($request->isMethod('POST')) {
+            $nombre = $request->request->get('nombre');
+            $porcentaje = $request->request->get('porcentaje');
+            $activo = $request->request->has('activo');
+
+            $descuentoPromocional->setNombre($nombre);
+            $descuentoPromocional->setPorcentaje((float)$porcentaje);
+            $descuentoPromocional->setActivo($activo);
+
+            $errors = $validator->validate($descuentoPromocional);
+            if (count($errors) === 0) {
+                $entityManager->persist($descuentoPromocional);
+                $entityManager->flush();
+                $this->addFlash('success', 'Descuento promocional creado correctamente.');
+                return $this->redirectToRoute('instituto_config_index');
+            } else {
+                foreach ($errors as $error) {
+                    $this->addFlash('danger', $error->getMessage());
+                }
+            }
+        }
+
+        return $this->render('instituto_config/descuento_promocional_new.html.twig', [
+            'descuentoPromocional' => $descuentoPromocional,
+            'configuracion' => $configuracion
+        ]);
+    }
+
+    /**
+     * @Route("/descuento-promocional/{id}/edit", name="instituto_config_descuento_promocional_edit", methods={"GET", "POST"})
+     */
+    public function editDescuentoPromocional(Request $request, DescuentoPromocional $descuentoPromocional, EntityManagerInterface $entityManager, ValidatorInterface $validator): Response
+    {
+        $instituto = $this->getUser()->getInstituto();
+        
+        // Verificar que el descuento pertenece al instituto del usuario
+        if ($descuentoPromocional->getConfiguracion()->getInstituto() !== $instituto) {
+            $this->addFlash('danger', 'No tiene permiso para editar este descuento.');
+            return $this->redirectToRoute('instituto_config_index');
+        }
+
+        if ($request->isMethod('POST')) {
+            $nombre = $request->request->get('nombre');
+            $porcentaje = $request->request->get('porcentaje');
+            $activo = $request->request->has('activo');
+
+            $descuentoPromocional->setNombre($nombre);
+            $descuentoPromocional->setPorcentaje((float)$porcentaje);
+            $descuentoPromocional->setActivo($activo);
+
+            $errors = $validator->validate($descuentoPromocional);
+            if (count($errors) === 0) {
+                $entityManager->persist($descuentoPromocional);
+                $entityManager->flush();
+                $this->addFlash('success', 'Descuento promocional actualizado correctamente.');
+                return $this->redirectToRoute('instituto_config_index');
+            } else {
+                foreach ($errors as $error) {
+                    $this->addFlash('danger', $error->getMessage());
+                }
+            }
+        }
+
+        return $this->render('instituto_config/descuento_promocional_edit.html.twig', [
+            'descuentoPromocional' => $descuentoPromocional,
+            'configuracion' => $descuentoPromocional->getConfiguracion()
+        ]);
+    }
+
+    /**
+     * @Route("/descuento-promocional/{id}", name="instituto_config_descuento_promocional_delete", methods={"POST"})
+     */
+    public function deleteDescuentoPromocional(Request $request, DescuentoPromocional $descuentoPromocional, EntityManagerInterface $entityManager): Response
+    {
+        $instituto = $this->getUser()->getInstituto();
+        
+        // Verificar que el descuento pertenece al instituto del usuario
+        if ($descuentoPromocional->getConfiguracion()->getInstituto() !== $instituto) {
+            $this->addFlash('danger', 'No tiene permiso para eliminar este descuento.');
+            return $this->redirectToRoute('instituto_config_index');
+        }
+
+        if ($this->isCsrfTokenValid('delete'.$descuentoPromocional->getId(), $request->request->get('_token'))) {
+            $entityManager->remove($descuentoPromocional);
+            $entityManager->flush();
+            $this->addFlash('success', 'Descuento promocional eliminado correctamente.');
         }
 
         return $this->redirectToRoute('instituto_config_index');
