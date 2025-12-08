@@ -43,91 +43,143 @@ class InstitutoConfigController extends AbstractController
     /**
      * @Route("/edit", name="instituto_config_edit", methods={"GET", "POST"})
      */
-    public function edit(Request $request, EntityManagerInterface $entityManager, SluggerInterface $slugger, ValidatorInterface $validator, InstitutoConfiguracionRepository $configuracionRepository): Response
-    {
+    public function edit(
+        Request $request, 
+        EntityManagerInterface $entityManager, 
+        SluggerInterface $slugger, 
+        ValidatorInterface $validator, 
+        InstitutoConfiguracionRepository $configuracionRepository,
+        VencimientoRepository $vencimientoRepository,
+        DescuentoPromocionalRepository $descuentoPromocionalRepository
+    ): Response {
         $instituto = $this->getUser()->getInstituto();
         $configuracion = $configuracionRepository->findOrCreateByInstituto($instituto);
+        $vencimientos = $vencimientoRepository->findByInstitutoOrdered($instituto);
+        $descuentosPromocionales = $descuentoPromocionalRepository->findByConfiguracion($configuracion);
         
         if ($request->isMethod('POST')) {
-            $instituto->setNombre($request->request->get('nombre'));
-            $instituto->setEmail($request->request->get('email'));
+            $section = $request->request->get('section', 'general');
             
-            // Validación del teléfono
-            $tel = $request->request->get('tel');
-            if (strlen($tel) > 25) {
-                $this->addFlash('danger', 'El número de teléfono no puede tener más de 20 caracteres.');
-                return $this->redirectToRoute('instituto_config_edit');
-            }
-            $instituto->setTel($tel);
-            
-            $instituto->setDir($request->request->get('dir'));
+            if ($section === 'general') {
+                $instituto->setNombre($request->request->get('nombre'));
+                $instituto->setEmail($request->request->get('email'));
+                
+                // Validación del teléfono
+                $tel = $request->request->get('tel');
+                if (strlen($tel) > 25) {
+                    $this->addFlash('danger', 'El número de teléfono no puede tener más de 25 caracteres.');
+                    return $this->redirectToRoute('instituto_config_edit', ['_fragment' => 'edit-general']);
+                }
+                $instituto->setTel($tel);
+                
+                $instituto->setDir($request->request->get('dir'));
 
-            // Configuración de descuentos
-            $descuentoEfectivo = $request->request->get('descuentoEfectivo');
-            $descuentoHermanos = $request->request->get('descuentoHermanos');
-            $deshabilitarDescuentosEnDeuda = $request->request->has('deshabilitarDescuentosEnDeuda');
-            $ordenCalculoInteresesDescuentos = $request->request->get('ordenCalculoInteresesDescuentos', 'interes_primero');
-            
-            $configuracion->setDescuentoEfectivo($descuentoEfectivo !== '' ? (float)$descuentoEfectivo : null);
-            $configuracion->setDescuentoHermanos($descuentoHermanos !== '' ? (float)$descuentoHermanos : null);
-            $configuracion->setDeshabilitarDescuentosEnDeuda($deshabilitarDescuentosEnDeuda);
-            $configuracion->setOrdenCalculoInteresesDescuentos($ordenCalculoInteresesDescuentos);
-
-            // Manejo del logo
-            if ($request->files->has('logo')) {
-                $logoFile = $request->files->get('logo');
-                if ($logoFile) {
-                    $originalFilename = pathinfo($logoFile->getClientOriginalName(), PATHINFO_FILENAME);
-                    $safeFilename = $slugger->slug($originalFilename);
-                    $newFilename = $safeFilename.'-'.uniqid().'.'.$logoFile->guessExtension();
-                    
-                    try {
-                        $logoFile->move(
-                            $this->getParameter('logos_directory'),
-                            $newFilename
-                        );
-                    } catch (FileException $e) {
-                        $this->addFlash('danger', 'No se pudo subir el logo.');
-                        return $this->redirectToRoute('instituto_config_edit');
+                // Manejo del logo
+                if ($request->files->has('logo')) {
+                    $logoFile = $request->files->get('logo');
+                    if ($logoFile) {
+                        $originalFilename = pathinfo($logoFile->getClientOriginalName(), PATHINFO_FILENAME);
+                        $safeFilename = $slugger->slug($originalFilename);
+                        $newFilename = $safeFilename.'-'.uniqid().'.'.$logoFile->guessExtension();
+                        
+                        try {
+                            $logoFile->move(
+                                $this->getParameter('logos_directory'),
+                                $newFilename
+                            );
+                        } catch (FileException $e) {
+                            $this->addFlash('danger', 'No se pudo subir el logo.');
+                            return $this->redirectToRoute('instituto_config_edit', ['_fragment' => 'edit-general']);
+                        }
+                        
+                        // Eliminar el logo anterior si existe
+                        if ($instituto->getLogo()) {
+                            $oldLogoPath = $this->getParameter('logos_directory').'/'.$instituto->getLogo();
+                            if (file_exists($oldLogoPath)) {
+                                unlink($oldLogoPath);
+                            }
+                        }
+                        
+                        $instituto->setLogo($newFilename);
                     }
+                }
+
+                try {
+                    $errors = $validator->validate($instituto);
                     
-                    // Eliminar el logo anterior si existe
-                    if ($instituto->getLogo()) {
-                        $oldLogoPath = $this->getParameter('logos_directory').'/'.$instituto->getLogo();
-                        if (file_exists($oldLogoPath)) {
-                            unlink($oldLogoPath);
+                    if (count($errors) === 0) {
+                        $entityManager->flush();
+                        $this->addFlash('success', 'La información general se ha actualizado correctamente.');
+                        return $this->redirectToRoute('instituto_config_edit', ['_fragment' => 'edit-general']);
+                    } else {
+                        foreach ($errors as $error) {
+                            $this->addFlash('danger', $error->getMessage());
                         }
                     }
-                    
-                    $instituto->setLogo($newFilename);
+                } catch (\Exception $e) {
+                    $this->addFlash('danger', 'Ocurrió un error al guardar los cambios: ' . $e->getMessage());
                 }
-            }
-
-            try {
-                $errors = $validator->validate($instituto); 
-                $errorsConfig = $validator->validate($configuracion);
                 
-                if (count($errors) === 0 && count($errorsConfig) === 0) {
-                    $entityManager->persist($configuracion);
-                    $entityManager->flush();
-                    $this->addFlash('success', 'La configuración se ha actualizado correctamente.');
-                    return $this->redirectToRoute('instituto_config_index');
-                } else {
-                    foreach ($errors as $error) {
-                        $this->addFlash('danger', $error->getMessage());
+            } elseif ($section === 'descuentos') {
+                // Configuración de descuentos
+                $descuentoEfectivo = $request->request->get('descuentoEfectivo');
+                $descuentoHermanos = $request->request->get('descuentoHermanos');
+                $deshabilitarDescuentosEnDeuda = $request->request->has('deshabilitarDescuentosEnDeuda');
+                $ordenCalculoInteresesDescuentos = $request->request->get('ordenCalculoInteresesDescuentos', 'interes_primero');
+                
+                $configuracion->setDescuentoEfectivo($descuentoEfectivo !== '' ? (float)$descuentoEfectivo : null);
+                $configuracion->setDescuentoHermanos($descuentoHermanos !== '' ? (float)$descuentoHermanos : null);
+                $configuracion->setDeshabilitarDescuentosEnDeuda($deshabilitarDescuentosEnDeuda);
+                $configuracion->setOrdenCalculoInteresesDescuentos($ordenCalculoInteresesDescuentos);
+
+                try {
+                    $errorsConfig = $validator->validate($configuracion);
+                    
+                    if (count($errorsConfig) === 0) {
+                        $entityManager->persist($configuracion);
+                        $entityManager->flush();
+                        $this->addFlash('success', 'La configuración de descuentos se ha actualizado correctamente.');
+                        return $this->redirectToRoute('instituto_config_edit', ['_fragment' => 'edit-descuentos']);
+                    } else {
+                        foreach ($errorsConfig as $error) {
+                            $this->addFlash('danger', $error->getMessage());
+                        }
                     }
-                    foreach ($errorsConfig as $error) {
-                        $this->addFlash('danger', $error->getMessage());
-                    }
+                } catch (\Exception $e) {
+                    $this->addFlash('danger', 'Ocurrió un error al guardar los cambios: ' . $e->getMessage());
                 }
-            } catch (\Exception $e) {
-                $this->addFlash('danger', 'Ocurrió un error al guardar los cambios: ' . $e->getMessage());
+                
+            } elseif ($section === 'notificaciones') {
+                // Configuración de notificaciones
+                $configuracion->setEnviarFacturasRecibos($request->request->has('enviarFacturasRecibos'));
+                $configuracion->setEnviarRecordatoriosDeudas($request->request->has('enviarRecordatoriosDeudas'));
+                $configuracion->setEnviarRecordatorioEnDiaVencimiento($request->request->has('enviarRecordatorioEnDiaVencimiento'));
+                $configuracion->setTextoPersonalizadoEmail($request->request->get('textoPersonalizadoEmail'));
+
+                try {
+                    $errorsConfig = $validator->validate($configuracion);
+                    
+                    if (count($errorsConfig) === 0) {
+                        $entityManager->persist($configuracion);
+                        $entityManager->flush();
+                        $this->addFlash('success', 'La configuración de notificaciones se ha actualizado correctamente.');
+                        return $this->redirectToRoute('instituto_config_edit', ['_fragment' => 'edit-notificaciones']);
+                    } else {
+                        foreach ($errorsConfig as $error) {
+                            $this->addFlash('danger', $error->getMessage());
+                        }
+                    }
+                } catch (\Exception $e) {
+                    $this->addFlash('danger', 'Ocurrió un error al guardar los cambios: ' . $e->getMessage());
+                }
             }
         }
 
         return $this->render('instituto_config/edit.html.twig', [
             'instituto' => $instituto,
-            'configuracion' => $configuracion
+            'configuracion' => $configuracion,
+            'vencimientos' => $vencimientos,
+            'descuentosPromocionales' => $descuentosPromocionales
         ]);
     }
 
@@ -162,7 +214,7 @@ class InstitutoConfigController extends AbstractController
                 $entityManager->persist($vencimiento);
                 $entityManager->flush();
                 $this->addFlash('success', 'Vencimiento creado correctamente.');
-                return $this->redirectToRoute('instituto_config_index');
+                return $this->redirectToRoute('instituto_config_edit', ['_fragment' => 'edit-pagos']);
             } else {
                 foreach ($errors as $error) {
                     $this->addFlash('danger', $error->getMessage());
@@ -195,7 +247,7 @@ class InstitutoConfigController extends AbstractController
                 $entityManager->persist($vencimiento);
                 $entityManager->flush();
                 $this->addFlash('success', 'Vencimiento actualizado correctamente.');
-                return $this->redirectToRoute('instituto_config_index');
+                return $this->redirectToRoute('instituto_config_edit', ['_fragment' => 'edit-pagos']);
             } else {
                 foreach ($errors as $error) {
                     $this->addFlash('danger', $error->getMessage());
@@ -220,7 +272,7 @@ class InstitutoConfigController extends AbstractController
             $this->addFlash('success', 'Vencimiento eliminado correctamente.');
         }
 
-        return $this->redirectToRoute('instituto_config_index');
+        return $this->redirectToRoute('instituto_config_edit', ['_fragment' => 'edit-pagos']);
     }
 
     /**
@@ -247,7 +299,7 @@ class InstitutoConfigController extends AbstractController
                 $entityManager->persist($descuentoPromocional);
                 $entityManager->flush();
                 $this->addFlash('success', 'Descuento promocional creado correctamente.');
-                return $this->redirectToRoute('instituto_config_index');
+                return $this->redirectToRoute('instituto_config_edit', ['_fragment' => 'edit-descuentos']);
             } else {
                 foreach ($errors as $error) {
                     $this->addFlash('danger', $error->getMessage());
@@ -288,7 +340,7 @@ class InstitutoConfigController extends AbstractController
                 $entityManager->persist($descuentoPromocional);
                 $entityManager->flush();
                 $this->addFlash('success', 'Descuento promocional actualizado correctamente.');
-                return $this->redirectToRoute('instituto_config_index');
+                return $this->redirectToRoute('instituto_config_edit', ['_fragment' => 'edit-descuentos']);
             } else {
                 foreach ($errors as $error) {
                     $this->addFlash('danger', $error->getMessage());
@@ -321,6 +373,6 @@ class InstitutoConfigController extends AbstractController
             $this->addFlash('success', 'Descuento promocional eliminado correctamente.');
         }
 
-        return $this->redirectToRoute('instituto_config_index');
+        return $this->redirectToRoute('instituto_config_edit', ['_fragment' => 'edit-descuentos']);
     }
 } 

@@ -21,6 +21,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use App\Service\HistorialCursosService;
 use Knp\Component\Pager\PaginatorInterface;
 use App\Service\DeudaService;
+use App\Service\NotificationService;
 /**
  * @Route("/alumnos/pagos")
  */
@@ -29,15 +30,18 @@ class AlumnosPagosController extends AbstractController
     private $entityManager;
     private $historialCursosService;
     private $deudaService;
+    private $notificationService;
 
     public function __construct(
         EntityManagerInterface $entityManager, 
         HistorialCursosService $historialCursosService,
-        DeudaService $deudaService
+        DeudaService $deudaService,
+        NotificationService $notificationService
     ) {
         $this->entityManager = $entityManager;
         $this->historialCursosService = $historialCursosService;
         $this->deudaService = $deudaService;
+        $this->notificationService = $notificationService;
     }
 
     /**
@@ -812,6 +816,14 @@ class AlumnosPagosController extends AbstractController
                     // Registrar el pago en el historial
                     $this->historialCursosService->registrarPago($alumnosPago);
                     
+                    // Enviar email con el recibo si está configurado
+                    try {
+                        $this->notificationService->enviarReciboPago($alumnosPago);
+                    } catch (\Exception $e) {
+                        // No interrumpir el flujo si falla el envío del email
+                        // Se puede loggear el error si es necesario
+                    }
+                    
                     $this->addFlash('success', 'Pago creado correctamente.');
                     return $this->redirectToRoute('app_alumnos_pagos_index', ['alumno' => $alumno->getId()]);
                 } catch (\Exception $e) {
@@ -1240,6 +1252,13 @@ class AlumnosPagosController extends AbstractController
                 
                 // Confirmar cambios
                 $this->entityManager->flush();
+                
+                // Enviar email con el recibo si está configurado
+                try {
+                    $this->notificationService->enviarReciboPago($pago);
+                } catch (\Exception $e) {
+                    // No interrumpir el flujo si falla el envío del email
+                }
                 
                 $this->addFlash('success', sprintf(
                     'Pago registrado correctamente para %s %s, curso %s, periodo %s.', 

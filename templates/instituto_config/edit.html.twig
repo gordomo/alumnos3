@@ -3,170 +3,590 @@
 {% block title %}Editar Configuración del Instituto{% endblock %}
 
 {% block body %}
-<div class="container mt-4">
+<div class="container-fluid mt-4">
     <div class="row">
         <div class="col-md-12">
-            <div class="card">
+            <div class="card shadow-sm">
                 <div class="card-header bg-primary text-white">
-                    <h1 class="h3 mb-0">Editar Configuración del Instituto</h1>
+                    <h1 class="h3 mb-0">
+                        <i class="bi bi-gear"></i> Editar Configuración del Instituto
+                    </h1>
                 </div>
                 <div class="card-body">
-                    <form method="post" enctype="multipart/form-data">
-                        <div class="row">
-                            <div class="col-md-4 text-center mb-4">
-                                <div class="mb-3">
-                                    {% if instituto.logo %}
-                                        <img src="{{ asset('uploads/logos/' ~ instituto.logo) }}" 
-                                             alt="Logo actual" 
-                                             class="img-fluid rounded mb-3"
-                                             style="max-height: 200px;">
-                                    {% endif %}
-                                    <div class="form-group">
-                                        <label for="logo" class="form-label">Logo del Instituto</label>
-                                        <input type="file" 
-                                               class="form-control" 
-                                               id="logo" 
-                                               name="logo" 
-                                               accept="image/*">
-                                        <small class="form-text text-muted">
-                                            Formatos permitidos: JPG, PNG, GIF. Tamaño máximo: 2MB
-                                        </small>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-8">
-                                <div class="mb-3">
-                                    <label for="nombre" class="form-label">Nombre del Instituto</label>
-                                    <input type="text" 
-                                           class="form-control" 
-                                           id="nombre" 
-                                           name="nombre" 
-                                           value="{{ instituto.nombre }}" 
-                                           required>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="email" class="form-label">Email</label>
-                                    <input type="email" 
-                                           class="form-control" 
-                                           id="email" 
-                                           name="email" 
-                                           value="{{ instituto.email }}">
-                                </div>
-                                <div class="mb-3">
-                                    <label for="tel" class="form-label">Teléfono</label>
-                                    <input type="tel" 
-                                           class="form-control" 
-                                           id="tel" 
-                                           name="tel" 
-                                           maxlength="25"
-                                           value="{{ instituto.tel }}">
-                                </div>
-                                <div class="mb-3">
-                                    <label for="dir" class="form-label">Dirección</label>
-                                    <textarea class="form-control" 
-                                              id="dir" 
-                                              name="dir" 
-                                              rows="3">{{ instituto.dir }}</textarea>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <hr class="my-4">
-                        
-                        <h4 class="mb-3">Configuración de Descuentos</h4>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="descuentoEfectivo" class="form-label">Descuento por pago en efectivo (%)</label>
-                                    <input type="number" 
-                                           class="form-control" 
-                                           id="descuentoEfectivo" 
-                                           name="descuentoEfectivo" 
-                                           min="0"
-                                           max="100"
-                                           step="0.01"
-                                           value="{{ configuracion.descuentoEfectivo }}">
-                                    <small class="form-text text-muted">
-                                        Porcentaje de descuento aplicado cuando se paga en efectivo. Dejar en blanco para no aplicar descuento.
-                                    </small>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="descuentoHermanos" class="form-label">Descuento por hermanos (%)</label>
-                                    <input type="number" 
-                                           class="form-control" 
-                                           id="descuentoHermanos" 
-                                           name="descuentoHermanos" 
-                                           min="0"
-                                           max="100"
-                                           step="0.01"
-                                           value="{{ configuracion.descuentoHermanos }}">
-                                    <small class="form-text text-muted">
-                                        Porcentaje de descuento aplicado a alumnos con hermanos en el instituto. Dejar en blanco para no aplicar descuento.
-                                    </small>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-12">
-                                <div class="form-check mb-3">
-                                    <input type="checkbox" 
-                                           class="form-check-input" 
-                                           id="deshabilitarDescuentosEnDeuda" 
-                                           name="deshabilitarDescuentosEnDeuda"
-                                           {% if configuracion.deshabilitarDescuentosEnDeuda %}checked{% endif %}>
-                                    <label class="form-check-label" for="deshabilitarDescuentosEnDeuda">
-                                        Deshabilitar descuentos para alumnos con deudas
-                                    </label>
-                                    <div class="form-text text-muted">
-                                        Si se activa esta opción, los alumnos con deudas no podrán beneficiarse de los descuentos configurados.
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-12">
-                                <div class="mb-3">
-                                    <label for="ordenCalculoInteresesDescuentos" class="form-label">Orden de cálculo de intereses y descuentos</label>
-                                    <select class="form-select" 
-                                            id="ordenCalculoInteresesDescuentos" 
-                                            name="ordenCalculoInteresesDescuentos">
-                                        <option value="interes_primero" {% if configuracion.ordenCalculoInteresesDescuentos == 'interes_primero' %}selected{% endif %}>
-                                            Interés primero, luego descuentos (recomendado)
-                                        </option>
-                                        <option value="descuento_primero" {% if configuracion.ordenCalculoInteresesDescuentos == 'descuento_primero' %}selected{% endif %}>
-                                            Descuentos primero, luego interés
-                                        </option>
-                                        <option value="neto" {% if configuracion.ordenCalculoInteresesDescuentos == 'neto' %}selected{% endif %}>
-                                            Neto (diferencia entre intereses y descuentos)
-                                        </option>
-                                        <option value="descuentos_solo_base" {% if configuracion.ordenCalculoInteresesDescuentos == 'descuentos_solo_base' %}selected{% endif %}>
-                                            Descuentos sobre base, interés sobre base original
-                                        </option>
-                                    </select>
-                                    <div class="form-text text-muted">
-                                        <strong>Interés primero:</strong> Se aplica el interés sobre el monto base, luego los descuentos sobre el resultado. Ejemplo: Base $100, Interés 10% = $110, Descuento 10% = $99.<br>
-                                        <strong>Descuento primero:</strong> Se aplican los descuentos sobre el monto base, luego el interés sobre el resultado. Ejemplo: Base $100, Descuento 10% = $90, Interés 10% = $99.<br>
-                                        <strong>Neto:</strong> Ambos se calculan sobre la base y se hace la diferencia. Ejemplo: Base $100, Interés +$10, Descuento -$10 = $100.<br>
-                                        <strong>Descuentos solo base:</strong> Los descuentos se aplican sobre la base, el interés se suma sobre la base original. Ejemplo: Base $100, Descuento 10% = $90, Interés +$10 = $100.
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="text-center mt-4">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save"></i> Guardar Cambios
+                    <!-- Pestañas -->
+                    <ul class="nav nav-tabs mb-4" id="editTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="edit-general-tab" data-bs-toggle="tab" data-bs-target="#edit-general" type="button" role="tab" aria-controls="edit-general" aria-selected="true">
+                                <i class="bi bi-building"></i> Información General
                             </button>
-                            <a href="{{ path('instituto_config_index') }}" class="btn btn-secondary">
-                                <i class="fas fa-times"></i> Cancelar
-                            </a>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="edit-pagos-tab" data-bs-toggle="tab" data-bs-target="#edit-pagos" type="button" role="tab" aria-controls="edit-pagos" aria-selected="false">
+                                <i class="bi bi-cash-coin"></i> Pagos y Vencimientos
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="edit-descuentos-tab" data-bs-toggle="tab" data-bs-target="#edit-descuentos" type="button" role="tab" aria-controls="edit-descuentos" aria-selected="false">
+                                <i class="bi bi-percent"></i> Descuentos
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="edit-notificaciones-tab" data-bs-toggle="tab" data-bs-target="#edit-notificaciones" type="button" role="tab" aria-controls="edit-notificaciones" aria-selected="false">
+                                <i class="bi bi-envelope"></i> Notificaciones
+                            </button>
+                        </li>
+                    </ul>
+
+                    <!-- Contenido de las pestañas -->
+                    <div class="tab-content" id="editTabsContent">
+                        <!-- Pestaña: Información General -->
+                        <div class="tab-pane fade show active" id="edit-general" role="tabpanel" aria-labelledby="edit-general-tab">
+                            <form method="post" enctype="multipart/form-data" action="{{ path('instituto_config_edit') }}">
+                                <input type="hidden" name="section" value="general">
+                                <div class="card mb-3">
+                                    <div class="card-header bg-light">
+                                        <h5 class="mb-0">Datos del Instituto</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-4 text-center mb-4">
+                                                <div class="mb-3">
+                                                    {% if instituto.logo %}
+                                                        <img src="{{ asset('uploads/logos/' ~ instituto.logo) }}" 
+                                                             alt="Logo actual" 
+                                                             class="img-fluid rounded shadow-sm mb-3"
+                                                             style="max-height: 200px;">
+                                                    {% endif %}
+                                                    <div class="form-group">
+                                                        <label for="logo" class="form-label">
+                                                            <i class="bi bi-image"></i> Logo del Instituto
+                                                        </label>
+                                                        <input type="file" 
+                                                               class="form-control" 
+                                                               id="logo" 
+                                                               name="logo" 
+                                                               accept="image/*">
+                                                        <small class="form-text text-muted">
+                                                            Formatos permitidos: JPG, PNG, GIF. Tamaño máximo: 2MB
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-8">
+                                                <div class="mb-3">
+                                                    <label for="nombre" class="form-label">
+                                                        <i class="bi bi-building"></i> Nombre del Instituto <span class="text-danger">*</span>
+                                                    </label>
+                                                    <input type="text" 
+                                                           class="form-control" 
+                                                           id="nombre" 
+                                                           name="nombre" 
+                                                           value="{{ instituto.nombre }}" 
+                                                           required>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="email" class="form-label">
+                                                        <i class="bi bi-envelope"></i> Email
+                                                    </label>
+                                                    <input type="email" 
+                                                           class="form-control" 
+                                                           id="email" 
+                                                           name="email" 
+                                                           value="{{ instituto.email }}"
+                                                           placeholder="email@ejemplo.com">
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="tel" class="form-label">
+                                                        <i class="bi bi-telephone"></i> Teléfono
+                                                    </label>
+                                                    <input type="tel" 
+                                                           class="form-control" 
+                                                           id="tel" 
+                                                           name="tel" 
+                                                           maxlength="25"
+                                                           value="{{ instituto.tel }}"
+                                                           placeholder="+54 11 1234-5678">
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="dir" class="form-label">
+                                                        <i class="bi bi-geo-alt"></i> Dirección
+                                                    </label>
+                                                    <textarea class="form-control" 
+                                                              id="dir" 
+                                                              name="dir" 
+                                                              rows="3"
+                                                              placeholder="Calle, número, ciudad, provincia">{{ instituto.dir }}</textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-center">
+                                    <button type="submit" class="btn btn-primary btn-lg">
+                                        <i class="bi bi-save"></i> Guardar Cambios
+                                    </button>
+                                    <a href="{{ path('instituto_config_index') }}" class="btn btn-secondary btn-lg">
+                                        <i class="bi bi-x-circle"></i> Cancelar
+                                    </a>
+                                </div>
+                            </form>
                         </div>
-                    </form>
+
+                        <!-- Pestaña: Pagos y Vencimientos -->
+                        <div class="tab-pane fade" id="edit-pagos" role="tabpanel" aria-labelledby="edit-pagos-tab">
+                            <div class="card mb-4">
+                                <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">
+                                        <i class="bi bi-calendar-event"></i> Vencimientos e Intereses
+                                    </h5>
+                                    <button type="button" class="btn btn-dark btn-sm" data-bs-toggle="modal" data-bs-target="#modalNuevoVencimiento">
+                                        <i class="bi bi-plus"></i> Nuevo Vencimiento
+                                    </button>
+                                </div>
+                                <div class="card-body">
+                                    {% for message in app.flashes('success') %}
+                                        <div class="alert alert-success alert-dismissible fade show">
+                                            {{ message }}
+                                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                        </div>
+                                    {% endfor %}
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-striped table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>Día de Vencimiento</th>
+                                                    <th>Porcentaje de Interés</th>
+                                                    <th width="120">Acciones</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for vencimiento in vencimientos %}
+                                                    <tr>
+                                                        <td><strong>Día {{ vencimiento.diaVencimiento }}</strong></td>
+                                                        <td><span class="badge bg-warning text-dark">{{ vencimiento.porcentajeInteres }}%</span></td>
+                                                        <td>
+                                                            <div class="btn-group btn-group-sm" role="group">
+                                                                <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalEditarVencimiento{{ vencimiento.id }}" title="Editar">
+                                                                    <i class="bi bi-pencil"></i>
+                                                                </button>
+                                                                <form method="post" action="{{ path('instituto_config_vencimiento_delete', {'id': vencimiento.id}) }}" onsubmit="return confirm('¿Está seguro que desea eliminar este vencimiento?');" style="display: inline-block;">
+                                                                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ vencimiento.id) }}">
+                                                                    <button class="btn btn-outline-danger" title="Eliminar">
+                                                                        <i class="bi bi-trash"></i>
+                                                                    </button>
+                                                                </form>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                {% else %}
+                                                    <tr>
+                                                        <td colspan="3" class="text-center text-muted py-4">
+                                                            <i class="bi bi-inbox"></i> No se encontraron vencimientos configurados
+                                                        </td>
+                                                    </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Pestaña: Descuentos -->
+                        <div class="tab-pane fade" id="edit-descuentos" role="tabpanel" aria-labelledby="edit-descuentos-tab">
+                            <form method="post" action="{{ path('instituto_config_edit') }}">
+                                <input type="hidden" name="section" value="descuentos">
+                                <div class="card mb-4">
+                                    <div class="card-header bg-info text-white">
+                                        <h5 class="mb-0">
+                                            <i class="bi bi-percent"></i> Configuración de Descuentos
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="descuentoEfectivo" class="form-label">
+                                                        Descuento por pago en efectivo (%)
+                                                    </label>
+                                                    <input type="number" 
+                                                           class="form-control" 
+                                                           id="descuentoEfectivo" 
+                                                           name="descuentoEfectivo" 
+                                                           min="0"
+                                                           max="100"
+                                                           step="0.01"
+                                                           value="{{ configuracion.descuentoEfectivo }}"
+                                                           placeholder="0.00">
+                                                    <small class="form-text text-muted">
+                                                        Porcentaje de descuento aplicado cuando se paga en efectivo. Dejar en blanco para no aplicar descuento.
+                                                    </small>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="descuentoHermanos" class="form-label">
+                                                        Descuento por hermanos (%)
+                                                    </label>
+                                                    <input type="number" 
+                                                           class="form-control" 
+                                                           id="descuentoHermanos" 
+                                                           name="descuentoHermanos" 
+                                                           min="0"
+                                                           max="100"
+                                                           step="0.01"
+                                                           value="{{ configuracion.descuentoHermanos }}"
+                                                           placeholder="0.00">
+                                                    <small class="form-text text-muted">
+                                                        Porcentaje de descuento aplicado a alumnos con hermanos en el instituto. Dejar en blanco para no aplicar descuento.
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <div class="form-check mb-3">
+                                                    <input type="checkbox" 
+                                                           class="form-check-input" 
+                                                           id="deshabilitarDescuentosEnDeuda" 
+                                                           name="deshabilitarDescuentosEnDeuda"
+                                                           {% if configuracion.deshabilitarDescuentosEnDeuda %}checked{% endif %}>
+                                                    <label class="form-check-label" for="deshabilitarDescuentosEnDeuda">
+                                                        <strong>Deshabilitar descuentos para alumnos con deudas</strong>
+                                                    </label>
+                                                    <div class="form-text text-muted">
+                                                        Si se activa esta opción, los alumnos con deudas no podrán beneficiarse de los descuentos configurados.
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <div class="mb-3">
+                                                    <label for="ordenCalculoInteresesDescuentos" class="form-label">
+                                                        <strong>Orden de cálculo de intereses y descuentos</strong>
+                                                    </label>
+                                                    <select class="form-select" 
+                                                            id="ordenCalculoInteresesDescuentos" 
+                                                            name="ordenCalculoInteresesDescuentos">
+                                                        <option value="interes_primero" {% if configuracion.ordenCalculoInteresesDescuentos == 'interes_primero' %}selected{% endif %}>
+                                                            Interés primero, luego descuentos (recomendado)
+                                                        </option>
+                                                        <option value="descuento_primero" {% if configuracion.ordenCalculoInteresesDescuentos == 'descuento_primero' %}selected{% endif %}>
+                                                            Descuentos primero, luego interés
+                                                        </option>
+                                                        <option value="neto" {% if configuracion.ordenCalculoInteresesDescuentos == 'neto' %}selected{% endif %}>
+                                                            Neto (diferencia entre intereses y descuentos)
+                                                        </option>
+                                                        <option value="descuentos_solo_base" {% if configuracion.ordenCalculoInteresesDescuentos == 'descuentos_solo_base' %}selected{% endif %}>
+                                                            Descuentos sobre base, interés sobre base original
+                                                        </option>
+                                                    </select>
+                                                    <div class="form-text text-muted mt-2">
+                                                        <strong>Interés primero:</strong> Se aplica el interés sobre el monto base, luego los descuentos sobre el resultado. Ejemplo: Base $100, Interés 10% = $110, Descuento 10% = $99.<br>
+                                                        <strong>Descuento primero:</strong> Se aplican los descuentos sobre el monto base, luego el interés sobre el resultado. Ejemplo: Base $100, Descuento 10% = $90, Interés 10% = $99.<br>
+                                                        <strong>Neto:</strong> Ambos se calculan sobre la base y se hace la diferencia. Ejemplo: Base $100, Interés +$10, Descuento -$10 = $100.<br>
+                                                        <strong>Descuentos solo base:</strong> Los descuentos se aplican sobre la base, el interés se suma sobre la base original. Ejemplo: Base $100, Descuento 10% = $90, Interés +$10 = $100.
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="card mb-4">
+                                    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                                        <h5 class="mb-0">
+                                            <i class="bi bi-tag"></i> Descuentos Promocionales
+                                        </h5>
+                                        <button type="button" class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#modalNuevoDescuento">
+                                            <i class="bi bi-plus"></i> Nuevo Descuento
+                                        </button>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered table-striped table-hover">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Nombre</th>
+                                                        <th>Porcentaje</th>
+                                                        <th>Estado</th>
+                                                        <th width="120">Acciones</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for descuento in descuentosPromocionales %}
+                                                        <tr>
+                                                            <td>{{ descuento.nombre }}</td>
+                                                            <td><strong>{{ descuento.porcentaje }}%</strong></td>
+                                                            <td>
+                                                                {% if descuento.activo %}
+                                                                    <span class="badge bg-success">Activo</span>
+                                                                {% else %}
+                                                                    <span class="badge bg-secondary">Inactivo</span>
+                                                                {% endif %}
+                                                            </td>
+                                                            <td>
+                                                                <div class="btn-group btn-group-sm" role="group">
+                                                                    <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalEditarDescuento{{ descuento.id }}" title="Editar">
+                                                                        <i class="bi bi-pencil"></i>
+                                                                    </button>
+                                                                    <form method="post" action="{{ path('instituto_config_descuento_promocional_delete', {'id': descuento.id}) }}" onsubmit="return confirm('¿Está seguro que desea eliminar este descuento promocional?');" style="display: inline-block;">
+                                                                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ descuento.id) }}">
+                                                                        <button class="btn btn-outline-danger" title="Eliminar">
+                                                                            <i class="bi bi-trash"></i>
+                                                                        </button>
+                                                                    </form>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    {% else %}
+                                                        <tr>
+                                                            <td colspan="4" class="text-center text-muted py-4">
+                                                                <i class="bi bi-inbox"></i> No se encontraron descuentos promocionales configurados
+                                                            </td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="text-center">
+                                    <button type="submit" class="btn btn-info btn-lg">
+                                        <i class="bi bi-save"></i> Guardar Configuración de Descuentos
+                                    </button>
+                                    <a href="{{ path('instituto_config_index') }}" class="btn btn-secondary btn-lg">
+                                        <i class="bi bi-x-circle"></i> Cancelar
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Pestaña: Notificaciones -->
+                        <div class="tab-pane fade" id="edit-notificaciones" role="tabpanel" aria-labelledby="edit-notificaciones-tab">
+                            <form method="post" action="{{ path('instituto_config_edit') }}">
+                                <input type="hidden" name="section" value="notificaciones">
+                                <div class="card mb-3">
+                                    <div class="card-header bg-secondary text-white">
+                                        <h5 class="mb-0">
+                                            <i class="bi bi-envelope"></i> Configuración de Notificaciones por Email
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="form-check mb-3">
+                                            <input type="checkbox" 
+                                                   class="form-check-input" 
+                                                   id="enviarFacturasRecibos" 
+                                                   name="enviarFacturasRecibos"
+                                                   {% if configuracion.enviarFacturasRecibos %}checked{% endif %}>
+                                            <label class="form-check-label" for="enviarFacturasRecibos">
+                                                <strong>Enviar emails con facturas/recibos</strong>
+                                            </label>
+                                            <div class="form-text text-muted">
+                                                Cuando se registre un pago, se enviará automáticamente un email al alumno con el recibo.
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="form-check mb-3">
+                                            <input type="checkbox" 
+                                                   class="form-check-input" 
+                                                   id="enviarRecordatoriosDeudas" 
+                                                   name="enviarRecordatoriosDeudas"
+                                                   {% if configuracion.enviarRecordatoriosDeudas %}checked{% endif %}>
+                                            <label class="form-check-label" for="enviarRecordatoriosDeudas">
+                                                <strong>Enviar recordatorios de deudas pendientes</strong>
+                                            </label>
+                                            <div class="form-text text-muted">
+                                                Permite enviar emails manuales recordando deudas pendientes.
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="form-check mb-3">
+                                            <input type="checkbox" 
+                                                   class="form-check-input" 
+                                                   id="enviarRecordatorioEnDiaVencimiento" 
+                                                   name="enviarRecordatorioEnDiaVencimiento"
+                                                   {% if configuracion.enviarRecordatorioEnDiaVencimiento %}checked{% endif %}>
+                                            <label class="form-check-label" for="enviarRecordatorioEnDiaVencimiento">
+                                                <strong>Enviar recordatorio automático el día de vencimiento</strong>
+                                            </label>
+                                            <div class="form-text text-muted">
+                                                El primer día de vencimiento configurado, se enviará automáticamente un email recordando el pago pendiente del mes actual.
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label for="textoPersonalizadoEmail" class="form-label">
+                                                <strong>Texto personalizado para emails</strong>
+                                            </label>
+                                            <textarea class="form-control" 
+                                                      id="textoPersonalizadoEmail" 
+                                                      name="textoPersonalizadoEmail" 
+                                                      rows="6"
+                                                      placeholder="Este texto aparecerá en todos los emails enviados (recibos y recordatorios). Puede incluir información adicional, instrucciones de pago, etc.">{{ configuracion.textoPersonalizadoEmail }}</textarea>
+                                            <div class="form-text text-muted">
+                                                Texto opcional que se incluirá en todos los emails enviados. Puede incluir información de contacto, instrucciones de pago, etc.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="text-center">
+                                    <button type="submit" class="btn btn-secondary btn-lg">
+                                        <i class="bi bi-save"></i> Guardar Configuración de Notificaciones
+                                    </button>
+                                    <a href="{{ path('instituto_config_index') }}" class="btn btn-secondary btn-lg">
+                                        <i class="bi bi-x-circle"></i> Cancelar
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-{% endblock %} 
+
+<!-- Modal Nuevo Vencimiento -->
+<div class="modal fade" id="modalNuevoVencimiento" tabindex="-1" aria-labelledby="modalNuevoVencimientoLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{{ path('instituto_config_vencimiento_new') }}">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalNuevoVencimientoLabel">Nuevo Vencimiento</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="diaVencimiento" class="form-label">Día de Vencimiento (1-31)</label>
+                        <input type="number" class="form-control" id="diaVencimiento" name="diaVencimiento" min="1" max="31" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="porcentajeInteres" class="form-label">Porcentaje de Interés (0-100)</label>
+                        <input type="number" class="form-control" id="porcentajeInteres" name="porcentajeInteres" min="0" max="100" step="0.01" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modales Editar Vencimiento -->
+{% for vencimiento in vencimientos %}
+<div class="modal fade" id="modalEditarVencimiento{{ vencimiento.id }}" tabindex="-1" aria-labelledby="modalEditarVencimientoLabel{{ vencimiento.id }}" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{{ path('instituto_config_vencimiento_edit', {'id': vencimiento.id}) }}">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalEditarVencimientoLabel{{ vencimiento.id }}">Editar Vencimiento</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="diaVencimiento{{ vencimiento.id }}" class="form-label">Día de Vencimiento (1-31)</label>
+                        <input type="number" class="form-control" id="diaVencimiento{{ vencimiento.id }}" name="diaVencimiento" min="1" max="31" value="{{ vencimiento.diaVencimiento }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="porcentajeInteres{{ vencimiento.id }}" class="form-label">Porcentaje de Interés (0-100)</label>
+                        <input type="number" class="form-control" id="porcentajeInteres{{ vencimiento.id }}" name="porcentajeInteres" min="0" max="100" step="0.01" value="{{ vencimiento.porcentajeInteres }}" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<!-- Modal Nuevo Descuento Promocional -->
+<div class="modal fade" id="modalNuevoDescuento" tabindex="-1" aria-labelledby="modalNuevoDescuentoLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{{ path('instituto_config_descuento_promocional_new') }}">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalNuevoDescuentoLabel">Nuevo Descuento Promocional</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="nombreDescuento" class="form-label">Nombre del Descuento</label>
+                        <input type="text" class="form-control" id="nombreDescuento" name="nombre" required maxlength="255" placeholder="Ej: Descuento por inscripción temprana">
+                    </div>
+                    <div class="mb-3">
+                        <label for="porcentajeDescuento" class="form-label">Porcentaje de Descuento (%)</label>
+                        <input type="number" class="form-control" id="porcentajeDescuento" name="porcentaje" required min="0" max="100" step="0.01" placeholder="Ej: 10">
+                    </div>
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="activoDescuento" name="activo" checked>
+                        <label class="form-check-label" for="activoDescuento">Activo</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modales Editar Descuento Promocional -->
+{% for descuento in descuentosPromocionales %}
+<div class="modal fade" id="modalEditarDescuento{{ descuento.id }}" tabindex="-1" aria-labelledby="modalEditarDescuentoLabel{{ descuento.id }}" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{{ path('instituto_config_descuento_promocional_edit', {'id': descuento.id}) }}">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalEditarDescuentoLabel{{ descuento.id }}">Editar Descuento Promocional</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="nombreDescuento{{ descuento.id }}" class="form-label">Nombre del Descuento</label>
+                        <input type="text" class="form-control" id="nombreDescuento{{ descuento.id }}" name="nombre" required maxlength="255" value="{{ descuento.nombre }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="porcentajeDescuento{{ descuento.id }}" class="form-label">Porcentaje de Descuento (%)</label>
+                        <input type="number" class="form-control" id="porcentajeDescuento{{ descuento.id }}" name="porcentaje" required min="0" max="100" step="0.01" value="{{ descuento.porcentaje }}">
+                    </div>
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="activoDescuento{{ descuento.id }}" name="activo" {% if descuento.activo %}checked{% endif %}>
+                        <label class="form-check-label" for="activoDescuento{{ descuento.id }}">Activo</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<script>
+    // Manejar hash en URL para activar pestaña específica
+    document.addEventListener('DOMContentLoaded', function() {
+        // Activar pestaña según hash
+        const hash = window.location.hash;
+        if (hash) {
+            const tabId = hash.replace('#', '');
+            const tabElement = document.getElementById(tabId + '-tab');
+            if (tabElement) {
+                const tab = new bootstrap.Tab(tabElement);
+                tab.show();
+            }
+        }
+    });
+</script>
+{% endblock %}

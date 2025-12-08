@@ -12,211 +12,292 @@
             <div class="col-md-12">
                 <div class="card shadow-sm">
                     <div class="card-body">
-                        <div class="card mb-4">
-                            <div class="card-header">
-                                <h4 class="card-title mb-0">Información General</h4>
-                            </div>
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-4 text-center mb-4">
-                                        {% if instituto.logo %}
-                                            <img src="{{ asset('uploads/logos/' ~ instituto.logo) }}" 
-                                                 alt="Logo del Instituto" 
-                                                 class="img-fluid rounded"
-                                                 style="max-height: 200px;">
-                                        {% else %}
-                                            <div class="bg-light p-4 rounded">
-                                                <i class="fas fa-building fa-4x text-muted"></i>
-                                                <p class="mt-2">Sin logo</p>
+                        <div class="text-end mb-4">
+                            <a href="{{ path('instituto_config_edit') }}" class="btn btn-primary">
+                                <i class="bi bi-pencil"></i> Editar Configuración
+                            </a>
+                        </div>
+
+                        <!-- Pestañas -->
+                        <ul class="nav nav-tabs mb-4" id="configTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="general-tab" data-bs-toggle="tab" data-bs-target="#general" type="button" role="tab" aria-controls="general" aria-selected="true">
+                                    <i class="bi bi-building"></i> Información General
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="pagos-tab" data-bs-toggle="tab" data-bs-target="#pagos" type="button" role="tab" aria-controls="pagos" aria-selected="false">
+                                    <i class="bi bi-cash-coin"></i> Pagos y Vencimientos
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="descuentos-tab" data-bs-toggle="tab" data-bs-target="#descuentos" type="button" role="tab" aria-controls="descuentos" aria-selected="false">
+                                    <i class="bi bi-percent"></i> Descuentos
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="notificaciones-tab" data-bs-toggle="tab" data-bs-target="#notificaciones" type="button" role="tab" aria-controls="notificaciones" aria-selected="false">
+                                    <i class="bi bi-envelope"></i> Notificaciones
+                                </button>
+                            </li>
+                        </ul>
+
+                        <!-- Contenido de las pestañas -->
+                        <div class="tab-content" id="configTabsContent">
+                            <!-- Pestaña: Información General -->
+                            <div class="tab-pane fade show active" id="general" role="tabpanel" aria-labelledby="general-tab">
+                                <div class="card mb-4">
+                                    <div class="card-header bg-primary text-white">
+                                        <h4 class="card-title mb-0">
+                                            <i class="bi bi-building"></i> Información General del Instituto
+                                        </h4>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-4 text-center mb-4">
+                                                {% if instituto.logo %}
+                                                    <img src="{{ asset('uploads/logos/' ~ instituto.logo) }}" 
+                                                         alt="Logo del Instituto" 
+                                                         class="img-fluid rounded shadow-sm"
+                                                         style="max-height: 200px;">
+                                                {% else %}
+                                                    <div class="bg-light p-4 rounded shadow-sm">
+                                                        <i class="fas fa-building fa-4x text-muted"></i>
+                                                        <p class="mt-2 text-muted">Sin logo</p>
+                                                    </div>
+                                                {% endif %}
                                             </div>
-                                        {% endif %}
+                                            <div class="col-md-8">
+                                                <table class="table table-borderless">
+                                                    <tr>
+                                                        <th width="30%">Nombre:</th>
+                                                        <td><strong>{{ instituto.nombre }}</strong></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th>Email:</th>
+                                                        <td>{{ instituto.email ?? '<span class="text-muted">No especificado</span>' }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th>Teléfono:</th>
+                                                        <td>{{ instituto.tel ?? '<span class="text-muted">No especificado</span>' }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th>Dirección:</th>
+                                                        <td>{{ instituto.dir ?? '<span class="text-muted">No especificada</span>' }}</td>
+                                                    </tr>
+                                                </table>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="col-md-8">
-                                        <table class="table">
-                                            <tr>
-                                                <th>Nombre:</th>
-                                                <td>{{ instituto.nombre }}</td>
-                                            </tr>
-                                            <tr>
-                                                <th>Email:</th>
-                                                <td>{{ instituto.email ?? 'No especificado' }}</td>
-                                            </tr>
-                                            <tr>
-                                                <th>Teléfono:</th>
-                                                <td>{{ instituto.tel ?? 'No especificado' }}</td>
-                                            </tr>
-                                            <tr>
-                                                <th>Dirección:</th>
-                                                <td>{{ instituto.dir ?? 'No especificada' }}</td>
-                                            </tr>
-                                        </table>
-                                    </div>
-                                </div>
-                                <div class="text-center mt-4">
-                                    <a href="{{ path('instituto_config_edit') }}" class="btn btn-primary">
-                                        <i class="bi bi-pencil"></i> Editar Información
-                                    </a>
                                 </div>
                             </div>
-                        </div>
 
-                        <div class="card mb-4">
-                            <div class="card-header">
-                                <h4 class="card-title mb-0">Configuración de Descuentos</h4>
-                            </div>
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-12">
-                                        <table class="table">
-                                            <tr>
-                                                <th>Descuento por pago en efectivo:</th>
-                                                <td>{{ configuracion.descuentoEfectivo is not null ? configuracion.descuentoEfectivo ~ '%' : 'No configurado' }}</td>
-                                            </tr>
-                                            <tr>
-                                                <th>Descuento por hermanos:</th>
-                                                <td>{{ configuracion.descuentoHermanos is not null ? configuracion.descuentoHermanos ~ '%' : 'No configurado' }}</td>
-                                            </tr>
-                                            <tr>
-                                                <th>Deshabilitar descuentos en deuda:</th>
-                                                <td>
-                                                    {% if configuracion.deshabilitarDescuentosEnDeuda %}
-                                                        <span class="badge bg-warning">Sí</span> 
-                                                        <small class="text-muted">(Los alumnos con deudas no reciben descuentos)</small>
+                            <!-- Pestaña: Pagos y Vencimientos -->
+                            <div class="tab-pane fade" id="pagos" role="tabpanel" aria-labelledby="pagos-tab">
+                                <!-- Vencimientos -->
+                                <div class="card">
+                                    <div class="card-header bg-warning text-dark">
+                                        <h4 class="card-title mb-0">
+                                            <i class="bi bi-calendar-event"></i> Vencimientos e Intereses
+                                        </h4>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered table-striped table-hover">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Día de Vencimiento</th>
+                                                        <th>Porcentaje de Interés</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for vencimiento in vencimientos %}
+                                                        <tr>
+                                                            <td><strong>Día {{ vencimiento.diaVencimiento }}</strong></td>
+                                                            <td><span class="badge bg-warning text-dark">{{ vencimiento.porcentajeInteres }}%</span></td>
+                                                        </tr>
                                                     {% else %}
-                                                        <span class="badge bg-success">No</span>
-                                                        <small class="text-muted">(Los alumnos con deudas reciben descuentos normalmente)</small>
-                                                    {% endif %}
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <th>Orden de cálculo:</th>
-                                                <td>
-                                                    {% set ordenTexto = {
-                                                        'interes_primero': 'Interés primero, luego descuentos',
-                                                        'descuento_primero': 'Descuentos primero, luego interés',
-                                                        'neto': 'Neto (diferencia entre intereses y descuentos)',
-                                                        'descuentos_solo_base': 'Descuentos sobre base, interés sobre base original'
-                                                    } %}
-                                                    <span class="badge bg-primary">{{ ordenTexto[configuracion.ordenCalculoInteresesDescuentos] ?? 'Interés primero, luego descuentos' }}</span>
-                                                </td>
-                                            </tr>
-                                        </table>
+                                                        <tr>
+                                                            <td colspan="2" class="text-center text-muted py-4">
+                                                                <i class="bi bi-inbox"></i> No se encontraron vencimientos configurados
+                                                            </td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="text-center mt-4">
-                                    <a href="{{ path('instituto_config_edit') }}" class="btn btn-primary">
-                                        <i class="bi bi-pencil"></i> Editar Configuración de Descuentos
-                                    </a>
-                                </div>
                             </div>
-                        </div>
 
-                        <div class="card mb-4">
-                            <div class="card-header">
-                                <h4 class="card-title mb-0">Descuentos Promocionales</h4>
-                            </div>
-                            <div class="card-body">
-                                <div class="mb-3">
-                                    <a href="{{ path('instituto_config_descuento_promocional_new') }}" class="btn btn-primary">
-                                        <i class="bi bi-plus"></i> Nuevo Descuento Promocional
-                                    </a>
-                                </div>
-
-                                <div class="table-responsive">
-                                    <table class="table table-bordered table-striped">
-                                        <thead>
-                                            <tr>
-                                                <th>Nombre</th>
-                                                <th>Porcentaje</th>
-                                                <th>Estado</th>
-                                                <th>Acciones</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {% for descuento in descuentosPromocionales %}
-                                                <tr>
-                                                    <td>{{ descuento.nombre }}</td>
-                                                    <td>{{ descuento.porcentaje }}%</td>
-                                                    <td>
-                                                        {% if descuento.activo %}
-                                                            <span class="badge bg-success">Activo</span>
-                                                        {% else %}
-                                                            <span class="badge bg-secondary">Inactivo</span>
-                                                        {% endif %}
-                                                    </td>
-                                                    <td>
-                                                        <a href="{{ path('instituto_config_descuento_promocional_edit', {'id': descuento.id}) }}" class="btn btn-sm btn-outline-primary">
-                                                            <i class="bi bi-pencil"></i>
-                                                        </a>
-                                                        <form method="post" action="{{ path('instituto_config_descuento_promocional_delete', {'id': descuento.id}) }}" onsubmit="return confirm('¿Está seguro que desea eliminar este descuento promocional?');" style="display: inline-block;">
-                                                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ descuento.id) }}">
-                                                            <button class="btn btn-sm btn-outline-danger">
-                                                                <i class="bi bi-trash"></i>
-                                                            </button>
-                                                        </form>
-                                                    </td>
-                                                </tr>
-                                            {% else %}
-                                                <tr>
-                                                    <td colspan="4" class="text-center">No se encontraron descuentos promocionales configurados</td>
-                                                </tr>
-                                            {% endfor %}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="card">
-                            <div class="card-header">
-                                <h4 class="card-title mb-0">Vencimientos</h4>
-                            </div>
-                            <div class="card-body">
-                                <div class="mb-3">
-                                    <a href="{{ path('instituto_config_vencimiento_new') }}" class="btn btn-primary">
-                                        <i class="bi bi-plus"></i> Nuevo Vencimiento
-                                    </a>
-                                </div>
-
-                                {% for message in app.flashes('success') %}
-                                    <div class="alert alert-success">
-                                        {{ message }}
+                            <!-- Pestaña: Descuentos -->
+                            <div class="tab-pane fade" id="descuentos" role="tabpanel" aria-labelledby="descuentos-tab">
+                                <!-- Configuración de Descuentos -->
+                                <div class="card mb-4">
+                                    <div class="card-header bg-info text-white">
+                                        <h4 class="card-title mb-0">
+                                            <i class="bi bi-percent"></i> Configuración de Descuentos
+                                        </h4>
                                     </div>
-                                {% endfor %}
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <table class="table table-borderless">
+                                                    <tr>
+                                                        <th width="40%">Descuento por pago en efectivo:</th>
+                                                        <td>
+                                                            {% if configuracion.descuentoEfectivo is not null %}
+                                                                <span class="badge bg-success">{{ configuracion.descuentoEfectivo }}%</span>
+                                                            {% else %}
+                                                                <span class="text-muted">No configurado</span>
+                                                            {% endif %}
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th>Descuento por hermanos:</th>
+                                                        <td>
+                                                            {% if configuracion.descuentoHermanos is not null %}
+                                                                <span class="badge bg-success">{{ configuracion.descuentoHermanos }}%</span>
+                                                            {% else %}
+                                                                <span class="text-muted">No configurado</span>
+                                                            {% endif %}
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th>Deshabilitar descuentos en deuda:</th>
+                                                        <td>
+                                                            {% if configuracion.deshabilitarDescuentosEnDeuda %}
+                                                                <span class="badge bg-warning">Sí</span> 
+                                                                <small class="text-muted">(Los alumnos con deudas no reciben descuentos)</small>
+                                                            {% else %}
+                                                                <span class="badge bg-success">No</span>
+                                                                <small class="text-muted">(Los alumnos con deudas reciben descuentos normalmente)</small>
+                                                            {% endif %}
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th>Orden de cálculo:</th>
+                                                        <td>
+                                                            {% set ordenTexto = {
+                                                                'interes_primero': 'Interés primero, luego descuentos',
+                                                                'descuento_primero': 'Descuentos primero, luego interés',
+                                                                'neto': 'Neto (diferencia entre intereses y descuentos)',
+                                                                'descuentos_solo_base': 'Descuentos sobre base, interés sobre base original'
+                                                            } %}
+                                                            <span class="badge bg-primary">{{ ordenTexto[configuracion.ordenCalculoInteresesDescuentos] ?? 'Interés primero, luego descuentos' }}</span>
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
 
-                                <div class="table-responsive">
-                                    <table class="table table-bordered table-striped">
-                                        <thead>
-                                            <tr>
-                                                <th>Día de Vencimiento</th>
-                                                <th>Porcentaje de Interés</th>
-                                                <th>Acciones</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {% for vencimiento in vencimientos %}
-                                                <tr>
-                                                    <td>{{ vencimiento.diaVencimiento }}</td>
-                                                    <td>{{ vencimiento.porcentajeInteres }}%</td>
-                                                    <td>
-                                                        <a href="{{ path('instituto_config_vencimiento_edit', {'id': vencimiento.id}) }}" class="btn btn-sm btn-outline-primary">
-                                                            <i class="bi bi-pencil"></i>
-                                                        </a>
-                                                        <form method="post" action="{{ path('instituto_config_vencimiento_delete', {'id': vencimiento.id}) }}" onsubmit="return confirm('¿Está seguro que desea eliminar este vencimiento?');" style="display: inline-block;">
-                                                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ vencimiento.id) }}">
-                                                            <button class="btn btn-sm btn-outline-danger">
-                                                                <i class="bi bi-trash"></i>
-                                                            </button>
-                                                        </form>
-                                                    </td>
-                                                </tr>
-                                            {% else %}
-                                                <tr>
-                                                    <td colspan="4" class="text-center">No se encontraron vencimientos configurados</td>
-                                                </tr>
-                                            {% endfor %}
-                                        </tbody>
-                                    </table>
+                                <!-- Descuentos Promocionales -->
+                                <div class="card">
+                                    <div class="card-header bg-success text-white">
+                                        <h4 class="card-title mb-0">
+                                            <i class="bi bi-tag"></i> Descuentos Promocionales
+                                        </h4>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered table-striped table-hover">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Nombre</th>
+                                                        <th>Porcentaje</th>
+                                                        <th>Estado</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for descuento in descuentosPromocionales %}
+                                                        <tr>
+                                                            <td>{{ descuento.nombre }}</td>
+                                                            <td><strong>{{ descuento.porcentaje }}%</strong></td>
+                                                            <td>
+                                                                {% if descuento.activo %}
+                                                                    <span class="badge bg-success">Activo</span>
+                                                                {% else %}
+                                                                    <span class="badge bg-secondary">Inactivo</span>
+                                                                {% endif %}
+                                                            </td>
+                                                        </tr>
+                                                    {% else %}
+                                                        <tr>
+                                                            <td colspan="3" class="text-center text-muted py-4">
+                                                                <i class="bi bi-inbox"></i> No se encontraron descuentos promocionales configurados
+                                                            </td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Pestaña: Notificaciones -->
+                            <div class="tab-pane fade" id="notificaciones" role="tabpanel" aria-labelledby="notificaciones-tab">
+                                <div class="card">
+                                    <div class="card-header bg-secondary text-white">
+                                        <h4 class="card-title mb-0">
+                                            <i class="bi bi-envelope"></i> Configuración de Notificaciones por Email
+                                        </h4>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <table class="table table-borderless">
+                                                    <tr>
+                                                        <th width="40%">Enviar emails con facturas/recibos:</th>
+                                                        <td>
+                                                            {% if configuracion.enviarFacturasRecibos %}
+                                                                <span class="badge bg-success">Activado</span>
+                                                                <small class="text-muted d-block">Se enviará automáticamente un email al registrar un pago</small>
+                                                            {% else %}
+                                                                <span class="badge bg-secondary">Desactivado</span>
+                                                            {% endif %}
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th>Enviar recordatorios de deudas:</th>
+                                                        <td>
+                                                            {% if configuracion.enviarRecordatoriosDeudas %}
+                                                                <span class="badge bg-success">Activado</span>
+                                                                <small class="text-muted d-block">Permite enviar emails manuales recordando deudas pendientes</small>
+                                                            {% else %}
+                                                                <span class="badge bg-secondary">Desactivado</span>
+                                                            {% endif %}
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th>Recordatorio automático el día de vencimiento:</th>
+                                                        <td>
+                                                            {% if configuracion.enviarRecordatorioEnDiaVencimiento %}
+                                                                <span class="badge bg-success">Activado</span>
+                                                                <small class="text-muted d-block">Se enviará automáticamente un email el primer día de vencimiento configurado</small>
+                                                            {% else %}
+                                                                <span class="badge bg-secondary">Desactivado</span>
+                                                            {% endif %}
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th>Texto personalizado para emails:</th>
+                                                        <td>
+                                                            {% if configuracion.textoPersonalizadoEmail %}
+                                                                <div class="alert alert-light">
+                                                                    {{ configuracion.textoPersonalizadoEmail|raw|nl2br }}
+                                                                </div>
+                                                            {% else %}
+                                                                <span class="text-muted">No configurado</span>
+                                                            {% endif %}
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -225,4 +306,4 @@
             </div>
         </div>
     </div>
-{% endblock %} 
+{% endblock %}

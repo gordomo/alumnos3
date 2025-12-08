@@ -68,6 +68,26 @@ class InstitutoConfiguracion
      */
     private $descuentosPromocionales;
     
+    /**
+     * @ORM\Column(type="boolean", options={"default": false})
+     */
+    private $enviarFacturasRecibos = false;
+    
+    /**
+     * @ORM\Column(type="boolean", options={"default": false})
+     */
+    private $enviarRecordatoriosDeudas = false;
+    
+    /**
+     * @ORM\Column(type="boolean", options={"default": false})
+     */
+    private $enviarRecordatorioEnDiaVencimiento = false;
+    
+    /**
+     * @ORM\Column(type="text", nullable=true)
+     */
+    private $textoPersonalizadoEmail;
+    
     public function __construct()
     {
         $this->vencimientos = new ArrayCollection();
@@ -184,11 +204,55 @@ class InstitutoConfiguracion
     {
         if ($this->descuentosPromocionales->removeElement($descuentosPromocionale)) {
             // set the owning side to null (unless already changed)
-            if ($descuentosPromocionale->getConfiguracion() === $this) {
-                $descuentosPromocionale->setConfiguracion(null);
+            if ($descuentosPromocional->getConfiguracion() === $this) {
+                $descuentosPromocional->setConfiguracion(null);
             }
         }
 
+        return $this;
+    }
+    
+    public function getEnviarFacturasRecibos(): bool
+    {
+        return $this->enviarFacturasRecibos;
+    }
+    
+    public function setEnviarFacturasRecibos(bool $enviarFacturasRecibos): self
+    {
+        $this->enviarFacturasRecibos = $enviarFacturasRecibos;
+        return $this;
+    }
+    
+    public function getEnviarRecordatoriosDeudas(): bool
+    {
+        return $this->enviarRecordatoriosDeudas;
+    }
+    
+    public function setEnviarRecordatoriosDeudas(bool $enviarRecordatoriosDeudas): self
+    {
+        $this->enviarRecordatoriosDeudas = $enviarRecordatoriosDeudas;
+        return $this;
+    }
+    
+    public function getEnviarRecordatorioEnDiaVencimiento(): bool
+    {
+        return $this->enviarRecordatorioEnDiaVencimiento;
+    }
+    
+    public function setEnviarRecordatorioEnDiaVencimiento(bool $enviarRecordatorioEnDiaVencimiento): self
+    {
+        $this->enviarRecordatorioEnDiaVencimiento = $enviarRecordatorioEnDiaVencimiento;
+        return $this;
+    }
+    
+    public function getTextoPersonalizadoEmail(): ?string
+    {
+        return $this->textoPersonalizadoEmail;
+    }
+    
+    public function setTextoPersonalizadoEmail(?string $textoPersonalizadoEmail): self
+    {
+        $this->textoPersonalizadoEmail = $textoPersonalizadoEmail;
         return $this;
     }
 } 
