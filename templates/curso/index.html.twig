@@ -67,6 +67,7 @@
                             <th>Fecha de Inicio</th>
                             <th>Fecha de Fin</th>
                             <th>Acciones</th>
+                            <th></th>
                             <th>Total: {{totalCursos}}</th>
                         </tr>
                     </thead>
@@ -116,6 +117,9 @@
                                 {{ curso.fechaFin|date('d/m/Y') }}
                             </td>
                             <td>
+                                <a href="{{ path('app_curso_show', {'id': curso.id}) }}" class="btn btn-sm btn-outline-info" title="Ver detalle" data-toggle="tooltip" data-placement="left">
+                                    <i class="bi bi-eye"></i>
+                                </a>
                                 <a href="{{ path('app_curso_edit', {'id': curso.id}) }}" class="btn btn-sm btn-outline-primary" title="Editar" data-toggle="tooltip" data-placement="left">
                                     <i class="bi bi-pencil"></i>
                                 </a>
@@ -123,10 +127,11 @@
                             <td>
                                 {{ include('curso/_delete_form.html.twig') }}
                             </td>
+                            <td></td>
                         </tr>
                     {% else %}
                         <tr>
-                            <td colspan="3">No se encontraron registros</td>
+                            <td colspan="11">No se encontraron registros</td>
                         </tr>
                     {% endfor %}
                     </tbody>
@@ -186,8 +191,11 @@
                         <td>
                             {{ curso.fechaFin|date('d/m/Y') }}
                         </td>
-                        <td colspan="2">
-                            <a class="btn btn-success" href="{{ path('app_curso_habilitar', {id: curso.id}) }}">Habilitar</a>
+                        <td>
+                            <a href="{{ path('app_curso_show', {'id': curso.id}) }}" class="btn btn-sm btn-outline-info" title="Ver detalle" data-toggle="tooltip" data-placement="left">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a class="btn btn-success btn-sm" href="{{ path('app_curso_habilitar', {id: curso.id}) }}">Habilitar</a>
                         </td>
                     </tr>
                 {% else %}

@@ -7,14 +7,19 @@
 {% endblock %}
 
 {% block body %}
-<div class="container-fluid mt-4">
+<style>
+    /* Hacer que el contenido ocupe todo el ancho disponible */
+    .container {
+        max-width: 100% !important;
+        width: 100% !important;
+        padding-left: 2rem;
+        padding-right: 2rem;
+    }
+</style>
+<div class="container-fluid px-4 mt-4">
     <div class="row">
         <div class="col-12">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    {{ include('profesor/_form.html.twig', {'button_label': 'Guardar'}) }}
-                </div>
-            </div>
+            {{ include('profesor/_form.html.twig', {'button_label': 'Guardar'}) }}
         </div>
     </div>
 </div>

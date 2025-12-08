@@ -90,56 +90,6 @@
         </div>
     </div>
 
-    {# Lista de usuarios #}
-    <div class="row mb-4">
-        <div class="col-md-12">
-            <div class="card shadow-sm">
-                <div class="card-header bg-white border-bottom">
-                    <h4 class="mb-0">
-                        <i class="fas fa-user-friends text-primary"></i> Usuarios del Instituto
-                    </h4>
-                </div>
-                <div class="card-body">
-                    {% if instituto.usuarios|length > 0 %}
-                        <div class="row">
-                            {% for usuario in instituto.usuarios %}
-                                <div class="col-md-12 {% if instituto.usuarios|length == 2 %}col-md-6{% elseif instituto.usuarios|length == 1 %}col-md-6 col-lg-4{% else %}col-sm-6 col-md-4 col-lg-3{% endif %} mb-3">
-                                    <div class="border rounded p-3 h-100">
-                                        <div class="d-flex align-items-start">
-                                            <div class="flex-shrink-0 me-3">
-                                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                                                    <i class="fas fa-user"></i>
-                                                </div>
-                                            </div>
-                                            <div class="flex-grow-1 overflow-hidden" style="min-width: 0;">
-                                                <div class="mb-2">
-                                                    <strong class="d-block text-truncate" title="{{ usuario.email }}" style="font-size: 0.95rem;">{{ usuario.email }}</strong>
-                                                </div>
-                                                <div>
-                                                    {% if 'ROLE_ADMIN_INSTITUTO' in usuario.roles %}
-                                                        <span class="badge bg-primary">Administrador</span>
-                                                    {% elseif 'ROLE_PROFESOR' in usuario.roles %}
-                                                        <span class="badge bg-success">Profesor</span>
-                                                    {% else %}
-                                                        <span class="badge bg-secondary">Usuario</span>
-                                                    {% endif %}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        <p class="text-muted mb-0 text-center py-3">
-                            <i class="fas fa-info-circle"></i> No hay usuarios registrados para este instituto.
-                        </p>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
-
     {# Estadísticas - Solo visible para Super Admin #}
     <div class="row mb-4">
         {# Estadísticas de Alumnos #}
@@ -242,6 +192,54 @@
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white border-bottom">
+                    <h4 class="mb-0">
+                        <i class="fas fa-user-friends text-primary"></i> Usuarios del Instituto
+                    </h4>
+                </div>
+                <div class="card-body">
+                    {% if instituto.usuarios|length > 0 %}
+                        <div class="row">
+                            {% for usuario in instituto.usuarios %}
+                                <div class="col-md-12 {% if instituto.usuarios|length == 2 %}col-md-6{% elseif instituto.usuarios|length == 1 %}col-md-6 col-lg-4{% else %}col-sm-6 col-md-4 col-lg-3{% endif %} mb-3">
+                                    <div class="border rounded p-3 h-100">
+                                        <div class="d-flex align-items-start">
+                                            <div class="flex-shrink-0 me-3">
+                                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                    <i class="fas fa-user"></i>
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1 overflow-hidden" style="min-width: 0;">
+                                                <div class="mb-2">
+                                                    <strong class="d-block text-truncate" title="{{ usuario.email }}" style="font-size: 0.95rem;">{{ usuario.email }}</strong>
+                                                </div>
+                                                <div>
+                                                    {% if 'ROLE_ADMIN_INSTITUTO' in usuario.roles %}
+                                                        <span class="badge bg-primary">Administrador</span>
+                                                    {% elseif 'ROLE_PROFESOR' in usuario.roles %}
+                                                        <span class="badge bg-success">Profesor</span>
+                                                    {% else %}
+                                                        <span class="badge bg-secondary">Usuario</span>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted mb-0 text-center py-3">
+                            <i class="fas fa-info-circle"></i> No hay usuarios registrados para este instituto.
+                        </p>
+                    {% endif %}
                 </div>
             </div>
         </div>

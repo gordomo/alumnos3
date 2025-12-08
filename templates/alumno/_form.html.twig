@@ -1,44 +1,421 @@
+<div style="max-width: 100%; width: 100%;">
 {{ form_start(form, {'attr': {'class': 'form-horizontal'}}) }}
-<div class="row g-3 mb-3">
-    {% for field in [
-        {form: form.nombre, label: 'Nombre', class: '', required: true},
-        {form: form.apellido, label: 'Apellido', class: '', required: true},
-        {form: form.f_nac, label: 'Fecha de Nacimiento', class: '', required: true},
-        {form: form.l_nac, label: 'Lugar de Nacimiento', class: ''},
-        {form: form.telefono_fijo, label: 'Teléfono fijo', class: ''},
-        {form: form.email, label: 'Email', class: '', required: true},
-        {form: form.dni, label: 'DNI', class: '', required: true},
-        {form: form.celular, label: 'Celular', class: '', required: true},
-        {form: form.n_tutor, label: 'Nombre Tutor', class: ''},
-        {form: form.t_tutor, label: 'Teléfono Tutor', class: ''},
-        {form: form.contacto_emergencia, label: 'Contacto de Emergencia - (Nombre + Cel)', class: '', required: true},
-        {form: form.corre_tutor, label: 'Email Tutor', class: ''},
-        {form: form.dni_tutor, label: 'DNI Tutor', class: ''},
-        {form: form.escuela, label: 'Escuela', class: ''},
-        {form: form.extras, label: 'Extras', class: ''},
-        {form: form.g_sanguineo, label: 'Grupo Sanguineo', class: ''},
-        {form: form.enfermedad, label: 'Enfermedad', class: ''},
-        {form: form.alergico, label: 'Alergico', class: ''},
-        {form: form.medicacion, label: 'Medicacion', class: ''},
-        {form: form.como_conociste, label: 'Como nos Conociste', class: ''},
-        {form: form.activo, label: 'Activo', class: '', required: true},
-        {form: form.hermanos, label: 'Hermanos', class: 'chosen-select'},
-        {form: form.curso, label: 'Cursos', class: 'chosen-select'}
-    ] %}
-        <div class="col-md-4">
-            {{ include('components/formGroup.html.twig', {
-                form: field.form,
-                label: field.label,
-                class: field.class,
-                required: field.required|default(false)
-            }) }}
+
+{# Información Personal #}
+<div class="card mb-4 shadow-sm">
+    <div class="card-header" style="background-color: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+        <h4 class="mb-0 text-dark">
+            <i class="bi bi-person" style="color: #0d6efd;"></i> Información Personal
+        </h4>
+    </div>
+    <div class="card-body">
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="{{ form.nombre.vars.id }}" class="form-label fw-semibold text-dark">
+                        Nombre <span class="text-danger">*</span>
+                    </label>
+                    {{ form_widget(form.nombre, {'attr': {'class': 'form-control'}}) }}
+                    {{ form_errors(form.nombre) }}
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="{{ form.apellido.vars.id }}" class="form-label fw-semibold text-dark">
+                        Apellido <span class="text-danger">*</span>
+                    </label>
+                    {{ form_widget(form.apellido, {'attr': {'class': 'form-control'}}) }}
+                    {{ form_errors(form.apellido) }}
+                </div>
+            </div>
         </div>
-    {% endfor %}
-</div>
-<div class="row mb-3">
-    <div class="col text-end">
-        {{ include('components/back_button.html.twig', {'default_path': path('app_alumno_index')}) }}
-        <button class="btn btn-success">{{ button_label|default('Guardar') }}</button>
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="{{ form.dni.vars.id }}" class="form-label fw-semibold text-dark">
+                        DNI <span class="text-danger">*</span>
+                    </label>
+                    {{ form_widget(form.dni, {'attr': {'class': 'form-control'}}) }}
+                    {{ form_errors(form.dni) }}
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="{{ form.email.vars.id }}" class="form-label fw-semibold text-dark">
+                        Email <span class="text-danger">*</span>
+                    </label>
+                    {{ form_widget(form.email, {'attr': {'class': 'form-control'}}) }}
+                    {{ form_errors(form.email) }}
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="{{ form.f_nac.vars.id }}" class="form-label fw-semibold text-dark">
+                        Fecha de Nacimiento <span class="text-danger">*</span>
+                    </label>
+                    {{ form_widget(form.f_nac, {'attr': {'class': 'form-control'}}) }}
+                    {{ form_errors(form.f_nac) }}
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="{{ form.l_nac.vars.id }}" class="form-label fw-semibold text-dark">
+                        Lugar de Nacimiento
+                    </label>
+                    {{ form_widget(form.l_nac, {'attr': {'class': 'form-control'}}) }}
+                    {{ form_errors(form.l_nac) }}
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="{{ form.telefono_fijo.vars.id }}" class="form-label fw-semibold text-dark">
+                        Teléfono Fijo
+                    </label>
+                    {{ form_widget(form.telefono_fijo, {'attr': {'class': 'form-control'}}) }}
+                    {{ form_errors(form.telefono_fijo) }}
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="{{ form.celular.vars.id }}" class="form-label fw-semibold text-dark">
+                        Celular <span class="text-danger">*</span>
+                    </label>
+                    {{ form_widget(form.celular, {'attr': {'class': 'form-control'}}) }}
+                    {{ form_errors(form.celular) }}
+                </div>
+            </div>
+        </div>
     </div>
 </div>
+
+{# Información del Tutor #}
+<div class="card mb-4 shadow-sm">
+    <div class="card-header" style="background-color: #e7f1ff; border-bottom: 2px solid #0d6efd;">
+        <h4 class="mb-0 text-dark">
+            <i class="bi bi-person-badge" style="color: #0d6efd;"></i> Información del Tutor
+        </h4>
+    </div>
+    <div class="card-body">
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="{{ form.n_tutor.vars.id }}" class="form-label fw-semibold text-dark">
+                        Nombre del Tutor
+                    </label>
+                    {{ form_widget(form.n_tutor, {'attr': {'class': 'form-control'}}) }}
+                    {{ form_errors(form.n_tutor) }}
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="{{ form.dni_tutor.vars.id }}" class="form-label fw-semibold text-dark">
+                        DNI del Tutor
+                    </label>
+                    {{ form_widget(form.dni_tutor, {'attr': {'class': 'form-control'}}) }}
+                    {{ form_errors(form.dni_tutor) }}
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="{{ form.t_tutor.vars.id }}" class="form-label fw-semibold text-dark">
+                        Teléfono del Tutor
+                    </label>
+                    {{ form_widget(form.t_tutor, {'attr': {'class': 'form-control'}}) }}
+                    {{ form_errors(form.t_tutor) }}
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="{{ form.corre_tutor.vars.id }}" class="form-label fw-semibold text-dark">
+                        Email del Tutor
+                    </label>
+                    {{ form_widget(form.corre_tutor, {'attr': {'class': 'form-control'}}) }}
+                    {{ form_errors(form.corre_tutor) }}
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <div class="mb-3">
+                    <label for="{{ form.contacto_emergencia.vars.id }}" class="form-label fw-semibold text-dark">
+                        Contacto de Emergencia (Nombre + Cel) <span class="text-danger">*</span>
+                    </label>
+                    {{ form_widget(form.contacto_emergencia, {'attr': {'class': 'form-control'}}) }}
+                    {{ form_errors(form.contacto_emergencia) }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Información Escolar y Adicional #}
+<div class="card mb-4 shadow-sm">
+    <div class="card-header" style="background-color: #fff3cd; border-bottom: 2px solid #ffc107;">
+        <h4 class="mb-0 text-dark">
+            <i class="bi bi-mortarboard" style="color: #ffc107;"></i> Información Escolar y Adicional
+        </h4>
+    </div>
+    <div class="card-body">
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="{{ form.escuela.vars.id }}" class="form-label fw-semibold text-dark">
+                        Escuela
+                    </label>
+                    {{ form_widget(form.escuela, {'attr': {'class': 'form-control'}}) }}
+                    {{ form_errors(form.escuela) }}
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="{{ form.activo.vars.id }}" class="form-label fw-semibold text-dark">
+                        Activo <span class="text-danger">*</span>
+                    </label>
+                    {{ form_widget(form.activo, {'attr': {'class': 'form-control'}}) }}
+                    {{ form_errors(form.activo) }}
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="{{ form.extras.vars.id }}" class="form-label fw-semibold text-dark">
+                        Extras
+                    </label>
+                    {{ form_widget(form.extras, {'attr': {'class': 'form-control'}}) }}
+                    {{ form_errors(form.extras) }}
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="{{ form.como_conociste.vars.id }}" class="form-label fw-semibold text-dark">
+                        ¿Cómo nos Conociste?
+                    </label>
+                    {{ form_widget(form.como_conociste, {'attr': {'class': 'form-control'}}) }}
+                    {{ form_errors(form.como_conociste) }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Información de Salud #}
+<div class="card mb-4 shadow-sm">
+    <div class="card-header" style="background-color: #f8d7da; border-bottom: 2px solid #dc3545;">
+        <h4 class="mb-0 text-dark">
+            <i class="bi bi-heart-pulse" style="color: #dc3545;"></i> Información de Salud
+        </h4>
+    </div>
+    <div class="card-body">
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="{{ form.g_sanguineo.vars.id }}" class="form-label fw-semibold text-dark">
+                        Grupo Sanguíneo
+                    </label>
+                    {{ form_widget(form.g_sanguineo, {'attr': {'class': 'form-control'}}) }}
+                    {{ form_errors(form.g_sanguineo) }}
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="{{ form.enfermedad.vars.id }}" class="form-label fw-semibold text-dark">
+                        Enfermedad
+                    </label>
+                    {{ form_widget(form.enfermedad, {'attr': {'class': 'form-control'}}) }}
+                    {{ form_errors(form.enfermedad) }}
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="{{ form.alergico.vars.id }}" class="form-label fw-semibold text-dark">
+                        Alérgico
+                    </label>
+                    {{ form_widget(form.alergico, {'attr': {'class': 'form-control'}}) }}
+                    {{ form_errors(form.alergico) }}
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="{{ form.medicacion.vars.id }}" class="form-label fw-semibold text-dark">
+                        Medicación
+                    </label>
+                    {{ form_widget(form.medicacion, {'attr': {'class': 'form-control'}}) }}
+                    {{ form_errors(form.medicacion) }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Relaciones y Cursos #}
+<div class="card mb-4 shadow-sm">
+    <div class="card-header" style="background-color: #d1e7dd; border-bottom: 2px solid #198754;">
+        <h4 class="mb-0 text-dark">
+            <i class="bi bi-people" style="color: #198754;"></i> Relaciones y Cursos
+        </h4>
+    </div>
+    <div class="card-body">
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <div class="mb-3">
+                    <label for="{{ form.hermanos.vars.id }}" class="form-label fw-semibold text-dark">
+                        Hermanos
+                    </label>
+                    <small class="text-muted d-block mb-2">Puede seleccionar múltiples hermanos. Use Ctrl+Click (o Cmd+Click en Mac) para seleccionar varios.</small>
+                    {{ form_widget(form.hermanos, {'attr': {'class': 'form-control chosen-select'}}) }}
+                    {{ form_errors(form.hermanos) }}
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <div class="mb-3">
+                    <label for="{{ form.curso.vars.id }}" class="form-label fw-semibold text-dark">
+                        Cursos
+                    </label>
+                    <small class="text-muted d-block mb-2">Puede seleccionar múltiples cursos. Use Ctrl+Click (o Cmd+Click en Mac) para seleccionar varios.</small>
+                    {{ form_widget(form.curso, {'attr': {'class': 'form-control chosen-select'}}) }}
+                    {{ form_errors(form.curso) }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Botones de Acción #}
+<div class="d-flex gap-2 mt-3 pt-2 border-top">
+    {{ include('components/back_button.html.twig', {'default_path': path('app_alumno_index')}) }}
+    <button type="submit" class="btn btn-success">
+        <i class="bi bi-save"></i> {{ button_label|default('Guardar') }}
+    </button>
+</div>
+
 {{ form_end(form) }}
+</div>
+
+<style>
+    /* Estilos para mejorar la visualización de los campos chosen-select */
+    .chosen-select {
+        width: 100% !important;
+    }
+    
+    /* Estilos para el campo de hermanos */
+    #{{ form.hermanos.vars.id }}_chosen,
+    #{{ form.curso.vars.id }}_chosen {
+        width: 100% !important;
+    }
+    
+    #{{ form.hermanos.vars.id }}_chosen .chosen-choices,
+    #{{ form.curso.vars.id }}_chosen .chosen-choices {
+        height: 200px !important;
+        min-height: 200px !important;
+        max-height: 200px !important;
+        overflow-y: auto;
+        overflow-x: visible !important;
+        padding: 8px;
+        border: 1px solid #ced4da;
+        border-radius: 0.375rem;
+        background-color: #fff;
+        display: flex !important;
+        flex-wrap: wrap !important;
+        width: 100% !important;
+    }
+    
+    #{{ form.hermanos.vars.id }}_chosen .chosen-choices li.search-choice,
+    #{{ form.curso.vars.id }}_chosen .chosen-choices li.search-choice {
+        margin: 4px 4px 4px 0 !important;
+        padding: 6px 25px 6px 10px !important;
+        background-color: #0d6efd !important;
+        color: #fff !important;
+        border: none !important;
+        border-radius: 0.375rem !important;
+        font-size: 0.875rem !important;
+        line-height: 1.4 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        position: relative !important;
+        max-width: 300px !important;
+        max-height: 70px !important;
+        width: auto !important;
+        min-width: 80px;
+    }
+    
+    #{{ form.hermanos.vars.id }}_chosen .chosen-choices li.search-choice span,
+    #{{ form.curso.vars.id }}_chosen .chosen-choices li.search-choice span {
+        color: #fff !important;
+        display: inline-block !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        max-width: 250px !important;
+        width: auto !important;
+        padding-right: 5px;
+        line-height: 1.4;
+    }
+    
+    #{{ form.hermanos.vars.id }}_chosen .chosen-choices li.search-choice .search-choice-close,
+    #{{ form.curso.vars.id }}_chosen .chosen-choices li.search-choice .search-choice-close {
+        position: absolute !important;
+        top: 50% !important;
+        right: 8px !important;
+        transform: translateY(-50%) !important;
+        color: #fff !important;
+        opacity: 1 !important;
+        width: 16px !important;
+        height: 16px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background: rgba(255, 255, 255, 0.2) !important;
+        border-radius: 50% !important;
+        cursor: pointer !important;
+    }
+    
+    #{{ form.hermanos.vars.id }}_chosen .chosen-choices li.search-choice .search-choice-close:hover,
+    #{{ form.curso.vars.id }}_chosen .chosen-choices li.search-choice .search-choice-close:hover {
+        background-color: rgba(255, 255, 255, 0.4) !important;
+        color: #fff !important;
+    }
+    
+    #{{ form.hermanos.vars.id }}_chosen .chosen-choices li.search-choice .search-choice-close:before,
+    #{{ form.curso.vars.id }}_chosen .chosen-choices li.search-choice .search-choice-close:before {
+        content: "×" !important;
+        font-size: 18px !important;
+        line-height: 1 !important;
+        color: #fff !important;
+    }
+    
+    #{{ form.hermanos.vars.id }}_chosen .chosen-choices li.search-field,
+    #{{ form.curso.vars.id }}_chosen .chosen-choices li.search-field {
+        flex: 1 1 auto !important;
+        min-width: 200px !important;
+    }
+    
+    #{{ form.hermanos.vars.id }}_chosen .chosen-choices li.search-field input[type="text"],
+    #{{ form.curso.vars.id }}_chosen .chosen-choices li.search-field input[type="text"] {
+        color: #212529 !important;
+        height: auto !important;
+        min-height: 30px;
+        width: 100% !important;
+    }
+</style>

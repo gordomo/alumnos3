@@ -1,26 +1,187 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Curso{% endblock %}
+{% block title %}Detalle del Curso{% endblock %}
+
+{% block panelTitle %}
+    Detalle del Curso
+{% endblock %}
 
 {% block body %}
-    <h1>Curso</h1>
+<div class="container-fluid">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Información del Curso</h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <table class="table table-bordered">
+                        <tbody>
+                            <tr>
+                                <th style="width: 200px;">Nombre</th>
+                                <td>{{ curso.nombre }}</td>
+                            </tr>
+                            <tr>
+                                <th>Precio</th>
+                                <td>${{ curso.precio | number_format(2, ',', '.') }}</td>
+                            </tr>
+                            <tr>
+                                <th>Días</th>
+                                <td>
+                                    {% for dia in curso.dias %}
+                                        {{ dia }}{% if not loop.last %}, {% endif %}
+                                    {% endfor %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Horario</th>
+                                <td>
+                                    {% if curso.horarioInicio|date('H:i') == curso.horarioFin|date('H:i') %}
+                                        <span class="text-danger">No tiene horario</span>
+                                    {% else %}
+                                        {{ curso.horarioInicio|date('H:i') }}hs - {{ curso.horarioFin|date('H:i') }}hs
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Duración</th>
+                                <td>
+                                    {% if curso.horarioInicio|date('H:i') == curso.horarioFin|date('H:i') %}
+                                        <span class="text-danger">No tiene horario</span>
+                                    {% else %}
+                                        {% set horas = (curso.duracion)|round(0, 'floor') %}
+                                        {% set minutos = ((curso.duracion - horas) * 60)|round(0, 'floor') %}
+                                        {{ horas }}:{{ '%02d'|format(minutos) }}hs
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <table class="table table-bordered">
+                        <tbody>
+                            <tr>
+                                <th style="width: 200px;">Fecha de Inicio</th>
+                                <td>{{ curso.fechaInicio|date('d/m/Y') }}</td>
+                            </tr>
+                            <tr>
+                                <th>Fecha de Fin</th>
+                                <td>{{ curso.fechaFin|date('d/m/Y') }}</td>
+                            </tr>
+                            <tr>
+                                <th>Estado</th>
+                                <td>
+                                    {% if curso.disabled %}
+                                        <span class="badge bg-danger">Deshabilitado</span>
+                                    {% else %}
+                                        <span class="badge bg-success">Activo</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Profesores</th>
+                                <td>
+                                    {% for profesor in curso.profesores %}
+                                        {{ profesor.apellido }}, {{ profesor.nombre }}{% if not loop.last %}<br>{% endif %}
+                                    {% else %}
+                                        <span class="text-danger">No tiene profesor asignado</span>
+                                    {% endfor %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Total de Alumnos</th>
+                                <td>
+                                    <strong>{{ curso.alumnos|length }}</strong>
+                                    {% if curso.alumnos|length > 0 %}
+                                        ({{ curso.getAlumnosActivos|length }} activos)
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <table class="table">
-        <tbody>
-            <tr>
-                <th>Id</th>
-                <td>{{ curso.id }}</td>
-            </tr>
-            <tr>
-                <th>Nombre</th>
-                <td>{{ curso.nombre }}</td>
-            </tr>
-        </tbody>
-    </table>
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Alumnos Inscriptos</h6>
+        </div>
+        <div class="card-body">
+            {% if curso.alumnos|length > 0 %}
+                <div class="table-responsive">
+                    <table class="table table-striped table-sm">
+                        <thead>
+                            <tr>
+                                <th>Apellido</th>
+                                <th>Nombre</th>
+                                <th>DNI</th>
+                                <th>Email</th>
+                                <th>Celular</th>
+                                <th>Teléfono Fijo</th>
+                                <th>Contacto de Emergencia</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for alumno in curso.alumnos %}
+                                <tr class="{% if alumno.activo %}activo{% else %}inactivo{% endif %}">
+                                    <td>{{ alumno.apellido }}</td>
+                                    <td>{{ alumno.nombre }}</td>
+                                    <td>{{ alumno.dni }}</td>
+                                    <td>{{ alumno.email }}</td>
+                                    <td>{{ alumno.celular }}</td>
+                                    <td>{{ alumno.telefonoFijo }}</td>
+                                    <td>{{ alumno.contactoEmergencia }}</td>
+                                    <td>
+                                        {% if alumno.activo %}
+                                            <span class="badge bg-success">Activo</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Inactivo</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{{ path('app_alumno_show', {'id': alumno.id}) }}" class="btn btn-sm btn-outline-primary" title="Ver detalle" data-toggle="tooltip" data-placement="left">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> No hay alumnos inscriptos en este curso.
+                </div>
+            {% endif %}
+        </div>
+    </div>
 
-    <a href="{{ path('app_curso_index') }}">back to list</a>
-
-    <a href="{{ path('app_curso_edit', {'id': curso.id}) }}">edit</a>
-
-    {{ include('curso/_delete_form.html.twig') }}
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Acciones</h6>
+        </div>
+        <div class="card-body">
+            <div class="d-flex gap-2">
+                <a href="{{ path('app_curso_index') }}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Volver al listado
+                </a>
+                <a href="{{ path('app_curso_edit', {'id': curso.id}) }}" class="btn btn-primary">
+                    <i class="bi bi-pencil"></i> Editar
+                </a>
+                {% if not curso.disabled %}
+                    {{ include('curso/_delete_form.html.twig') }}
+                {% else %}
+                    <a href="{{ path('app_curso_habilitar', {'id': curso.id}) }}" class="btn btn-success">
+                        <i class="bi bi-check-circle"></i> Habilitar
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

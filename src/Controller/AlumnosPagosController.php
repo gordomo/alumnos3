@@ -181,6 +181,66 @@ class AlumnosPagosController extends AbstractController
             20
         );
 
+        // Calcular estadísticas por período
+        $fechaActual = new \DateTime();
+        $hoy = clone $fechaActual;
+        $hoy->setTime(0, 0, 0);
+        
+        $inicioSemana = clone $fechaActual;
+        $inicioSemana->modify('monday this week')->setTime(0, 0, 0);
+        
+        $inicioMes = clone $fechaActual;
+        $inicioMes->modify('first day of this month')->setTime(0, 0, 0);
+        
+        $inicioAno = clone $fechaActual;
+        $inicioAno->modify('first day of january')->setTime(0, 0, 0);
+
+        // Estadísticas de pagos - función helper
+        $getEstadisticas = function($fechaDesde) use ($alumnosPagosRepository, $instituto) {
+            $qb = $alumnosPagosRepository->createQueryBuilder('p')
+                ->leftJoin('p.alumno', 'a')
+                ->select('COALESCE(SUM(p.monto), 0) as total, COUNT(p.id) as cantidad')
+                ->andWhere('a.instituto = :instituto')
+                ->andWhere('p.fecha >= :fechaDesde')
+                ->setParameter('instituto', $instituto)
+                ->setParameter('fechaDesde', $fechaDesde);
+            return $qb->getQuery()->getSingleResult();
+        };
+
+        // Calcular estadísticas
+        $resultadoHoy = $getEstadisticas($hoy);
+        $totalHoy = $resultadoHoy['total'] ?? 0;
+        $cantidadHoy = $resultadoHoy['cantidad'] ?? 0;
+
+        $resultadoSemana = $getEstadisticas($inicioSemana);
+        $totalSemana = $resultadoSemana['total'] ?? 0;
+        $cantidadSemana = $resultadoSemana['cantidad'] ?? 0;
+
+        $resultadoMes = $getEstadisticas($inicioMes);
+        $totalMes = $resultadoMes['total'] ?? 0;
+        $cantidadMes = $resultadoMes['cantidad'] ?? 0;
+
+        $resultadoAno = $getEstadisticas($inicioAno);
+        $totalAno = $resultadoAno['total'] ?? 0;
+        $cantidadAno = $resultadoAno['cantidad'] ?? 0;
+
+        // Obtener próximos vencimientos (deudas pendientes)
+        $deudaRepository = $this->entityManager->getRepository(\App\Entity\DeudaAlumno::class);
+        $deudasPendientes = $deudaRepository->createQueryBuilder('d')
+            ->leftJoin('d.alumno', 'a')
+            ->leftJoin('d.curso', 'c')
+            ->andWhere('d.pagado = :pagado')
+            ->andWhere('a.instituto = :instituto')
+            ->andWhere('a.activo = :activo')
+            ->setParameter('pagado', false)
+            ->setParameter('instituto', $instituto)
+            ->setParameter('activo', true)
+            ->orderBy('d.ano', 'ASC')
+            ->addOrderBy('d.mes', 'ASC')
+            ->setMaxResults(10)
+            ->getQuery()
+            ->getResult();
+
         return $this->render('alumnos_pagos/index.html.twig', [
             'pagos' => $pagination,
             'alumno' => $alumno,
@@ -195,7 +255,14 @@ class AlumnosPagosController extends AbstractController
             'sort' => $sort,
             'order' => $order,
             'alumnoId' => $alumnoId,
-            'total' => $pagination->getTotalItemCount()
+            'total' => $pagination->getTotalItemCount(),
+            'estadisticas' => [
+                'hoy' => ['total' => $totalHoy, 'cantidad' => $cantidadHoy],
+                'semana' => ['total' => $totalSemana, 'cantidad' => $cantidadSemana],
+                'mes' => ['total' => $totalMes, 'cantidad' => $cantidadMes],
+                'ano' => ['total' => $totalAno, 'cantidad' => $cantidadAno],
+            ],
+            'deudasPendientes' => $deudasPendientes
         ]);
     }
 

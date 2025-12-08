@@ -2,8 +2,9 @@
 
 {% block title %}Nuevo Pago{% endblock %}
 
+
 {% block body %}
-    <div class="container mt-4">
+    <div class="mx-4 mt-4">
         <div class="card shadow-sm">
             <div class="card-header bg-white border-bottom">
                 <h1 class="h3 mb-0 text-dark">Nuevo Pago</h1>
@@ -280,13 +281,6 @@
                 </div>
 
                 {# MÓDULO 3: REGISTRO DEL PAGO #}
-                <div class="card shadow-sm">
-                    <div class="card-header" style="background-color: #f8f9fa; border-bottom: 2px solid #dee2e6;">
-                        <h4 class="mb-0 text-dark">
-                            <i class="bi bi-pencil-square" style="color: #0d6efd;"></i> Registro del Pago
-                        </h4>
-                    </div>
-                    <div class="card-body">
                 {{ include('alumnos_pagos/_form.html.twig', {
                             'button_label': 'Guardar Pago',
                     'alumno': alumno,
@@ -296,8 +290,6 @@
                             'is_general': is_general,
                             'calculoMonto': calculoMonto is defined ? calculoMonto : null
                 }) }}
-                    </div>
-                </div>
             </div>
         </div>
     </div>
