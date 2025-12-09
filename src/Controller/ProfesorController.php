@@ -21,6 +21,7 @@ use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\DBAL\Exception\DriverException;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use App\Entity\User;
+use App\Service\TokenService;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
@@ -29,6 +30,13 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_ADMIN_INSTITUTO')]
 class ProfesorController extends AbstractController
 {
+    private TokenService $tokenService;
+
+    public function __construct(TokenService $tokenService)
+    {
+        $this->tokenService = $tokenService;
+    }
+
     /**
      * @Route("/", name="app_profesor_index", methods={"GET"})
      */
@@ -241,6 +249,15 @@ class ProfesorController extends AbstractController
 
         if ($form->isSubmitted()) {
             if ($form->isValid()) {
+                // Verificar tokens antes de crear
+                if (!$this->tokenService->hasEnoughTokens($instituto, 'profesor.create')) {
+                    $this->addFlash('danger', 'No tienes suficientes tokens para crear un profesor. Balance actual: ' . $this->tokenService->getBalance($instituto)->getBalance());
+                    return $this->renderForm('profesor/new.html.twig', [
+                        'profesor' => $profesor,
+                        'form' => $form,
+                    ]);
+                }
+
                 $email = $profesor->getEmail();
                 
                 // Verificar si el email ya existe en usuarios
@@ -300,6 +317,16 @@ class ProfesorController extends AbstractController
                         $curso->addProfesor($profesor);
                     }
                     $entityManager->flush();
+
+                    // Consumir tokens después de guardar exitosamente
+                    $this->tokenService->consumeTokens(
+                        $instituto,
+                        'profesor.create',
+                        $this->getUser(),
+                        'Crear profesor: ' . $profesor->getNombre() . ' ' . $profesor->getApellido(),
+                        'Profesor',
+                        $profesor->getId()
+                    );
 
                     // Mostrar mensaje con la contraseña temporal
                     $this->addFlash('success', 'Profesor creado exitosamente. La contraseña temporal es: ' . $plainPassword);
@@ -380,6 +407,15 @@ class ProfesorController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            // Verificar tokens antes de editar
+            if (!$this->tokenService->hasEnoughTokens($instituto, 'profesor.edit')) {
+                $this->addFlash('danger', 'No tienes suficientes tokens para editar un profesor. Balance actual: ' . $this->tokenService->getBalance($instituto)->getBalance());
+                return $this->renderForm('profesor/edit.html.twig', [
+                    'profesor' => $profesor,
+                    'form' => $form,
+                ]);
+            }
+
             $email = $profesor->getEmail();
             
             // Verificar si el email cambió y si el nuevo email ya existe
@@ -500,6 +536,16 @@ class ProfesorController extends AbstractController
                 // Finalmente, guardar el profesor
                 $profesorRepository->add($profesor, true);
 
+                // Consumir tokens después de guardar exitosamente
+                $this->tokenService->consumeTokens(
+                    $instituto,
+                    'profesor.edit',
+                    $this->getUser(),
+                    'Editar profesor: ' . $profesor->getNombre() . ' ' . $profesor->getApellido(),
+                    'Profesor',
+                    $profesor->getId()
+                );
+
                 $this->addFlash('success', 'Profesor actualizado exitosamente.');
                 return $this->redirectToRoute('app_profesor_index', [], Response::HTTP_SEE_OTHER);
                 
@@ -599,8 +645,27 @@ class ProfesorController extends AbstractController
      */
     public function delete(Request $request, Profesor $profesor, ProfesorRepository $profesorRepository): Response
     {
+        $user = $this->getUser();
+        $instituto = $user->getInstituto();
+        
+        // Verificar tokens antes de eliminar
+        if (!$this->tokenService->hasEnoughTokens($instituto, 'profesor.delete')) {
+            $this->addFlash('danger', 'No tienes suficientes tokens para eliminar un profesor. Balance actual: ' . $this->tokenService->getBalance($instituto)->getBalance());
+            return $this->redirectToRoute('app_profesor_index');
+        }
+        
         if ($this->isCsrfTokenValid('delete'.$profesor->getId(), $request->request->get('_token'))) {
             $profesorRepository->remove($profesor);
+            
+            // Consumir tokens después de eliminar exitosamente
+            $this->tokenService->consumeTokens(
+                $instituto,
+                'profesor.delete',
+                $this->getUser(),
+                'Eliminar profesor: ' . $profesor->getNombre() . ' ' . $profesor->getApellido(),
+                'Profesor',
+                $profesor->getId()
+            );
         }
 
         return $this->redirectToRoute('app_profesor_index', [], Response::HTTP_SEE_OTHER);

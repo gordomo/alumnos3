@@ -322,6 +322,15 @@
                 padding: 0.75rem;
                 font-size: 0.9rem;
             }
+
+            /* Tokens section responsive */
+            .features-section > div[style*="grid-template-columns"] {
+                grid-template-columns: 1fr !important;
+            }
+
+            .features-section > div[style*="font-size: 3rem"] {
+                font-size: 2rem !important;
+            }
         }
 
         /* CTA Section */
@@ -486,6 +495,174 @@
             color: #155724;
             border: 1px solid #c3e6cb;
         }
+
+        /* Token Reset Section */
+        .token-reset-section {
+            background: linear-gradient(135deg, #849d9a 0%, #6c757d 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            border: none;
+        }
+
+        .token-reset-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            gap: 0.75rem;
+        }
+
+        .token-reset-header i {
+            font-size: 2rem;
+            color: white;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+        }
+
+        .token-reset-header h3 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .token-reset-alert {
+            background: rgba(255,255,255,0.25);
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.3);
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .token-reset-alert-icon {
+            flex-shrink: 0;
+            font-size: 1.5rem;
+            color: #ffc107;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+        }
+
+        .token-reset-alert-content {
+            flex: 1;
+            font-size: 1rem;
+            line-height: 1.7;
+            color: white;
+        }
+
+        .token-reset-alert-content strong {
+            font-weight: 600;
+            font-size: 1.05rem;
+        }
+
+        .token-reset-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.25rem;
+        }
+
+        .token-reset-card {
+            background: rgba(255,255,255,0.25);
+            border-radius: 12px;
+            padding: 1.5rem 1.25rem;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .token-reset-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            background: rgba(255,255,255,0.35);
+        }
+
+        .token-reset-card-icon {
+            font-size: 2rem;
+            color: white;
+            margin-bottom: 0.75rem;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+        }
+
+        .token-reset-card-content {
+            color: white;
+        }
+
+        .token-reset-card-content strong {
+            display: block;
+            font-size: 1.05rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: white;
+        }
+
+        .token-reset-card-content p {
+            margin: 0;
+            font-size: 0.9rem;
+            opacity: 0.95;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 768px) {
+            .token-reset-section {
+                padding: 1.5rem;
+            }
+
+            .token-reset-header h3 {
+                font-size: 1.25rem;
+            }
+
+            .token-reset-header i {
+                font-size: 1.75rem;
+            }
+
+            .token-reset-alert {
+                padding: 1rem;
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .token-reset-alert-icon {
+                align-self: center;
+            }
+
+            .token-reset-cards {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .token-reset-card {
+                padding: 1.25rem 1rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .token-reset-section {
+                padding: 1.25rem;
+            }
+
+            .token-reset-header {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .token-reset-header h3 {
+                font-size: 1.1rem;
+                text-align: center;
+            }
+
+            .token-reset-alert-content {
+                font-size: 0.95rem;
+            }
+        }
     </style>
 {% endblock %}
 
@@ -555,11 +732,166 @@
         </div>
     </div>
 
+    <!-- Tokens & Pricing Section -->
+    <div class="features-section" style="margin-bottom: 2rem;">
+        <h2 style="text-align: center; color: var(--primary-color); margin-bottom: 1rem;">
+            <i class="bi bi-coin" style="color: var(--accent-color); margin-right: 0.5rem;"></i>
+            Sistema de Tokens: Paga Solo por lo que Usas
+        </h2>
+        <p style="text-align: center; color: #6c757d; margin-bottom: 2rem; font-size: 1.1rem;">
+            Modelo transparente y justo. Sin suscripciones fijas, sin sorpresas.
+        </p>
+
+        <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 15px; padding: 2rem; margin-bottom: 2rem; border: 2px solid var(--accent-color);">
+            <div style="text-align: center; margin-bottom: 1.5rem;">
+                <div style="font-size: 3rem; font-weight: 700; color: var(--accent-color); margin-bottom: 0.5rem;">
+                    300 Tokens Gratis
+                </div>
+                <div style="font-size: 1.2rem; color: var(--primary-color); font-weight: 600;">
+                    Al registrarte recibes 300 tokens de bienvenida
+                </div>
+                <div style="font-size: 0.95rem; color: #6c757d; margin-top: 0.5rem;">
+                    Suficiente para comenzar a cargar tus datos y probar el sistema
+                </div>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+            <div style="background: white; padding: 1.5rem; border-radius: 10px; border: 1px solid #e9ecef;">
+                <h3 style="color: var(--primary-color); margin-bottom: 1rem; font-size: 1.25rem;">
+                    <i class="bi bi-lightning-charge-fill" style="color: var(--accent-color); margin-right: 0.5rem;"></i>
+                    ¿Cómo Funciona?
+                </h3>
+                <p style="color: #6c757d; font-size: 0.95rem; line-height: 1.6; margin: 0;">
+                    Cada acción en el sistema consume tokens. Los pagos, crear alumnos, cursos y notificaciones tienen un costo pequeño y transparente. Puedes ver tu consumo en tiempo real.
+                </p>
+            </div>
+
+            <div style="background: white; padding: 1.5rem; border-radius: 10px; border: 1px solid #e9ecef;">
+                <h3 style="color: var(--primary-color); margin-bottom: 1rem; font-size: 1.25rem;">
+                    <i class="bi bi-cash-stack" style="color: var(--accent-color); margin-right: 0.5rem;"></i>
+                    Precios Transparentes
+                </h3>
+                <div style="margin-bottom: 0.75rem;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span style="color: #6c757d;">Precio Promocional (primeros 6 meses):</span>
+                        <strong style="color: var(--accent-color);">$120/token</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: #6c757d;">Precio Normal:</span>
+                        <strong style="color: var(--primary-color);">$150/token</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div style="background: white; padding: 1.5rem; border-radius: 10px; border: 1px solid #e9ecef;">
+                <h3 style="color: var(--primary-color); margin-bottom: 1rem; font-size: 1.25rem;">
+                    <i class="bi bi-calculator" style="color: var(--accent-color); margin-right: 0.5rem;"></i>
+                    Ejemplo de Consumo
+                </h3>
+                <p style="color: #6c757d; font-size: 0.95rem; line-height: 1.6; margin: 0;">
+                    Para un instituto de <strong>50 alumnos</strong>: ~250 tokens/mes en operación normal. 
+                    <strong>Costo mensual: $30,000-$37,500</strong>
+                </p>
+            </div>
+        </div>
+
+        <div style="background: #f8f9fa; border-radius: 10px; padding: 1.5rem; margin-bottom: 2rem;">
+            <h3 style="color: var(--primary-color); margin-bottom: 1rem; font-size: 1.2rem; text-align: center;">
+                Costos por Acción
+            </h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; font-size: 0.9rem;">
+                <div style="display: flex; justify-content: space-between; padding: 0.5rem; background: white; border-radius: 5px;">
+                    <span style="color: #6c757d;">Registrar Pago:</span>
+                    <strong style="color: var(--primary-color);">3 tokens</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 0.5rem; background: white; border-radius: 5px;">
+                    <span style="color: #6c757d;">Crear Alumno:</span>
+                    <strong style="color: var(--primary-color);">5 tokens</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 0.5rem; background: white; border-radius: 5px;">
+                    <span style="color: #6c757d;">Crear Curso:</span>
+                    <strong style="color: var(--primary-color);">10 tokens</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 0.5rem; background: white; border-radius: 5px;">
+                    <span style="color: #6c757d;">Enviar Notificación:</span>
+                    <strong style="color: var(--primary-color);">1 token</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 0.5rem; background: white; border-radius: 5px;">
+                    <span style="color: #6c757d;">Editar Alumno:</span>
+                    <strong style="color: var(--primary-color);">1 token</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 0.5rem; background: white; border-radius: 5px;">
+                    <span style="color: #6c757d;">Exportar a Excel:</span>
+                    <strong style="color: var(--primary-color);">5 tokens</strong>
+                </div>
+            </div>
+        </div>
+
+        <div style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); color: white; border-radius: 10px; padding: 1.5rem; text-align: center;">
+            <div style="font-size: 1.1rem; margin-bottom: 0.5rem; font-weight: 600;">
+                💡 Ventajas del Modelo de Tokens
+            </div>
+            <div style="font-size: 0.95rem; opacity: 0.95; line-height: 1.6;">
+                • <strong>Paga solo por lo que usas</strong> - Sin costos fijos mensuales<br>
+                • <strong>Escala con tu crecimiento</strong> - Más alumnos = más tokens, pero solo cuando los necesitas<br>
+                • <strong>Transparencia total</strong> - Ves exactamente cuánto consumes y cuánto cuesta cada acción<br>
+                • <strong>Costo mínimo</strong> - Representa menos del 2% de tus ingresos mensuales
+            </div>
+        </div>
+
+        <!-- Información sobre Reseteo Mensual -->
+        <div class="token-reset-section mt-4">
+            <div class="token-reset-header">
+                <i class="bi bi-calendar-x-fill"></i>
+                <h3>Reseteo Mensual de Tokens</h3>
+            </div>
+            <div class="token-reset-alert">
+                <div class="token-reset-alert-icon">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                </div>
+                <div class="token-reset-alert-content">
+                    <strong>Importante:</strong> Todos los tokens se resetean a <strong>0</strong> el día <strong>1 de cada mes</strong>. 
+                    Recuerda usar tus tokens antes del fin de mes para aprovecharlos al máximo.
+                </div>
+            </div>
+            <div class="token-reset-cards">
+                <div class="token-reset-card">
+                    <div class="token-reset-card-icon">
+                        <i class="bi bi-check-circle-fill"></i>
+                    </div>
+                    <div class="token-reset-card-content">
+                        <strong>Planifica tus compras</strong>
+                        <p>Compra tokens cerca del día 1</p>
+                    </div>
+                </div>
+                <div class="token-reset-card">
+                    <div class="token-reset-card-icon">
+                        <i class="bi bi-lightbulb-fill"></i>
+                    </div>
+                    <div class="token-reset-card-content">
+                        <strong>Usa tus tokens</strong>
+                        <p>Aprovecha antes del reseteo</p>
+                    </div>
+                </div>
+                <div class="token-reset-card">
+                    <div class="token-reset-card-icon">
+                        <i class="bi bi-info-circle-fill"></i>
+                    </div>
+                    <div class="token-reset-card-content">
+                        <strong>Transparencia total</strong>
+                        <p>Siempre sabes cuándo resetea</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- CTA Section -->
     <div class="cta-section">
         <div class="cta-text">¡Comienza hoy mismo!</div>
-        <div class="cta-subtext">Regístrate gratis y obtén acceso completo al sistema</div>
-        <div class="cta-badge">Sin tarjeta de crédito • Configuración en minutos</div>
+        <div class="cta-subtext">Regístrate gratis y obtén 300 tokens para comenzar</div>
+        <div class="cta-badge">Sin tarjeta de crédito • Configuración en minutos • 300 tokens gratis</div>
     </div>
 
     <!-- Auth Section -->

@@ -8,6 +8,7 @@ use App\Entity\User;
 use App\Repository\InstitutoConfiguracionRepository;
 use App\Repository\InstitutoRepository;
 use App\Repository\UserRepository;
+use App\Service\TokenService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -28,17 +29,20 @@ class SecurityController extends AbstractController
     private $entityManager;
     private $passwordHasher;
     private $slugger;
+    private $tokenService;
 
     public function __construct(
         UrlGeneratorInterface $urlGenerator,
         EntityManagerInterface $entityManager,
         UserPasswordHasherInterface $passwordHasher,
-        SluggerInterface $slugger
+        SluggerInterface $slugger,
+        TokenService $tokenService
     ) {
         $this->urlGenerator = $urlGenerator;
         $this->entityManager = $entityManager;
         $this->passwordHasher = $passwordHasher;
         $this->slugger = $slugger;
+        $this->tokenService = $tokenService;
     }
 
     /**
@@ -193,7 +197,15 @@ class SecurityController extends AbstractController
                 $this->entityManager->persist($configuracion);
                 $this->entityManager->flush();
 
-                $this->addFlash('success', '¡Cuenta creada exitosamente! Ya puedes iniciar sesión.');
+                // Asignar 300 tokens iniciales gratis para nuevos institutos
+                $this->tokenService->addTokens(
+                    $instituto,
+                    300,
+                    $user,
+                    'Tokens de bienvenida - 300 tokens gratis para comenzar'
+                );
+
+                $this->addFlash('success', '¡Cuenta creada exitosamente! Se te han asignado 300 tokens gratis para comenzar. Ya puedes iniciar sesión.');
                 
                 // Redirigir al login
                 return $this->redirectToRoute('app_login');

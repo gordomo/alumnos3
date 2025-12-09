@@ -57,7 +57,7 @@ class TestNotificationCommand extends Command
         try {
             if ($tipo === 'recibo') {
                 $pagoId = $input->getOption('pago-id');
-                
+
                 if ($pagoId) {
                     $pago = $this->entityManager->getRepository(AlumnosPagos::class)->find($pagoId);
                     if (!$pago) {
@@ -149,8 +149,8 @@ class TestNotificationCommand extends Command
                     throw $e;
                 }
             }
-            
-            return Command::SUCCESS;
+
+        return Command::SUCCESS;
         } catch (\Exception $e) {
             $io->error('Error al enviar el email: ' . $e->getMessage());
             $io->error($e->getTraceAsString());

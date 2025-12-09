@@ -79,6 +79,11 @@ class Instituto
      */
     private $admins;
 
+    /**
+     * @ORM\OneToOne(targetEntity=TokenBalance::class, mappedBy="instituto", cascade={"persist", "remove"})
+     */
+    private $tokenBalance;
+
     // Métodos de inicialización y getters/setters
 
     public function __construct()
@@ -315,6 +320,17 @@ class Instituto
                 $admin->setInstituto(null);
             }
         }
+        return $this;
+    }
+
+    public function getTokenBalance(): ?\App\Entity\TokenBalance
+    {
+        return $this->tokenBalance;
+    }
+
+    public function setTokenBalance(?\App\Entity\TokenBalance $tokenBalance): self
+    {
+        $this->tokenBalance = $tokenBalance;
         return $this;
     }
 }

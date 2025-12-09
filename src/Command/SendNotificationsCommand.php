@@ -31,7 +31,7 @@ class SendNotificationsCommand extends Command
         
         try {
             $enviados = $this->notificationService->procesarRecordatoriosAutomaticos();
-            
+
             if ($enviados > 0) {
                 $io->success(sprintf('Se enviaron %d notificaciones de recordatorios de deudas.', $enviados));
             } else {

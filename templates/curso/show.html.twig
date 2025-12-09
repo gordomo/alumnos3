@@ -60,8 +60,8 @@
                 </div>
                 <div class="col-md-6">
                     <table class="table table-bordered">
-                        <tbody>
-                            <tr>
+        <tbody>
+            <tr>
                                 <th style="width: 200px;">Fecha de Inicio</th>
                                 <td>{{ curso.fechaInicio|date('d/m/Y') }}</td>
                             </tr>
@@ -88,8 +88,8 @@
                                         <span class="text-danger">No tiene profesor asignado</span>
                                     {% endfor %}
                                 </td>
-                            </tr>
-                            <tr>
+            </tr>
+            <tr>
                                 <th>Total de Alumnos</th>
                                 <td>
                                     <strong>{{ curso.alumnos|length }}</strong>
@@ -97,9 +97,9 @@
                                         ({{ curso.getAlumnosActivos|length }} activos)
                                     {% endif %}
                                 </td>
-                            </tr>
-                        </tbody>
-                    </table>
+            </tr>
+        </tbody>
+    </table>
                 </div>
             </div>
         </div>
@@ -174,7 +174,7 @@
                     <i class="bi bi-pencil"></i> Editar
                 </a>
                 {% if not curso.disabled %}
-                    {{ include('curso/_delete_form.html.twig') }}
+    {{ include('curso/_delete_form.html.twig') }}
                 {% else %}
                     <a href="{{ path('app_curso_habilitar', {'id': curso.id}) }}" class="btn btn-success">
                         <i class="bi bi-check-circle"></i> Habilitar

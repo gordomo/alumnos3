@@ -10,6 +10,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
+use App\Service\TokenService;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
@@ -18,6 +19,13 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_ADMIN_INSTITUTO')]
 class InstitutoUserController extends AbstractController
 {
+    private TokenService $tokenService;
+
+    public function __construct(TokenService $tokenService)
+    {
+        $this->tokenService = $tokenService;
+    }
+
     /**
      * @Route("/", name="instituto_user_index", methods={"GET"})
      */
@@ -68,6 +76,15 @@ class InstitutoUserController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            // Verificar tokens antes de crear
+            if (!$this->tokenService->hasEnoughTokens($instituto, 'usuario.create')) {
+                $this->addFlash('danger', 'No tienes suficientes tokens para crear un usuario. Balance actual: ' . $this->tokenService->getBalance($instituto)->getBalance());
+                return $this->renderForm('instituto/user/new.html.twig', [
+                    'user' => $user,
+                    'form' => $form,
+                ]);
+            }
+
             $email = $form->get('email')->getData();
             $password = $form->get('password')->getData();
             
@@ -87,6 +104,16 @@ class InstitutoUserController extends AbstractController
             $user->setInstituto($instituto);
             
             $userRepository->add($user, true);
+
+            // Consumir tokens después de guardar exitosamente
+            $this->tokenService->consumeTokens(
+                $instituto,
+                'usuario.create',
+                $this->getUser(),
+                'Crear usuario: ' . $user->getEmail(),
+                'User',
+                $user->getId()
+            );
 
             $this->addFlash('success', 'Usuario creado exitosamente.');
             return $this->redirectToRoute('instituto_user_index', [], Response::HTTP_SEE_OTHER);
@@ -149,6 +176,15 @@ class InstitutoUserController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            // Verificar tokens antes de editar
+            if (!$this->tokenService->hasEnoughTokens($usuarioActual->getInstituto(), 'usuario.edit')) {
+                $this->addFlash('danger', 'No tienes suficientes tokens para editar un usuario. Balance actual: ' . $this->tokenService->getBalance($usuarioActual->getInstituto())->getBalance());
+                return $this->renderForm('instituto/user/edit.html.twig', [
+                    'user' => $user,
+                    'form' => $form,
+                ]);
+            }
+
             $newEmail = $form->get('email')->getData();
             $newPassword = $form->get('password')->getData();
             
@@ -176,6 +212,16 @@ class InstitutoUserController extends AbstractController
             }
             
             $userRepository->add($user, true);
+
+            // Consumir tokens después de guardar exitosamente
+            $this->tokenService->consumeTokens(
+                $usuarioActual->getInstituto(),
+                'usuario.edit',
+                $this->getUser(),
+                'Editar usuario: ' . $user->getEmail(),
+                'User',
+                $user->getId()
+            );
 
             $this->addFlash('success', 'Usuario actualizado exitosamente.');
             return $this->redirectToRoute('instituto_user_index', [], Response::HTTP_SEE_OTHER);
@@ -210,8 +256,25 @@ class InstitutoUserController extends AbstractController
             return $this->redirectToRoute('instituto_user_index');
         }
 
+        // Verificar tokens antes de eliminar
+        if (!$this->tokenService->hasEnoughTokens($usuarioActual->getInstituto(), 'usuario.delete')) {
+            $this->addFlash('danger', 'No tienes suficientes tokens para eliminar un usuario. Balance actual: ' . $this->tokenService->getBalance($usuarioActual->getInstituto())->getBalance());
+            return $this->redirectToRoute('instituto_user_index');
+        }
+
         if ($this->isCsrfTokenValid('delete'.$user->getId(), $request->request->get('_token'))) {
             $userRepository->remove($user, true);
+            
+            // Consumir tokens después de eliminar exitosamente
+            $this->tokenService->consumeTokens(
+                $usuarioActual->getInstituto(),
+                'usuario.delete',
+                $this->getUser(),
+                'Eliminar usuario: ' . $user->getEmail(),
+                'User',
+                $user->getId()
+            );
+            
             $this->addFlash('success', 'Usuario eliminado exitosamente.');
         }
 

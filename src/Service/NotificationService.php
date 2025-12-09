@@ -11,22 +11,26 @@ use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\Mime\Address;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use App\Service\TokenService;
 
 class NotificationService
 {
     private MailerInterface $mailer;
     private EntityManagerInterface $entityManager;
     private UrlGeneratorInterface $urlGenerator;
+    private TokenService $tokenService;
     private string $baseUrl;
 
     public function __construct(
         MailerInterface $mailer,
         EntityManagerInterface $entityManager,
-        UrlGeneratorInterface $urlGenerator
+        UrlGeneratorInterface $urlGenerator,
+        TokenService $tokenService
     ) {
         $this->mailer = $mailer;
         $this->entityManager = $entityManager;
         $this->urlGenerator = $urlGenerator;
+        $this->tokenService = $tokenService;
         
         // Obtener URL base
         try {
@@ -91,6 +95,17 @@ class NotificationService
                 ]);
             
             $this->mailer->send($email);
+            
+            // Consumir tokens por enviar notificación
+            $this->tokenService->consumeTokens(
+                $instituto,
+                'notificacion.send',
+                null,
+                'Enviar recibo de pago a ' . $alumno->getNombreApellido(),
+                'AlumnosPagos',
+                $pago->getId()
+            );
+            
             return true;
         } catch (\Exception $e) {
             // Log error si es necesario
@@ -159,6 +174,17 @@ class NotificationService
                 ]);
             
             $this->mailer->send($email);
+            
+            // Consumir tokens por enviar notificación
+            $this->tokenService->consumeTokens(
+                $instituto,
+                'notificacion.send',
+                null,
+                'Enviar recordatorio de deuda a ' . $alumno->getNombreApellido(),
+                'DeudaAlumno',
+                $deuda->getId()
+            );
+            
             return true;
         } catch (\Exception $e) {
             // Log error si es necesario

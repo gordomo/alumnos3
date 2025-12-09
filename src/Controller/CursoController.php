@@ -15,6 +15,7 @@ use Psr\Log\LoggerInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\AlumnoCursoHistorico;
 use App\Service\DeudaService;
+use App\Service\TokenService;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
@@ -24,10 +25,12 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class CursoController extends AbstractController
 {
     private $logger;
+    private $tokenService;
 
-    public function __construct(LoggerInterface $logger)
+    public function __construct(LoggerInterface $logger, TokenService $tokenService)
     {
         $this->logger = $logger;
+        $this->tokenService = $tokenService;
     }
 
     /**
@@ -119,10 +122,30 @@ class CursoController extends AbstractController
 
         if ($form->isSubmitted()) {
             if ($form->isValid()) {
+                // Verificar tokens antes de crear
+                if (!$this->tokenService->hasEnoughTokens($instituto, 'curso.create')) {
+                    $this->addFlash('danger', 'No tienes suficientes tokens para crear un curso. Balance actual: ' . $this->tokenService->getBalance($instituto)->getBalance());
+                    return $this->renderForm('curso/new.html.twig', [
+                        'curso' => $curso,
+                        'form' => $form,
+                    ]);
+                }
+
                 $curso->setHorarioInicio(new \DateTime($form->get('horarioInicio')->getData()));
                 $curso->setHorarioFin(new \DateTime($form->get('horarioFin')->getData()));
                 $curso->setDuracion($this->calcularDuracion($curso->getHorarioInicio(), $curso->getHorarioFin()));
                 $cursoRepository->add($curso);
+                
+                // Consumir tokens después de guardar exitosamente
+                $this->tokenService->consumeTokens(
+                    $instituto,
+                    'curso.create',
+                    $this->getUser(),
+                    'Crear curso: ' . $curso->getNombre(),
+                    'Curso',
+                    $curso->getId()
+                );
+                
                 return $this->redirectToRoute('app_curso_index', [], Response::HTTP_SEE_OTHER);
             } else {
                 $errors = $form->getErrors(true);
@@ -260,8 +283,17 @@ class CursoController extends AbstractController
 
         $form->handleRequest($request);
 
-        if ($form->isSubmitted()) {
-            if ($form->isValid()) {
+        if ($form->isSubmitted() && $form->isValid()) {
+            // Verificar tokens antes de editar
+            if (!$this->tokenService->hasEnoughTokens($instituto, 'curso.edit')) {
+                $this->addFlash('danger', 'No tienes suficientes tokens para editar un curso. Balance actual: ' . $this->tokenService->getBalance($instituto)->getBalance());
+                return $this->renderForm('curso/edit.html.twig', [
+                    'curso' => $curso,
+                    'form' => $form,
+                ]);
+            }
+            
+            try {
                 // Verificar si se cambiaron los profesores
                 $profesoresNuevos = [];
                 foreach ($curso->getProfesores() as $profesor) {
@@ -371,12 +403,24 @@ class CursoController extends AbstractController
                 $cursoRepository->add($curso);
                 $entityManager->flush();
 
+                // Consumir tokens después de guardar exitosamente
+                $this->tokenService->consumeTokens(
+                    $instituto,
+                    'curso.edit',
+                    $this->getUser(),
+                    'Editar curso: ' . $curso->getNombre(),
+                    'Curso',
+                    $curso->getId()
+                );
+
                 return $this->redirectToRoute('app_curso_index', [], Response::HTTP_SEE_OTHER);
-            } else {
-                $errors = $form->getErrors(true);
-                foreach ($errors as $error) {
-                    $this->addFlash('danger', $error->getMessage());
-                }
+            } catch (\Exception $e) {
+                $this->addFlash('danger', 'Ocurrió un error al actualizar el curso: ' . $e->getMessage());
+            }
+        } elseif ($form->isSubmitted()) {
+            $errors = $form->getErrors(true);
+            foreach ($errors as $error) {
+                $this->addFlash('danger', $error->getMessage());
             }
         }
 
@@ -402,8 +446,24 @@ class CursoController extends AbstractController
             return $this->redirectToRoute('app_curso_index');
         }
 
+        // Verificar tokens antes de eliminar
+        if (!$this->tokenService->hasEnoughTokens($instituto, 'curso.delete')) {
+            $this->addFlash('danger', 'No tienes suficientes tokens para eliminar un curso. Balance actual: ' . $this->tokenService->getBalance($instituto)->getBalance());
+            return $this->redirectToRoute('app_curso_index');
+        }
+
         if ($this->isCsrfTokenValid('delete'.$curso->getId(), $request->request->get('_token'))) {
             $cursoRepository->remove($curso);
+            
+            // Consumir tokens después de eliminar exitosamente
+            $this->tokenService->consumeTokens(
+                $instituto,
+                'curso.delete',
+                $this->getUser(),
+                'Eliminar curso: ' . $curso->getNombre(),
+                'Curso',
+                $curso->getId()
+            );
         }
 
         return $this->redirectToRoute('app_curso_index', [], Response::HTTP_SEE_OTHER);

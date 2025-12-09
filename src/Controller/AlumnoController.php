@@ -16,6 +16,7 @@ use App\Service\HistorialCursosService;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Repository\AsistenciaAlumnosRepository;
 use App\Service\DeudaService;
+use App\Service\TokenService;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use App\Entity\User;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
@@ -30,17 +31,20 @@ class AlumnoController extends AbstractController
     private $historialCursosService;
     private $deudaService;
     private $passwordHasher;
+    private $tokenService;
 
     public function __construct(
         EntityManagerInterface $entityManager, 
         HistorialCursosService $historialCursosService,
         DeudaService $deudaService,
-        UserPasswordHasherInterface $passwordHasher
+        UserPasswordHasherInterface $passwordHasher,
+        TokenService $tokenService
     ) {
         $this->entityManager = $entityManager;
         $this->historialCursosService = $historialCursosService;
         $this->deudaService = $deudaService;
         $this->passwordHasher = $passwordHasher;
+        $this->tokenService = $tokenService;
     }
 
     /**
@@ -149,6 +153,16 @@ class AlumnoController extends AbstractController
 
         if ($form->isSubmitted()) {
             if ($form->isValid()) {
+                // Verificar tokens antes de crear
+                if (!$this->tokenService->hasEnoughTokens($instituto, 'alumno.create')) {
+                    $this->addFlash('danger', 'No tienes suficientes tokens para crear un alumno. Balance actual: ' . $this->tokenService->getBalance($instituto)->getBalance());
+                    return $this->renderForm('alumno/new.html.twig', [
+                        'alumno' => $alumno,
+                        'form' => $form,
+                        'hermanos' => $alumno->getHermanos()
+                    ]);
+                }
+
                 try {
                     $email = $alumno->getEmail();
                     
@@ -207,6 +221,16 @@ class AlumnoController extends AbstractController
                     
                     // Guardar todo
                     $this->entityManager->flush();
+                    
+                    // Consumir tokens después de guardar exitosamente
+                    $this->tokenService->consumeTokens(
+                        $instituto,
+                        'alumno.create',
+                        $this->getUser(),
+                        'Crear alumno: ' . $alumno->getNombreApellido(),
+                        'Alumno',
+                        $alumno->getId()
+                    );
                     
                     $this->addFlash('success', 'Alumno creado correctamente. La contraseña temporal para acceso es: ' . $plainPassword);
                     return $this->redirectToRoute('app_alumno_index', [], Response::HTTP_SEE_OTHER);
@@ -346,6 +370,15 @@ class AlumnoController extends AbstractController
 
         if ($form->isSubmitted()) {
             if ($form->isValid()) {
+                // Verificar tokens antes de editar
+                if (!$this->tokenService->hasEnoughTokens($instituto, 'alumno.edit')) {
+                    $this->addFlash('danger', 'No tienes suficientes tokens para editar un alumno. Balance actual: ' . $this->tokenService->getBalance($instituto)->getBalance());
+                    return $this->renderForm('alumno/edit.html.twig', [
+                        'alumno' => $alumno,
+                        'form' => $form,
+                    ]);
+                }
+
                 try {
                     // Verificar si el alumno pasó de activo a inactivo
                     if ($estadoActivoPrevio && !$alumno->getActivo()) {
@@ -429,6 +462,17 @@ class AlumnoController extends AbstractController
                     
                     $alumnoRepository->add($alumno);
                     $this->setearHermandad($request, $alumno, $alumnoRepository);
+                    
+                    // Consumir tokens después de guardar exitosamente
+                    $this->tokenService->consumeTokens(
+                        $instituto,
+                        'alumno.edit',
+                        $this->getUser(),
+                        'Editar alumno: ' . $alumno->getNombreApellido(),
+                        'Alumno',
+                        $alumno->getId()
+                    );
+                    
                     $this->addFlash('success', 'Alumno actualizado correctamente.');
                     return $this->redirectToRoute('app_alumno_index', [], Response::HTTP_SEE_OTHER);
                 } catch (\Exception $e) {
@@ -457,6 +501,15 @@ class AlumnoController extends AbstractController
      */
     public function delete(Request $request, Alumno $alumno, AlumnoRepository $alumnoRepository, DeudaService $deudaService): Response
     {
+        $user = $this->getUser();
+        $instituto = $user->getInstituto();
+        
+        // Verificar tokens antes de eliminar
+        if (!$this->tokenService->hasEnoughTokens($instituto, 'alumno.delete')) {
+            $this->addFlash('danger', 'No tienes suficientes tokens para eliminar un alumno. Balance actual: ' . $this->tokenService->getBalance($instituto)->getBalance());
+            return $this->redirectToRoute('app_alumno_index');
+        }
+        
         if ($this->isCsrfTokenValid('delete'.$alumno->getId(), $request->request->get('_token'))) {
             // Remover relaciones con cursos
             foreach ($alumno->getCurso() as $curso) {
@@ -480,6 +533,16 @@ class AlumnoController extends AbstractController
             }
             $alumno->setHermanos([]);
             $alumnoRepository->remove($alumno);
+            
+            // Consumir tokens después de eliminar exitosamente
+            $this->tokenService->consumeTokens(
+                $instituto,
+                'alumno.delete',
+                $this->getUser(),
+                'Eliminar alumno: ' . $alumno->getNombreApellido(),
+                'Alumno',
+                $alumno->getId()
+            );
         }
 
         return $this->redirectToRoute('app_alumno_index', [], Response::HTTP_SEE_OTHER);
@@ -613,9 +676,19 @@ class AlumnoController extends AbstractController
                 
                 $mensajes[] = $detallesMensaje;
             }
-        }
-        
-        $this->entityManager->flush();
+                    }
+                    
+                    $this->entityManager->flush();
+                    
+                    // Consumir tokens después de guardar exitosamente
+                    $this->tokenService->consumeTokens(
+                        $instituto,
+                        'alumno.edit',
+                        $this->getUser(),
+                        'Editar alumno: ' . $alumno->getNombreApellido(),
+                        'Alumno',
+                        $alumno->getId()
+                    );
         
         return new JsonResponse([
             'success' => true,

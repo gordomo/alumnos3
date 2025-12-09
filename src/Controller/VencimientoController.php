@@ -10,12 +10,20 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use App\Service\TokenService;
 
 /**
  * @Route("/instituto/vencimientos")
  */
 class VencimientoController extends AbstractController
 {
+    private TokenService $tokenService;
+
+    public function __construct(TokenService $tokenService)
+    {
+        $this->tokenService = $tokenService;
+    }
+
     /**
      * @Route("/", name="vencimiento_index", methods={"GET"})
      */
@@ -40,6 +48,15 @@ class VencimientoController extends AbstractController
         $vencimiento->setInstituto($instituto);
 
         if ($request->isMethod('POST')) {
+            // Verificar tokens antes de crear
+            if (!$this->tokenService->hasEnoughTokens($instituto, 'vencimiento.create')) {
+                $this->addFlash('danger', 'No tienes suficientes tokens para crear un vencimiento. Balance actual: ' . $this->tokenService->getBalance($instituto)->getBalance());
+                return $this->render('vencimiento/new.html.twig', [
+                    'vencimiento' => $vencimiento,
+                    'instituto' => $instituto
+                ]);
+            }
+
             $diaVencimiento = $request->request->get('diaVencimiento');
             $porcentajeInteres = $request->request->get('porcentajeInteres');
             
@@ -60,6 +77,17 @@ class VencimientoController extends AbstractController
             if (count($errors) === 0) {
                 $entityManager->persist($vencimiento);
                 $entityManager->flush();
+                
+                // Consumir tokens después de guardar exitosamente
+                $this->tokenService->consumeTokens(
+                    $instituto,
+                    'vencimiento.create',
+                    $this->getUser(),
+                    'Crear vencimiento: día ' . $vencimiento->getDiaVencimiento(),
+                    'Vencimiento',
+                    $vencimiento->getId()
+                );
+                
                 $this->addFlash('success', 'Vencimiento creado correctamente.');
                 return $this->redirectToRoute('vencimiento_index');
             }
@@ -76,7 +104,18 @@ class VencimientoController extends AbstractController
      */
     public function edit(Request $request, Vencimiento $vencimiento, EntityManagerInterface $entityManager, ValidatorInterface $validator): Response
     {
+        $instituto = $vencimiento->getInstituto();
+        
         if ($request->isMethod('POST')) {
+            // Verificar tokens antes de editar
+            if (!$this->tokenService->hasEnoughTokens($instituto, 'vencimiento.edit')) {
+                $this->addFlash('danger', 'No tienes suficientes tokens para editar un vencimiento. Balance actual: ' . $this->tokenService->getBalance($instituto)->getBalance());
+                return $this->render('vencimiento/edit.html.twig', [
+                    'vencimiento' => $vencimiento,
+                    'instituto' => $instituto
+                ]);
+            }
+
             $diaVencimiento = $request->request->get('diaVencimiento');
             $porcentajeInteres = $request->request->get('porcentajeInteres');
             $orden = $request->request->get('orden');
@@ -88,6 +127,17 @@ class VencimientoController extends AbstractController
             $errors = $validator->validate($vencimiento);
             if (count($errors) === 0) {
                 $entityManager->flush();
+                
+                // Consumir tokens después de guardar exitosamente
+                $this->tokenService->consumeTokens(
+                    $instituto,
+                    'vencimiento.edit',
+                    $this->getUser(),
+                    'Editar vencimiento: día ' . $vencimiento->getDiaVencimiento(),
+                    'Vencimiento',
+                    $vencimiento->getId()
+                );
+                
                 $this->addFlash('success', 'Vencimiento actualizado correctamente.');
                 return $this->redirectToRoute('vencimiento_index');
             }
@@ -104,9 +154,28 @@ class VencimientoController extends AbstractController
      */
     public function delete(Request $request, Vencimiento $vencimiento, EntityManagerInterface $entityManager): Response
     {
+        $instituto = $vencimiento->getInstituto();
+        
+        // Verificar tokens antes de eliminar
+        if (!$this->tokenService->hasEnoughTokens($instituto, 'vencimiento.delete')) {
+            $this->addFlash('danger', 'No tienes suficientes tokens para eliminar un vencimiento. Balance actual: ' . $this->tokenService->getBalance($instituto)->getBalance());
+            return $this->redirectToRoute('vencimiento_index');
+        }
+
         if ($this->isCsrfTokenValid('delete'.$vencimiento->getId(), $request->request->get('_token'))) {
             $entityManager->remove($vencimiento);
             $entityManager->flush();
+            
+            // Consumir tokens después de eliminar exitosamente
+            $this->tokenService->consumeTokens(
+                $instituto,
+                'vencimiento.delete',
+                $this->getUser(),
+                'Eliminar vencimiento: día ' . $vencimiento->getDiaVencimiento(),
+                'Vencimiento',
+                $vencimiento->getId()
+            );
+            
             $this->addFlash('success', 'Vencimiento eliminado correctamente.');
         }
 

@@ -22,6 +22,7 @@ use App\Service\HistorialCursosService;
 use Knp\Component\Pager\PaginatorInterface;
 use App\Service\DeudaService;
 use App\Service\NotificationService;
+use App\Service\TokenService;
 /**
  * @Route("/alumnos/pagos")
  */
@@ -31,17 +32,20 @@ class AlumnosPagosController extends AbstractController
     private $historialCursosService;
     private $deudaService;
     private $notificationService;
+    private $tokenService;
 
     public function __construct(
         EntityManagerInterface $entityManager, 
         HistorialCursosService $historialCursosService,
         DeudaService $deudaService,
-        NotificationService $notificationService
+        NotificationService $notificationService,
+        TokenService $tokenService
     ) {
         $this->entityManager = $entityManager;
         $this->historialCursosService = $historialCursosService;
         $this->deudaService = $deudaService;
         $this->notificationService = $notificationService;
+        $this->tokenService = $tokenService;
     }
 
     /**
@@ -813,8 +817,28 @@ class AlumnosPagosController extends AbstractController
                         ]);
                     }
 
+                    // Verificar tokens antes de registrar el pago
+                    $instituto = $alumno->getInstituto();
+                    if (!$this->tokenService->hasEnoughTokens($instituto, 'pago.create')) {
+                        $this->addFlash('danger', 'No tienes suficientes tokens para registrar un pago. Balance actual: ' . $this->tokenService->getBalance($instituto)->getBalance());
+                        return $this->redirectToRoute('app_alumnos_pagos_new', [
+                            'id' => $alumno->getId(),
+                            'curso' => $alumnosPago->getCurso()->getId()
+                        ]);
+                    }
+
                     // Registrar el pago en el historial
                     $this->historialCursosService->registrarPago($alumnosPago);
+                    
+                    // Consumir tokens después de guardar exitosamente
+                    $this->tokenService->consumeTokens(
+                        $instituto,
+                        'pago.create',
+                        $this->getUser(),
+                        'Registrar pago: ' . $alumno->getNombreApellido() . ' - ' . $alumnosPago->getCurso()->getNombre() . ' (' . $alumnosPago->getMes() . '/' . $alumnosPago->getAno() . ')',
+                        'AlumnosPagos',
+                        $alumnosPago->getId()
+                    );
                     
                     // Enviar email con el recibo si está configurado
                     try {
@@ -1124,6 +1148,15 @@ class AlumnosPagosController extends AbstractController
 
         if ($form->isSubmitted()) {
             if ($form->isValid()) {
+                // Verificar tokens antes de editar
+                if (!$this->tokenService->hasEnoughTokens($instituto, 'pago.edit')) {
+                    $this->addFlash('danger', 'No tienes suficientes tokens para editar un pago. Balance actual: ' . $this->tokenService->getBalance($instituto)->getBalance());
+                    return $this->renderForm('alumnos_pagos/edit.html.twig', [
+                        'pago' => $pago,
+                        'form' => $form,
+                    ]);
+                }
+
                 try {
                     // Verificar si ya existe un pago para este alumno, curso, mes y año
                     $pagoExistente = $this->entityManager->getRepository(AlumnosPagos::class)->findOneBy([
@@ -1142,6 +1175,16 @@ class AlumnosPagosController extends AbstractController
                     //$this->historialCursosService->actualizarPago($pago);
                     $this->entityManager->persist($pago);
                     $this->entityManager->flush();
+                    
+                    // Consumir tokens después de guardar exitosamente
+                    $this->tokenService->consumeTokens(
+                        $instituto,
+                        'pago.edit',
+                        $this->getUser(),
+                        'Editar pago: ' . $alumno->getNombreApellido() . ' - ' . $pago->getCurso()->getNombre() . ' (' . $pago->getMes() . '/' . $pago->getAno() . ')',
+                        'AlumnosPagos',
+                        $pago->getId()
+                    );
                     
                     $this->addFlash('success', 'Pago actualizado correctamente.');
                     return $this->redirectToRoute('app_alumnos_pagos_index', ['alumno' => $alumno->getId()]);
@@ -1171,10 +1214,30 @@ class AlumnosPagosController extends AbstractController
      */
     public function delete(Request $request, AlumnosPagos $pago): Response
     {
+        $instituto = $pago->getAlumno()->getInstituto();
+        
+        // Verificar tokens antes de eliminar
+        if (!$this->tokenService->hasEnoughTokens($instituto, 'pago.delete')) {
+            $alumnoId = $pago->getAlumno()->getId();
+            $this->addFlash('danger', 'No tienes suficientes tokens para eliminar un pago. Balance actual: ' . $this->tokenService->getBalance($instituto)->getBalance());
+            return $this->redirectToRoute('app_alumnos_pagos_index', ['alumno' => $alumnoId]);
+        }
+        
         if ($this->isCsrfTokenValid('delete'.$pago->getId(), $request->request->get('_token'))) {
             $alumnoId = $pago->getAlumno()->getId();
             $this->entityManager->remove($pago);
             $this->entityManager->flush();
+            
+            // Consumir tokens después de eliminar exitosamente
+            $this->tokenService->consumeTokens(
+                $instituto,
+                'pago.delete',
+                $this->getUser(),
+                'Eliminar pago: ' . $pago->getAlumno()->getNombreApellido() . ' - ' . $pago->getCurso()->getNombre() . ' (' . $pago->getMes() . '/' . $pago->getAno() . ')',
+                'AlumnosPagos',
+                $pago->getId()
+            );
+            
             $this->addFlash('success', 'Pago eliminado correctamente.');
         }
 

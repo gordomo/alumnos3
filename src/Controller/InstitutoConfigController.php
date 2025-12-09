@@ -16,12 +16,20 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\String\Slugger\SluggerInterface;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use App\Service\TokenService;
 
 /**
  * @Route("/instituto/config")
  */
 class InstitutoConfigController extends AbstractController
 {
+    private TokenService $tokenService;
+
+    public function __construct(TokenService $tokenService)
+    {
+        $this->tokenService = $tokenService;
+    }
+
     /**
      * @Route("/", name="instituto_config_index", methods={"GET"})
      */
@@ -32,11 +40,35 @@ class InstitutoConfigController extends AbstractController
         $configuracion = $configuracionRepository->findOrCreateByInstituto($instituto);
         $descuentosPromocionales = $descuentoPromocionalRepository->findByConfiguracion($configuracion);
         
+        // Obtener información de tokens
+        $balance = $this->tokenService->getBalance($instituto);
+        $now = new \DateTime();
+        $startOfMonth = new \DateTime($now->format('Y-m-01'));
+        $endOfMonth = clone $now;
+        $endOfMonth->modify('last day of this month')->setTime(23, 59, 59);
+        $startOfWeek = clone $now;
+        $startOfWeek->modify('monday this week')->setTime(0, 0, 0);
+        $endOfWeek = clone $now;
+        $endOfWeek->modify('sunday this week')->setTime(23, 59, 59);
+        $monthlyConsumption = $this->tokenService->getTotalConsumptionByPeriod($instituto, $startOfMonth, $endOfMonth);
+        $weeklyConsumption = $this->tokenService->getTotalConsumptionByPeriod($instituto, $startOfWeek, $endOfWeek);
+        $monthlyConsumptionByAction = $this->tokenService->getConsumptionByPeriod($instituto, $startOfMonth, $endOfMonth);
+        $weeklyConsumptionByAction = $this->tokenService->getConsumptionByPeriod($instituto, $startOfWeek, $endOfWeek);
+        $recentTransactions = $this->tokenService->getRecentTransactions($instituto, 20);
+        $allActions = $this->tokenService->getAllActions();
+        
         return $this->render('instituto_config/index.html.twig', [
             'instituto' => $instituto,
             'vencimientos' => $vencimientos,
             'configuracion' => $configuracion,
-            'descuentosPromocionales' => $descuentosPromocionales
+            'descuentosPromocionales' => $descuentosPromocionales,
+            'tokenBalance' => $balance,
+            'monthlyConsumption' => $monthlyConsumption,
+            'weeklyConsumption' => $weeklyConsumption,
+            'monthlyConsumptionByAction' => $monthlyConsumptionByAction,
+            'weeklyConsumptionByAction' => $weeklyConsumptionByAction,
+            'recentTransactions' => $recentTransactions,
+            'allActions' => $allActions,
         ]);
     }
 
@@ -61,60 +93,60 @@ class InstitutoConfigController extends AbstractController
             $section = $request->request->get('section', 'general');
             
             if ($section === 'general') {
-                $instituto->setNombre($request->request->get('nombre'));
-                $instituto->setEmail($request->request->get('email'));
-                
-                // Validación del teléfono
-                $tel = $request->request->get('tel');
-                if (strlen($tel) > 25) {
+            $instituto->setNombre($request->request->get('nombre'));
+            $instituto->setEmail($request->request->get('email'));
+            
+            // Validación del teléfono
+            $tel = $request->request->get('tel');
+            if (strlen($tel) > 25) {
                     $this->addFlash('danger', 'El número de teléfono no puede tener más de 25 caracteres.');
                     return $this->redirectToRoute('instituto_config_edit', ['_fragment' => 'edit-general']);
-                }
-                $instituto->setTel($tel);
-                
-                $instituto->setDir($request->request->get('dir'));
+            }
+            $instituto->setTel($tel);
+            
+            $instituto->setDir($request->request->get('dir'));
 
-                // Manejo del logo
-                if ($request->files->has('logo')) {
-                    $logoFile = $request->files->get('logo');
-                    if ($logoFile) {
-                        $originalFilename = pathinfo($logoFile->getClientOriginalName(), PATHINFO_FILENAME);
-                        $safeFilename = $slugger->slug($originalFilename);
-                        $newFilename = $safeFilename.'-'.uniqid().'.'.$logoFile->guessExtension();
-                        
-                        try {
-                            $logoFile->move(
-                                $this->getParameter('logos_directory'),
-                                $newFilename
-                            );
-                        } catch (FileException $e) {
-                            $this->addFlash('danger', 'No se pudo subir el logo.');
-                            return $this->redirectToRoute('instituto_config_edit', ['_fragment' => 'edit-general']);
-                        }
-                        
-                        // Eliminar el logo anterior si existe
-                        if ($instituto->getLogo()) {
-                            $oldLogoPath = $this->getParameter('logos_directory').'/'.$instituto->getLogo();
-                            if (file_exists($oldLogoPath)) {
-                                unlink($oldLogoPath);
-                            }
-                        }
-                        
-                        $instituto->setLogo($newFilename);
-                    }
-                }
-
-                try {
-                    $errors = $validator->validate($instituto);
+            // Manejo del logo
+            if ($request->files->has('logo')) {
+                $logoFile = $request->files->get('logo');
+                if ($logoFile) {
+                    $originalFilename = pathinfo($logoFile->getClientOriginalName(), PATHINFO_FILENAME);
+                    $safeFilename = $slugger->slug($originalFilename);
+                    $newFilename = $safeFilename.'-'.uniqid().'.'.$logoFile->guessExtension();
                     
+                    try {
+                        $logoFile->move(
+                            $this->getParameter('logos_directory'),
+                            $newFilename
+                        );
+                    } catch (FileException $e) {
+                        $this->addFlash('danger', 'No se pudo subir el logo.');
+                            return $this->redirectToRoute('instituto_config_edit', ['_fragment' => 'edit-general']);
+                    }
+                    
+                    // Eliminar el logo anterior si existe
+                    if ($instituto->getLogo()) {
+                        $oldLogoPath = $this->getParameter('logos_directory').'/'.$instituto->getLogo();
+                        if (file_exists($oldLogoPath)) {
+                            unlink($oldLogoPath);
+                        }
+                    }
+                    
+                    $instituto->setLogo($newFilename);
+                }
+            }
+
+            try {
+                $errors = $validator->validate($instituto); 
+                
                     if (count($errors) === 0) {
-                        $entityManager->flush();
+                    $entityManager->flush();
                         $this->addFlash('success', 'La información general se ha actualizado correctamente.');
                         return $this->redirectToRoute('instituto_config_edit', ['_fragment' => 'edit-general']);
-                    } else {
-                        foreach ($errors as $error) {
-                            $this->addFlash('danger', $error->getMessage());
-                        }
+                } else {
+                    foreach ($errors as $error) {
+                        $this->addFlash('danger', $error->getMessage());
+                    }
                     }
                 } catch (\Exception $e) {
                     $this->addFlash('danger', 'Ocurrió un error al guardar los cambios: ' . $e->getMessage());
@@ -141,12 +173,12 @@ class InstitutoConfigController extends AbstractController
                         $this->addFlash('success', 'La configuración de descuentos se ha actualizado correctamente.');
                         return $this->redirectToRoute('instituto_config_edit', ['_fragment' => 'edit-descuentos']);
                     } else {
-                        foreach ($errorsConfig as $error) {
-                            $this->addFlash('danger', $error->getMessage());
-                        }
+                    foreach ($errorsConfig as $error) {
+                        $this->addFlash('danger', $error->getMessage());
                     }
-                } catch (\Exception $e) {
-                    $this->addFlash('danger', 'Ocurrió un error al guardar los cambios: ' . $e->getMessage());
+                }
+            } catch (\Exception $e) {
+                $this->addFlash('danger', 'Ocurrió un error al guardar los cambios: ' . $e->getMessage());
                 }
                 
             } elseif ($section === 'notificaciones') {
@@ -286,6 +318,15 @@ class InstitutoConfigController extends AbstractController
         $descuentoPromocional->setConfiguracion($configuracion);
 
         if ($request->isMethod('POST')) {
+            // Verificar tokens antes de crear
+            if (!$this->tokenService->hasEnoughTokens($instituto, 'descuento.create')) {
+                $this->addFlash('danger', 'No tienes suficientes tokens para crear un descuento. Balance actual: ' . $this->tokenService->getBalance($instituto)->getBalance());
+                return $this->render('instituto_config/descuento_promocional_new.html.twig', [
+                    'descuentoPromocional' => $descuentoPromocional,
+                    'configuracion' => $configuracion
+                ]);
+            }
+
             $nombre = $request->request->get('nombre');
             $porcentaje = $request->request->get('porcentaje');
             $activo = $request->request->has('activo');
@@ -298,6 +339,17 @@ class InstitutoConfigController extends AbstractController
             if (count($errors) === 0) {
                 $entityManager->persist($descuentoPromocional);
                 $entityManager->flush();
+                
+                // Consumir tokens después de guardar exitosamente
+                $this->tokenService->consumeTokens(
+                    $instituto,
+                    'descuento.create',
+                    $this->getUser(),
+                    'Crear descuento promocional: ' . $descuentoPromocional->getNombre(),
+                    'DescuentoPromocional',
+                    $descuentoPromocional->getId()
+                );
+                
                 $this->addFlash('success', 'Descuento promocional creado correctamente.');
                 return $this->redirectToRoute('instituto_config_edit', ['_fragment' => 'edit-descuentos']);
             } else {
@@ -327,6 +379,15 @@ class InstitutoConfigController extends AbstractController
         }
 
         if ($request->isMethod('POST')) {
+            // Verificar tokens antes de editar
+            if (!$this->tokenService->hasEnoughTokens($instituto, 'descuento.edit')) {
+                $this->addFlash('danger', 'No tienes suficientes tokens para editar un descuento. Balance actual: ' . $this->tokenService->getBalance($instituto)->getBalance());
+                return $this->render('instituto_config/descuento_promocional_edit.html.twig', [
+                    'descuentoPromocional' => $descuentoPromocional,
+                    'configuracion' => $descuentoPromocional->getConfiguracion()
+                ]);
+            }
+
             $nombre = $request->request->get('nombre');
             $porcentaje = $request->request->get('porcentaje');
             $activo = $request->request->has('activo');
@@ -339,6 +400,17 @@ class InstitutoConfigController extends AbstractController
             if (count($errors) === 0) {
                 $entityManager->persist($descuentoPromocional);
                 $entityManager->flush();
+                
+                // Consumir tokens después de guardar exitosamente
+                $this->tokenService->consumeTokens(
+                    $instituto,
+                    'descuento.edit',
+                    $this->getUser(),
+                    'Editar descuento promocional: ' . $descuentoPromocional->getNombre(),
+                    'DescuentoPromocional',
+                    $descuentoPromocional->getId()
+                );
+                
                 $this->addFlash('success', 'Descuento promocional actualizado correctamente.');
                 return $this->redirectToRoute('instituto_config_edit', ['_fragment' => 'edit-descuentos']);
             } else {
@@ -367,9 +439,26 @@ class InstitutoConfigController extends AbstractController
             return $this->redirectToRoute('instituto_config_index');
         }
 
+        // Verificar tokens antes de eliminar
+        if (!$this->tokenService->hasEnoughTokens($instituto, 'descuento.delete')) {
+            $this->addFlash('danger', 'No tienes suficientes tokens para eliminar un descuento. Balance actual: ' . $this->tokenService->getBalance($instituto)->getBalance());
+            return $this->redirectToRoute('instituto_config_edit', ['_fragment' => 'edit-descuentos']);
+        }
+
         if ($this->isCsrfTokenValid('delete'.$descuentoPromocional->getId(), $request->request->get('_token'))) {
             $entityManager->remove($descuentoPromocional);
             $entityManager->flush();
+            
+            // Consumir tokens después de eliminar exitosamente
+            $this->tokenService->consumeTokens(
+                $instituto,
+                'descuento.delete',
+                $this->getUser(),
+                'Eliminar descuento promocional: ' . $descuentoPromocional->getNombre(),
+                'DescuentoPromocional',
+                $descuentoPromocional->getId()
+            );
+            
             $this->addFlash('success', 'Descuento promocional eliminado correctamente.');
         }
 

@@ -196,6 +196,167 @@
             </div>
         </div>
     </div>
+
+    {# Estadísticas de Tokens #}
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h3 class="mb-0">
+                        <i class="bi bi-coin"></i> Gestión de Tokens
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <div class="card shadow-sm border-0">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title text-muted mb-3">Balance Actual</h5>
+                                    <h2 class="display-4 mb-0" style="color: {% if tokenBalance.balance > 100 %}green{% elseif tokenBalance.balance > 20 %}orange{% else %}red{% endif %};">
+                                        {{ tokenBalance.balance }}
+                                    </h2>
+                                    <p class="text-muted mt-2 mb-0">tokens disponibles</p>
+                                    <small class="text-muted">Actualizado: {{ tokenBalance.updatedAt|date('d/m/Y H:i') }}</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card shadow-sm border-0">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title text-muted mb-3">Consumo Semanal</h5>
+                                    <h2 class="display-4 mb-0 text-primary">{{ weeklyConsumption }}</h2>
+                                    <p class="text-muted mt-2 mb-0">tokens consumidos</p>
+                                    <small class="text-muted">Esta semana</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card shadow-sm border-0">
+                                <div class="card-body text-center">
+                                    <h5 class="card-title text-muted mb-3">Consumo Mensual</h5>
+                                    <h2 class="display-4 mb-0 text-info">{{ monthlyConsumption }}</h2>
+                                    <p class="text-muted mt-2 mb-0">tokens consumidos</p>
+                                    <small class="text-muted">Este mes</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-light">
+                                    <h5 class="mb-0"><i class="bi bi-plus-circle"></i> Agregar Tokens</h5>
+                                </div>
+                                <div class="card-body">
+                                    <form method="post" action="{{ path('admin_instituto_tokens_add', {'id': instituto.id}) }}">
+                                        <div class="mb-3">
+                                            <label for="amount" class="form-label">Cantidad de Tokens</label>
+                                            <input type="number" 
+                                                   class="form-control" 
+                                                   id="amount" 
+                                                   name="amount" 
+                                                   min="1" 
+                                                   required
+                                                   placeholder="Ingrese la cantidad de tokens a agregar">
+                                            <small class="form-text text-muted">La cantidad debe ser mayor a 0</small>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="description" class="form-label">Descripción (opcional)</label>
+                                            <textarea class="form-control" 
+                                                      id="description" 
+                                                      name="description" 
+                                                      rows="2"
+                                                      placeholder="Descripción de la transacción (ej: Pago mensual, Bonificación, etc.)"></textarea>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="bi bi-check-circle"></i> Agregar Tokens
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-light">
+                                    <h5 class="mb-0"><i class="bi bi-bar-chart"></i> Consumo por Acción</h5>
+                                </div>
+                                <div class="card-body">
+                                    {% if monthlyConsumptionByAction|length > 0 %}
+                                        <div class="table-responsive">
+                                            <table class="table table-sm">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Acción</th>
+                                                        <th class="text-end">Tokens</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for item in monthlyConsumptionByAction %}
+                                                        <tr>
+                                                            <td>{{ item.action }}</td>
+                                                            <td class="text-end"><strong>{{ item.total }}</strong></td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    {% else %}
+                                        <p class="text-muted text-center mb-0">No hay consumo este mes</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-header bg-light">
+                                    <h5 class="mb-0"><i class="bi bi-clock-history"></i> Transacciones Recientes</h5>
+                                </div>
+                                <div class="card-body">
+                                    {% if recentTransactions|length > 0 %}
+                                        <div class="table-responsive">
+                                            <table class="table table-sm table-hover">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Fecha</th>
+                                                        <th>Acción</th>
+                                                        <th>Descripción</th>
+                                                        <th class="text-end">Cantidad</th>
+                                                        <th class="text-end">Balance</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for transaction in recentTransactions %}
+                                                        <tr>
+                                                            <td>{{ transaction.createdAt|date('d/m/Y H:i') }}</td>
+                                                            <td><code>{{ transaction.action }}</code></td>
+                                                            <td>{{ transaction.description }}</td>
+                                                            <td class="text-end">
+                                                                <span class="badge {% if transaction.amount > 0 %}bg-success{% else %}bg-danger{% endif %}">
+                                                                    {% if transaction.amount > 0 %}+{% endif %}{{ transaction.amount }}
+                                                                </span>
+                                                            </td>
+                                                            <td class="text-end"><strong>{{ transaction.balanceAfter }}</strong></td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    {% else %}
+                                        <p class="text-muted text-center mb-0">No hay transacciones registradas</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="row mb-4">
         <div class="col-md-12">
             <div class="card shadow-sm">

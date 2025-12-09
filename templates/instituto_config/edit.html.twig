@@ -35,6 +35,11 @@
                                 <i class="bi bi-envelope"></i> Notificaciones
                             </button>
                         </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="edit-tokens-tab" data-bs-toggle="tab" data-bs-target="#edit-tokens" type="button" role="tab" aria-controls="edit-tokens" aria-selected="false">
+                                <i class="bi bi-coin"></i> Tokens
+                            </button>
+                        </li>
                     </ul>
 
                     <!-- Contenido de las pestañas -->
@@ -48,72 +53,72 @@
                                         <h5 class="mb-0">Datos del Instituto</h5>
                                     </div>
                                     <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-4 text-center mb-4">
-                                                <div class="mb-3">
-                                                    {% if instituto.logo %}
-                                                        <img src="{{ asset('uploads/logos/' ~ instituto.logo) }}" 
-                                                             alt="Logo actual" 
+                        <div class="row">
+                            <div class="col-md-4 text-center mb-4">
+                                <div class="mb-3">
+                                    {% if instituto.logo %}
+                                        <img src="{{ asset('uploads/logos/' ~ instituto.logo) }}" 
+                                             alt="Logo actual" 
                                                              class="img-fluid rounded shadow-sm mb-3"
-                                                             style="max-height: 200px;">
-                                                    {% endif %}
-                                                    <div class="form-group">
+                                             style="max-height: 200px;">
+                                    {% endif %}
+                                    <div class="form-group">
                                                         <label for="logo" class="form-label">
                                                             <i class="bi bi-image"></i> Logo del Instituto
                                                         </label>
-                                                        <input type="file" 
-                                                               class="form-control" 
-                                                               id="logo" 
-                                                               name="logo" 
-                                                               accept="image/*">
-                                                        <small class="form-text text-muted">
-                                                            Formatos permitidos: JPG, PNG, GIF. Tamaño máximo: 2MB
-                                                        </small>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-8">
-                                                <div class="mb-3">
+                                        <input type="file" 
+                                               class="form-control" 
+                                               id="logo" 
+                                               name="logo" 
+                                               accept="image/*">
+                                        <small class="form-text text-muted">
+                                            Formatos permitidos: JPG, PNG, GIF. Tamaño máximo: 2MB
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-8">
+                                <div class="mb-3">
                                                     <label for="nombre" class="form-label">
                                                         <i class="bi bi-building"></i> Nombre del Instituto <span class="text-danger">*</span>
                                                     </label>
-                                                    <input type="text" 
-                                                           class="form-control" 
-                                                           id="nombre" 
-                                                           name="nombre" 
-                                                           value="{{ instituto.nombre }}" 
-                                                           required>
-                                                </div>
-                                                <div class="mb-3">
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="nombre" 
+                                           name="nombre" 
+                                           value="{{ instituto.nombre }}" 
+                                           required>
+                                </div>
+                                <div class="mb-3">
                                                     <label for="email" class="form-label">
                                                         <i class="bi bi-envelope"></i> Email
                                                     </label>
-                                                    <input type="email" 
-                                                           class="form-control" 
-                                                           id="email" 
-                                                           name="email" 
+                                    <input type="email" 
+                                           class="form-control" 
+                                           id="email" 
+                                           name="email" 
                                                            value="{{ instituto.email }}"
                                                            placeholder="email@ejemplo.com">
-                                                </div>
-                                                <div class="mb-3">
+                                </div>
+                                <div class="mb-3">
                                                     <label for="tel" class="form-label">
                                                         <i class="bi bi-telephone"></i> Teléfono
                                                     </label>
-                                                    <input type="tel" 
-                                                           class="form-control" 
-                                                           id="tel" 
-                                                           name="tel" 
-                                                           maxlength="25"
+                                    <input type="tel" 
+                                           class="form-control" 
+                                           id="tel" 
+                                           name="tel" 
+                                           maxlength="25"
                                                            value="{{ instituto.tel }}"
                                                            placeholder="+54 11 1234-5678">
-                                                </div>
-                                                <div class="mb-3">
+                                </div>
+                                <div class="mb-3">
                                                     <label for="dir" class="form-label">
                                                         <i class="bi bi-geo-alt"></i> Dirección
                                                     </label>
-                                                    <textarea class="form-control" 
-                                                              id="dir" 
-                                                              name="dir" 
+                                    <textarea class="form-control" 
+                                              id="dir" 
+                                              name="dir" 
                                                               rows="3"
                                                               placeholder="Calle, número, ciudad, provincia">{{ instituto.dir }}</textarea>
                                                 </div>
@@ -191,7 +196,7 @@
                                 </div>
                             </div>
                         </div>
-
+                        
                         <!-- Pestaña: Descuentos -->
                         <div class="tab-pane fade" id="edit-descuentos" role="tabpanel" aria-labelledby="edit-descuentos-tab">
                             <form method="post" action="{{ path('instituto_config_edit') }}">
@@ -203,91 +208,91 @@
                                         </h5>
                                     </div>
                                     <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="mb-3">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
                                                     <label for="descuentoEfectivo" class="form-label">
                                                         Descuento por pago en efectivo (%)
                                                     </label>
-                                                    <input type="number" 
-                                                           class="form-control" 
-                                                           id="descuentoEfectivo" 
-                                                           name="descuentoEfectivo" 
-                                                           min="0"
-                                                           max="100"
-                                                           step="0.01"
+                                    <input type="number" 
+                                           class="form-control" 
+                                           id="descuentoEfectivo" 
+                                           name="descuentoEfectivo" 
+                                           min="0"
+                                           max="100"
+                                           step="0.01"
                                                            value="{{ configuracion.descuentoEfectivo }}"
                                                            placeholder="0.00">
-                                                    <small class="form-text text-muted">
-                                                        Porcentaje de descuento aplicado cuando se paga en efectivo. Dejar en blanco para no aplicar descuento.
-                                                    </small>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="mb-3">
+                                    <small class="form-text text-muted">
+                                        Porcentaje de descuento aplicado cuando se paga en efectivo. Dejar en blanco para no aplicar descuento.
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
                                                     <label for="descuentoHermanos" class="form-label">
                                                         Descuento por hermanos (%)
                                                     </label>
-                                                    <input type="number" 
-                                                           class="form-control" 
-                                                           id="descuentoHermanos" 
-                                                           name="descuentoHermanos" 
-                                                           min="0"
-                                                           max="100"
-                                                           step="0.01"
+                                    <input type="number" 
+                                           class="form-control" 
+                                           id="descuentoHermanos" 
+                                           name="descuentoHermanos" 
+                                           min="0"
+                                           max="100"
+                                           step="0.01"
                                                            value="{{ configuracion.descuentoHermanos }}"
                                                            placeholder="0.00">
-                                                    <small class="form-text text-muted">
-                                                        Porcentaje de descuento aplicado a alumnos con hermanos en el instituto. Dejar en blanco para no aplicar descuento.
-                                                    </small>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-md-12">
-                                                <div class="form-check mb-3">
-                                                    <input type="checkbox" 
-                                                           class="form-check-input" 
-                                                           id="deshabilitarDescuentosEnDeuda" 
-                                                           name="deshabilitarDescuentosEnDeuda"
-                                                           {% if configuracion.deshabilitarDescuentosEnDeuda %}checked{% endif %}>
-                                                    <label class="form-check-label" for="deshabilitarDescuentosEnDeuda">
+                                    <small class="form-text text-muted">
+                                        Porcentaje de descuento aplicado a alumnos con hermanos en el instituto. Dejar en blanco para no aplicar descuento.
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-check mb-3">
+                                    <input type="checkbox" 
+                                           class="form-check-input" 
+                                           id="deshabilitarDescuentosEnDeuda" 
+                                           name="deshabilitarDescuentosEnDeuda"
+                                           {% if configuracion.deshabilitarDescuentosEnDeuda %}checked{% endif %}>
+                                    <label class="form-check-label" for="deshabilitarDescuentosEnDeuda">
                                                         <strong>Deshabilitar descuentos para alumnos con deudas</strong>
-                                                    </label>
-                                                    <div class="form-text text-muted">
-                                                        Si se activa esta opción, los alumnos con deudas no podrán beneficiarse de los descuentos configurados.
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-md-12">
-                                                <div class="mb-3">
+                                    </label>
+                                    <div class="form-text text-muted">
+                                        Si se activa esta opción, los alumnos con deudas no podrán beneficiarse de los descuentos configurados.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
                                                     <label for="ordenCalculoInteresesDescuentos" class="form-label">
                                                         <strong>Orden de cálculo de intereses y descuentos</strong>
                                                     </label>
-                                                    <select class="form-select" 
-                                                            id="ordenCalculoInteresesDescuentos" 
-                                                            name="ordenCalculoInteresesDescuentos">
-                                                        <option value="interes_primero" {% if configuracion.ordenCalculoInteresesDescuentos == 'interes_primero' %}selected{% endif %}>
-                                                            Interés primero, luego descuentos (recomendado)
-                                                        </option>
-                                                        <option value="descuento_primero" {% if configuracion.ordenCalculoInteresesDescuentos == 'descuento_primero' %}selected{% endif %}>
-                                                            Descuentos primero, luego interés
-                                                        </option>
-                                                        <option value="neto" {% if configuracion.ordenCalculoInteresesDescuentos == 'neto' %}selected{% endif %}>
-                                                            Neto (diferencia entre intereses y descuentos)
-                                                        </option>
-                                                        <option value="descuentos_solo_base" {% if configuracion.ordenCalculoInteresesDescuentos == 'descuentos_solo_base' %}selected{% endif %}>
-                                                            Descuentos sobre base, interés sobre base original
-                                                        </option>
-                                                    </select>
+                                    <select class="form-select" 
+                                            id="ordenCalculoInteresesDescuentos" 
+                                            name="ordenCalculoInteresesDescuentos">
+                                        <option value="interes_primero" {% if configuracion.ordenCalculoInteresesDescuentos == 'interes_primero' %}selected{% endif %}>
+                                            Interés primero, luego descuentos (recomendado)
+                                        </option>
+                                        <option value="descuento_primero" {% if configuracion.ordenCalculoInteresesDescuentos == 'descuento_primero' %}selected{% endif %}>
+                                            Descuentos primero, luego interés
+                                        </option>
+                                        <option value="neto" {% if configuracion.ordenCalculoInteresesDescuentos == 'neto' %}selected{% endif %}>
+                                            Neto (diferencia entre intereses y descuentos)
+                                        </option>
+                                        <option value="descuentos_solo_base" {% if configuracion.ordenCalculoInteresesDescuentos == 'descuentos_solo_base' %}selected{% endif %}>
+                                            Descuentos sobre base, interés sobre base original
+                                        </option>
+                                    </select>
                                                     <div class="form-text text-muted mt-2">
-                                                        <strong>Interés primero:</strong> Se aplica el interés sobre el monto base, luego los descuentos sobre el resultado. Ejemplo: Base $100, Interés 10% = $110, Descuento 10% = $99.<br>
-                                                        <strong>Descuento primero:</strong> Se aplican los descuentos sobre el monto base, luego el interés sobre el resultado. Ejemplo: Base $100, Descuento 10% = $90, Interés 10% = $99.<br>
-                                                        <strong>Neto:</strong> Ambos se calculan sobre la base y se hace la diferencia. Ejemplo: Base $100, Interés +$10, Descuento -$10 = $100.<br>
-                                                        <strong>Descuentos solo base:</strong> Los descuentos se aplican sobre la base, el interés se suma sobre la base original. Ejemplo: Base $100, Descuento 10% = $90, Interés +$10 = $100.
-                                                    </div>
+                                        <strong>Interés primero:</strong> Se aplica el interés sobre el monto base, luego los descuentos sobre el resultado. Ejemplo: Base $100, Interés 10% = $110, Descuento 10% = $99.<br>
+                                        <strong>Descuento primero:</strong> Se aplican los descuentos sobre el monto base, luego el interés sobre el resultado. Ejemplo: Base $100, Descuento 10% = $90, Interés 10% = $99.<br>
+                                        <strong>Neto:</strong> Ambos se calculan sobre la base y se hace la diferencia. Ejemplo: Base $100, Interés +$10, Descuento -$10 = $100.<br>
+                                        <strong>Descuentos solo base:</strong> Los descuentos se aplican sobre la base, el interés se suma sobre la base original. Ejemplo: Base $100, Descuento 10% = $90, Interés +$10 = $100.
+                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -349,19 +354,19 @@
                                                     {% endfor %}
                                                 </tbody>
                                             </table>
-                                        </div>
-                                    </div>
                                 </div>
-                                
+                            </div>
+                        </div>
+                        
                                 <div class="text-center">
                                     <button type="submit" class="btn btn-info btn-lg">
                                         <i class="bi bi-save"></i> Guardar Configuración de Descuentos
-                                    </button>
+                            </button>
                                     <a href="{{ path('instituto_config_index') }}" class="btn btn-secondary btn-lg">
                                         <i class="bi bi-x-circle"></i> Cancelar
-                                    </a>
-                                </div>
-                            </form>
+                            </a>
+                        </div>
+                    </form>
                         </div>
 
                         <!-- Pestaña: Notificaciones -->
@@ -574,6 +579,35 @@
 </div>
 {% endfor %}
 
+                        <!-- Pestaña: Tokens -->
+                        <div class="tab-pane fade" id="edit-tokens" role="tabpanel" aria-labelledby="edit-tokens-tab">
+                            <div class="card">
+                                <div class="card-header bg-warning text-dark">
+                                    <h5 class="mb-0">
+                                        <i class="bi bi-coin"></i> Gestión de Tokens
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="alert alert-info">
+                                        <h5 class="alert-heading"><i class="bi bi-info-circle"></i> Información sobre Tokens</h5>
+                                        <p>Los tokens son unidades de consumo que se utilizan para realizar acciones en el sistema. Cada acción tiene un costo en tokens que se descuenta de tu balance.</p>
+                                        <hr>
+                                        <p class="mb-0"><strong>Para gestionar tus tokens:</strong> Visita la página completa de gestión de tokens donde podrás ver tu balance actual, consumo histórico, costos de acciones y transacciones recientes.</p>
+                                    </div>
+                                    <div class="text-center">
+                                        <a href="{{ path('app_tokens_index') }}" class="btn btn-primary btn-lg">
+                                            <i class="bi bi-arrow-right-circle"></i> Ir a Gestión de Tokens
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 <script>
     // Manejar hash en URL para activar pestaña específica
     document.addEventListener('DOMContentLoaded', function() {
@@ -581,7 +615,7 @@
         const hash = window.location.hash;
         if (hash) {
             const tabId = hash.replace('#', '');
-            const tabElement = document.getElementById(tabId + '-tab');
+            const tabElement = document.getElementById('edit-' + tabId + '-tab');
             if (tabElement) {
                 const tab = new bootstrap.Tab(tabElement);
                 tab.show();
@@ -589,4 +623,4 @@
         }
     });
 </script>
-{% endblock %}
+{% endblock %} 
