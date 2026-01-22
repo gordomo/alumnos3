@@ -53,11 +53,11 @@ class ProfesorType extends AbstractType
                         ->where('c.instituto = :instituto')
                         ->setParameter('instituto', $instituto);
 
+                    // Permitir seleccionar cualquier curso del instituto
+                    // (sin restricción de profesores - permite múltiples profesores por curso)
                     if ($options['is_edit'] && $options['data']) {
-                        $qb->andWhere('c.profesores IS EMPTY OR :profesor MEMBER OF c.profesores')
-                            ->setParameter('profesor', $options['data']);
-                    } else {
-                        $qb->andWhere('c.profesores IS EMPTY');
+                        // En modo edición, mostrar todos los cursos del instituto
+                        // El profesor puede estar en múltiples cursos y los cursos pueden tener múltiples profesores
                     }
                     
                     return $qb;

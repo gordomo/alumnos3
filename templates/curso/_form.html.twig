@@ -119,12 +119,12 @@
 
 {% if mostrar_confirmacion is defined and mostrar_confirmacion %}
     <div class="alert alert-warning mt-3">
-        <p><strong>Atención:</strong> Este curso ya ha comenzado y tiene registros de asistencia para el profesor actual.</p>
-        <p>Si cambia el profesor, todas las asistencias registradas serán transferidas al nuevo profesor.</p>
+        <p><strong>Atención:</strong> Este curso ya ha comenzado y tiene registros de asistencia para los profesores actuales.</p>
+        <p>Si remueve algún profesor del curso, las asistencias registradas de ese profesor serán transferidas a otro profesor del curso.</p>
         <div class="form-check mt-3">
             <input type="checkbox" class="form-check-input" id="confirmar_cambio_profesor" name="confirmar_cambio_profesor" value="1" required>
             <label class="form-check-label" for="confirmar_cambio_profesor">
-                Confirmo que deseo transferir todas las asistencias al nuevo profesor
+                Confirmo que deseo transferir las asistencias de los profesores removidos
             </label>
         </div>
     </div>
@@ -252,3 +252,98 @@
         width: 100% !important;
     }
 </style>
+
+<!-- Modal de advertencia de conflictos de horarios -->
+{% if mostrar_confirmacion_conflictos is defined and mostrar_confirmacion_conflictos %}
+{% set conflictosData = app.session.get('conflictos_horarios_warning') %}
+{% if conflictosData and conflictosData.conflictos|length > 0 %}
+<div class="modal fade show" id="conflictosHorariosModal" tabindex="-1" aria-labelledby="conflictosHorariosModalLabel" aria-hidden="false" style="display: block;">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title" id="conflictosHorariosModalLabel">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    Advertencia: Conflictos de Horarios Detectados
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" onclick="window.location.reload();"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <strong>Se detectaron conflictos de horarios con otros cursos asignados a los profesores:</strong>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered">
+                        <thead class="table-warning">
+                            <tr>
+                                <th>Curso con Conflicto</th>
+                                <th>Días</th>
+                                <th>Horario Existente</th>
+                                <th>Horario Nuevo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for conflicto in conflictosData.conflictos %}
+                            <tr>
+                                <td><strong>{{ conflicto.curso_nombre }}</strong></td>
+                                <td>{{ conflicto.dias|join(', ') }}</td>
+                                <td>{{ conflicto.horario_existente }}</td>
+                                <td class="text-danger"><strong>{{ conflicto.horario_nuevo }}</strong></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <strong>¿Está seguro de que desea continuar?</strong><br>
+                    Los profesores asignados tendrán cursos con horarios solapados. Esto puede causar problemas en la gestión de asistencias y reportes.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="window.location.reload();">
+                    <i class="bi bi-x-circle"></i> Cancelar
+                </button>
+                <button type="button" class="btn btn-warning" id="confirmarConflictosBtn" onclick="window.showLoading();">
+                    <i class="bi bi-check-circle"></i> Sí, continuar de todas formas
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal-backdrop fade show"></div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Cerrar modal al hacer clic fuera
+    const modal = document.getElementById('conflictosHorariosModal');
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                window.location.reload();
+            }
+        });
+    }
+    
+    // Manejar confirmación de conflictos
+    const confirmarBtn = document.getElementById('confirmarConflictosBtn');
+    const form = document.querySelector('form.form-horizontal');
+    
+    if (confirmarBtn && form) {
+        confirmarBtn.addEventListener('click', function() {
+            // Agregar campo hidden para confirmar conflictos
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = 'confirmar_conflictos_horarios';
+            hiddenInput.value = '1';
+            form.appendChild(hiddenInput);
+            
+            // Enviar el formulario
+            form.submit();
+        });
+    }
+});
+</script>
+{% endif %}
+{% endif %}

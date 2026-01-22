@@ -16,6 +16,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\AlumnoCursoHistorico;
 use App\Service\DeudaService;
 use App\Service\TokenService;
+use App\Service\HorarioConflictService;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
@@ -26,11 +27,13 @@ class CursoController extends AbstractController
 {
     private $logger;
     private $tokenService;
+    private HorarioConflictService $horarioConflictService;
 
-    public function __construct(LoggerInterface $logger, TokenService $tokenService)
+    public function __construct(LoggerInterface $logger, TokenService $tokenService, HorarioConflictService $horarioConflictService)
     {
         $this->logger = $logger;
         $this->tokenService = $tokenService;
+        $this->horarioConflictService = $horarioConflictService;
     }
 
     /**
@@ -134,6 +137,62 @@ class CursoController extends AbstractController
                 $curso->setHorarioInicio(new \DateTime($form->get('horarioInicio')->getData()));
                 $curso->setHorarioFin(new \DateTime($form->get('horarioFin')->getData()));
                 $curso->setDuracion($this->calcularDuracion($curso->getHorarioInicio(), $curso->getHorarioFin()));
+                
+                // Verificar conflictos de horarios para cada profesor asignado
+                $todosConflictos = [];
+                $conflictosVistos = []; // Para evitar duplicados
+                
+                foreach ($curso->getProfesores() as $profesor) {
+                    if (!$profesor->getId()) {
+                        continue; // Profesor nuevo sin ID, no puede tener cursos existentes
+                    }
+                    $conflictos = $this->horarioConflictService->detectarConflictos($curso, $profesor);
+                    
+                    foreach ($conflictos as $conflicto) {
+                        // Crear una clave única para identificar conflictos duplicados
+                        // Basada en: curso_id + días + horarios
+                        $claveUnica = $conflicto['curso']->getId() . '_' . 
+                                     implode(',', $conflicto['dias']) . '_' . 
+                                     $conflicto['horarioExistente'] . '_' . 
+                                     $conflicto['horarioNuevo'];
+                        
+                        // Solo agregar si no hemos visto este conflicto antes
+                        if (!isset($conflictosVistos[$claveUnica])) {
+                            $conflictosVistos[$claveUnica] = true;
+                            $todosConflictos[] = $conflicto;
+                        }
+                    }
+                }
+                
+                // Si hay conflictos y el usuario no ha confirmado, mostrar modal y detener el guardado
+                if (!empty($todosConflictos) && !$request->request->get('confirmar_conflictos_horarios')) {
+                    // Guardar información de conflictos en la sesión para mostrar en el modal
+                    $conflictosData = [];
+                    foreach ($todosConflictos as $conflicto) {
+                        $conflictosData[] = [
+                            'curso_nombre' => $conflicto['curso']->getNombre(),
+                            'dias' => $conflicto['dias'],
+                            'horario_existente' => $conflicto['horarioExistente'],
+                            'horario_nuevo' => $conflicto['horarioNuevo'],
+                        ];
+                    }
+                    
+                    $request->getSession()->set('conflictos_horarios_warning', [
+                        'curso_id' => null, // Curso nuevo, aún no tiene ID
+                        'conflictos' => $conflictosData,
+                    ]);
+                    
+                    // Volver a mostrar el formulario con el modal
+                    return $this->renderForm('curso/new.html.twig', [
+                        'curso' => $curso,
+                        'form' => $form,
+                        'mostrar_confirmacion_conflictos' => true,
+                    ]);
+                }
+                
+                // Si llegamos aquí, el usuario confirmó o no hay conflictos - limpiar sesión
+                $request->getSession()->remove('conflictos_horarios_warning');
+                
                 $cursoRepository->add($curso);
                 
                 // Consumir tokens después de guardar exitosamente
@@ -155,9 +214,19 @@ class CursoController extends AbstractController
             }
         }
 
+        // Verificar si hay advertencia de conflictos en la sesión
+        $mostrarConfirmacionConflictos = false;
+        if ($request->getSession()->has('conflictos_horarios_warning')) {
+            $conflictosData = $request->getSession()->get('conflictos_horarios_warning');
+            if ($conflictosData && (!isset($conflictosData['curso_id']) || $conflictosData['curso_id'] === null)) {
+                $mostrarConfirmacionConflictos = true;
+            }
+        }
+
         return $this->renderForm('curso/new.html.twig', [
             'curso' => $curso,
             'form' => $form,
+            'mostrar_confirmacion_conflictos' => $mostrarConfirmacionConflictos,
         ]);
     }
 
@@ -206,12 +275,26 @@ class CursoController extends AbstractController
                     $diaSemana = (int)$fechaActual->format('w');
                     
                     if (in_array($diaSemana, $diasSeleccionados)) {
+                        // Construir string de profesores para el calendario
+                        $profesores = $curso->getProfesores();
+                        $profesorStr = '';
+                        if ($profesores->count() > 0) {
+                            $primerProfesor = $profesores->first();
+                            $profesorStr = $primerProfesor->getNombre() . ' ' . $primerProfesor->getApellido();
+                            if ($profesores->count() > 1) {
+                                $profesorStr .= ' (+' . ($profesores->count() - 1) . ' más)';
+                            }
+                        } else {
+                            $profesorStr = 'Sin profesor';
+                        }
+                        
                         $evento = [
                             'title' => $curso->getNombre(),
                             'start' => $fechaActual->format('Y-m-d') . 'T' . $horaInicio->format('H:i:s'),
                             'end' => $fechaActual->format('Y-m-d') . 'T' . $horaFin->format('H:i:s'),
                             'extendedProps' => [
-                                'profesor' => $curso->getProfesores()->first() ? $curso->getProfesores()->first()->getNombre() . ' ' . $curso->getProfesores()->first()->getApellido() : 'Sin profesor',
+                                'profesor' => $profesorStr,
+                                'profesores' => $profesores->map(function($p) { return $p->getNombre() . ' ' . $p->getApellido(); })->toArray(), // Lista completa para el tooltip
                                 'duracion' => $curso->getDuracion(),
                                 'precio' => $curso->getPrecio()
                             ]
@@ -281,6 +364,15 @@ class CursoController extends AbstractController
             $form->get('horarioFin')->setData($curso->getHorarioFin()->format('H:i'));
         }
 
+        // Verificar si hay advertencia de conflictos en la sesión
+        $mostrarConfirmacionConflictos = false;
+        if ($request->getSession()->has('conflictos_horarios_warning')) {
+            $conflictosData = $request->getSession()->get('conflictos_horarios_warning');
+            if ($conflictosData && isset($conflictosData['curso_id']) && $conflictosData['curso_id'] == $curso->getId()) {
+                $mostrarConfirmacionConflictos = true;
+            }
+        }
+
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
@@ -328,8 +420,8 @@ class CursoController extends AbstractController
                     if ($asistenciasExistentes) {
                         // Si hay asistencias y no se confirmó la acción, mostrar advertencia
                         if (!$request->request->get('confirmar_cambio_profesor')) {
-                            $this->addFlash('warning', 'Este curso ya ha comenzado y tiene registros de asistencia para el profesor actual. 
-                            Si cambia el profesor, todas las asistencias registradas serán transferidas al nuevo profesor. 
+                            $this->addFlash('warning', 'Este curso ya ha comenzado y tiene registros de asistencia para los profesores actuales. 
+                            Si remueve algún profesor del curso, las asistencias registradas de ese profesor serán transferidas a otro profesor del curso. 
                             Si desea continuar, confirme la acción.');
                             
                             return $this->renderForm('curso/edit.html.twig', [
@@ -344,25 +436,42 @@ class CursoController extends AbstractController
                             ]);
                             
                             $profesoresActuales = $curso->getProfesores();
+                            $profesoresActualesIds = [];
+                            foreach ($profesoresActuales as $profesorActual) {
+                                $profesoresActualesIds[] = $profesorActual->getId();
+                            }
                             
-                            if (count($profesoresActuales) > 0) {
-                                // Tomar el primer profesor nuevo como el que recibirá las asistencias
-                                $nuevoProfesor = $profesoresActuales[0];
+                            // Identificar profesores que fueron completamente removidos del curso
+                            $profesoresRemovidos = [];
+                            foreach ($profesoresAnteriores as $profesorAnterior) {
+                                if (!in_array($profesorAnterior->getId(), $profesoresActualesIds)) {
+                                    $profesoresRemovidos[] = $profesorAnterior;
+                                }
+                            }
+                            
+                            // Solo transferir asistencias de profesores completamente removidos
+                            if (count($profesoresRemovidos) > 0 && count($profesoresActuales) > 0) {
+                                // Tomar el primer profesor actual como el que recibirá las asistencias
+                                $profesorDestino = $profesoresActuales[0];
+                                $asistenciasTransferidas = 0;
                                 
-                                foreach ($profesoresAnteriores as $profesorAnterior) {
-                                    // Actualizar todas las asistencias del profesor anterior en este curso
+                                foreach ($profesoresRemovidos as $profesorRemovido) {
+                                    // Buscar todas las asistencias del profesor removido en este curso
                                     $asistencias = $asistenciaProfesoresRepository->findBy([
                                         'curso' => $curso,
-                                        'profesor' => $profesorAnterior
+                                        'profesor' => $profesorRemovido
                                     ]);
                                     
                                     foreach ($asistencias as $asistencia) {
-                                        $asistencia->setProfesor($nuevoProfesor);
+                                        $asistencia->setProfesor($profesorDestino);
                                         $entityManager->persist($asistencia);
+                                        $asistenciasTransferidas++;
                                     }
                                 }
                                 
-                                $this->addFlash('success', 'Se han transferido las asistencias al nuevo profesor.');
+                                if ($asistenciasTransferidas > 0) {
+                                    $this->addFlash('success', 'Se han transferido ' . $asistenciasTransferidas . ' registro(s) de asistencia al profesor ' . $profesorDestino->getNombre() . ' ' . $profesorDestino->getApellido() . '.');
+                                }
                             }
                         }
                     }
@@ -371,6 +480,63 @@ class CursoController extends AbstractController
                 $curso->setHorarioInicio(new \DateTime($form->get('horarioInicio')->getData()));
                 $curso->setHorarioFin(new \DateTime($form->get('horarioFin')->getData()));
                 $curso->setDuracion($this->calcularDuracion($curso->getHorarioInicio(), $curso->getHorarioFin()));
+                
+                // Verificar conflictos de horarios para cada profesor asignado
+                // IMPORTANTE: Esto se ejecuta DESPUÉS de que el formulario ya actualizó $curso->getProfesores()
+                $todosConflictos = [];
+                $conflictosVistos = []; // Para evitar duplicados
+                
+                foreach ($curso->getProfesores() as $profesor) {
+                    if (!$profesor->getId()) {
+                        continue; // Profesor nuevo sin ID, no puede tener cursos existentes
+                    }
+                    
+                    $conflictos = $this->horarioConflictService->detectarConflictos($curso, $profesor, $curso->getId());
+                    
+                    foreach ($conflictos as $conflicto) {
+                        // Crear una clave única para identificar conflictos duplicados
+                        // Basada en: curso_id + días + horarios
+                        $claveUnica = $conflicto['curso']->getId() . '_' . 
+                                     implode(',', $conflicto['dias']) . '_' . 
+                                     $conflicto['horarioExistente'] . '_' . 
+                                     $conflicto['horarioNuevo'];
+                        
+                        // Solo agregar si no hemos visto este conflicto antes
+                        if (!isset($conflictosVistos[$claveUnica])) {
+                            $conflictosVistos[$claveUnica] = true;
+                            $todosConflictos[] = $conflicto;
+                        }
+                    }
+                }
+                
+                // Si hay conflictos y el usuario no ha confirmado, mostrar modal y detener el guardado
+                if (!empty($todosConflictos) && !$request->request->get('confirmar_conflictos_horarios')) {
+                    // Guardar información de conflictos en la sesión para mostrar en el modal
+                    $conflictosData = [];
+                    foreach ($todosConflictos as $conflicto) {
+                        $conflictosData[] = [
+                            'curso_nombre' => $conflicto['curso']->getNombre(),
+                            'dias' => $conflicto['dias'],
+                            'horario_existente' => $conflicto['horarioExistente'],
+                            'horario_nuevo' => $conflicto['horarioNuevo'],
+                        ];
+                    }
+                    
+                    $request->getSession()->set('conflictos_horarios_warning', [
+                        'curso_id' => $curso->getId(),
+                        'conflictos' => $conflictosData,
+                    ]);
+                    
+                    // Volver a mostrar el formulario con el modal
+                    return $this->renderForm('curso/edit.html.twig', [
+                        'curso' => $curso,
+                        'form' => $form,
+                        'mostrar_confirmacion_conflictos' => true,
+                    ]);
+                }
+                
+                // Si llegamos aquí, el usuario confirmó o no hay conflictos - limpiar sesión
+                $request->getSession()->remove('conflictos_horarios_warning');
                 
                 // Verificar si las fechas han cambiado
                 $fechasModificadas = ($fechaInicioOriginal != $curso->getFechaInicio() || 
@@ -427,6 +593,7 @@ class CursoController extends AbstractController
         return $this->renderForm('curso/edit.html.twig', [
             'curso' => $curso,
             'form' => $form,
+            'mostrar_confirmacion_conflictos' => $mostrarConfirmacionConflictos,
         ]);
     }
 

@@ -7,6 +7,29 @@
 {% endblock %}
 
 {% block body %}
+<style>
+    .table th:first-child,
+    .table td:first-child {
+        min-width: 200px;
+        width: 200px;
+        white-space: nowrap;
+    }
+    .table th:first-child {
+        position: sticky;
+        left: 0;
+        background-color: #f8f9fa;
+        z-index: 10;
+    }
+    .table td:first-child {
+        position: sticky;
+        left: 0;
+        background-color: white;
+        z-index: 5;
+    }
+    .table-striped tbody tr:nth-of-type(odd) td:first-child {
+        background-color: rgba(0,0,0,.05);
+    }
+</style>
 <div class="container-fluid mt-4">
         <div class="row">
             <div class="col-md-6">
@@ -18,7 +41,7 @@
         <table class="table table-striped table-responsive">
             <thead>
                 <tr>
-                    <th scope="col">Profes</th>
+                    <th scope="col" style="min-width: 200px; width: 200px;">Profes</th>
                     {% for fechas in rango %}
                         <th scope="col" class="border-start text-center">{{ fechas }}</th>
                     {% endfor %}
@@ -28,16 +51,16 @@
                 </tr>
             </thead>
             <tbody>
-                {% for profe, asistencia in asistencias %}
+                {% for profeId, asistencia in asistencias %}
                     {% set totalFaltas = 0 %}
                     {% set totalHoras = 0 %}
-                    {% if profe != 'reemplazantes' %}
+                    {% if profesoresInfo[profeId] is defined %}
                         <tr scope="row">
-                            <th>
-                                {{ profe }}
+                            <th style="min-width: 200px; width: 200px; white-space: nowrap;">
+                                {{ profesoresInfo[profeId].nombreCompleto }}
                             </th>
                             {% for fechas in rango %}
-                                <td class="border-start text-center" id="{{ profe }}-{{ fechas }}" style="padding: 0;">
+                                <td class="border-start text-center" id="{{ profeId }}-{{ fechas }}" style="padding: 0;">
                                     {% if asistencia[fechas] is defined %}
                                         {% if asistencia[fechas] | length > 0  %}
                                             {% for asis in asistencia[fechas] %}

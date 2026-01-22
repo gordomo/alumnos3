@@ -85,7 +85,7 @@
                                     {% for profesor in curso.profesores %}
                                         {{ profesor.apellido }}, {{ profesor.nombre }}{% if not loop.last %}<br>{% endif %}
                                     {% else %}
-                                        <span class="text-danger">No tiene profesor asignado</span>
+                                        <span class="text-danger">No tiene profesores asignados</span>
                                     {% endfor %}
                                 </td>
             </tr>

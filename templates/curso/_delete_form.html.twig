@@ -1,4 +1,6 @@
-<form method="post" action="{{ path('app_curso_delete', {'id': curso.id}) }}" onsubmit="return confirm('Está seguro que desea deshabilitar este curso?');">
+<form method="post" action="{{ path('app_curso_delete', {'id': curso.id}) }}" onsubmit="return confirm('Está seguro que desea deshabilitar este curso?');" class="d-inline">
     <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ curso.id) }}">
-    <button class="btn btn-sm btn-outline-danger">Deshabilitar</button>
+    <button class="btn btn-sm btn-outline-danger" title="Deshabilitar">
+        <i class="bi bi-x-circle"></i>
+    </button>
 </form>

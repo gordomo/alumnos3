@@ -22,6 +22,7 @@ use Doctrine\DBAL\Exception\DriverException;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use App\Entity\User;
 use App\Service\TokenService;
+use App\Service\HorarioConflictService;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
@@ -31,10 +32,12 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class ProfesorController extends AbstractController
 {
     private TokenService $tokenService;
+    private HorarioConflictService $horarioConflictService;
 
-    public function __construct(TokenService $tokenService)
+    public function __construct(TokenService $tokenService, HorarioConflictService $horarioConflictService)
     {
         $this->tokenService = $tokenService;
+        $this->horarioConflictService = $horarioConflictService;
     }
 
     /**
@@ -158,6 +161,16 @@ class ProfesorController extends AbstractController
 
         $asisArray = [];
         $reemplazantes = [];
+        $profesoresInfo = []; // Array para almacenar información de profesores (ID => nombre completo)
+
+        // Inicializar información de profesores
+        foreach ($profesores as $profe) {
+            $profesoresInfo[$profe->getId()] = [
+                'nombreCompleto' => $profe->getApellido() . ', ' . $profe->getNombre(),
+                'apellido' => $profe->getApellido(),
+                'nombre' => $profe->getNombre()
+            ];
+        }
 
         foreach ($rango as $fecha) {
             $date = new \DateTime($fecha);
@@ -174,27 +187,51 @@ class ProfesorController extends AbstractController
                 $faltas = $asistenciaProfesoresRepository->findByFechaEinstituto(new \DateTime($fecha), $instituto);
                 /* if($faltas) dd($faltas); */
                 foreach ($profeCurso as $profe) {
-                    $asisArray[$profe->getApellido()][$fecha][] = ['falta' => false, 'horas' => $cursoHoy->getDuracion(), 'curso' => $cursoHoy->getNombre()];
-                    $asisArray[$profe->getApellido()]['precioHora'] = $profe->getPrecioHora();
+                    $profeId = $profe->getId();
+                    $asisArray[$profeId][$fecha][] = ['falta' => false, 'horas' => $cursoHoy->getDuracion(), 'curso' => $cursoHoy->getNombre()];
+                    $asisArray[$profeId]['precioHora'] = $profe->getPrecioHora();
+                    
+                    // Asegurar que el profesor esté en el array de información
+                    if (!isset($profesoresInfo[$profeId])) {
+                        $profesoresInfo[$profeId] = [
+                            'nombreCompleto' => $profe->getApellido() . ', ' . $profe->getNombre(),
+                            'apellido' => $profe->getApellido(),
+                            'nombre' => $profe->getNombre()
+                        ];
+                    }
                 }
             }
 
 
             foreach ($faltas as $falta) {
+                $profeFalta = $falta->getProfesor();
+                $profeFaltaId = $profeFalta->getId();
                 $reemplazante = $profesorRepository->find($falta->getProfesorRemplazante());
+                $reemplazanteId = $reemplazante ? $reemplazante->getId() : null;
                 $curso = $cursoRepository->find($falta->getCurso());
                 $nombreCurso = (!empty($curso)) ? $curso->getNombre() : 'El curso fue eliminado';
-                $faltaArr[] = ["falta" => true, "remplazante" => $reemplazante ? $reemplazante->getApellido() : 'Sin Reemplazo', "curso" => $nombreCurso, 'horas' => $curso->getDuracion()];
+                $faltaArr[] = ["falta" => true, "remplazante" => $reemplazante ? ($reemplazante->getApellido() . ', ' . $reemplazante->getNombre()) : 'Sin Reemplazo', "curso" => $nombreCurso, 'horas' => $curso->getDuracion()];
 
                 if ($reemplazante) {
-                    $reemplazantes[$reemplazante->getApellido()][$fecha][]['reemplazo'] = ["reemplazoA" =>"Reemplazó a " . $falta->getProfesor()->getApellido() . " en "  . $cursoRepository->find($falta->getCurso())->getNombre(), 'horas' => $curso->getDuracion()];
-                    $reemplazantes[$reemplazante->getApellido()]['precioHora'] = $reemplazante->getPrecioHora();
+                    $reemplazantes[$reemplazanteId][$fecha][]['reemplazo'] = ["reemplazoA" =>"Reemplazó a " . $profeFalta->getApellido() . ", " . $profeFalta->getNombre() . " en "  . $cursoRepository->find($falta->getCurso())->getNombre(), 'horas' => $curso->getDuracion()];
+                    $reemplazantes[$reemplazanteId]['precioHora'] = $reemplazante->getPrecioHora();
+                    
+                    // Asegurar que el reemplazante esté en el array de información
+                    if (!isset($profesoresInfo[$reemplazanteId])) {
+                        $profesoresInfo[$reemplazanteId] = [
+                            'nombreCompleto' => $reemplazante->getApellido() . ', ' . $reemplazante->getNombre(),
+                            'apellido' => $reemplazante->getApellido(),
+                            'nombre' => $reemplazante->getNombre()
+                        ];
+                    }
                 }
 
-                foreach ( $asisArray[$falta->getProfesor()->getApellido()][$fecha] as $clave => $asistencias ) {
-                    foreach ( $faltaArr as $faltaIndividual ) {
-                        if ($asistencias['curso'] == $faltaIndividual['curso']) {
-                            $asisArray[$falta->getProfesor()->getApellido()][$fecha][$clave] = $faltaIndividual;
+                if (isset($asisArray[$profeFaltaId][$fecha])) {
+                    foreach ( $asisArray[$profeFaltaId][$fecha] as $clave => $asistencias ) {
+                        foreach ( $faltaArr as $faltaIndividual ) {
+                            if ($asistencias['curso'] == $faltaIndividual['curso']) {
+                                $asisArray[$profeFaltaId][$fecha][$clave] = $faltaIndividual;
+                            }
                         }
                     }
                 }
@@ -216,11 +253,36 @@ class ProfesorController extends AbstractController
                 }
             }
         }
+        
+        // Ordenar profesores por apellido y luego por nombre
+        uasort($profesoresInfo, function($a, $b) {
+            $cmp = strcmp($a['apellido'], $b['apellido']);
+            if ($cmp === 0) {
+                return strcmp($a['nombre'], $b['nombre']);
+            }
+            return $cmp;
+        });
+        
+        // Reordenar $asisArray según el orden de $profesoresInfo
+        $asisArrayOrdenado = [];
+        foreach ($profesoresInfo as $profeId => $info) {
+            if (isset($asisArray[$profeId])) {
+                $asisArrayOrdenado[$profeId] = $asisArray[$profeId];
+            }
+        }
+        
+        // Agregar reemplazantes que no están en profesores principales
+        foreach ($reemplazantes as $reempId => $reempData) {
+            if (!isset($asisArrayOrdenado[$reempId])) {
+                $asisArrayOrdenado[$reempId] = $reempData;
+            }
+        }
 
         return $this->render('profesor/informes.html.twig',[
             'cursos' => $cursos,
             'todosLosProfes' => $profesores,
-            'asistencias' => $asisArray,
+            'asistencias' => $asisArrayOrdenado,
+            'profesoresInfo' => $profesoresInfo,
             'desde' => $desde,
             'hasta' => $hasta,
             'rango' => $this->createDateRangeArray($desde, $hasta),
@@ -280,14 +342,24 @@ class ProfesorController extends AbstractController
                     ]);
                 }
 
-                // Verificar que los cursos seleccionados no tengan profesor asignado
-                foreach($profesor->getCursos() as $curso) {
-                    if(count($curso->getProfesores()) > 0) {
-                        $this->addFlash('danger', 'El curso "' . $curso->getNombre() . '" ya tiene un profesor asignado.');
-                        return $this->renderForm('profesor/new.html.twig', [
-                            'profesor' => $profesor,
-                            'form' => $form,
-                        ]);
+                // Verificar conflictos de horarios
+                // Solo verificar si el profesor ya tiene ID (ya existe en BD)
+                if ($profesor->getId()) {
+                    $todosConflictos = [];
+                    foreach ($profesor->getCursos() as $curso) {
+                        if (!$curso->getId()) {
+                            continue; // Curso nuevo sin ID, se verificará cuando se guarde
+                        }
+                        $conflictos = $this->horarioConflictService->detectarConflictos($curso, $profesor, $curso->getId());
+                        if (!empty($conflictos)) {
+                            $todosConflictos = array_merge($todosConflictos, $conflictos);
+                        }
+                    }
+                    
+                    if (!empty($todosConflictos)) {
+                        $mensaje = 'Advertencia: Se detectaron conflictos de horarios. ' . $this->horarioConflictService->generarMensajeConflicto($todosConflictos);
+                        $this->addFlash('warning', $mensaje);
+                        // Continuar con el guardado pero mostrar advertencia
                     }
                 }
 
@@ -451,19 +523,6 @@ class ProfesorController extends AbstractController
             $cursosCambiados = count(array_diff($cursosOriginalesIds, $cursosNuevosIds)) > 0 || 
                               count(array_diff($cursosNuevosIds, $cursosOriginalesIds)) > 0;
             
-            // Verificar que los cursos seleccionados no tengan otro profesor asignado
-            foreach($profesor->getCursos() as $curso) {
-                foreach ($curso->getProfesores() as $profe) {
-                    if ($profe->getId() != $profesor->getId()) {
-                        $this->addFlash('danger', 'El curso "' . $curso->getNombre() . '" ya tiene un profesor asignado.');
-                        return $this->renderForm('profesor/edit.html.twig', [
-                            'profesor' => $profesor,
-                            'form' => $form,
-                        ]);
-                    }
-                }
-            }
-            
             // Verificar si hay cursos que ya comenzaron y tienen asistencias
             $cursosComenzados = false;
             $asistenciasExistentes = false;
@@ -509,6 +568,21 @@ class ProfesorController extends AbstractController
                     // El usuario confirmó la acción, proceder a guardar los cambios
                     $this->addFlash('success', 'Los cambios en los cursos han sido aplicados. Los registros de asistencia se han mantenido en el sistema.');
                 }
+            }
+            
+            // Verificar conflictos de horarios
+            $todosConflictos = [];
+            foreach ($profesor->getCursos() as $curso) {
+                $conflictos = $this->horarioConflictService->detectarConflictos($curso, $profesor, $curso->getId());
+                if (!empty($conflictos)) {
+                    $todosConflictos = array_merge($todosConflictos, $conflictos);
+                }
+            }
+            
+            if (!empty($todosConflictos)) {
+                $mensaje = 'Advertencia: Se detectaron conflictos de horarios. ' . $this->horarioConflictService->generarMensajeConflicto($todosConflictos);
+                $this->addFlash('warning', $mensaje);
+                // Continuar con el guardado pero mostrar advertencia
             }
             
             try {

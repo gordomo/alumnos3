@@ -10,28 +10,32 @@
 
 {% block body %}
 <div class="container-fluid mt-4">
-    <div class="row">
-        <div class="col-5">
-            <form method="get" action="{{ path('app_curso_index') }}">
-                <div class="input-group mb-3">
-                    <input name="busqueda" type="text" class="form-control" placeholder="Buscar por nombre" value="{{ busqueda is defined ? busqueda : '' }}" aria-label="Buscar curso" aria-describedby="button-addon2">
-                    <button class="btn btn-outline-secondary" type="submit" id="button-addon2"><i class="bi bi-search"></i></button>
+    {# Barra de búsqueda y filtros #}
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <form method="get" action="{{ path('app_curso_index') }}" class="d-flex gap-2">
+                <div class="input-group">
+                    <input name="busqueda" type="text" class="form-control" placeholder="Buscar por nombre" value="{{ busqueda is defined ? busqueda : '' }}" aria-label="Buscar curso">
+                    <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i></button>
                 </div>
+                {% if busqueda %}
+                    <a class="btn btn-outline-secondary" href="{{ path('app_curso_index') }}" title="Limpiar búsqueda">
+                        <i class="bi bi-x-lg"></i>
+                    </a>
+                {% endif %}
             </form>
         </div>
-        <div class="col-7">
-            <a class="btn btn-outline-secondary" href="{{ path('app_curso_index') }}">Todos</a>
-        </div>
-    </div>
-
-    <div class="row mb-3">
-        <div class="col-12 d-flex justify-content-between align-items-center">
-            <ul class="nav nav-tabs w-100" id="myTab" role="tablist">
+        <div class="col-md-6 d-flex justify-content-end align-items-center">
+            <ul class="nav nav-pills" id="myTab" role="tablist">
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button" role="tab" aria-controls="home" aria-selected="true">Activos</button>
+                    <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button" role="tab" aria-controls="home" aria-selected="true">
+                        Activos <span class="badge bg-primary ms-1">{{ totalCursos }}</span>
+                    </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="false">Deshabilitados</button>
+                    <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="false">
+                        Deshabilitados <span class="badge bg-secondary ms-1">{{ totalCursosDeshabilitados }}</span>
+                    </button>
                 </li>
             </ul>
         </div>
@@ -39,10 +43,10 @@
     <div class="tab-content" id="myTabContent">
         <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
             <div class="table-responsive">
-                <table class="table table-striped table-sm">
-                    <thead>
+                <table class="table table-striped table-hover align-middle">
+                    <thead class="table-light">
                         <tr>
-                            <th>
+                            <th class="w-auto">
                                 <a href="{{ path('app_curso_index', {
                                     'action': 'cursos',
                                     'order': order == 'asc' ? 'desc' : 'asc',
@@ -50,88 +54,101 @@
                                     'busqueda': busqueda
                                 }) }}" class="text-decoration-none text-dark">
                                     Nombre
-                                <i class="bi bi-arrow-{{ sort == 'nombre' ? (order == 'asc' ? 'up' : 'down') : 'up-down' }}"></i>
-                            </a> </th>
-                            <th>Profesor</th>
-                            <th><a href="{{ path('app_curso_index', {
+                                    <i class="bi bi-arrow-{{ sort == 'nombre' ? (order == 'asc' ? 'up' : 'down') : 'up-down' }}"></i>
+                                </a>
+                            </th>
+                            <th class="w-auto">Profesor</th>
+                            <th class="w-auto">
+                                <a href="{{ path('app_curso_index', {
                                     'action': 'cursos',
                                     'order': order == 'asc' ? 'desc' : 'asc',
                                     'sort': 'precio',
                                     'busqueda': busqueda
                                 }) }}" class="text-decoration-none text-dark">
                                     Precio
-                                <i class="bi bi-arrow-{{ sort == 'precio' ? (order == 'asc' ? 'up' : 'down') : 'up-down' }}"></i></th>
-                            <th>Días</th>
-                            <th>Horario</th>
-                            <th>Duración</th>
-                            <th>Fecha de Inicio</th>
-                            <th>Fecha de Fin</th>
-                            <th>Acciones</th>
-                            <th></th>
-                            <th>Total: {{totalCursos}}</th>
+                                    <i class="bi bi-arrow-{{ sort == 'precio' ? (order == 'asc' ? 'up' : 'down') : 'up-down' }}"></i>
+                                </a>
+                            </th>
+                            <th class="w-auto">Días</th>
+                            <th class="w-auto">Horario</th>
+                            <th class="w-auto">Duración</th>
+                            <th class="w-auto">Fecha Inicio</th>
+                            <th class="w-auto">Fecha Fin</th>
+                            <th class="text-center" style="width: 80px;">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                     {% for curso in cursos %}
                         <tr>
-                            <td>{{ curso.nombre }}</td>
+                            <td><strong>{{ curso.nombre }}</strong></td>
                             <td>
                                 {% for profesor in curso.profesores %}
-                                    {{ profesor.apellido }} {{ profesor.nombre }}
-                                    {% if not loop.last %}
-                                        <br>
-                                    {% endif %}
-                                    {% else %}
-                                        <span class="text-danger">No tiene profesor</span>
-                                    {% endfor %}
+                                    <div class="mb-1">
+                                        <span class="badge bg-info text-dark" style="font-size: 0.9rem; padding: 0.5rem 0.75rem; white-space: nowrap;">{{ profesor.apellido }} {{ profesor.nombre }}</span>
+                                    </div>
+                                {% else %}
+                                    <span class="text-danger"><i class="bi bi-exclamation-triangle"></i> Sin profesores</span>
+                                {% endfor %}
                             </td>
-                            <td>${{ curso.precio | number_format(2, ',', '.') }} </td>
+                            <td><strong class="text-success">${{ curso.precio | number_format(2, ',', '.') }}</strong></td>
                             <td>
                                 {% for key in curso.dias %}
-                                    {{ key }}
-                                    {% if curso.dias | length > 1 %}
-                                        <br>
-                                    {% endif %}
+                                    <span class="badge bg-secondary mb-1">{{ key }}</span>
                                 {% endfor %}
                             </td>
                             <td>
                                 {% if curso.horarioInicio|date('H:i') == curso.horarioFin|date('H:i') %}
-                                    <span class="text-danger">No tiene horario</span>
+                                    <span class="text-danger small"><i class="bi bi-exclamation-triangle"></i> Sin horario</span>
                                 {% else %}
-                                    {{ curso.horarioInicio|date('H:i') }}hs - {{ curso.horarioFin|date('H:i') }}hs
+                                    <span class="badge bg-light text-dark">{{ curso.horarioInicio|date('H:i') }}hs - {{ curso.horarioFin|date('H:i') }}hs</span>
                                 {% endif %} 
                             </td>
                             <td>
                                 {% if curso.horarioInicio|date('H:i') == curso.horarioFin|date('H:i') %}
-                                    <span class="text-danger">No tiene horario</span>
+                                    <span class="text-danger small">-</span>
                                 {% else %}
                                     {% set horas = (curso.duracion)|round(0, 'floor') %}
                                     {% set minutos = ((curso.duracion - horas) * 60)|round(0, 'floor') %}
-                                    {{ horas }}:{{ '%02d'|format(minutos) }}hs
+                                    <span class="badge bg-light text-dark">{{ horas }}:{{ '%02d'|format(minutos) }}hs</span>
                                 {% endif %} 
                             </td>
-                            <td>
-                                {{ curso.fechaInicio|date('d/m/Y') }}
+                            <td>{{ curso.fechaInicio|date('d/m/Y') }}</td>
+                            <td>{{ curso.fechaFin|date('d/m/Y') }}</td>
+                            <td class="text-center position-relative">
+                                <div class="dropdown dropstart">
+                                    <button class="btn btn-sm btn-outline-secondary" type="button" id="dropdownMenuButton{{ curso.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="bi bi-three-dots-vertical"></i>
+                                    </button>
+                                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton{{ curso.id }}">
+                                        <li>
+                                            <a class="dropdown-item" href="{{ path('app_curso_show', {'id': curso.id}) }}">
+                                                <i class="bi bi-eye me-2"></i> Ver detalle
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="{{ path('app_curso_edit', {'id': curso.id}) }}">
+                                                <i class="bi bi-pencil me-2"></i> Editar
+                                            </a>
+                                        </li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <form method="post" action="{{ path('app_curso_delete', {'id': curso.id}) }}" onsubmit="return confirm('Está seguro que desea deshabilitar este curso?');" class="d-inline">
+                                                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ curso.id) }}">
+                                                <button type="submit" class="dropdown-item text-danger">
+                                                    <i class="bi bi-x-circle me-2"></i> Deshabilitar
+                                                </button>
+                                            </form>
+                                        </li>
+                                    </ul>
+                                </div>
                             </td>
-                            <td>
-                                {{ curso.fechaFin|date('d/m/Y') }}
-                            </td>
-                            <td>
-                                <a href="{{ path('app_curso_show', {'id': curso.id}) }}" class="btn btn-sm btn-outline-info" title="Ver detalle" data-toggle="tooltip" data-placement="left">
-                                    <i class="bi bi-eye"></i>
-                                </a>
-                                <a href="{{ path('app_curso_edit', {'id': curso.id}) }}" class="btn btn-sm btn-outline-primary" title="Editar" data-toggle="tooltip" data-placement="left">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
-                            </td>
-                            <td>
-                                {{ include('curso/_delete_form.html.twig') }}
-                            </td>
-                            <td></td>
                         </tr>
                     {% else %}
                         <tr>
-                            <td colspan="11">No se encontraron registros</td>
+                            <td colspan="9" class="text-center py-4">
+                                <i class="bi bi-inbox" style="font-size: 2rem; color: #ccc;"></i>
+                                <p class="text-muted mt-2">No se encontraron cursos activos</p>
+                            </td>
                         </tr>
                     {% endfor %}
                     </tbody>
@@ -139,72 +156,81 @@
             </div>
         </div>
         <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
-            <table class="table table-striped table-sm">
-                <thead>
-                <tr>
-                    <th>Nombre</th>
-                    <th>Profesor</th>
-                    <th>Precio</th>
-                    <th>Días</th>
-                    <th>Horario</th>
-                    <th>Duración</th>
-                    <th>Fecha de Inicio</th>
-                    <th>Fecha de Fin</th>
-                    <th>Acciones</th>
-                    <th>Total: {{ totalCursosDeshabilitados }}</th>
-                </tr>
-                </thead>
-                <tbody>
-                {% for curso in cursosDeshabilitados %}
-                    <tr>
-                        <td>{{ curso.nombre }}</td>
-                        <td>
-                            {% for profesor in curso.profesores %}
-                                {{ profesor.apellido }}, {{ profesor.nombre }}
-                                {% if not loop.last %}
-                                    <br>
-                                {% endif %}
+            <div class="table-responsive">
+                <table class="table table-striped table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="w-auto">Nombre</th>
+                            <th class="w-auto">Profesor</th>
+                            <th class="w-auto">Precio</th>
+                            <th class="w-auto">Días</th>
+                            <th class="w-auto">Horario</th>
+                            <th class="w-auto">Duración</th>
+                            <th class="w-auto">Fecha Inicio</th>
+                            <th class="w-auto">Fecha Fin</th>
+                            <th class="text-center" style="width: 80px;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for curso in cursosDeshabilitados %}
+                        <tr>
+                            <td><strong>{{ curso.nombre }}</strong></td>
+                            <td>
+                                {% for profesor in curso.profesores %}
+                                    <div class="mb-1">
+                                        <span class="badge bg-info text-dark" style="font-size: 0.9rem; padding: 0.5rem 0.75rem; white-space: nowrap;">{{ profesor.apellido }} {{ profesor.nombre }}</span>
+                                    </div>
                                 {% else %}
-                                    <span class="text-danger">No tiene profesor</span>
+                                    <span class="text-danger"><i class="bi bi-exclamation-triangle"></i> Sin profesores</span>
                                 {% endfor %}
-                        </td>
-                        <td>${{ curso.precio }}</td>
-                        <td>
-                            {% for key in curso.dias %}
-                                {{ key }}
-                                {% if curso.dias | length > 1 %}
-                                    <br>
-                                {% endif %}
-                            {% endfor %}
-                        </td>
-                        <td>
-                            {{ curso.horarioInicio|date('H:i') }} - {{ curso.horarioFin|date('H:i') }}
-                        </td>
-                        <td>
-                            {% set horas = (curso.duracion)|round(0, 'floor') %}
-                            {% set minutos = ((curso.duracion - horas) * 60)|round(0, 'floor') %}
-                            {{ horas }}:{{ '%02d'|format(minutos) }}hs    
-                        </td>
-                        <td>
-                            {{ curso.fechaInicio|date('d/m/Y') }}
-                        </td>
-                        <td>
-                            {{ curso.fechaFin|date('d/m/Y') }}
-                        </td>
-                        <td>
-                            <a href="{{ path('app_curso_show', {'id': curso.id}) }}" class="btn btn-sm btn-outline-info" title="Ver detalle" data-toggle="tooltip" data-placement="left">
-                                <i class="bi bi-eye"></i>
-                            </a>
-                            <a class="btn btn-success btn-sm" href="{{ path('app_curso_habilitar', {id: curso.id}) }}">Habilitar</a>
-                        </td>
-                    </tr>
-                {% else %}
-                    <tr>
-                        <td colspan="10">No se encontraron registros</td>
-                    </tr>
-                {% endfor %}
-                </tbody>
-            </table>
+                            </td>
+                            <td><strong class="text-success">${{ curso.precio | number_format(2, ',', '.') }}</strong></td>
+                            <td>
+                                {% for key in curso.dias %}
+                                    <span class="badge bg-secondary mb-1">{{ key }}</span>
+                                {% endfor %}
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark">{{ curso.horarioInicio|date('H:i') }}hs - {{ curso.horarioFin|date('H:i') }}hs</span>
+                            </td>
+                            <td>
+                                {% set horas = (curso.duracion)|round(0, 'floor') %}
+                                {% set minutos = ((curso.duracion - horas) * 60)|round(0, 'floor') %}
+                                <span class="badge bg-light text-dark">{{ horas }}:{{ '%02d'|format(minutos) }}hs</span>
+                            </td>
+                            <td>{{ curso.fechaInicio|date('d/m/Y') }}</td>
+                            <td>{{ curso.fechaFin|date('d/m/Y') }}</td>
+                            <td class="text-center position-relative">
+                                <div class="dropdown dropstart">
+                                    <button class="btn btn-sm btn-outline-secondary" type="button" id="dropdownMenuButtonDisabled{{ curso.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="bi bi-three-dots-vertical"></i>
+                                    </button>
+                                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButtonDisabled{{ curso.id }}">
+                                        <li>
+                                            <a class="dropdown-item" href="{{ path('app_curso_show', {'id': curso.id}) }}">
+                                                <i class="bi bi-eye me-2"></i> Ver detalle
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item text-success" href="{{ path('app_curso_habilitar', {id: curso.id}) }}">
+                                                <i class="bi bi-check-circle me-2"></i> Habilitar
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="9" class="text-center py-4">
+                                <i class="bi bi-inbox" style="font-size: 2rem; color: #ccc;"></i>
+                                <p class="text-muted mt-2">No se encontraron cursos deshabilitados</p>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>

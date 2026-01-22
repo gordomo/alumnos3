@@ -19,7 +19,7 @@
                 </div>
                 <div class="col-md-6">
                     <label for="curso" class="form-label">Curso</label>
-                    <select class="form-select chosen-select" id="curso" name="curso">
+                    <select class="form-select" id="curso" name="curso">
                         <option value="">Seleccione un curso</option>
                         {% for curso in cursos %}
                             <option value="{{ curso.id }}" {% if cursoSeleccionado and cursoSeleccionado.id == curso.id %}selected{% endif %}>

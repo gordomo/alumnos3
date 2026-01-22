@@ -70,9 +70,16 @@
                         hideLoading();
                     }
                     var props = info.event.extendedProps;
+                    var profesoresTexto = props.profesor;
+                    
+                    // Si hay múltiples profesores, mostrar la lista completa
+                    if (props.profesores && Array.isArray(props.profesores) && props.profesores.length > 1) {
+                        profesoresTexto = props.profesores.join(', ');
+                    }
+                    
                     alert(
                         'Curso: ' + info.event.title + '\n' +
-                        'Profesor: ' + props.profesor + '\n' +
+                        'Profesor' + (props.profesores && props.profesores.length > 1 ? 'es' : '') + ': ' + profesoresTexto + '\n' +
                         'Duración: ' + props.duracion + ' horas\n' +
                         'Precio: $' + props.precio
                     );

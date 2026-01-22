@@ -57,8 +57,12 @@ class LoginFormAuthAuthenticator extends AbstractLoginFormAuthenticator implemen
 
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
     {
+        // Establecer la última actividad al iniciar sesión
+        $session = $request->getSession();
+        $session->set('_last_activity', time());
+        
         // Intentar obtener la URL objetivo almacenada en la sesión
-        if ($targetPath = $this->getTargetPath($request->getSession(), $firewallName)) {
+        if ($targetPath = $this->getTargetPath($session, $firewallName)) {
             return new RedirectResponse($targetPath);
         }
         

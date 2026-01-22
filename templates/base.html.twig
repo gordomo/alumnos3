@@ -50,6 +50,16 @@
             {{ message }}
         </div>
     {% endfor %}
+    {% for message in app.flashes('warning') %}
+        <div class="alert alert-warning toast-custom" style="z-index: 9999; position: fixed; top: 20px; right: 20px; min-width: 400px; max-width: 600px;">
+            <strong>⚠️ Advertencia:</strong> {{ message }}
+        </div>
+    {% endfor %}
+    {% for message in app.flashes('info') %}
+        <div class="alert alert-info toast-custom" style="z-index: 9999; position: fixed; top: 20px; right: 20px; min-width: 400px; max-width: 600px;">
+            <strong>ℹ️ Información:</strong> {{ message }}
+        </div>
+    {% endfor %}
     {{ include('components/loading.html.twig') }}
 {% block javascripts %}
     {{ encore_entry_script_tags('app') }}
@@ -66,17 +76,27 @@
             const toastMessages = document.querySelectorAll('.toast-custom');
 
             toastMessages.forEach((toast) => {
-                // Tiempo de espera antes de que el mensaje empiece a desaparecer (3 segundos en este ejemplo)
+                // Determinar tiempo de visualización según el tipo de mensaje
+                let fadeOutTime = 3000; // Por defecto 3 segundos
+                let removeTime = 4000;
+                
+                // Los mensajes de warning e info duran más tiempo para que el usuario los vea
+                if (toast.classList.contains('alert-warning') || toast.classList.contains('alert-info')) {
+                    fadeOutTime = 10000; // 10 segundos antes de empezar a desaparecer
+                    removeTime = 12000; // 12 segundos total antes de remover
+                }
+                
+                // Tiempo de espera antes de que el mensaje empiece a desaparecer
                 setTimeout(() => {
                     toast.classList.add('fade-out');
-                }, 3000); // Cambia el número para esperar más tiempo antes de comenzar a desvanecer
+                }, fadeOutTime);
 
                 // Tiempo total para remover el elemento del DOM, después de fade-in
                 setTimeout(() => {
                     if (toast.parentNode) {
                         toast.parentNode.removeChild(toast);
                     }
-                }, 4000); // Debe ser mayor que el de arriba para asegurarse que la transición se ejecute
+                }, removeTime);
             });
         });
 
@@ -86,6 +106,8 @@
             }});
 
             // Inicialización global de Chosen para selectores
+            // Nota: Chosen.js puede causar "Violation" warnings por event listeners no pasivos
+            // Estos warnings no afectan la funcionalidad pero pueden aparecer en la consola
             if ($.fn.chosen) {
                 // Inicializar todos los campos chosen-select
                 $(".chosen-select").chosen({

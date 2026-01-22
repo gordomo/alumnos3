@@ -90,9 +90,9 @@
                                                     <td>
                                                         {% if asistencia.presente is not null %}
                                                             {% if asistencia.presente %}
-                                                                <span class="badge bg-success">Presente</span>
+                                                                <i style="font-size: 25px; color: green" class="bi bi-check" title="Presente"></i>
                                                             {% else %}
-                                                                <span class="badge bg-danger">Ausente</span>
+                                                                <i style="font-size: 25px; color: red" class="bi bi-x" title="Ausente"></i>
                                                             {% endif %}
                                                         {% else %}
                                                             <span class="badge bg-secondary">Sin registro</span>
@@ -113,11 +113,11 @@
                                 <table class="table table-bordered table-striped table-sm">
                                     <thead>
                                         <tr>
-                                            <th>Alumno</th>
+                                            <th style="min-width: 150px;">Alumno</th>
                                             {% for fecha in informeAsistencias.fechas %}
-                                                <th class="text-center">{{ fecha|date('d/m') }}</th>
+                                                <th class="text-center" style="min-width: 60px;">{{ fecha|date('d/m') }}</th>
                                             {% endfor %}
-                                            <th class="text-center">Asistencia</th>
+                                            <th class="text-center" style="min-width: 120px;">Asistencia</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -129,30 +129,34 @@
                                                     {% set totalDias = informeAsistencias.fechas|length %}
                                                     
                                                     {% for fecha in informeAsistencias.fechas %}
-                                                        <td class="text-center">
+                                                        <td class="text-center align-middle" style="vertical-align: middle;">
                                                             {% set asistenciaInfo = alumnoData.fechas[fecha] %}
                                                             {% if asistenciaInfo.presente is not null %}
                                                                 {% if asistenciaInfo.presente %}
-                                                                    <span class="badge bg-success" title="{{ asistenciaInfo.observaciones }}">P</span>
+                                                                    <i style="font-size: 25px; color: green" class="bi bi-check" title="{{ asistenciaInfo.observaciones }}"></i>
                                                                     {% set asistenciaCount = asistenciaCount + 1 %}
                                                                 {% else %}
-                                                                    <span class="badge bg-danger" title="{{ asistenciaInfo.observaciones }}">A</span>
+                                                                    <i style="font-size: 25px; color: red" class="bi bi-x" title="{{ asistenciaInfo.observaciones }}"></i>
                                                                 {% endif %}
                                                             {% else %}
-                                                                <span class="badge bg-secondary">-</span>
+                                                                <span class="badge bg-secondary" style="font-size: 0.875rem; padding: 0.35rem 0.65rem;">-</span>
                                                             {% endif %}
                                                         </td>
                                                     {% endfor %}
                                                     
-                                                    <td class="text-center">
+                                                    <td class="text-center align-middle" style="min-width: 150px; vertical-align: middle;">
                                                         {% if totalDias > 0 %}
                                                             {% set porcentaje = (asistenciaCount / totalDias) * 100 %}
-                                                            <div class="progress" style="height: 20px;">
-                                                                <div class="progress-bar bg-success" role="progressbar" 
-                                                                     style="width: {{ porcentaje }}%;" 
-                                                                     aria-valuenow="{{ porcentaje }}" 
-                                                                     aria-valuemin="0" 
-                                                                     aria-valuemax="100">
+                                                            <div class="d-flex flex-column align-items-center gap-2">
+                                                                <div class="progress" style="height: 25px; width: 100%; min-width: 120px; background-color: #e9ecef;">
+                                                                    <div class="progress-bar bg-success" role="progressbar" 
+                                                                         style="width: {{ porcentaje }}%;" 
+                                                                         aria-valuenow="{{ porcentaje }}" 
+                                                                         aria-valuemin="0" 
+                                                                         aria-valuemax="100">
+                                                                    </div>
+                                                                </div>
+                                                                <div class="badge bg-white text-dark border" style="font-size: 0.95rem; font-weight: bold; padding: 0.4rem 0.6rem;">
                                                                     {{ porcentaje|round }}%
                                                                 </div>
                                                             </div>

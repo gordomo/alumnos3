@@ -11,12 +11,18 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 
 /**
  * @Route("/instituto/asistencias")
  */
 class AsistenciaInstitutoController extends AbstractController
 {
+    public function __construct(
+        private LoggerInterface $logger
+    ) {
+    }
+
     /**
      * @Route("/", name="app_instituto_asistencias_index", methods={"GET", "POST"})
      */
@@ -32,7 +38,8 @@ class AsistenciaInstitutoController extends AbstractController
         // Obtener fecha del formulario o usar la fecha actual
         $fecha = $request->get('fecha', date('Y-m-d'));
         $cursoId = $request->get('curso');
-        $modo = $request->get('modo', 'edicion'); // 'edicion' o 'lectura'
+        // Obtener modo de GET o POST (el formulario puede enviarlo en POST)
+        $modo = $request->get('modo') ?? $request->request->get('modo', 'edicion'); // 'edicion' o 'lectura'
         
         // Obtener todos los cursos del instituto
         $cursos = $cursoRepository->findBy(['instituto' => $instituto]);
@@ -47,41 +54,130 @@ class AsistenciaInstitutoController extends AbstractController
             }
 
             // Si es una petición POST, procesar el formulario de asistencia
-            if ($request->isMethod('POST') && $modo === 'edicion') {
-                $asistencias = $request->request->all('asistencias');
-                $observaciones = $request->request->all('observaciones');
+            if ($request->isMethod('POST')) {
+                $this->logger->info('POST recibido en AsistenciaInstitutoController', [
+                    'fecha' => $fecha,
+                    'curso_id' => $cursoId,
+                    'modo' => $modo,
+                    'post_data' => $request->request->all()
+                ]);
+                
+                // Asegurar que el modo se obtiene del POST si está disponible
+                $modoPost = $request->request->get('modo', $modo);
+                $this->logger->info('Modo obtenido', ['modo_post' => $modoPost, 'modo_get' => $modo]);
+                
+                if ($modoPost !== 'edicion') {
+                    $this->logger->warning('Modo no es edicion', ['modo' => $modoPost]);
+                    throw $this->createAccessDeniedException('No tiene permiso para editar asistencias.');
+                }
+                
+                $asistencias = $request->request->all('asistencias') ?? [];
+                $observaciones = $request->request->all('observaciones') ?? [];
+                $alumnosProcesados = $request->request->all('alumnos_procesados') ?? [];
+                
+                $this->logger->info('Datos recibidos', [
+                    'asistencias_count' => count($asistencias),
+                    'observaciones_count' => count($observaciones),
+                    'alumnos_procesados_count' => count($alumnosProcesados),
+                    'asistencias' => $asistencias,
+                    'alumnos_procesados' => $alumnosProcesados
+                ]);
+                
                 $fechaAsistencia = new \DateTime($fecha);
 
-                // Eliminar asistencias existentes para este curso y fecha
-                $asistenciasExistentes = $asistenciaRepository->findBy([
-                    'curso' => $curso,
-                    'fecha' => $fechaAsistencia
-                ]);
-
-                foreach ($asistenciasExistentes as $asistenciaExistente) {
-                    $entityManager->remove($asistenciaExistente);
+                // Obtener todos los alumnos del curso
+                $alumnos = $curso->getAlumnos();
+                
+                $this->logger->info('Alumnos del curso', ['count' => $alumnos->count()]);
+                
+                if ($alumnos->isEmpty()) {
+                    $this->logger->warning('No hay alumnos en el curso', ['curso_id' => $cursoId]);
+                    $this->addFlash('warning', 'No hay alumnos en este curso.');
+                    return $this->redirectToRoute('app_instituto_asistencias_index', [
+                        'fecha' => $fecha,
+                        'curso' => $cursoId,
+                        'modo' => $modo
+                    ]);
                 }
-                $entityManager->flush();
-
-                // Crear nuevas asistencias
-                foreach ($asistencias as $alumnoId => $presente) {
-                    $alumno = $entityManager->getRepository(Alumno::class)->find($alumnoId);
-                    if (!$alumno) {
+                
+                // Solo procesar alumnos que están en la lista de procesados (los que están en el formulario)
+                // Esto permite distinguir entre "sin registro" (null) y "ausente" (false)
+                $alumnosProcesadosIds = array_map('intval', $alumnosProcesados);
+                $asistenciasCreadas = 0;
+                $asistenciasActualizadas = 0;
+                
+                foreach ($alumnos as $alumno) {
+                    $alumnoId = $alumno->getId();
+                    
+                    // Solo procesar si el alumno está en la lista de procesados
+                    if (!in_array($alumnoId, $alumnosProcesadosIds)) {
+                        // Este alumno no está en el formulario, mantener su estado actual (no hacer nada)
                         continue;
                     }
-
-                    $asistencia = new AsistenciaAlumnos();
-                    $asistencia->setAlumno($alumno);
-                    $asistencia->setCurso($curso);
-                    $asistencia->setFecha($fechaAsistencia);
-                    $asistencia->setPresente($presente === '1');
-                    $asistencia->setObservaciones($observaciones[$alumnoId] ?? '');
-
-                    $entityManager->persist($asistencia);
+                    
+                    // Buscar asistencia existente
+                    $asistenciaExistente = $asistenciaRepository->findOneBy([
+                        'alumno' => $alumno,
+                        'curso' => $curso,
+                        'fecha' => $fechaAsistencia
+                    ]);
+                    
+                    // Determinar el estado: presente si el checkbox está marcado, ausente si no
+                    $presente = isset($asistencias[$alumnoId]) && ($asistencias[$alumnoId] === '1' || $asistencias[$alumnoId] === 1);
+                    
+                    if ($asistenciaExistente) {
+                        // Actualizar asistencia existente
+                        $asistenciaExistente->setPresente($presente);
+                        $asistenciaExistente->setObservaciones($observaciones[$alumnoId] ?? '');
+                        $asistenciasActualizadas++;
+                        
+                        $this->logger->debug('Actualizando asistencia', [
+                            'alumno_id' => $alumnoId,
+                            'presente' => $presente,
+                            'observaciones' => $observaciones[$alumnoId] ?? ''
+                        ]);
+                    } else {
+                        // Crear nueva asistencia
+                        $asistencia = new AsistenciaAlumnos();
+                        $asistencia->setAlumno($alumno);
+                        $asistencia->setCurso($curso);
+                        $asistencia->setFecha($fechaAsistencia);
+                        $asistencia->setPresente($presente);
+                        $asistencia->setObservaciones($observaciones[$alumnoId] ?? '');
+                        
+                        $entityManager->persist($asistencia);
+                        $asistenciasCreadas++;
+                        
+                        $this->logger->debug('Creando asistencia', [
+                            'alumno_id' => $alumnoId,
+                            'presente' => $presente,
+                            'observaciones' => $observaciones[$alumnoId] ?? ''
+                        ]);
+                    }
                 }
 
-                $entityManager->flush();
-                $this->addFlash('success', 'Asistencias guardadas correctamente');
+                $this->logger->info('Asistencias preparadas para guardar', [
+                    'creadas' => $asistenciasCreadas,
+                    'actualizadas' => $asistenciasActualizadas
+                ]);
+
+                try {
+                    $entityManager->flush();
+                    $totalProcesadas = $asistenciasCreadas + $asistenciasActualizadas;
+                    $this->logger->info('Asistencias guardadas exitosamente', [
+                        'creadas' => $asistenciasCreadas,
+                        'actualizadas' => $asistenciasActualizadas,
+                        'total' => $totalProcesadas
+                    ]);
+                    
+                    $this->addFlash('success', sprintf('Asistencias guardadas correctamente (%d registros).', $totalProcesadas));
+                } catch (\Exception $e) {
+                    $this->logger->error('Error al guardar asistencias', [
+                        'message' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString()
+                    ]);
+                    $this->addFlash('error', 'Error al guardar las asistencias: ' . $e->getMessage());
+                }
                 
                 return $this->redirectToRoute('app_instituto_asistencias_index', [
                     'fecha' => $fecha,
@@ -95,16 +191,27 @@ class AsistenciaInstitutoController extends AbstractController
             
             // Crear un array con todos los alumnos y su estado de asistencia
             $asistenciasPorAlumno = [];
+            $fechaBusqueda = new \DateTime($fecha);
             foreach ($alumnos as $alumno) {
                 $asistencia = $asistenciaRepository->findOneBy([
                     'alumno' => $alumno,
                     'curso' => $curso,
-                    'fecha' => new \DateTime($fecha)
+                    'fecha' => $fechaBusqueda
+                ]);
+                
+                $presente = $asistencia ? $asistencia->getPresente() : false;
+                
+                $this->logger->debug('Cargando asistencia para vista', [
+                    'alumno_id' => $alumno->getId(),
+                    'fecha' => $fecha,
+                    'asistencia_encontrada' => $asistencia !== null,
+                    'presente' => $presente,
+                    'asistencia_id' => $asistencia ? $asistencia->getId() : null
                 ]);
                 
                 $asistenciasPorAlumno[] = [
                     'alumno' => $alumno,
-                    'presente' => $asistencia ? $asistencia->getPresente() : false,
+                    'presente' => $presente,
                     'observaciones' => $asistencia ? $asistencia->getObservaciones() : ''
                 ];
             }
