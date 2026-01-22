@@ -1,0 +1,85 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Editar Configuración de Facturación{% endblock %}
+
+{% block panelTitle %}
+    Editar Configuración de Facturación
+    <a href="{{ path('admin_billing_config_index') }}" class="btn btn-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i> Volver
+    </a>
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-pencil"></i> Editar Configuración
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{{ path('admin_billing_config_edit', {'id': config.id}) }}">
+                        <div class="mb-3">
+                            <label for="config_key" class="form-label">Clave de Configuración</label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="config_key" 
+                                   value="{{ config.configKey }}" 
+                                   disabled>
+                            <small class="form-text text-muted">
+                                La clave de configuración no puede ser modificada.
+                            </small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="price_per_student_monthly" class="form-label">
+                                Precio por Alumno/Mes <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" 
+                                       class="form-control" 
+                                       id="price_per_student_monthly" 
+                                       name="price_per_student_monthly" 
+                                       value="{{ config.pricePerStudentMonthly }}" 
+                                       step="0.01" 
+                                       min="0.01" 
+                                       required>
+                            </div>
+                            <small class="form-text text-muted">
+                                Este precio se aplicará a todas las facturas futuras. Las facturas ya generadas no se modificarán.
+                            </small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Descripción (opcional)</label>
+                            <textarea class="form-control" 
+                                      id="description" 
+                                      name="description" 
+                                      rows="3"
+                                      placeholder="Descripción de la configuración...">{{ config.description ?? '' }}</textarea>
+                        </div>
+
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle"></i> 
+                            <strong>Importante:</strong> Al modificar el precio, este se aplicará solo a las facturas nuevas. 
+                            Las facturas ya generadas mantendrán el precio con el que fueron creadas.
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ path('admin_billing_config_index') }}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> Guardar Cambios
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

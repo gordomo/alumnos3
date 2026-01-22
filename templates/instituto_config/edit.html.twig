@@ -35,11 +35,6 @@
                                 <i class="bi bi-envelope"></i> Notificaciones
                             </button>
                         </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="edit-tokens-tab" data-bs-toggle="tab" data-bs-target="#edit-tokens" type="button" role="tab" aria-controls="edit-tokens" aria-selected="false">
-                                <i class="bi bi-coin"></i> Tokens
-                            </button>
-                        </li>
                     </ul>
 
                     <!-- Contenido de las pestañas -->
@@ -579,29 +574,6 @@
 </div>
 {% endfor %}
 
-                        <!-- Pestaña: Tokens -->
-                        <div class="tab-pane fade" id="edit-tokens" role="tabpanel" aria-labelledby="edit-tokens-tab">
-                            <div class="card">
-                                <div class="card-header bg-warning text-dark">
-                                    <h5 class="mb-0">
-                                        <i class="bi bi-coin"></i> Gestión de Tokens
-                                    </h5>
-                                </div>
-                                <div class="card-body">
-                                    <div class="alert alert-info">
-                                        <h5 class="alert-heading"><i class="bi bi-info-circle"></i> Información sobre Tokens</h5>
-                                        <p>Los tokens son unidades de consumo que se utilizan para realizar acciones en el sistema. Cada acción tiene un costo en tokens que se descuenta de tu balance.</p>
-                                        <hr>
-                                        <p class="mb-0"><strong>Para gestionar tus tokens:</strong> Visita la página completa de gestión de tokens donde podrás ver tu balance actual, consumo histórico, costos de acciones y transacciones recientes.</p>
-                                    </div>
-                                    <div class="text-center">
-                                        <a href="{{ path('app_tokens_index') }}" class="btn btn-primary btn-lg">
-                                            <i class="bi bi-arrow-right-circle"></i> Ir a Gestión de Tokens
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>

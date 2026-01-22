@@ -1,0 +1,35 @@
+<?php
+
+declare(strict_types=1);
+
+namespace DoctrineMigrations;
+
+use Doctrine\DBAL\Schema\Schema;
+use Doctrine\Migrations\AbstractMigration;
+
+/**
+ * Auto-generated Migration: Please modify to your needs!
+ */
+final class Version20260122125338 extends AbstractMigration
+{
+    public function getDescription(): string
+    {
+        return '';
+    }
+
+    public function up(Schema $schema): void
+    {
+        // this up() migration is auto-generated, please modify it to your needs
+        $this->addSql('ALTER TABLE billing_invoice ADD approved_by_id INT DEFAULT NULL, ADD payment_requested_at DATETIME DEFAULT NULL, ADD payment_proof_path VARCHAR(255) DEFAULT NULL, ADD rejection_reason LONGTEXT DEFAULT NULL, ADD rejected_at DATETIME DEFAULT NULL, ADD approved_at DATETIME DEFAULT NULL');
+        $this->addSql('ALTER TABLE billing_invoice ADD CONSTRAINT FK_FB4B9C932D234F6A FOREIGN KEY (approved_by_id) REFERENCES user (id)');
+        $this->addSql('CREATE INDEX IDX_FB4B9C932D234F6A ON billing_invoice (approved_by_id)');
+    }
+
+    public function down(Schema $schema): void
+    {
+        // this down() migration is auto-generated, please modify it to your needs
+        $this->addSql('ALTER TABLE billing_invoice DROP FOREIGN KEY FK_FB4B9C932D234F6A');
+        $this->addSql('DROP INDEX IDX_FB4B9C932D234F6A ON billing_invoice');
+        $this->addSql('ALTER TABLE billing_invoice DROP approved_by_id, DROP payment_requested_at, DROP payment_proof_path, DROP rejection_reason, DROP rejected_at, DROP approved_at');
+    }
+}

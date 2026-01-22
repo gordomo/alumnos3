@@ -326,7 +326,25 @@ class HistorialCursosService
     {
         $alumno = $pago->getAlumno();
         $curso = $pago->getCurso();
-        $fechaPago = new \DateTime($pago->getAno() . '-' . $pago->getMes() . '-01');
+        
+        // Validar que mes y año estén presentes
+        $mes = $pago->getMes();
+        $ano = $pago->getAno();
+        
+        if ($mes === null || $ano === null) {
+            // Si falta mes o año, usar la fecha del pago como referencia
+            $fechaPago = $pago->getFecha();
+            if ($fechaPago === null) {
+                throw new \InvalidArgumentException('El pago debe tener una fecha válida o mes y año especificados.');
+            }
+        } else {
+            // Validar que el mes esté en rango válido (1-12)
+            if ($mes < 1 || $mes > 12) {
+                throw new \InvalidArgumentException("El mes debe estar entre 1 y 12. Valor recibido: {$mes}");
+            }
+            // Construir la fecha con validación
+            $fechaPago = new \DateTime(sprintf('%d-%02d-01', $ano, $mes));
+        }
 
         // Buscar el historial correspondiente
         $historico = $this->buscarHistorial($alumno, $curso, $fechaPago);

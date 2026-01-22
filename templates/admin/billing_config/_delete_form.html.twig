@@ -1,0 +1,8 @@
+<form method="post" action="{{ path('admin_billing_config_delete', {'id': config.id}) }}" 
+      onsubmit="return confirm('¿Estás seguro de que deseas eliminar esta configuración? Esta acción no se puede deshacer.');" 
+      style="display: inline;">
+    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ config.id) }}">
+    <button type="submit" class="btn btn-sm btn-outline-danger" title="Eliminar">
+        <i class="bi bi-trash"></i>
+    </button>
+</form>

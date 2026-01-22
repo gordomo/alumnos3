@@ -15,6 +15,8 @@ use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Validator\Constraints\Length;
+use Symfony\Component\Validator\Constraints\NotBlank;
 
 class AlumnoType extends AbstractType
 {
@@ -28,7 +30,20 @@ class AlumnoType extends AbstractType
             ->add('nombre', TextType::class, ['attr' => ['class' => 'form-control'], 'label_attr' => ['class' => 'form-label required'], ])
             ->add('apellido', TextType::class, ['attr' => ['class' => 'form-control'], 'label_attr' => ['class' => 'form-label required'], ])
             ->add('email', EmailType::class, ['attr' => ['class' => 'form-control'], 'label_attr' => ['class' => 'form-label required'], ])
-            ->add('dni', TextType::class, ['attr' => ['class' => 'form-control'], 'label_attr' => ['class' => 'form-label required'], ])
+            ->add('dni', TextType::class, [
+                'attr' => [
+                    'class' => 'form-control',
+                    'maxlength' => 30
+                ], 
+                'label_attr' => ['class' => 'form-label required'],
+                'constraints' => [
+                    new NotBlank(['message' => 'El DNI es obligatorio']),
+                    new Length([
+                        'max' => 30,
+                        'maxMessage' => 'El DNI no puede tener más de {{ limit }} caracteres. Por favor, ingrese un DNI válido.'
+                    ])
+                ]
+            ])
             ->add('f_nac', DateType::class, ['widget' => 'single_text', 'attr' => ['class' => 'form-control'], 'label_attr' => ['class' => 'form-label required'], ])
             ->add('l_nac', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'label_attr' => ['class' => 'form-label '], ])
             ->add('telefono_fijo', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'label_attr' => ['class' => 'form-label '], ])

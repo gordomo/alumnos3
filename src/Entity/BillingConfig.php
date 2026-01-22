@@ -2,13 +2,14 @@
 
 namespace App\Entity;
 
-use App\Repository\TokenActionRepository;
+use App\Repository\BillingConfigRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @ORM\Entity(repositoryClass=TokenActionRepository::class)
+ * @ORM\Entity(repositoryClass=BillingConfigRepository::class)
+ * @ORM\Table(name="billing_config")
  */
-class TokenAction
+class BillingConfig
 {
     /**
      * @ORM\Id
@@ -20,27 +21,17 @@ class TokenAction
     /**
      * @ORM\Column(type="string", length=100, unique=true)
      */
-    private string $code; // Código único de la acción (ej: 'alumno.create')
+    private string $configKey = 'price_per_student_monthly';
 
     /**
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="decimal", precision=10, scale=2)
      */
-    private string $name; // Nombre legible (ej: 'Crear Alumno')
+    private float $pricePerStudentMonthly;
 
     /**
      * @ORM\Column(type="text", nullable=true)
      */
     private ?string $description = null;
-
-    /**
-     * @ORM\Column(type="integer")
-     */
-    private int $cost; // Costo en tokens
-
-    /**
-     * @ORM\Column(type="boolean")
-     */
-    private bool $active = true;
 
     /**
      * @ORM\Column(type="datetime")
@@ -63,25 +54,26 @@ class TokenAction
         return $this->id;
     }
 
-    public function getCode(): string
+    public function getConfigKey(): string
     {
-        return $this->code;
+        return $this->configKey;
     }
 
-    public function setCode(string $code): self
+    public function setConfigKey(string $configKey): self
     {
-        $this->code = $code;
+        $this->configKey = $configKey;
         return $this;
     }
 
-    public function getName(): string
+    public function getPricePerStudentMonthly(): float
     {
-        return $this->name;
+        return $this->pricePerStudentMonthly;
     }
 
-    public function setName(string $name): self
+    public function setPricePerStudentMonthly(float $pricePerStudentMonthly): self
     {
-        $this->name = $name;
+        $this->pricePerStudentMonthly = $pricePerStudentMonthly;
+        $this->updatedAt = new \DateTime();
         return $this;
     }
 
@@ -93,30 +85,6 @@ class TokenAction
     public function setDescription(?string $description): self
     {
         $this->description = $description;
-        return $this;
-    }
-
-    public function getCost(): int
-    {
-        return $this->cost;
-    }
-
-    public function setCost(int $cost): self
-    {
-        $this->cost = $cost;
-        $this->updatedAt = new \DateTime();
-        return $this;
-    }
-
-    public function isActive(): bool
-    {
-        return $this->active;
-    }
-
-    public function setActive(bool $active): self
-    {
-        $this->active = $active;
-        $this->updatedAt = new \DateTime();
         return $this;
     }
 

@@ -48,6 +48,7 @@ security:
     # IMPORTANT: Order matters! More specific routes must come first
     access_control:
         # Public routes (only essential public routes)
+        - { path: ^/$, roles: PUBLIC_ACCESS }
         - { path: ^/login$, roles: PUBLIC_ACCESS }
         - { path: ^/logout$, roles: PUBLIC_ACCESS }
         - { path: ^/register$, roles: PUBLIC_ACCESS }
@@ -59,8 +60,10 @@ security:
         
         # SUPER_ADMIN only routes (must come before general /admin routes)
         - { path: ^/admin/admin-user, roles: ROLE_SUPER_ADMIN }
+        - { path: ^/admin/billing-config, roles: ROLE_SUPER_ADMIN }
         
         # Admin routes (SUPER_ADMIN and ADMIN can access)
+        - { path: ^/admin/facturas, roles: [ROLE_ADMIN, ROLE_SUPER_ADMIN] }
         - { path: ^/admin/instituto, roles: [ROLE_ADMIN, ROLE_SUPER_ADMIN] }
         - { path: ^/admin, roles: [ROLE_ADMIN, ROLE_SUPER_ADMIN] }
         
@@ -75,6 +78,7 @@ security:
         - { path: ^/instituto/alumno, roles: ROLE_ADMIN_INSTITUTO }
         - { path: ^/instituto/asistencia, roles: [ROLE_ADMIN_INSTITUTO, ROLE_PROFESOR] }
         - { path: ^/instituto/user, roles: ROLE_ADMIN_INSTITUTO }
+        - { path: ^/instituto/facturas, roles: ROLE_ADMIN_INSTITUTO }
         - { path: ^/instituto, roles: ROLE_ADMIN_INSTITUTO }
         
         # Dashboard route (ADMIN_INSTITUTO only)

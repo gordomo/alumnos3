@@ -1,0 +1,67 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Nueva Configuración de Facturación{% endblock %}
+
+{% block panelTitle %}
+    Nueva Configuración de Facturación
+    <a href="{{ path('admin_billing_config_index') }}" class="btn btn-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i> Volver
+    </a>
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-plus-circle"></i> Crear Nueva Configuración
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{{ path('admin_billing_config_new') }}">
+                        <div class="mb-3">
+                            <label for="price_per_student_monthly" class="form-label">
+                                Precio por Alumno/Mes <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" 
+                                       class="form-control" 
+                                       id="price_per_student_monthly" 
+                                       name="price_per_student_monthly" 
+                                       value="{{ config.pricePerStudentMonthly }}" 
+                                       step="0.01" 
+                                       min="0.01" 
+                                       required>
+                            </div>
+                            <small class="form-text text-muted">
+                                Este precio se aplicará a todos los institutos para calcular las facturas mensuales.
+                            </small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Descripción (opcional)</label>
+                            <textarea class="form-control" 
+                                      id="description" 
+                                      name="description" 
+                                      rows="3"
+                                      placeholder="Descripción de la configuración...">{{ config.description ?? '' }}</textarea>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ path('admin_billing_config_index') }}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check-circle"></i> Crear Configuración
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

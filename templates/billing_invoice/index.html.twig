@@ -1,0 +1,246 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mis Facturas{% endblock %}
+
+{% block panelTitle %}
+    Mis Facturas
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid mt-4">
+    <!-- Información principal de facturación -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-muted mb-3">
+                        <i class="bi bi-people-fill text-primary me-2"></i>
+                        Alumnos Activos
+                    </h5>
+                    <h2 class="display-4 mb-0" style="color: #007bff;">
+                        {{ activeStudents }}
+                    </h2>
+                    <p class="text-muted mt-2 mb-0">alumnos registrados actualmente</p>
+                    <small class="text-muted">Base para facturación mensual</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-muted mb-3">
+                        <i class="bi bi-calculator-fill text-success me-2"></i>
+                        Costo Próximo Mes
+                    </h5>
+                    <h2 class="display-4 mb-0" style="color: #28a745;">
+                        ${{ estimatedNextMonth|number_format(2, ',', '.') }}
+                    </h2>
+                    <p class="text-muted mt-2 mb-0">facturación mensual estimada</p>
+                    <small class="text-muted">
+                        {{ activeStudents }} alumnos × ${{ billingService.getPricePerStudentMonthly()|number_format(2, ',', '.') }}/alumno
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Información del sistema -->
+    <div class="card mb-4 border-0 shadow-sm">
+        <div class="card-header text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <h4 class="card-title mb-0">
+                <i class="bi bi-info-circle-fill me-2"></i>
+                Sistema de Facturación por Alumnos
+            </h4>
+        </div>
+        <div class="card-body" style="background-color: #f8f9ff;">
+            <div class="border-0 shadow-sm" style="background-color: #ffffff; border-left: 4px solid #667eea !important; padding: 1.5rem;">
+                <div class="d-flex align-items-start">
+                    <div class="flex-shrink-0 me-3">
+                        <i class="bi bi-lightbulb-fill" style="font-size: 2.5rem; color: #667eea;"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h5 class="mb-2" style="color: #667eea;">¿Cómo funciona la facturación?</h5>
+                        <ul class="mb-0" style="color: #495057;">
+                            <li><strong>Sin límites de uso:</strong> Todas las operaciones del sistema son gratuitas e ilimitadas</li>
+                            <li><strong>Facturación mensual:</strong> Se cobra mensualmente basado en la cantidad de alumnos activos</li>
+                            <li><strong>Precio fijo:</strong> ${{ billingService.getPricePerStudentMonthly()|number_format(2, ',', '.') }} por alumno por mes</li>
+                            <li><strong>Facturas automáticas:</strong> Se generan automáticamente el primer día de cada mes</li>
+                            <li><strong>Transparencia:</strong> Historial completo de facturación disponible</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Facturas Pendientes -->
+    {% if pendingInvoices|length > 0 %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="card-title mb-0">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        Facturas Pendientes de Pago
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Período</th>
+                                    <th class="text-center">Alumnos</th>
+                                    <th class="text-end">Monto</th>
+                                    <th class="text-center">Estado</th>
+                                    <th class="text-center">Fecha de Creación</th>
+                                    <th class="text-center">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for invoice in pendingInvoices %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ invoice.getFormattedPeriod() }}</strong>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-primary">{{ invoice.activeStudentsCount }}</span>
+                                    </td>
+                                    <td class="text-end">
+                                        <strong class="text-danger">${{ invoice.totalAmount|number_format(2, ',', '.') }}</strong>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-warning">Pendiente</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <small class="text-muted">{{ invoice.createdAt|date('d/m/Y H:i') }}</small>
+                                    </td>
+                                    <td class="text-center">
+                                        <a href="{{ path('billing_invoice_show', {'id': invoice.id}) }}" 
+                                           class="btn btn-sm btn-outline-info" 
+                                           title="Ver detalles">
+                                            <i class="bi bi-eye"></i> Ver
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="alert alert-warning mt-3">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <strong>Total pendiente:</strong> ${{ billingStats.totalPending|number_format(2, ',', '.') }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Historial de Facturación -->
+    <div class="card mb-4">
+        <div class="card-header bg-info text-white">
+            <h4 class="card-title mb-0">
+                <i class="bi bi-receipt me-2"></i>
+                Historial de Facturación
+            </h4>
+        </div>
+        <div class="card-body">
+            {% if billingHistory|length > 0 %}
+                <div class="alert alert-info border-0 shadow-sm mb-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Período</th>
+                                    <th class="text-center">Alumnos</th>
+                                    <th class="text-end">Monto</th>
+                                    <th class="text-center">Estado</th>
+                                    <th class="text-center">Fecha de Creación</th>
+                                    <th class="text-center">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for invoice in billingHistory %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ invoice.getFormattedPeriod() }}</strong>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-secondary">{{ invoice.activeStudentsCount }}</span>
+                                    </td>
+                                    <td class="text-end">
+                                        <strong class="{% if invoice.isPaid %}text-success{% else %}text-danger{% endif %}">
+                                            ${{ invoice.totalAmount|number_format(2, ',', '.') }}
+                                        </strong>
+                                    </td>
+                                    <td class="text-center">
+                                        {% if invoice.isPaid %}
+                                            <span class="badge bg-success">Pagada</span>
+                                        {% elseif invoice.isPendingApproval %}
+                                            <span class="badge bg-info">Pendiente de Aprobación</span>
+                                        {% elseif invoice.isPending %}
+                                            <span class="badge bg-warning">Pendiente</span>
+                                        {% elseif invoice.isRejected %}
+                                            <span class="badge bg-danger">Rechazada</span>
+                                        {% elseif invoice.isCancelled %}
+                                            <span class="badge bg-secondary">Cancelada</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ invoice.status|capitalize }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        <small class="text-muted">{{ invoice.createdAt|date('d/m/Y H:i') }}</small>
+                                    </td>
+                                    <td class="text-center">
+                                        <a href="{{ path('billing_invoice_show', {'id': invoice.id}) }}" 
+                                           class="btn btn-sm btn-outline-primary" 
+                                           title="Ver detalles">
+                                            <i class="bi bi-eye"></i> Ver
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            {% else %}
+                <div class="border-0 shadow-sm mb-0" style="background-color: #ffffff; border-left: 4px solid #667eea !important; padding: 1.5rem;">
+                    <div class="text-center" style="color: #495057;">
+                        <i class="bi bi-info-circle" style="color: #667eea;"></i> No hay facturas registradas aún.
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Estadísticas -->
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <h5 class="text-muted mb-2">Total de Facturas</h5>
+                    <h2 class="mb-0">{{ billingStats.totalInvoices }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <h5 class="text-muted mb-2">Total Pagado</h5>
+                    <h2 class="mb-0 text-success">${{ billingStats.totalPaid|number_format(2, ',', '.') }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <h5 class="text-muted mb-2">Promedio Alumnos</h5>
+                    <h2 class="mb-0">{{ billingStats.avgStudents|number_format(0) }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

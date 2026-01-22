@@ -25,12 +25,6 @@ use Symfony\Component\Routing\Annotation\Route;
  */
 class InstitutoAdminController extends AbstractController
 {
-    private TokenService $tokenService;
-
-    public function __construct(TokenService $tokenService)
-    {
-        $this->tokenService = $tokenService;
-    }
 
     private function generateRandomPassword($length = 12) {
         $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+';
@@ -323,22 +317,6 @@ class InstitutoAdminController extends AbstractController
             }
         }
 
-        // Estadísticas de tokens
-        $balance = $this->tokenService->getBalance($instituto);
-        $now = new \DateTime();
-        $startOfMonth = new \DateTime($now->format('Y-m-01'));
-        $endOfMonth = clone $now;
-        $endOfMonth->modify('last day of this month')->setTime(23, 59, 59);
-        $startOfWeek = clone $now;
-        $startOfWeek->modify('monday this week')->setTime(0, 0, 0);
-        $endOfWeek = clone $now;
-        $endOfWeek->modify('sunday this week')->setTime(23, 59, 59);
-        $monthlyConsumption = $this->tokenService->getTotalConsumptionByPeriod($instituto, $startOfMonth, $endOfMonth);
-        $weeklyConsumption = $this->tokenService->getTotalConsumptionByPeriod($instituto, $startOfWeek, $endOfWeek);
-        $monthlyConsumptionByAction = $this->tokenService->getConsumptionByPeriod($instituto, $startOfMonth, $endOfMonth);
-        $weeklyConsumptionByAction = $this->tokenService->getConsumptionByPeriod($instituto, $startOfWeek, $endOfWeek);
-        $recentTransactions = $this->tokenService->getRecentTransactions($instituto, 10);
-
         return $this->render('admin/instituto/show.html.twig', [
             'instituto' => $instituto,
             'total_alumnos' => $totalAlumnos,
@@ -348,36 +326,9 @@ class InstitutoAdminController extends AbstractController
             'usuarios_admin' => $usuariosAdmin,
             'usuarios_profesor' => $usuariosProfesor,
             'otros_usuarios' => $otrosUsuarios,
-            'tokenBalance' => $balance,
-            'monthlyConsumption' => $monthlyConsumption,
-            'weeklyConsumption' => $weeklyConsumption,
-            'monthlyConsumptionByAction' => $monthlyConsumptionByAction,
-            'weeklyConsumptionByAction' => $weeklyConsumptionByAction,
-            'recentTransactions' => $recentTransactions,
         ]);
     }
 
-    /**
-     * @Route("/{id}/tokens/add", name="admin_instituto_tokens_add", methods={"POST"})
-     */
-    public function addTokensToInstituto(Request $request, Instituto $instituto): Response
-    {
-        $amount = (int) $request->request->get('amount');
-        $description = $request->request->get('description', 'Tokens agregados manualmente por administrador');
-
-        if ($amount <= 0) {
-            $this->addFlash('error', 'La cantidad debe ser mayor a 0');
-        } else {
-            try {
-                $this->tokenService->addTokens($instituto, $amount, $this->getUser(), $description);
-                $this->addFlash('success', sprintf('Se agregaron %d tokens al instituto %s', $amount, $instituto->getNombre()));
-            } catch (\Exception $e) {
-                $this->addFlash('error', 'Error al agregar tokens: ' . $e->getMessage());
-            }
-        }
-
-        return $this->redirectToRoute('admin_instituto_show', ['id' => $instituto->getId()]);
-    }
 
     /**
      * @Route("/{id}", name="admin_instituto_delete", methods={"POST"})

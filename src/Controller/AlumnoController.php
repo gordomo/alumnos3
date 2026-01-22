@@ -16,7 +16,6 @@ use App\Service\HistorialCursosService;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Repository\AsistenciaAlumnosRepository;
 use App\Service\DeudaService;
-use App\Service\TokenService;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use App\Entity\User;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
@@ -27,24 +26,21 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 #[IsGranted('ROLE_ADMIN_INSTITUTO')]
 class AlumnoController extends AbstractController
 {
-    private $entityManager;
+    private EntityManagerInterface $entityManager;
     private $historialCursosService;
     private $deudaService;
     private $passwordHasher;
-    private $tokenService;
 
     public function __construct(
-        EntityManagerInterface $entityManager, 
+        EntityManagerInterface $entityManager,
         HistorialCursosService $historialCursosService,
         DeudaService $deudaService,
-        UserPasswordHasherInterface $passwordHasher,
-        TokenService $tokenService
+        UserPasswordHasherInterface $passwordHasher
     ) {
         $this->entityManager = $entityManager;
         $this->historialCursosService = $historialCursosService;
         $this->deudaService = $deudaService;
         $this->passwordHasher = $passwordHasher;
-        $this->tokenService = $tokenService;
     }
 
     /**
@@ -153,15 +149,6 @@ class AlumnoController extends AbstractController
 
         if ($form->isSubmitted()) {
             if ($form->isValid()) {
-                // Verificar tokens antes de crear
-                if (!$this->tokenService->hasEnoughTokens($instituto, 'alumno.create')) {
-                    $this->addFlash('danger', 'No tienes suficientes tokens para crear un alumno. Balance actual: ' . $this->tokenService->getBalance($instituto)->getBalance());
-                    return $this->renderForm('alumno/new.html.twig', [
-                        'alumno' => $alumno,
-                        'form' => $form,
-                        'hermanos' => $alumno->getHermanos()
-                    ]);
-                }
 
                 try {
                     $email = $alumno->getEmail();
@@ -221,17 +208,7 @@ class AlumnoController extends AbstractController
                     
                     // Guardar todo
                     $this->entityManager->flush();
-                    
-                    // Consumir tokens después de guardar exitosamente
-                    $this->tokenService->consumeTokens(
-                        $instituto,
-                        'alumno.create',
-                        $this->getUser(),
-                        'Crear alumno: ' . $alumno->getNombreApellido(),
-                        'Alumno',
-                        $alumno->getId()
-                    );
-                    
+
                     $this->addFlash('success', 'Alumno creado correctamente. La contraseña temporal para acceso es: ' . $plainPassword);
                     return $this->redirectToRoute('app_alumno_index', [], Response::HTTP_SEE_OTHER);
                 } catch (\Exception $e) {
@@ -370,14 +347,6 @@ class AlumnoController extends AbstractController
 
         if ($form->isSubmitted()) {
             if ($form->isValid()) {
-                // Verificar tokens antes de editar
-                if (!$this->tokenService->hasEnoughTokens($instituto, 'alumno.edit')) {
-                    $this->addFlash('danger', 'No tienes suficientes tokens para editar un alumno. Balance actual: ' . $this->tokenService->getBalance($instituto)->getBalance());
-                    return $this->renderForm('alumno/edit.html.twig', [
-                        'alumno' => $alumno,
-                        'form' => $form,
-                    ]);
-                }
 
                 try {
                     // Verificar si el alumno pasó de activo a inactivo
@@ -462,17 +431,7 @@ class AlumnoController extends AbstractController
                     
                     $alumnoRepository->add($alumno);
                     $this->setearHermandad($request, $alumno, $alumnoRepository);
-                    
-                    // Consumir tokens después de guardar exitosamente
-                    $this->tokenService->consumeTokens(
-                        $instituto,
-                        'alumno.edit',
-                        $this->getUser(),
-                        'Editar alumno: ' . $alumno->getNombreApellido(),
-                        'Alumno',
-                        $alumno->getId()
-                    );
-                    
+
                     $this->addFlash('success', 'Alumno actualizado correctamente.');
                     return $this->redirectToRoute('app_alumno_index', [], Response::HTTP_SEE_OTHER);
                 } catch (\Exception $e) {
@@ -489,10 +448,24 @@ class AlumnoController extends AbstractController
             }
         }
 
+        // Obtener información de advertencia de eliminación si existe
+        $deleteWarning = null;
+        if ($request->getSession()->has('delete_alumno_warning')) {
+            $warningData = $request->getSession()->get('delete_alumno_warning');
+            // Verificar que la advertencia es para este alumno
+            if ($warningData['alumno_id'] == $alumno->getId()) {
+                $deleteWarning = $warningData;
+            } else {
+                // Limpiar si es para otro alumno
+                $request->getSession()->remove('delete_alumno_warning');
+            }
+        }
+
         return $this->renderForm('alumno/edit.html.twig', [
             'alumno' => $alumno,
             'form' => $form,
-            'hermanos' => $alumno->getHermanos()
+            'hermanos' => $alumno->getHermanos(),
+            'deleteWarning' => $deleteWarning
         ]);
     }
 
@@ -503,48 +476,81 @@ class AlumnoController extends AbstractController
     {
         $user = $this->getUser();
         $instituto = $user->getInstituto();
-        
-        // Verificar tokens antes de eliminar
-        if (!$this->tokenService->hasEnoughTokens($instituto, 'alumno.delete')) {
-            $this->addFlash('danger', 'No tienes suficientes tokens para eliminar un alumno. Balance actual: ' . $this->tokenService->getBalance($instituto)->getBalance());
-            return $this->redirectToRoute('app_alumno_index');
-        }
-        
-        if ($this->isCsrfTokenValid('delete'.$alumno->getId(), $request->request->get('_token'))) {
-            // Remover relaciones con cursos
-            foreach ($alumno->getCurso() as $curso) {
-                // Cancelar todas las deudas pendientes
-                $deudaService->cancelarDeudasPendientesAlumnoCurso($alumno, $curso, false);
-                $alumno->removeCurso($curso);
-            }
 
-            // Desarmar relaciones de hermanos
-            $hermanosActuales = $alumno->getHermanos();
-            foreach ($hermanosActuales as $hermanoId) {
-                $hermano = $alumnoRepository->find($hermanoId);
-                if ($hermano) {
-                    $hermanosDelHermano = $hermano->getHermanos();
-                    if (($key = array_search($alumno->getId(), $hermanosDelHermano)) !== false) {
-                        unset($hermanosDelHermano[$key]);
-                        $hermano->setHermanos(array_values($hermanosDelHermano));
-                        $alumnoRepository->add($hermano);
-                    }
+        if (!$this->isCsrfTokenValid('delete'.$alumno->getId(), $request->request->get('_token'))) {
+            $this->addFlash('danger', 'Token de seguridad inválido.');
+            return $this->redirectToRoute('app_alumno_edit', ['id' => $alumno->getId()]);
+        }
+
+        // Verificar si es una eliminación forzada (después de mostrar advertencia)
+        $forceDelete = $request->request->get('force_delete', false);
+
+        // Verificar relaciones antes de eliminar (solo si no es forzado)
+        if (!$forceDelete) {
+            $cursosActivos = $alumno->getCurso()->toArray();
+            $asistencias = $alumno->getAsistencias()->toArray();
+            $deudasPendientes = $this->entityManager->getRepository(\App\Entity\DeudaAlumno::class)
+                ->createQueryBuilder('d')
+                ->where('d.alumno = :alumno')
+                ->andWhere('d.pagado = false')
+                ->setParameter('alumno', $alumno)
+                ->getQuery()
+                ->getResult();
+
+            // Si hay relaciones, guardar información y redirigir para mostrar advertencia
+            if (!empty($cursosActivos) || !empty($asistencias) || !empty($deudasPendientes)) {
+                $request->getSession()->set('delete_alumno_warning', [
+                    'alumno_id' => $alumno->getId(),
+                    'cursos' => array_map(function($c) { return $c->getNombre(); }, $cursosActivos),
+                    'asistencias_count' => count($asistencias),
+                    'deudas' => array_map(function($d) {
+                        return [
+                            'curso' => $d->getCurso()->getNombre(),
+                            'periodo' => $d->getMes() . '/' . $d->getAno(),
+                            'monto' => $d->getMonto() + $d->getInteres()
+                        ];
+                    }, $deudasPendientes)
+                ]);
+                
+                return $this->redirectToRoute('app_alumno_edit', ['id' => $alumno->getId()]);
+            }
+        }
+
+        // Proceder con la eliminación
+        // Remover relaciones con cursos
+        foreach ($alumno->getCurso() as $curso) {
+            // Cancelar todas las deudas pendientes
+            $deudaService->cancelarDeudasPendientesAlumnoCurso($alumno, $curso, false);
+            $alumno->removeCurso($curso);
+        }
+
+        // Desarmar relaciones de hermanos
+        $hermanosActuales = $alumno->getHermanos();
+        foreach ($hermanosActuales as $hermanoId) {
+            $hermano = $alumnoRepository->find($hermanoId);
+            if ($hermano) {
+                $hermanosDelHermano = $hermano->getHermanos();
+                if (($key = array_search($alumno->getId(), $hermanosDelHermano)) !== false) {
+                    unset($hermanosDelHermano[$key]);
+                    $hermano->setHermanos(array_values($hermanosDelHermano));
+                    $alumnoRepository->add($hermano);
                 }
             }
-            $alumno->setHermanos([]);
-            $alumnoRepository->remove($alumno);
-            
-            // Consumir tokens después de eliminar exitosamente
-            $this->tokenService->consumeTokens(
-                $instituto,
-                'alumno.delete',
-                $this->getUser(),
-                'Eliminar alumno: ' . $alumno->getNombreApellido(),
-                'Alumno',
-                $alumno->getId()
-            );
         }
+        $alumno->setHermanos([]);
+        
+        // Eliminar asistencias asociadas
+        foreach ($alumno->getAsistencias() as $asistencia) {
+            $this->entityManager->remove($asistencia);
+        }
+        
+        $alumnoRepository->remove($alumno);
+        $this->entityManager->flush();
 
+        // Limpiar la sesión si había advertencia
+        $request->getSession()->remove('delete_alumno_warning');
+
+        $this->addFlash('success', 'Alumno eliminado exitosamente.');
         return $this->redirectToRoute('app_alumno_index', [], Response::HTTP_SEE_OTHER);
     }
 
@@ -679,17 +685,7 @@ class AlumnoController extends AbstractController
                     }
                     
                     $this->entityManager->flush();
-                    
-                    // Consumir tokens después de guardar exitosamente
-                    $this->tokenService->consumeTokens(
-                        $instituto,
-                        'alumno.edit',
-                        $this->getUser(),
-                        'Editar alumno: ' . $alumno->getNombreApellido(),
-                        'Alumno',
-                        $alumno->getId()
-                    );
-        
+
         return new JsonResponse([
             'success' => true,
             'message' => 'Cursos actualizados correctamente',

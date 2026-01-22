@@ -38,4 +38,113 @@
         </div>
     </div>
 </div>
+
+<!-- Modal de advertencia de eliminación -->
+{% if deleteWarning is defined and deleteWarning %}
+<div class="modal fade show" id="deleteWarningModal" tabindex="-1" aria-labelledby="deleteWarningModalLabel" aria-hidden="false" style="display: block;">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title" id="deleteWarningModalLabel">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    Advertencia: El alumno tiene relaciones activas
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" onclick="window.location.reload();"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <strong>El alumno <em>{{ alumno.nombreApellido }}</em> tiene las siguientes relaciones activas:</strong>
+                </div>
+                
+                {% if deleteWarning.cursos|length > 0 %}
+                <div class="mb-3">
+                    <h6><i class="bi bi-book me-2"></i>Cursos activos:</h6>
+                    <ul class="list-group">
+                        {% for curso in deleteWarning.cursos %}
+                        <li class="list-group-item">
+                            <i class="bi bi-check-circle text-warning me-2"></i>{{ curso }}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+                
+                {% if deleteWarning.asistencias_count > 0 %}
+                <div class="mb-3">
+                    <h6><i class="bi bi-clipboard-check me-2"></i>Registros de asistencia:</h6>
+                    <p class="text-muted mb-0">
+                        <i class="bi bi-info-circle me-2"></i>
+                        El alumno tiene <strong>{{ deleteWarning.asistencias_count }}</strong> registro(s) de asistencia que serán eliminados.
+                    </p>
+                </div>
+                {% endif %}
+                
+                {% if deleteWarning.deudas|length > 0 %}
+                <div class="mb-3">
+                    <h6><i class="bi bi-cash-coin me-2"></i>Deudas pendientes:</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-warning">
+                                <tr>
+                                    <th>Curso</th>
+                                    <th>Período</th>
+                                    <th class="text-end">Monto</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% set totalDeudas = 0 %}
+                                {% for deuda in deleteWarning.deudas %}
+                                    {% set totalDeudas = totalDeudas + deuda.monto %}
+                                    <tr>
+                                        <td>{{ deuda.curso }}</td>
+                                        <td>{{ deuda.periodo }}</td>
+                                        <td class="text-end">${{ deuda.monto|number_format(2, ',', '.') }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot class="table-warning">
+                                <tr>
+                                    <th colspan="2" class="text-end">Total:</th>
+                                    <th class="text-end">${{ totalDeudas|number_format(2, ',', '.') }}</th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <strong>¿Está seguro de que desea eliminar este alumno?</strong><br>
+                    Se eliminarán todas las relaciones asociadas incluyendo cursos, asistencias y deudas pendientes.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="window.location.reload();">
+                    <i class="bi bi-x-circle"></i> Cancelar
+                </button>
+                <form method="post" action="{{ path('app_alumno_delete', {'id': alumno.id}) }}" style="display: inline;">
+                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ alumno.id) }}">
+                    <input type="hidden" name="force_delete" value="1">
+                    <button type="submit" class="btn btn-danger" onclick="window.showLoading();">
+                        <i class="bi bi-trash"></i> Sí, eliminar de todas formas
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal-backdrop fade show"></div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Cerrar modal al hacer clic fuera
+    document.getElementById('deleteWarningModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            window.location.reload();
+        }
+    });
+});
+</script>
+{% endif %}
 {% endblock %}

@@ -16,18 +16,18 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\String\Slugger\SluggerInterface;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
-use App\Service\TokenService;
+use App\Service\BillingService;
 
 /**
  * @Route("/instituto/config")
  */
 class InstitutoConfigController extends AbstractController
 {
-    private TokenService $tokenService;
+    private BillingService $billingService;
 
-    public function __construct(TokenService $tokenService)
+    public function __construct(BillingService $billingService)
     {
-        $this->tokenService = $tokenService;
+        $this->billingService = $billingService;
     }
 
     /**
@@ -40,35 +40,11 @@ class InstitutoConfigController extends AbstractController
         $configuracion = $configuracionRepository->findOrCreateByInstituto($instituto);
         $descuentosPromocionales = $descuentoPromocionalRepository->findByConfiguracion($configuracion);
         
-        // Obtener información de tokens
-        $balance = $this->tokenService->getBalance($instituto);
-        $now = new \DateTime();
-        $startOfMonth = new \DateTime($now->format('Y-m-01'));
-        $endOfMonth = clone $now;
-        $endOfMonth->modify('last day of this month')->setTime(23, 59, 59);
-        $startOfWeek = clone $now;
-        $startOfWeek->modify('monday this week')->setTime(0, 0, 0);
-        $endOfWeek = clone $now;
-        $endOfWeek->modify('sunday this week')->setTime(23, 59, 59);
-        $monthlyConsumption = $this->tokenService->getTotalConsumptionByPeriod($instituto, $startOfMonth, $endOfMonth);
-        $weeklyConsumption = $this->tokenService->getTotalConsumptionByPeriod($instituto, $startOfWeek, $endOfWeek);
-        $monthlyConsumptionByAction = $this->tokenService->getConsumptionByPeriod($instituto, $startOfMonth, $endOfMonth);
-        $weeklyConsumptionByAction = $this->tokenService->getConsumptionByPeriod($instituto, $startOfWeek, $endOfWeek);
-        $recentTransactions = $this->tokenService->getRecentTransactions($instituto, 20);
-        $allActions = $this->tokenService->getAllActions();
-        
         return $this->render('instituto_config/index.html.twig', [
             'instituto' => $instituto,
             'vencimientos' => $vencimientos,
             'configuracion' => $configuracion,
             'descuentosPromocionales' => $descuentosPromocionales,
-            'tokenBalance' => $balance,
-            'monthlyConsumption' => $monthlyConsumption,
-            'weeklyConsumption' => $weeklyConsumption,
-            'monthlyConsumptionByAction' => $monthlyConsumptionByAction,
-            'weeklyConsumptionByAction' => $weeklyConsumptionByAction,
-            'recentTransactions' => $recentTransactions,
-            'allActions' => $allActions,
         ]);
     }
 
@@ -318,14 +294,6 @@ class InstitutoConfigController extends AbstractController
         $descuentoPromocional->setConfiguracion($configuracion);
 
         if ($request->isMethod('POST')) {
-            // Verificar tokens antes de crear
-            if (!$this->tokenService->hasEnoughTokens($instituto, 'descuento.create')) {
-                $this->addFlash('danger', 'No tienes suficientes tokens para crear un descuento. Balance actual: ' . $this->tokenService->getBalance($instituto)->getBalance());
-                return $this->render('instituto_config/descuento_promocional_new.html.twig', [
-                    'descuentoPromocional' => $descuentoPromocional,
-                    'configuracion' => $configuracion
-                ]);
-            }
 
             $nombre = $request->request->get('nombre');
             $porcentaje = $request->request->get('porcentaje');
@@ -339,17 +307,7 @@ class InstitutoConfigController extends AbstractController
             if (count($errors) === 0) {
                 $entityManager->persist($descuentoPromocional);
                 $entityManager->flush();
-                
-                // Consumir tokens después de guardar exitosamente
-                $this->tokenService->consumeTokens(
-                    $instituto,
-                    'descuento.create',
-                    $this->getUser(),
-                    'Crear descuento promocional: ' . $descuentoPromocional->getNombre(),
-                    'DescuentoPromocional',
-                    $descuentoPromocional->getId()
-                );
-                
+
                 $this->addFlash('success', 'Descuento promocional creado correctamente.');
                 return $this->redirectToRoute('instituto_config_edit', ['_fragment' => 'edit-descuentos']);
             } else {

@@ -6,6 +6,7 @@ use App\Repository\ProfesorRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * @ORM\Entity(repositoryClass=ProfesorRepository::class)
@@ -30,7 +31,12 @@ class Profesor
     private $apellido;
 
     /**
-     * @ORM\Column(type="text")
+     * @ORM\Column(type="string", length=30)
+     * @Assert\NotBlank(message="El DNI es obligatorio")
+     * @Assert\Length(
+     *     max=30,
+     *     maxMessage="El DNI no puede tener más de {{ limit }} caracteres. Por favor, ingrese un DNI válido."
+     * )
      */
     private $dni;
 

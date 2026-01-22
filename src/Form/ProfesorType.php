@@ -12,6 +12,8 @@ use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Validator\Constraints\Length;
+use Symfony\Component\Validator\Constraints\NotBlank;
 
 class ProfesorType extends AbstractType
 {
@@ -23,7 +25,20 @@ class ProfesorType extends AbstractType
         $builder
             ->add('nombre', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => !$isEdit, 'label_attr'=> ['class'=> 'form-label']])
             ->add('apellido', TextType::class, ['attr' => ['class' => 'form-control'], 'label_attr'=> ['class'=> 'form-label']])
-            ->add('dni', NumberType::class, ['attr' => ['class' => 'form-control'], 'label_attr'=> ['class'=> 'form-label'],])
+            ->add('dni', TextType::class, [
+                'attr' => [
+                    'class' => 'form-control',
+                    'maxlength' => 30
+                ],
+                'label_attr' => ['class' => 'form-label'],
+                'constraints' => [
+                    new NotBlank(['message' => 'El DNI es obligatorio']),
+                    new Length([
+                        'max' => 30,
+                        'maxMessage' => 'El DNI no puede tener más de {{ limit }} caracteres. Por favor, ingrese un DNI válido.'
+                    ])
+                ]
+            ])
             ->add('email', EmailType::class, ['attr' => ['class' => 'form-control'], 'label_attr'=> ['class'=> 'form-label'],])
             ->add('tel', NumberType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'label_attr'=> ['class'=> 'form-label'],])
             ->add('precioHora', NumberType::class, ['html5' => true,'attr' => ['class' => 'form-control'], 'label_attr'=> ['class'=> 'form-label'],])

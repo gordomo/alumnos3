@@ -1,0 +1,210 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Factura #{{ invoice.id }}{% endblock %}
+
+{% block panelTitle %}
+    Factura #{{ invoice.id }}
+    <a href="{{ path('admin_billing_invoice_index') }}" class="btn btn-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i> Volver
+    </a>
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Información de la Factura -->
+            <div class="card mb-4">
+                <div class="card-header {% if invoice.isPaid %}bg-success{% elseif invoice.isPendingApproval %}bg-warning{% elseif invoice.isRejected %}bg-danger{% else %}bg-secondary{% endif %} text-white">
+                    <h5 class="mb-0">
+                        Factura #{{ invoice.id }}
+                        {% if invoice.isPaid %}
+                            <span class="badge bg-light text-success ms-2">Pagada</span>
+                        {% elseif invoice.isPendingApproval %}
+                            <span class="badge bg-light text-warning ms-2">Pendiente de Aprobación</span>
+                        {% elseif invoice.isPending %}
+                            <span class="badge bg-light text-info ms-2">Pendiente</span>
+                        {% elseif invoice.isRejected %}
+                            <span class="badge bg-light text-danger ms-2">Rechazada</span>
+                        {% else %}
+                            <span class="badge bg-light text-secondary ms-2">Cancelada</span>
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Instituto</h6>
+                            <p><strong>{{ invoice.instituto.nombre }}</strong></p>
+                            {% if invoice.instituto.email %}
+                                <p><i class="bi bi-envelope"></i> {{ invoice.instituto.email }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Información de Facturación</h6>
+                            <p><strong>Período:</strong> {{ invoice.getFormattedPeriod() }}</p>
+                            <p><strong>Fecha de Creación:</strong> {{ invoice.createdAt|date('d/m/Y H:i:s') }}</p>
+                            {% if invoice.paymentRequestedAt %}
+                                <p><strong>Fecha de Solicitud:</strong> {{ invoice.paymentRequestedAt|date('d/m/Y H:i:s') }}</p>
+                            {% endif %}
+                            {% if invoice.paidAt %}
+                                <p><strong>Fecha de Pago:</strong> {{ invoice.paidAt|date('d/m/Y H:i:s') }}</p>
+                            {% endif %}
+                            {% if invoice.approvedAt %}
+                                <p><strong>Fecha de Aprobación:</strong> {{ invoice.approvedAt|date('d/m/Y H:i:s') }}</p>
+                                {% if invoice.approvedBy %}
+                                    <p><strong>Aprobado por:</strong> {{ invoice.approvedBy.email }}</p>
+                                {% endif %}
+                            {% endif %}
+                            {% if invoice.rejectedAt %}
+                                <p><strong>Fecha de Rechazo:</strong> {{ invoice.rejectedAt|date('d/m/Y H:i:s') }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <h6 class="text-muted">Detalles de la Factura</h6>
+                            <table class="table table-bordered">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Concepto</th>
+                                        <th class="text-center">Cantidad</th>
+                                        <th class="text-end">Precio Unitario</th>
+                                        <th class="text-end">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <strong>Facturación mensual por alumnos activos</strong>
+                                            <br>
+                                            <small class="text-muted">Período: {{ invoice.getFormattedPeriod() }}</small>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge bg-primary">{{ invoice.activeStudentsCount }}</span>
+                                            <br>
+                                            <small class="text-muted">alumnos activos</small>
+                                        </td>
+                                        <td class="text-end">
+                                            <strong>${{ invoice.pricePerStudent|number_format(2, ',', '.') }}</strong>
+                                            <br>
+                                            <small class="text-muted">por alumno/mes</small>
+                                        </td>
+                                        <td class="text-end">
+                                            <strong class="fs-5">${{ invoice.totalAmount|number_format(2, ',', '.') }}</strong>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                                <tfoot class="table-light">
+                                    <tr>
+                                        <th colspan="3" class="text-end">Total a Pagar:</th>
+                                        <th class="text-end">
+                                            <span class="fs-4 text-{% if invoice.isPaid %}success{% else %}danger{% endif %}">
+                                                ${{ invoice.totalAmount|number_format(2, ',', '.') }}
+                                            </span>
+                                        </th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+
+                    {% if invoice.rejectionReason %}
+                        <div class="alert alert-danger">
+                            <h6 class="alert-heading">
+                                <i class="bi bi-x-circle"></i> Motivo de Rechazo
+                            </h6>
+                            <p class="mb-0">{{ invoice.rejectionReason }}</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <!-- Comprobante de Pago -->
+            {% if invoice.paymentProofPath %}
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h6 class="mb-0"><i class="bi bi-file-earmark"></i> Comprobante de Pago</h6>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Archivo:</strong> {{ invoice.paymentProofPath }}</p>
+                        <a href="{{ asset('uploads/payment_proofs/' ~ invoice.paymentProofPath) }}" target="_blank" class="btn btn-primary w-100">
+                            <i class="bi bi-eye"></i> Ver Comprobante
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Acciones -->
+            {% if invoice.isPendingApproval %}
+                <div class="card">
+                    <div class="card-header bg-warning text-white">
+                        <h6 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Acciones</h6>
+                    </div>
+                    <div class="card-body">
+                        <!-- Aprobar -->
+                        <form method="post" action="{{ path('admin_billing_invoice_approve', {'id': invoice.id}) }}" 
+                              onsubmit="return confirm('¿Estás seguro de que deseas aprobar este pago?');" 
+                              class="mb-3">
+                            <input type="hidden" name="_token" value="{{ csrf_token('approve_invoice_' ~ invoice.id) }}">
+                            <button type="submit" class="btn btn-success w-100">
+                                <i class="bi bi-check-circle"></i> Aprobar Pago
+                            </button>
+                        </form>
+
+                        <!-- Rechazar -->
+                        <button type="button" class="btn btn-danger w-100" data-bs-toggle="modal" data-bs-target="#rejectModal">
+                            <i class="bi bi-x-circle"></i> Rechazar Pago
+                        </button>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal para rechazar -->
+{% if invoice.isPendingApproval %}
+<div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="rejectModalLabel">Rechazar Pago</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{{ path('admin_billing_invoice_reject', {'id': invoice.id}) }}">
+                <div class="modal-body">
+                    <input type="hidden" name="_token" value="{{ csrf_token('reject_invoice_' ~ invoice.id) }}">
+                    
+                    <div class="mb-3">
+                        <label for="rejection_reason" class="form-label">
+                            <strong>Motivo del Rechazo *</strong>
+                        </label>
+                        <textarea class="form-control" id="rejection_reason" name="rejection_reason" rows="4" required placeholder="Explica el motivo del rechazo..."></textarea>
+                        <small class="form-text text-muted">
+                            Este motivo será visible para el instituto.
+                        </small>
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i> 
+                        <strong>Advertencia:</strong> Al rechazar este pago, el instituto podrá subir un nuevo comprobante.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-x-circle"></i> Rechazar Pago
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

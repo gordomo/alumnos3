@@ -775,10 +775,29 @@ class AlumnosPagosController extends AbstractController
                             $alumnosPago->setMes((int)$mesForm[0]);
                         } elseif ($mesForm) {
                             $alumnosPago->setMes((int)$mesForm);
+                        } else {
+                            // Si no viene mes del formulario, extraerlo de la fecha
+                            if ($alumnosPago->getFecha()) {
+                                $alumnosPago->setMes((int)$alumnosPago->getFecha()->format('n'));
+                            } else {
+                                throw new \InvalidArgumentException('El mes es obligatorio. Debe seleccionar un mes o proporcionar una fecha válida.');
+                            }
                         }
                         
                         if ($anoForm) {
                             $alumnosPago->setAno((int)$anoForm);
+                        } else {
+                            // Si no viene año del formulario, extraerlo de la fecha
+                            if ($alumnosPago->getFecha()) {
+                                $alumnosPago->setAno((int)$alumnosPago->getFecha()->format('Y'));
+                            } else {
+                                throw new \InvalidArgumentException('El año es obligatorio. Debe seleccionar un año o proporcionar una fecha válida.');
+                            }
+                        }
+                        
+                        // Validar que mes y año estén establecidos antes de continuar
+                        if ($alumnosPago->getMes() === null || $alumnosPago->getAno() === null) {
+                            throw new \InvalidArgumentException('El mes y el año son obligatorios para registrar un pago.');
                         }
                         
                         // Obtener descuentos promocionales seleccionados del formulario

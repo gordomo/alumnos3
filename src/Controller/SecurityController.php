@@ -8,7 +8,7 @@ use App\Entity\User;
 use App\Repository\InstitutoConfiguracionRepository;
 use App\Repository\InstitutoRepository;
 use App\Repository\UserRepository;
-use App\Service\TokenService;
+use App\Service\BillingService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -29,26 +29,26 @@ class SecurityController extends AbstractController
     private $entityManager;
     private $passwordHasher;
     private $slugger;
-    private $tokenService;
+    private $billingService;
 
     public function __construct(
         UrlGeneratorInterface $urlGenerator,
         EntityManagerInterface $entityManager,
         UserPasswordHasherInterface $passwordHasher,
         SluggerInterface $slugger,
-        TokenService $tokenService
+        BillingService $billingService
     ) {
         $this->urlGenerator = $urlGenerator;
         $this->entityManager = $entityManager;
         $this->passwordHasher = $passwordHasher;
         $this->slugger = $slugger;
-        $this->tokenService = $tokenService;
+        $this->billingService = $billingService;
     }
 
     /**
      * @Route("/", name="app_start")
      */
-    public function start(): Response
+    public function start(AuthenticationUtils $authenticationUtils): Response
     {
         $user = $this->getUser();
         if ($user) {
@@ -73,7 +73,15 @@ class SecurityController extends AbstractController
                 return new RedirectResponse($this->urlGenerator->generate('app_alumno_dashboard'));
             }
         }
-        return new RedirectResponse($this->urlGenerator->generate('app_login'));
+        // Mostrar la landing page en lugar de redirigir
+        $error = $authenticationUtils->getLastAuthenticationError();
+        $lastUsername = $authenticationUtils->getLastUsername();
+        
+        return $this->render('security/landing.html.twig', [
+            'last_username' => $lastUsername, 
+            'error' => $error,
+            'is_home' => true
+        ]);
     }
 
     /**
@@ -93,7 +101,9 @@ class SecurityController extends AbstractController
 
         return $this->render('security/landing.html.twig', [
             'last_username' => $lastUsername, 
-            'error' => $error
+            'error' => $error,
+            'is_home' => false,
+            'pricePerStudent' => $this->billingService->getPricePerStudentMonthly()
         ]);
     }
 
@@ -197,15 +207,7 @@ class SecurityController extends AbstractController
                 $this->entityManager->persist($configuracion);
                 $this->entityManager->flush();
 
-                // Asignar 300 tokens iniciales gratis para nuevos institutos
-                $this->tokenService->addTokens(
-                    $instituto,
-                    300,
-                    $user,
-                    'Tokens de bienvenida - 300 tokens gratis para comenzar'
-                );
-
-                $this->addFlash('success', '¡Cuenta creada exitosamente! Se te han asignado 300 tokens gratis para comenzar. Ya puedes iniciar sesión.');
+                $this->addFlash('success', '¡Cuenta creada exitosamente! Ya puedes iniciar sesión y comenzar a gestionar tu instituto.');
                 
                 // Redirigir al login
                 return $this->redirectToRoute('app_login');

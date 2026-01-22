@@ -109,8 +109,28 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Manejar envío de formularios
     document.querySelectorAll('form').forEach(form => {
+        // Verificar si el formulario tiene un atributo data-no-loading o si ya tiene un handler personalizado
+        if (form.hasAttribute('data-no-loading')) {
+            return; // Saltar este formulario
+        }
+        
         form.addEventListener('submit', function(e) {
-            if (form.checkValidity()) {
+            // Si el formulario tiene un onsubmit que retorna false, no mostrar spinner
+            // (esto maneja casos donde el usuario cancela un confirm)
+            if (form.onsubmit) {
+                try {
+                    const result = form.onsubmit.call(form, e);
+                    if (result === false) {
+                        // El usuario canceló, no mostrar spinner
+                        return;
+                    }
+                } catch (err) {
+                    // Si hay un error, continuar normalmente
+                }
+            }
+            
+            // Solo mostrar spinner si el formulario es válido y no fue cancelado
+            if (form.checkValidity() && !e.defaultPrevented) {
                 showLoading();
             }
         });

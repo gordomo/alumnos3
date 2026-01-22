@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Factura #{{ invoice.id }}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'DejaVu Sans', Arial, sans-serif;
+            font-size: 12pt;
+            color: #333;
+            background: white;
+            padding: 20mm;
+        }
+        
+        .invoice-container {
+            max-width: 210mm;
+            margin: 0 auto;
+            background: white;
+        }
+        
+        .invoice-header {
+            border-bottom: 3px solid #333;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .invoice-title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #333;
+            margin: 0;
+        }
+        
+        .invoice-number {
+            font-size: 1.2rem;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .invoice-status {
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+        
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+            border: 2px solid #ffc107;
+        }
+        
+        .status-paid {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #28a745;
+        }
+        
+        .invoice-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+        }
+        
+        .invoice-from, .invoice-to {
+            flex: 1;
+        }
+        
+        .invoice-from h3, .invoice-to h3 {
+            font-size: 1rem;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+        
+        .invoice-from p, .invoice-to p {
+            margin: 5px 0;
+            color: #333;
+        }
+        
+        .invoice-details {
+            margin-bottom: 30px;
+        }
+        
+        .invoice-details h3 {
+            font-size: 1rem;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+        
+        .invoice-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        
+        .invoice-table th {
+            background: #f8f9fa;
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #dee2e6;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .invoice-table td {
+            padding: 12px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .invoice-table tfoot th {
+            background: #f8f9fa;
+            font-size: 1.2rem;
+        }
+        
+        .text-right {
+            text-align: right;
+        }
+        
+        .text-center {
+            text-align: center;
+        }
+        
+        .total-row {
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+        
+        .invoice-footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 2px solid #ddd;
+            font-size: 0.85rem;
+            color: #666;
+        }
+        
+        .invoice-footer p {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="invoice-container">
+        <!-- Header -->
+        <div class="invoice-header">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <h1 class="invoice-title">FACTURA</h1>
+                    <div class="invoice-number">Nº {{ "%06d"|format(invoice.id) }}</div>
+                </div>
+                <div>
+                    {% if invoice.isPaid %}
+                        <span class="invoice-status status-paid">PAGADA</span>
+                    {% elseif invoice.isPending %}
+                        <span class="invoice-status status-pending">PENDIENTE</span>
+                    {% else %}
+                        <span class="invoice-status" style="background: #e2e3e5; color: #383d41; border: 2px solid #6c757d;">CANCELADA</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Información de Emisor y Receptor -->
+        <div class="invoice-info">
+            <div class="invoice-from">
+                <h3>De:</h3>
+                <p><strong>TEAM INSTITUTE</strong></p>
+                <p>Sistema de Gestión de Institutos</p>
+                <p>by TEAM BUILDER</p>
+            </div>
+            <div class="invoice-to">
+                <h3>Para:</h3>
+                <p><strong>{{ instituto.nombre }}</strong></p>
+                {% if instituto.email %}
+                    <p>{{ instituto.email }}</p>
+                {% endif %}
+                {% if instituto.tel %}
+                    <p>Tel: {{ instituto.tel }}</p>
+                {% endif %}
+                {% if instituto.dir %}
+                    <p>{{ instituto.dir }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Detalles de Facturación -->
+        <div class="invoice-details">
+            <h3>Detalles de Facturación</h3>
+            <table class="invoice-table">
+                <thead>
+                    <tr>
+                        <th style="width: 40%;">Concepto</th>
+                        <th style="width: 15%;" class="text-center">Cantidad</th>
+                        <th style="width: 20%;" class="text-right">Precio Unitario</th>
+                        <th style="width: 25%;" class="text-right">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <strong>Facturación mensual por alumnos activos</strong>
+                            <br>
+                            <small style="color: #666;">Período: {{ invoice.getFormattedPeriod() }}</small>
+                        </td>
+                        <td class="text-center">
+                            <strong>{{ invoice.activeStudentsCount }}</strong>
+                            <br>
+                            <small style="color: #666;">alumnos</small>
+                        </td>
+                        <td class="text-right">
+                            <strong>${{ invoice.pricePerStudent|number_format(2, ',', '.') }}</strong>
+                            <br>
+                            <small style="color: #666;">por alumno/mes</small>
+                        </td>
+                        <td class="text-right">
+                            <strong>${{ invoice.totalAmount|number_format(2, ',', '.') }}</strong>
+                        </td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <th colspan="3" class="text-right total-row">TOTAL A PAGAR:</th>
+                        <th class="text-right total-row" style="color: {% if invoice.isPaid %}#28a745{% else %}#dc3545{% endif %};">
+                            ${{ invoice.totalAmount|number_format(2, ',', '.') }}
+                        </th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <!-- Información Adicional -->
+        <div class="invoice-footer">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                <div>
+                    <p><strong>Fecha de Emisión:</strong> {{ invoice.createdAt|date('d/m/Y') }}</p>
+                    <p><strong>Período Facturado:</strong> {{ invoice.getFormattedPeriod() }}</p>
+                </div>
+                <div style="text-align: right;">
+                    {% if invoice.paidAt %}
+                        <p><strong>Fecha de Pago:</strong> {{ invoice.paidAt|date('d/m/Y') }}</p>
+                    {% endif %}
+                    <p><strong>Estado:</strong> 
+                        {% if invoice.isPaid %}
+                            Pagada
+                        {% elseif invoice.isPending %}
+                            Pendiente de Pago
+                        {% else %}
+                            Cancelada
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+            
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-top: 20px;">
+                <p style="margin: 0; font-size: 0.9rem;">
+                    <strong>Nota:</strong> Esta factura fue generada con un precio de <strong>${{ invoice.pricePerStudent|number_format(2, ',', '.') }} por alumno/mes</strong>, 
+                    vigente al momento de su creación ({{ invoice.createdAt|date('d/m/Y H:i') }}). 
+                    El precio mostrado es fijo y no cambiará aunque se modifique el precio actual del sistema.
+                </p>
+            </div>
+            
+            {% if invoice.notes %}
+            <div style="margin-top: 15px;">
+                <p><strong>Notas:</strong> {{ invoice.notes }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,145 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Gestión de Facturas{% endblock %}
+
+{% block panelTitle %}
+    Gestión de Facturas
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid mt-4">
+    <!-- Filtros -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" action="{{ path('admin_billing_invoice_index') }}" class="row g-3">
+                <div class="col-md-4">
+                    <label for="instituto" class="form-label">Instituto</label>
+                    <select name="instituto" id="instituto" class="form-select">
+                        <option value="">Todos los institutos</option>
+                        {% for instituto in institutos %}
+                            <option value="{{ instituto.id }}" {% if selectedInstituto == instituto.id %}selected{% endif %}>
+                                {{ instituto.nombre }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="status" class="form-label">Estado</label>
+                    <select name="status" id="status" class="form-select">
+                        <option value="all" {% if selectedStatus == 'all' or selectedStatus is empty %}selected{% endif %}>Todas</option>
+                        <option value="pending_approval" {% if selectedStatus == 'pending_approval' %}selected{% endif %}>Pendientes de Aprobación</option>
+                        <option value="pending" {% if selectedStatus == 'pending' %}selected{% endif %}>Pendientes</option>
+                        <option value="paid" {% if selectedStatus == 'paid' %}selected{% endif %}>Pagadas</option>
+                        <option value="rejected" {% if selectedStatus == 'rejected' %}selected{% endif %}>Rechazadas</option>
+                    </select>
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-funnel"></i> Filtrar
+                    </button>
+                    <a href="{{ path('admin_billing_invoice_index') }}" class="btn btn-secondary ms-2">
+                        <i class="bi bi-x-circle"></i> Limpiar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Estadísticas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-white bg-warning">
+                <div class="card-body">
+                    <h5 class="card-title">Pendientes de Aprobación</h5>
+                    <h2 class="mb-0">{{ stats.pending_approval }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-info">
+                <div class="card-body">
+                    <h5 class="card-title">Pendientes</h5>
+                    <h2 class="mb-0">{{ stats.pending }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-success">
+                <div class="card-body">
+                    <h5 class="card-title">Pagadas</h5>
+                    <h2 class="mb-0">{{ stats.paid }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-danger">
+                <div class="card-body">
+                    <h5 class="card-title">Rechazadas</h5>
+                    <h2 class="mb-0">{{ stats.rejected }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Facturas -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Facturas ({{ invoices|length }})</h5>
+        </div>
+        <div class="card-body">
+            {% if invoices|length > 0 %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Instituto</th>
+                                <th>Período</th>
+                                <th>Alumnos</th>
+                                <th>Monto</th>
+                                <th>Estado</th>
+                                <th>Fecha de Creación</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for invoice in invoices %}
+                                <tr>
+                                    <td>#{{ invoice.id }}</td>
+                                    <td>{{ invoice.instituto.nombre }}</td>
+                                    <td>{{ invoice.getFormattedPeriod() }}</td>
+                                    <td>{{ invoice.activeStudentsCount }}</td>
+                                    <td>${{ invoice.totalAmount|number_format(2, ',', '.') }}</td>
+                                    <td>
+                                        {% if invoice.isPaid %}
+                                            <span class="badge bg-success">Pagada</span>
+                                        {% elseif invoice.isPendingApproval %}
+                                            <span class="badge bg-warning">Pendiente de Aprobación</span>
+                                        {% elseif invoice.isPending %}
+                                            <span class="badge bg-info">Pendiente</span>
+                                        {% elseif invoice.isRejected %}
+                                            <span class="badge bg-danger">Rechazada</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Cancelada</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ invoice.createdAt|date('d/m/Y H:i') }}</td>
+                                    <td>
+                                        <a href="{{ path('admin_billing_invoice_show', {'id': invoice.id}) }}" class="btn btn-sm btn-primary">
+                                            <i class="bi bi-eye"></i> Ver
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> No se encontraron facturas con los filtros seleccionados.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

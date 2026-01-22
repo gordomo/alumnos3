@@ -105,6 +105,14 @@
 
             <ul class="nav nav-tabs sidebar-dropdown-ul">
                 <li class="nav-item">
+                    <a class="list-group-item list-group-item-action bg-light {% if app.request.get('_route') starts with 'billing_invoice_' %}active{% endif %}" href="{{ path('billing_invoice_index') }}">
+                        <i class="bi bi-receipt"></i> Facturas
+                    </a>
+                </li>
+            </ul>
+
+            <ul class="nav nav-tabs sidebar-dropdown-ul">
+                <li class="nav-item">
                     <a class="list-group-item list-group-item-action bg-light {% if app.request.get('_route') starts with 'instituto_user_' %}active{% endif %}" href="{{ path('instituto_user_index') }}">
                         <i class="bi bi-people"></i> Usuarios
                     </a>
@@ -128,6 +136,13 @@
                     </a>
                 </li>
             </ul>
+            <ul class="nav nav-tabs sidebar-dropdown-ul">
+                <li class="nav-item">
+                    <a class="list-group-item list-group-item-action bg-light {% if app.request.get('_route') starts with 'admin_billing_invoice_' %}active{% endif %}" href="{{ path('admin_billing_invoice_index') }}">
+                        <i class="bi bi-receipt-cutoff"></i> Gestión de Facturas
+                    </a>
+                </li>
+            </ul>
         {% endif %}
 
         {% if is_granted('ROLE_SUPER_ADMIN') %}
@@ -135,6 +150,13 @@
                 <li class="nav-item">
                     <a class="list-group-item list-group-item-action bg-light {% if app.request.get('_route') starts with 'admin_user_' %}active{% endif %}" href="{{ path('admin_user_index') }}">
                         <i class="bi bi-people"></i> Usuarios Administradores
+                    </a>
+                </li>
+            </ul>
+            <ul class="nav nav-tabs sidebar-dropdown-ul">
+                <li class="nav-item">
+                    <a class="list-group-item list-group-item-action bg-light {% if app.request.get('_route') starts with 'admin_billing_config_' %}active{% endif %}" href="{{ path('admin_billing_config_index') }}">
+                        <i class="bi bi-cash-stack"></i> Configuración de Facturación
                     </a>
                 </li>
             </ul>
