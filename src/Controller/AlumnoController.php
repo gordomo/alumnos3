@@ -209,7 +209,8 @@ class AlumnoController extends AbstractController
                     // Guardar todo
                     $this->entityManager->flush();
 
-                    $this->addFlash('success', 'Alumno creado correctamente. La contraseña temporal para acceso es: ' . $plainPassword);
+                    $this->addFlash('success', 'Alumno creado correctamente.');
+                    // Usuario creado - la información está en el formulario
                     return $this->redirectToRoute('app_alumno_index', [], Response::HTTP_SEE_OTHER);
                 } catch (\Exception $e) {
                     if (strpos($e->getMessage(), 'UNIQ_') !== false) {
@@ -349,6 +350,11 @@ class AlumnoController extends AbstractController
             if ($form->isValid()) {
 
                 try {
+                    // Sincronizar email con el usuario asociado
+                    if ($alumno->getUser()) {
+                        $alumno->getUser()->setEmail($alumno->getEmail());
+                    }
+                    
                     // Verificar si el alumno pasó de activo a inactivo
                     if ($estadoActivoPrevio && !$alumno->getActivo()) {
                         // Verificar si tiene deudas pendientes

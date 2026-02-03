@@ -3,7 +3,11 @@
 {% block title %}Dashboard Profesor{% endblock %}
 
 {% block panelTitle %}
-    Bienvenido, {{ profesor.nombre }} {{ profesor.apellido }}
+    {% if profesor %}
+        Bienvenido, {{ profesor.nombre }} {{ profesor.apellido }}
+    {% else %}
+        Dashboard Profesor
+    {% endif %}
 {% endblock %}
 
 {% block body %}

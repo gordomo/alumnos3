@@ -12,6 +12,7 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use App\Service\TokenService;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Knp\Component\Pager\PaginatorInterface;
 
 /**
  * @Route("/instituto/user")
@@ -29,7 +30,7 @@ class InstitutoUserController extends AbstractController
     /**
      * @Route("/", name="instituto_user_index", methods={"GET"})
      */
-    public function index(UserRepository $userRepository): Response
+    public function index(Request $request, UserRepository $userRepository, PaginatorInterface $paginator): Response
     {
         $usuarioActual = $this->getUser();
         if (!$usuarioActual || !$usuarioActual->getInstituto()) {
@@ -38,20 +39,47 @@ class InstitutoUserController extends AbstractController
         }
         
         $instituto = $usuarioActual->getInstituto();
+        $busqueda = $request->get('busqueda', '');
+        $limit = $request->get('limit', 10);
         
-        // Obtener todos los usuarios del instituto excepto el usuario actual
-        $users = $userRepository->findBy(
-            ['instituto' => $instituto],
-            ['email' => 'ASC']
-        );
+        // Crear query base
+        $qb = $userRepository->createQueryBuilder('u')
+            ->where('u.instituto = :instituto')
+            ->setParameter('instituto', $instituto)
+            ->andWhere('u.id != :currentUserId')
+            ->setParameter('currentUserId', $usuarioActual->getId())
+            ->orderBy('u.email', 'ASC');
         
-        // Filtrar el usuario actual
-        $users = array_filter($users, function($user) use ($usuarioActual) {
-            return $user->getId() !== $usuarioActual->getId();
+        // Aplicar búsqueda si existe
+        if ($busqueda) {
+            $qb->andWhere('u.email LIKE :busqueda')
+               ->setParameter('busqueda', '%' . $busqueda . '%');
+        }
+        
+        // Obtener todos los resultados para filtrar por rol
+        $allUsers = $qb->getQuery()->getResult();
+        
+        // Filtrar para mostrar solo usuarios con roles de administrador
+        $filteredUsers = array_filter($allUsers, function($user) {
+            foreach ($user->getRoles() as $role) {
+                if (strpos($role, 'ROLE_ADMIN') !== false) {
+                    return true;
+                }
+            }
+            return false;
         });
+        
+        // Aplicar paginación
+        $users = $paginator->paginate(
+            $filteredUsers,
+            $request->query->getInt('page', 1),
+            $limit
+        );
 
         return $this->render('instituto/user/index.html.twig', [
             'users' => $users,
+            'busqueda' => $busqueda,
+            'limit' => $limit,
         ]);
     }
 
@@ -206,10 +234,7 @@ class InstitutoUserController extends AbstractController
                 $user->setPassword($passwordHasher->hashPassword($user, $newPassword));
             }
             
-            // Mantener el rol ROLE_ADMIN_INSTITUTO (no cambiar roles en edición)
-            if (!in_array('ROLE_ADMIN_INSTITUTO', $user->getRoles())) {
-                $user->setRoles(['ROLE_ADMIN_INSTITUTO']);
-            }
+            // No modificar roles en edición - mantener los roles actuales del usuario
             
             $userRepository->add($user, true);
 

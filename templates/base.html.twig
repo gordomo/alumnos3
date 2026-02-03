@@ -60,6 +60,12 @@
             <strong>ℹ️ Información:</strong> {{ message }}
         </div>
     {% endfor %}
+    {% for message in app.flashes('banner') %}
+        <div class="alert alert-info banner-custom alert-dismissible" style="z-index: 9999; position: fixed; top: 20px; right: 20px; min-width: 400px; max-width: 600px;">
+            <strong>ℹ️ Información:</strong> {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endfor %}
     {{ include('components/loading.html.twig') }}
 {% block javascripts %}
     {{ encore_entry_script_tags('app') }}
@@ -81,22 +87,25 @@
                 let removeTime = 4000;
                 
                 // Los mensajes de warning e info duran más tiempo para que el usuario los vea
-                if (toast.classList.contains('alert-warning') || toast.classList.contains('alert-info')) {
+                if ((toast.classList.contains('alert-warning') || toast.classList.contains('alert-info')) && !toast.classList.contains('banner-custom')) {
                     fadeOutTime = 10000; // 10 segundos antes de empezar a desaparecer
                     removeTime = 12000; // 12 segundos total antes de remover
                 }
                 
-                // Tiempo de espera antes de que el mensaje empiece a desaparecer
-                setTimeout(() => {
-                    toast.classList.add('fade-out');
-                }, fadeOutTime);
+                // No aplicar fade a banner-custom
+                if (!toast.classList.contains('banner-custom')) {
+                    // Tiempo de espera antes de que el mensaje empiece a desaparecer
+                    setTimeout(() => {
+                        toast.classList.add('fade-out');
+                    }, fadeOutTime);
 
-                // Tiempo total para remover el elemento del DOM, después de fade-in
-                setTimeout(() => {
-                    if (toast.parentNode) {
-                        toast.parentNode.removeChild(toast);
-                    }
-                }, removeTime);
+                    // Tiempo total para remover el elemento del DOM, después de fade-in
+                    setTimeout(() => {
+                        if (toast.parentNode) {
+                            toast.parentNode.removeChild(toast);
+                        }
+                    }, removeTime);
+                }
             });
         });
 

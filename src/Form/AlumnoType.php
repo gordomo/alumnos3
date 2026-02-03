@@ -33,13 +33,13 @@ class AlumnoType extends AbstractType
             ->add('dni', TextType::class, [
                 'attr' => [
                     'class' => 'form-control',
-                    'maxlength' => 30
+                    'maxlength' => 8
                 ], 
                 'label_attr' => ['class' => 'form-label required'],
                 'constraints' => [
                     new NotBlank(['message' => 'El DNI es obligatorio']),
                     new Length([
-                        'max' => 30,
+                        'max' => 8,
                         'maxMessage' => 'El DNI no puede tener más de {{ limit }} caracteres. Por favor, ingrese un DNI válido.'
                     ])
                 ]
@@ -48,7 +48,7 @@ class AlumnoType extends AbstractType
             ->add('l_nac', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'label_attr' => ['class' => 'form-label '], ])
             ->add('telefono_fijo', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'label_attr' => ['class' => 'form-label '], ])
             ->add('celular', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => true, 'label_attr' => ['class' => 'form-label '], ])
-            ->add('contacto_emergencia', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => true, 'label_attr' => ['class' => 'form-label '], ])
+            ->add('contacto_emergencia', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'label_attr' => ['class' => 'form-label '], ])
             ->add('n_tutor', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'label_attr' => ['class' => 'form-label '], ])
             ->add('t_tutor', TextType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'label_attr' => ['class' => 'form-label '], ])
             ->add('corre_tutor', EmailType::class, ['attr' => ['class' => 'form-control'], 'required' => false, 'label_attr' => ['class' => 'form-label '], ])

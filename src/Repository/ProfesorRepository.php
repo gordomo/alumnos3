@@ -59,7 +59,7 @@ class ProfesorRepository extends ServiceEntityRepository
     }
 
 
-    public function findByApellido($value = null, $instituto)
+    public function findByApellido($instituto, $value = null)
     {
         $query =  $this->createQueryBuilder('p');
         $query->where('p.instituto = :instituto')->setParameter('instituto', $instituto);

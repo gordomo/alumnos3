@@ -121,7 +121,7 @@ class ProfesorController extends AbstractController
 
         $cursos = $cursoRepository->findBy(['disabled' => false, 'instituto' => $instituto]);
 
-        $profesores = $profesorRepository->findByApellido(null, $instituto)->getResult();
+        $profesores = $profesorRepository->findByApellido($instituto, null)->getResult();
 
         $asistencias = $asistenciaProfesoresRepository->findAll($instituto);
         
@@ -401,7 +401,8 @@ class ProfesorController extends AbstractController
                     );
 
                     // Mostrar mensaje con la contraseña temporal
-                    $this->addFlash('success', 'Profesor creado exitosamente. La contraseña temporal es: ' . $plainPassword);
+                    $this->addFlash('success', 'Profesor creado exitosamente.');
+                    // Usuario creado - la información está en el formulario
 
                     return $this->redirectToRoute('app_profesor_index', [], Response::HTTP_SEE_OTHER);
                     

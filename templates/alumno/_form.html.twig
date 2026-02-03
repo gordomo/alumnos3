@@ -1,6 +1,21 @@
 <div style="max-width: 100%; width: 100%;">
 {{ form_start(form, {'attr': {'class': 'form-horizontal'}}) }}
 
+{# Información sobre creación de usuario #}
+<div class="alert alert-info border-info shadow-sm mb-4" role="alert">
+    <div class="d-flex align-items-start">
+        <i class="bi bi-info-circle-fill me-3" style="font-size: 1.5rem;"></i>
+        <div>
+            <h5 class="alert-heading mb-2">Creación de Usuario</h5>
+            <p class="mb-0">
+                Al crear este alumno, se generará automáticamente un usuario para acceder al sistema.
+                Para obtener la contraseña, el alumno deberá utilizar la funcionalidad 
+                <strong>"¿Olvidó su contraseña?"</strong> en la página de inicio de sesión.
+            </p>
+        </div>
+    </div>
+</div>
+
 {# Información Personal #}
 <div class="card mb-4 shadow-sm">
     <div class="card-header" style="background-color: #f8f9fa; border-bottom: 2px solid #dee2e6;">
@@ -149,7 +164,7 @@
             <div class="col-md-12">
                 <div class="mb-3">
                     <label for="{{ form.contacto_emergencia.vars.id }}" class="form-label fw-semibold text-dark">
-                        Contacto de Emergencia (Nombre + Cel) <span class="text-danger">*</span>
+                        Contacto de Emergencia (Nombre + Cel)
                     </label>
                     {{ form_widget(form.contacto_emergencia, {'attr': {'class': 'form-control'}}) }}
                     {{ form_errors(form.contacto_emergencia) }}

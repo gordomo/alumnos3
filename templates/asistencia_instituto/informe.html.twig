@@ -126,12 +126,13 @@
                                                 <tr>
                                                     <td>{{ alumnoData.alumno.nombre }} {{ alumnoData.alumno.apellido }}</td>
                                                     {% set asistenciaCount = 0 %}
-                                                    {% set totalDias = informeAsistencias.fechas|length %}
+                                                    {% set diasConAsistenciaTomada = 0 %}
                                                     
                                                     {% for fecha in informeAsistencias.fechas %}
                                                         <td class="text-center align-middle" style="vertical-align: middle;">
                                                             {% set asistenciaInfo = alumnoData.fechas[fecha] %}
                                                             {% if asistenciaInfo.presente is not null %}
+                                                                {% set diasConAsistenciaTomada = diasConAsistenciaTomada + 1 %}
                                                                 {% if asistenciaInfo.presente %}
                                                                     <i style="font-size: 25px; color: green" class="bi bi-check" title="{{ asistenciaInfo.observaciones }}"></i>
                                                                     {% set asistenciaCount = asistenciaCount + 1 %}
@@ -145,20 +146,18 @@
                                                     {% endfor %}
                                                     
                                                     <td class="text-center align-middle" style="min-width: 150px; vertical-align: middle;">
-                                                        {% if totalDias > 0 %}
-                                                            {% set porcentaje = (asistenciaCount / totalDias) * 100 %}
-                                                            <div class="d-flex flex-column align-items-center gap-2">
-                                                                <div class="progress" style="height: 25px; width: 100%; min-width: 120px; background-color: #e9ecef;">
-                                                                    <div class="progress-bar bg-success" role="progressbar" 
-                                                                         style="width: {{ porcentaje }}%;" 
-                                                                         aria-valuenow="{{ porcentaje }}" 
-                                                                         aria-valuemin="0" 
-                                                                         aria-valuemax="100">
-                                                                    </div>
+                                                        {% if diasConAsistenciaTomada > 0 %}
+                                                            {% set porcentaje = (asistenciaCount / diasConAsistenciaTomada) * 100 %}
+                                                            <div class="progress" style="height: 30px; width: 100%; min-width: 120px; background-color: #e9ecef; position: relative;">
+                                                                <div class="progress-bar bg-success" role="progressbar" 
+                                                                     style="width: {{ porcentaje }}%;" 
+                                                                     aria-valuenow="{{ porcentaje }}" 
+                                                                     aria-valuemin="0" 
+                                                                     aria-valuemax="100">
                                                                 </div>
-                                                                <div class="badge bg-white text-dark border" style="font-size: 0.95rem; font-weight: bold; padding: 0.4rem 0.6rem;">
-                                                                    {{ porcentaje|round }}%
-                                                                </div>
+                                                                <span style="position: absolute; width: 100%; text-align: center; line-height: 30px; font-weight: bold; color: #fff; text-shadow: 1px 1px 2px #000, -1px -1px 2px #000, 1px -1px 2px #000, -1px 1px 2px #000;">
+                                                                    {{ porcentaje|round }}% ({{ asistenciaCount }}/{{ diasConAsistenciaTomada }})
+                                                                </span>
                                                             </div>
                                                         {% else %}
                                                             <span class="badge bg-secondary">Sin datos</span>

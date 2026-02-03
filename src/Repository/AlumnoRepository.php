@@ -108,7 +108,7 @@ class AlumnoRepository extends ServiceEntityRepository
         return $query->orderBy('p.apellido', 'ASC')->getQuery()->getResult();
     }
 
-    public function getAlumnoByNombreEstadoYcursoQuery($value, $activo = null, $cursoSelected = 0, $instituto)
+    public function getAlumnoByNombreEstadoYcursoQuery($value, $instituto, $activo = null, $cursoSelected = 0)
     {
         $query =  $this->createQueryBuilder('p');
         if ($value) {

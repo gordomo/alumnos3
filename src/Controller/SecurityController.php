@@ -30,19 +30,22 @@ class SecurityController extends AbstractController
     private $passwordHasher;
     private $slugger;
     private $billingService;
+    private $userAuthenticator;
 
     public function __construct(
         UrlGeneratorInterface $urlGenerator,
         EntityManagerInterface $entityManager,
         UserPasswordHasherInterface $passwordHasher,
         SluggerInterface $slugger,
-        BillingService $billingService
+        BillingService $billingService,
+        UserAuthenticatorInterface $userAuthenticator
     ) {
         $this->urlGenerator = $urlGenerator;
         $this->entityManager = $entityManager;
         $this->passwordHasher = $passwordHasher;
         $this->slugger = $slugger;
         $this->billingService = $billingService;
+        $this->userAuthenticator = $userAuthenticator;
     }
 
     /**
@@ -207,10 +210,10 @@ class SecurityController extends AbstractController
                 $this->entityManager->persist($configuracion);
                 $this->entityManager->flush();
 
-                $this->addFlash('success', '¡Cuenta creada exitosamente! Ya puedes iniciar sesión y comenzar a gestionar tu instituto.');
+                $this->addFlash('success', '¡Cuenta creada exitosamente! Ya puedes gestionar tu instituto.');
                 
-                // Redirigir al login
-                return $this->redirectToRoute('app_login');
+                // Autenticar al usuario automáticamente
+                return $this->userAuthenticator->authenticateUser($user, null, $request);
             } catch (\Exception $e) {
                 $this->addFlash('error', 'Ocurrió un error al crear la cuenta. Por favor, intenta nuevamente.');
                 return $this->redirectToRoute('app_login');

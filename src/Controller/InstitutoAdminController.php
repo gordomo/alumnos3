@@ -10,7 +10,6 @@ use App\Repository\AlumnoRepository;
 use App\Repository\InstitutoAdminRepository;
 use App\Repository\InstitutoRepository;
 use App\Repository\UserRepository;
-use App\Service\TokenService;
 use Doctrine\ORM\EntityManagerInterface;
 use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -147,15 +146,7 @@ class InstitutoAdminController extends AbstractController
             
             $em->flush();
 
-            // Asignar 300 tokens iniciales gratis para nuevos institutos
-            $this->tokenService->addTokens(
-                $instituto,
-                300,
-                $usuarioActual,
-                'Tokens de bienvenida - 300 tokens gratis para comenzar'
-            );
-
-            $this->addFlash('success', 'Instituto creado correctamente. Se le han asignado 300 tokens gratis para comenzar.');
+            $this->addFlash('success', 'Instituto creado correctamente.');
             return $this->redirectToRoute('admin_instituto_index');
         }
 

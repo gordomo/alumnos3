@@ -31,10 +31,10 @@ class Profesor
     private $apellido;
 
     /**
-     * @ORM\Column(type="string", length=30)
+     * @ORM\Column(type="string", length=8, unique=true)
      * @Assert\NotBlank(message="El DNI es obligatorio")
      * @Assert\Length(
-     *     max=30,
+     *     max=8,
      *     maxMessage="El DNI no puede tener más de {{ limit }} caracteres. Por favor, ingrese un DNI válido."
      * )
      */

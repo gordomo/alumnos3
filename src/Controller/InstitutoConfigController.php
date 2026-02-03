@@ -17,6 +17,7 @@ use Symfony\Component\String\Slugger\SluggerInterface;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use App\Service\BillingService;
+use App\Service\TokenService;
 
 /**
  * @Route("/instituto/config")
@@ -24,10 +25,12 @@ use App\Service\BillingService;
 class InstitutoConfigController extends AbstractController
 {
     private BillingService $billingService;
+    private TokenService $tokenService;
 
-    public function __construct(BillingService $billingService)
+    public function __construct(BillingService $billingService, TokenService $tokenService)
     {
         $this->billingService = $billingService;
+        $this->tokenService = $tokenService;
     }
 
     /**

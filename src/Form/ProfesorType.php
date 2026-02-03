@@ -28,13 +28,13 @@ class ProfesorType extends AbstractType
             ->add('dni', TextType::class, [
                 'attr' => [
                     'class' => 'form-control',
-                    'maxlength' => 30
+                    'maxlength' => 8
                 ],
                 'label_attr' => ['class' => 'form-label'],
                 'constraints' => [
                     new NotBlank(['message' => 'El DNI es obligatorio']),
                     new Length([
-                        'max' => 30,
+                        'max' => 8,
                         'maxMessage' => 'El DNI no puede tener más de {{ limit }} caracteres. Por favor, ingrese un DNI válido.'
                     ])
                 ]
