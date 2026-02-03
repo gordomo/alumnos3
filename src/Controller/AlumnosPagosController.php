@@ -65,6 +65,8 @@ class AlumnosPagosController extends AbstractController
         $fechaHasta = $request->get('fechaHasta', '');
         $sort = $request->get('sort', 'fecha');
         $order = $request->get('order', 'desc');
+        $alumnoSelected = $request->get('alumnoId', '');
+        $activeTab = $request->get('tab', 'pagos');
 
         $alumnoId = $request->query->get('alumno');
         $alumno = null;
@@ -116,6 +118,11 @@ class AlumnosPagosController extends AbstractController
         if ($busqueda) {
             $qb->andWhere('a.nombre LIKE :busqueda OR a.apellido LIKE :busqueda')
                ->setParameter('busqueda', '%' . $busqueda . '%');
+        }
+        
+        if ($alumnoSelected) {
+            $qb->andWhere('a.id = :alumnoSeleccionado')
+               ->setParameter('alumnoSeleccionado', $alumnoSelected);
         }
 
         if ($cursoSelected) {
@@ -234,7 +241,7 @@ class AlumnosPagosController extends AbstractController
 
         // Obtener próximos vencimientos (deudas pendientes)
         $deudaRepository = $this->entityManager->getRepository(\App\Entity\DeudaAlumno::class);
-        $deudasPendientes = $deudaRepository->createQueryBuilder('d')
+        $qbDeudas = $deudaRepository->createQueryBuilder('d')
             ->leftJoin('d.alumno', 'a')
             ->leftJoin('d.curso', 'c')
             ->andWhere('d.pagado = :pagado')
@@ -242,10 +249,67 @@ class AlumnosPagosController extends AbstractController
             ->andWhere('a.activo = :activo')
             ->setParameter('pagado', false)
             ->setParameter('instituto', $instituto)
+            ->setParameter('activo', true);
+        
+        // Aplicar filtros de búsqueda también a las deudas
+        if ($busqueda) {
+            $qbDeudas->andWhere('a.nombre LIKE :busqueda OR a.apellido LIKE :busqueda')
+                     ->setParameter('busqueda', '%' . $busqueda . '%');
+        }
+        
+        if ($alumnoSelected) {
+            $qbDeudas->andWhere('a.id = :alumnoSeleccionado')
+                     ->setParameter('alumnoSeleccionado', $alumnoSelected);
+        }
+        
+        if ($cursoSelected) {
+            $qbDeudas->andWhere('c.id = :cursoDeuda')
+                     ->setParameter('cursoDeuda', $cursoSelected);
+        }
+        
+        // Si estamos viendo un alumno específico por URL, filtrar por ese alumno
+        if ($alumnoId) {
+            $qbDeudas->andWhere('a.id = :alumnoId')
+                     ->setParameter('alumnoId', $alumnoId);
+        }
+        
+        // Obtener fecha actual para filtrar solo deudas vencidas
+        $fechaActual = new \DateTime();
+        $mesActual = (int)$fechaActual->format('n');
+        $anoActual = (int)$fechaActual->format('Y');
+        
+        // Filtrar solo deudas vencidas (meses anteriores o mes actual según día de vencimiento)
+        $qbDeudas->andWhere(
+            $qbDeudas->expr()->orX(
+                // Deudas de años anteriores
+                $qbDeudas->expr()->lt('d.ano', ':anoActual'),
+                // Deudas del año actual pero meses anteriores
+                $qbDeudas->expr()->andX(
+                    $qbDeudas->expr()->eq('d.ano', ':anoActual'),
+                    $qbDeudas->expr()->lte('d.mes', ':mesActual')
+                )
+            )
+        )
+        ->setParameter('anoActual', $anoActual)
+        ->setParameter('mesActual', $mesActual)
+        ->orderBy('d.ano', 'ASC')
+        ->addOrderBy('d.mes', 'ASC');
+        
+        // Si no estamos viendo un alumno específico, limitar a 20 deudas más recientes
+        if (!$alumnoId) {
+            $qbDeudas->setMaxResults(20);
+        }
+        
+        $deudasPendientes = $qbDeudas->getQuery()->getResult();
+        
+        // Obtener todos los alumnos activos del instituto para el filtro
+        $alumnos = $alumnoRepository->createQueryBuilder('a')
+            ->where('a.instituto = :instituto')
+            ->andWhere('a.activo = :activo')
+            ->setParameter('instituto', $instituto)
             ->setParameter('activo', true)
-            ->orderBy('d.ano', 'ASC')
-            ->addOrderBy('d.mes', 'ASC')
-            ->setMaxResults(10)
+            ->orderBy('a.apellido', 'ASC')
+            ->addOrderBy('a.nombre', 'ASC')
             ->getQuery()
             ->getResult();
 
@@ -255,6 +319,8 @@ class AlumnosPagosController extends AbstractController
             'nombreAlumno' => $nombreAlumno,
             'cursos' => $cursos,
             'cursoSelected' => $cursoSelected,
+            'alumnos' => $alumnos,
+            'alumnoSelected' => $alumnoSelected,
             'metodosPago' => $metodosPago,
             'metodoSelected' => $metodoSelected,
             'fechaDesde' => $fechaDesde,
@@ -263,6 +329,7 @@ class AlumnosPagosController extends AbstractController
             'sort' => $sort,
             'order' => $order,
             'alumnoId' => $alumnoId,
+            'activeTab' => $activeTab,
             'total' => $pagination->getTotalItemCount(),
             'estadisticas' => [
                 'hoy' => ['total' => $totalHoy, 'cantidad' => $cantidadHoy],

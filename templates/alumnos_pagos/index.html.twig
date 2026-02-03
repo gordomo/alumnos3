@@ -109,63 +109,51 @@
                         <div class="card-body py-2">
                             <div class="row g-2">
                                 <div class="col-md-2">
-                                    <div class="btn-group w-100" role="group">
-                                        {% set hoy = "now"|date("Y-m-d") %}
-                                        {% set inicioSemana = "now"|date_modify("monday this week")|date("Y-m-d") %}
-                                        {% set inicioMes = "now"|date("Y-m-01") %}
-                                        {% set inicioAno = "now"|date("Y-01-01") %}
-                                        {% set finHoy = "now"|date("Y-m-d") %}
-                                        {% set finSemana = "now"|date_modify("sunday this week")|date("Y-m-d") %}
-                                        {% set finMes = "now"|date("Y-m-t") %}
-                                        {% set finAno = "now"|date("Y-12-31") %}
-                                        
-                                        <a href="{{ path('app_alumnos_pagos_index', {'fechaDesde': inicioMes, 'fechaHasta': finMes}) }}" 
-                                           class="btn btn-sm btn-outline-primary {% if fechaDesde == inicioMes and fechaHasta == finMes %}active{% endif %}">
-                                            Mes
-                                        </a>
-                                        <a href="{{ path('app_alumnos_pagos_index', {'fechaDesde': inicioAno, 'fechaHasta': finAno}) }}" 
-                                           class="btn btn-sm btn-outline-primary {% if fechaDesde == inicioAno and fechaHasta == finAno %}active{% endif %}">
-                                            Año
-                                        </a>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                                    <input type="text" name="busqueda" class="form-control form-control-sm" placeholder="Buscar alumno..." value="{{ busqueda }}">
+                                    <input type="text" name="busqueda" class="form-control form-control-sm" placeholder="Buscar por nombre..." value="{{ busqueda }}">
+                                </div>
+                                <div class="col-md-2">
+                                    <select name="alumnoId" class="form-control form-control-sm" onchange="this.form.submit()">
+                                        <option value="">Todos los alumnos</option>
+                                        {% for alu in alumnos %}
+                                            <option value="{{ alu.id }}" {% if alumnoSelected == alu.id %}selected{% endif %}>
+                                                {{ alu.apellido }}, {{ alu.nombre }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
                                 </div>
                                 <div class="col-md-2">
                                     <select name="curso" class="form-control form-control-sm" onchange="this.form.submit()">
-                            <option value="">Todos los cursos</option>
-                            {% for curso in cursos %}
-                                <option value="{{ curso.id }}" {% if cursoSelected == curso.id %}selected{% endif %}>{{ curso.nombre }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
+                                        <option value="">Todos los cursos</option>
+                                        {% for curso in cursos %}
+                                            <option value="{{ curso.id }}" {% if cursoSelected == curso.id %}selected{% endif %}>{{ curso.nombre }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
                                 <div class="col-md-2">
                                     <select name="metodoPago" class="form-control form-control-sm" onchange="this.form.submit()">
-                            <option value="">Todos los métodos</option>
-                            {% for metodo in metodosPago %}
-                                <option value="{{ metodo }}" {% if metodoSelected == metodo %}selected{% endif %}>{{ metodo }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
+                                        <option value="">Todos los métodos</option>
+                                        {% for metodo in metodosPago %}
+                                            <option value="{{ metodo }}" {% if metodoSelected == metodo %}selected{% endif %}>{{ metodo }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
                                 <div class="col-md-2">
                                     <input type="date" name="fechaDesde" class="form-control form-control-sm" value="{{ fechaDesde }}" placeholder="Desde">
                                 </div>
                                 <div class="col-md-1">
                                     <button class="btn btn-sm btn-primary w-100" type="submit">
                                         <i class="bi bi-search"></i>
-                            </button>
-                        </div>
-                    </div>
-                            {% if fechaDesde or fechaHasta or busqueda or cursoSelected or metodoSelected %}
-                            <div class="row mt-2">
-                                <div class="col-12">
-                                    <a href="{{ path('app_alumnos_pagos_index') }}" class="btn btn-sm btn-outline-secondary">
-                                        <i class="bi bi-x-circle"></i> Limpiar Filtros
+                                    </button>
+                                </div>
+                                {% if fechaDesde or fechaHasta or busqueda or cursoSelected or metodoSelected or alumnoSelected %}
+                                <div class="col-md-1">
+                                    <a href="{{ path('app_alumnos_pagos_index') }}" class="btn btn-sm btn-outline-secondary w-100" title="Limpiar filtros">
+                                        <i class="bi bi-x-circle"></i>
                                     </a>
                                 </div>
+                                {% endif %}
                             </div>
-                            {% endif %}
+                            <input type="hidden" name="tab" value="pagos">
                 </div>
             </form>
         </div>
@@ -176,6 +164,20 @@
                 <div class="col-12">
                     <div class="card shadow-sm">
                         <div class="card-body p-0">
+                            {# Info de paginación #}
+                            {% if total > 0 %}
+                            <div class="px-3 py-2 border-bottom bg-light">
+                                <small class="text-muted">
+                                    Mostrando 
+                                    <strong>{{ pagos.currentPageNumber == 1 ? 1 : ((pagos.currentPageNumber - 1) * pagos.itemNumberPerPage) + 1 }}</strong>
+                                    - 
+                                    <strong>{{ pagos.currentPageNumber * pagos.itemNumberPerPage > total ? total : pagos.currentPageNumber * pagos.itemNumberPerPage }}</strong>
+                                    de 
+                                    <strong>{{ total }}</strong> 
+                                    registro{{ total != 1 ? 's' : '' }}
+                                </small>
+                            </div>
+                            {% endif %}
             <div class="table-responsive">
                                 <table class="table table-striped table-hover mb-0">
                                     <thead class="table-light">
@@ -285,10 +287,62 @@
         {# Tab Deudas Pendientes #}
         {% if deudasPendientes is defined and deudasPendientes|length > 0 %}
         <div class="tab-pane fade" id="deudas" role="tabpanel" aria-labelledby="deudas-tab">
+            {# Filtros para Deudas #}
+            <div class="row mb-3">
+                <div class="col-12">
+                    <form method="get" class="card shadow-sm border-warning">
+                        <div class="card-body py-2">
+                            <div class="row g-2">
+                                <div class="col-md-3">
+                                    <input type="text" name="busqueda" class="form-control form-control-sm" placeholder="Buscar por nombre..." value="{{ busqueda }}">
+                                </div>
+                                <div class="col-md-3">
+                                    <select name="alumnoId" class="form-control form-control-sm" onchange="this.form.submit()">
+                                        <option value="">Todos los alumnos</option>
+                                        {% for alu in alumnos %}
+                                            <option value="{{ alu.id }}" {% if alumnoSelected == alu.id %}selected{% endif %}>
+                                                {{ alu.apellido }}, {{ alu.nombre }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <select name="curso" class="form-control form-control-sm" onchange="this.form.submit()">
+                                        <option value="">Todos los cursos</option>
+                                        {% for curso in cursos %}
+                                            <option value="{{ curso.id }}" {% if cursoSelected == curso.id %}selected{% endif %}>{{ curso.nombre }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <button class="btn btn-sm btn-primary w-100" type="submit">
+                                        <i class="bi bi-search"></i> Buscar
+                                    </button>
+                                </div>
+                                {% if busqueda or cursoSelected or alumnoSelected %}
+                                <div class="col-md-1">
+                                    <a href="{{ path('app_alumnos_pagos_index', {'tab': 'deudas'}) }}" class="btn btn-sm btn-outline-secondary w-100" title="Limpiar filtros">
+                                        <i class="bi bi-x-circle"></i>
+                                    </a>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <input type="hidden" name="tab" value="deudas">
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
             <div class="row">
                 <div class="col-12">
                     <div class="card shadow-sm border-warning">
                         <div class="card-body p-0">
+                            {# Info de registros #}
+                            <div class="px-3 py-2 border-bottom bg-light">
+                                <small class="text-muted">
+                                    Total de deudas pendientes: <strong>{{ deudasPendientes|length }}</strong>
+                                </small>
+                            </div>
                             <div class="table-responsive">
                                 <table class="table table-striped table-hover mb-0">
                                     <thead class="table-warning">
@@ -354,6 +408,20 @@
             tab.show();
         }
     }
+    
+    // Mantener la pestaña activa según parámetro URL
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const activeTab = urlParams.get('tab');
+        
+        if (activeTab === 'deudas') {
+            const deudasTab = document.getElementById('deudas-tab');
+            if (deudasTab) {
+                const tab = new bootstrap.Tab(deudasTab);
+                tab.show();
+            }
+        }
+    });
 </script>
 {% endblock %}
 

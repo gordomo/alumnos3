@@ -546,7 +546,7 @@
         <h1>Gestiona tu Instituto de Forma Inteligente</h1>
         <p>La solución completa para administrar alumnos, profesores, cursos y pagos</p>
         {% if is_home is not defined or is_home %}
-        <a href="#auth-section" class="login-button-hero" onclick="scrollToAuth(event)">
+        <a href="{{ path('app_login') }}" class="login-button-hero">
             <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
         </a>
         {% endif %}
@@ -900,14 +900,25 @@
 
     // Si hay un mensaje de éxito, mostrar el tab de login
     document.addEventListener('DOMContentLoaded', function() {
-        // Prevenir scroll automático del navegador si estamos en la home
+        // Prevenir restauración automática de scroll del navegador
+        if ('scrollRestoration' in history) {
+            history.scrollRestoration = 'manual';
+        }
+        
+        // Prevenir scroll automático del navegador en la home
         {% if is_home is defined and is_home == true %}
+            // Forzar posición inicial inmediatamente
+            window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+            
             // Si hay un hash en la URL, removerlo sin hacer scroll
-            if (window.location.hash === '#auth-section') {
+            if (window.location.hash) {
                 history.replaceState(null, null, window.location.pathname);
             }
-            // Asegurar que la página empiece desde arriba
-            window.scrollTo(0, 0);
+            
+            // Segunda verificación después de un breve delay
+            requestAnimationFrame(() => {
+                window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+            });
         {% endif %}
 
         // Solo hacer scroll si estamos en /login directamente (no en la home)

@@ -76,14 +76,16 @@ class SecurityController extends AbstractController
                 return new RedirectResponse($this->urlGenerator->generate('app_alumno_dashboard'));
             }
         }
-        // Mostrar la landing page en lugar de redirigir
+        
+        // Mostrar la landing page con las variables necesarias
         $error = $authenticationUtils->getLastAuthenticationError();
         $lastUsername = $authenticationUtils->getLastUsername();
         
         return $this->render('security/landing.html.twig', [
             'last_username' => $lastUsername, 
             'error' => $error,
-            'is_home' => true
+            'is_home' => true,
+            'pricePerStudent' => $this->billingService->getPricePerStudentMonthly()
         ]);
     }
 
@@ -102,11 +104,9 @@ class SecurityController extends AbstractController
         // last username entered by the user
         $lastUsername = $authenticationUtils->getLastUsername();
 
-        return $this->render('security/landing.html.twig', [
+        return $this->render('security/login.html.twig', [
             'last_username' => $lastUsername, 
-            'error' => $error,
-            'is_home' => false,
-            'pricePerStudent' => $this->billingService->getPricePerStudentMonthly()
+            'error' => $error
         ]);
     }
 

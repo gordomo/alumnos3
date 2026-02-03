@@ -1,103 +1,102 @@
 {% extends 'base.html.twig' %}
 
-{% block stylesheets %}
-    {{ parent() }}
-    <link rel="stylesheet" href="{{ asset('assets/css/loginform.css') }}">
-{% endblock %}
-
 {% block title %}Iniciar Sesión{% endblock %}
 
 {% block body %}
-<div class="wrapper">
-    <div id="formContent">
-        
-        <div class="logo-container">
-            <img src="{{ asset('assets/img/logoteam.png') }}" alt="Logo" class="logo">
+<div class="container">
+    <div class="row justify-content-center align-items-center" style="min-height: 80vh;">
+        <div class="col-md-5 col-lg-4">
+            <div class="card shadow">
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <img src="{{ asset('assets/img/logoteam.png') }}" alt="TeamBuilder Logo" style="max-width: 100%; height: auto; margin-bottom: 1.5rem;">
+                        <h2 class="fw-bold text-dark">Iniciar Sesión</h2>
+                    </div>
+
+                    {% if error %}
+                        <div class="alert alert-danger">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+                    {% endif %}
+
+                    {% for message in app.flashes('note') %}
+                        <div class="alert alert-warning">{{ message }}</div>
+                    {% endfor %}
+
+                    {% if app.user %}
+                        <div class="alert alert-info">
+                            Ya estás conectado como {{ app.user.username }}, 
+                            <a href="{{ path('app_logout') }}" class="alert-link">Cerrar sesión</a>
+                        </div>
+                    {% endif %}
+
+                    <form method="post">
+                        <div class="mb-3">
+                            <label for="inputEmail" class="form-label">Correo electrónico</label>
+                            <input type="email" 
+                                   value="{{ last_username }}" 
+                                   name="email" 
+                                   id="inputEmail" 
+                                   class="form-control" 
+                                   placeholder="correo@ejemplo.com"
+                                   autocomplete="email" 
+                                   required 
+                                   autofocus>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="inputPassword" class="form-label">Contraseña</label>
+                            <div class="input-group">
+                                <input type="password" 
+                                       name="password" 
+                                       id="inputPassword" 
+                                       class="form-control" 
+                                       placeholder="Contraseña"
+                                       autocomplete="current-password" 
+                                       required>
+                                <button class="btn btn-outline-secondary" type="button" id="togglePassword" tabindex="-1">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <div class="form-check">
+                                <input type="checkbox" name="_remember_me" id="remember_me" class="form-check-input">
+                                <label class="form-check-label" for="remember_me">Recordarme</label>
+                            </div>
+                            <a href="{{ path('app_reset_password') }}" class="text-decoration-none small">
+                                ¿Olvidaste tu contraseña?
+                            </a>
+                        </div>
+
+                        <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-primary btn-lg" type="submit">
+                                Ingresar
+                            </button>
+                            <a href="{{ path('app_start') }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Volver al inicio
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
-        <h2 style="text-align: center; color: #5c6f6c; font-size: 1.8rem; margin-bottom: 1.5rem; font-weight: 600;">
-            Institutos
-        </h2>
-        {% if error %}
-            <div class="alert alert-danger">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
-        {% endif %}
-
-        {% for message in app.flashes('note') %}
-            <div class="alert alert-warning">{{ message }}</div>
-        {% endfor %}
-
-        {% if app.user %}
-            <div class="alert alert-info">
-                Ya estás conectado como {{ app.user.username }}, 
-                <a href="{{ path('app_logout') }}" class="alert-link">Cerrar sesión</a>
-            </div>
-        {% endif %}
-
-        <form method="post" class="login-form" id="loginForm">
-            <div class="form-group">
-                <input type="email" 
-                       value="{{ last_username }}" 
-                       name="email" 
-                       id="inputEmail" 
-                       class="form-control" 
-                       placeholder="Correo electrónico"
-                       autocomplete="email" 
-                       required 
-                       autofocus>
-            </div>
-
-            <div class="form-group">
-                <div class="input-group">
-                    <input type="password" 
-                           name="password" 
-                           id="inputPassword" 
-                           class="form-control" 
-                           placeholder="Contraseña"
-                           autocomplete="current-password" 
-                           required>
-                    <button class="btn btn-outline-secondary" type="button" id="togglePassword">
-                        <i class="bi bi-eye"></i>
-                    </button>
-                </div>
-            </div>
-
-            <div class="form-options">
-                <div class="form-check">
-                    <input type="checkbox" name="_remember_me" id="remember_me" class="form-check-input">
-                    <label class="form-check-label" for="remember_me">Recordarme</label>
-                </div>
-                <a href="{{ path('app_reset_password') }}" class="forgot-password">
-                    ¿Olvidaste tu contraseña?
-                </a>
-            </div>
-
-            <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
-
-            <button class="btn btn-primary" type="submit">
-                Ingresar
-            </button>
-        </form>
     </div>
 </div>
-
-{{ include('components/loading.html.twig') }}
-
 {% endblock %}
 
 {% block javascripts %}
     {{ parent() }}
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-
             const togglePassword = document.querySelector('#togglePassword');
             const password = document.querySelector('#inputPassword');
             const icon = togglePassword.querySelector('i');
 
             togglePassword.addEventListener('click', function() {
-                // Cambiar el tipo de input
                 const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
                 password.setAttribute('type', type);
-                
-                // Cambiar el ícono
                 icon.classList.toggle('bi-eye');
                 icon.classList.toggle('bi-eye-slash');
             });
