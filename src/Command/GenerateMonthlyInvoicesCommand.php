@@ -74,7 +74,12 @@ class GenerateMonthlyInvoicesCommand extends Command
                     $estimatedCost = $this->billingService->getEstimatedNextMonthCost($instituto);
 
                     if ($isDryRun) {
-                        $io->text('Instituto: ' . $instituto->getNombre() . ' - Alumnos activos: ' . $activeStudents . ' - Costo estimado: $' . number_format($estimatedCost, 2));
+                        $io->text(sprintf(
+                            'Instituto: %s - Alumnos activos: %d - Costo estimado: $%s',
+                            $instituto->getNombre(),
+                            $activeStudents,
+                            number_format($estimatedCost, 2)
+                        ));
                         continue;
                     }
 
