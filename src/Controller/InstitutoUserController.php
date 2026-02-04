@@ -46,7 +46,6 @@ class InstitutoUserController extends AbstractController
         $qb = $userRepository->createQueryBuilder('u')
             ->where('u.instituto = :instituto')
             ->setParameter('instituto', $instituto)
-            ->setParameter('currentUserId', $usuarioActual->getId())
             ->orderBy('u.email', 'ASC');
         
         // Aplicar búsqueda si existe
