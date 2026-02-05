@@ -81,48 +81,51 @@
     {# Tabs Navigation #}
     <ul class="nav nav-tabs mb-3" id="pagosTabs" role="tablist">
         <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="pagos-tab" data-bs-toggle="tab" data-bs-target="#pagos" type="button" role="tab" aria-controls="pagos" aria-selected="true">
+            <button class="nav-link {% if activeTab == 'pagos' or activeTab is empty %}active{% endif %}" id="pagos-tab" data-bs-toggle="tab" data-bs-target="#pagos" type="button" role="tab" aria-controls="pagos" aria-selected="{% if activeTab == 'pagos' or activeTab is empty %}true{% else %}false{% endif %}">
                 <i class="bi bi-cash-coin"></i> Pagos
                 {% if total > 0 %}
                     <span class="badge bg-primary ms-1">{{ total }}</span>
                 {% endif %}
             </button>
         </li>
-        {% if deudasPendientes is defined and deudasPendientes|length > 0 %}
         <li class="nav-item" role="presentation">
-            <button class="nav-link" id="deudas-tab" data-bs-toggle="tab" data-bs-target="#deudas" type="button" role="tab" aria-controls="deudas" aria-selected="false">
+            <button class="nav-link {% if activeTab == 'deudas' %}active{% endif %}" id="deudas-tab" data-bs-toggle="tab" data-bs-target="#deudas" type="button" role="tab" aria-controls="deudas" aria-selected="{% if activeTab == 'deudas' %}true{% else %}false{% endif %}">
                 <i class="bi bi-exclamation-triangle"></i> Deudas Pendientes
-                <span class="badge bg-warning text-dark ms-1">{{ deudasPendientes|length }}</span>
+                {% if deudasPendientes is defined and deudasPendientes.getTotalItemCount() > 0 %}
+                    <span class="badge bg-warning text-dark ms-1">{{ deudasPendientes.getTotalItemCount() }}</span>
+                {% endif %}
             </button>
         </li>
-        {% endif %}
     </ul>
 
     {# Tab Content #}
     <div class="tab-content" id="pagosTabsContent">
         {# Tab Pagos #}
-        <div class="tab-pane fade show active" id="pagos" role="tabpanel" aria-labelledby="pagos-tab">
-            {# Filtros Simplificados #}
+        <div class="tab-pane fade {% if activeTab == 'pagos' or activeTab is empty %}show active{% endif %}" id="pagos" role="tabpanel" aria-labelledby="pagos-tab">
+            {# Filtros para Pagos #}
             <div class="row mb-3">
                 <div class="col-12">
                     <form method="get" class="card shadow-sm">
                         <div class="card-body py-2">
-                            <div class="row g-2">
+                            <div class="row g-2 align-items-end">
                                 <div class="col-md-2">
-                                    <input type="text" name="busqueda" class="form-control form-control-sm" placeholder="Buscar por nombre..." value="{{ busqueda }}">
+                                    <label class="form-label small text-muted mb-1">Buscar</label>
+                                    <input type="text" name="busqueda" class="form-control form-control-sm" placeholder="Por nombre..." value="{{ busqueda }}">
                                 </div>
-                                <div class="col-md-2">
-                                    <select name="alumnoId" class="form-control form-control-sm" onchange="this.form.submit()">
+                                <div class="col-md-3">
+                                    <label class="form-label small text-muted mb-1">Alumno</label>
+                                    <select name="alumnoId" class="form-select form-select-sm" onchange="this.form.submit()">
                                         <option value="">Todos los alumnos</option>
                                         {% for alu in alumnos %}
-                                            <option value="{{ alu.id }}" {% if alumnoSelected == alu.id %}selected{% endif %}>
+                                            <option value="{{ alu.id }}" {% if alumnoSelected == alu.id or (alumnoId is defined and alumnoId == alu.id) %}selected{% endif %}>
                                                 {{ alu.apellido }}, {{ alu.nombre }}
                                             </option>
                                         {% endfor %}
                                     </select>
                                 </div>
-                                <div class="col-md-2">
-                                    <select name="curso" class="form-control form-control-sm" onchange="this.form.submit()">
+                                <div class="col-md-3">
+                                    <label class="form-label small text-muted mb-1">Curso</label>
+                                    <select name="curso" class="form-select form-select-sm" onchange="this.form.submit()">
                                         <option value="">Todos los cursos</option>
                                         {% for curso in cursos %}
                                             <option value="{{ curso.id }}" {% if cursoSelected == curso.id %}selected{% endif %}>{{ curso.nombre }}</option>
@@ -130,7 +133,8 @@
                                     </select>
                                 </div>
                                 <div class="col-md-2">
-                                    <select name="metodoPago" class="form-control form-control-sm" onchange="this.form.submit()">
+                                    <label class="form-label small text-muted mb-1">Método de Pago</label>
+                                    <select name="metodoPago" class="form-select form-select-sm" onchange="this.form.submit()">
                                         <option value="">Todos los métodos</option>
                                         {% for metodo in metodosPago %}
                                             <option value="{{ metodo }}" {% if metodoSelected == metodo %}selected{% endif %}>{{ metodo }}</option>
@@ -138,26 +142,28 @@
                                     </select>
                                 </div>
                                 <div class="col-md-2">
+                                    <label class="form-label small text-muted mb-1">Fecha Desde</label>
                                     <input type="date" name="fechaDesde" class="form-control form-control-sm" value="{{ fechaDesde }}" placeholder="Desde">
                                 </div>
-                                <div class="col-md-1">
-                                    <button class="btn btn-sm btn-primary w-100" type="submit">
-                                        <i class="bi bi-search"></i>
-                                    </button>
-                                </div>
-                                {% if fechaDesde or fechaHasta or busqueda or cursoSelected or metodoSelected or alumnoSelected %}
-                                <div class="col-md-1">
-                                    <a href="{{ path('app_alumnos_pagos_index') }}" class="btn btn-sm btn-outline-secondary w-100" title="Limpiar filtros">
-                                        <i class="bi bi-x-circle"></i>
+                                {% if fechaDesde or fechaHasta or busqueda or cursoSelected or metodoSelected or alumnoSelected or (alumnoId is defined and alumnoId) %}
+                                <div class="col-md-2">
+                                    <label class="form-label small text-muted mb-1 d-block">&nbsp;</label>
+                                    <a href="{{ path('app_alumnos_pagos_index', {'tab': 'pagos'}) }}" class="btn btn-sm btn-outline-secondary w-100" title="Limpiar filtros">
+                                        <i class="bi bi-x-circle"></i> Limpiar Filtros
                                     </a>
                                 </div>
                                 {% endif %}
                             </div>
                             <input type="hidden" name="tab" value="pagos">
+                            {# No mantener el parámetro alumno si se selecciona "Todos los alumnos" #}
+                            {# Solo mantenerlo si hay un alumno seleccionado explícitamente #}
+                            {% if alumnoSelected and alumnoSelected != '' %}
+                                <input type="hidden" name="alumno" value="{{ alumnoSelected }}">
+                            {% endif %}
+                        </div>
+                    </form>
                 </div>
-            </form>
-        </div>
-    </div>
+            </div>
 
             {# Tabla de Pagos #}
             <div class="row">
@@ -285,29 +291,27 @@
         </div>
 
         {# Tab Deudas Pendientes #}
-        {% if deudasPendientes is defined and deudasPendientes|length > 0 %}
-        <div class="tab-pane fade" id="deudas" role="tabpanel" aria-labelledby="deudas-tab">
+        <div class="tab-pane fade {% if activeTab == 'deudas' %}show active{% endif %}" id="deudas" role="tabpanel" aria-labelledby="deudas-tab">
             {# Filtros para Deudas #}
             <div class="row mb-3">
                 <div class="col-12">
-                    <form method="get" class="card shadow-sm border-warning">
+                    <form method="get" class="card shadow-sm">
                         <div class="card-body py-2">
-                            <div class="row g-2">
+                            <div class="row g-2 align-items-end">
                                 <div class="col-md-3">
-                                    <input type="text" name="busqueda" class="form-control form-control-sm" placeholder="Buscar por nombre..." value="{{ busqueda }}">
-                                </div>
-                                <div class="col-md-3">
-                                    <select name="alumnoId" class="form-control form-control-sm" onchange="this.form.submit()">
+                                    <label class="form-label small text-muted mb-1">Alumno</label>
+                                    <select name="alumnoId" class="form-select form-select-sm" onchange="this.form.submit()">
                                         <option value="">Todos los alumnos</option>
                                         {% for alu in alumnos %}
-                                            <option value="{{ alu.id }}" {% if alumnoSelected == alu.id %}selected{% endif %}>
+                                            <option value="{{ alu.id }}" {% if alumnoSelected == alu.id or (alumnoId is defined and alumnoId == alu.id) %}selected{% endif %}>
                                                 {{ alu.apellido }}, {{ alu.nombre }}
                                             </option>
                                         {% endfor %}
                                     </select>
                                 </div>
                                 <div class="col-md-3">
-                                    <select name="curso" class="form-control form-control-sm" onchange="this.form.submit()">
+                                    <label class="form-label small text-muted mb-1">Curso</label>
+                                    <select name="curso" class="form-select form-select-sm" onchange="this.form.submit()">
                                         <option value="">Todos los cursos</option>
                                         {% for curso in cursos %}
                                             <option value="{{ curso.id }}" {% if cursoSelected == curso.id %}selected{% endif %}>{{ curso.nombre }}</option>
@@ -315,19 +319,28 @@
                                     </select>
                                 </div>
                                 <div class="col-md-2">
-                                    <button class="btn btn-sm btn-primary w-100" type="submit">
-                                        <i class="bi bi-search"></i> Buscar
-                                    </button>
+                                    <label class="form-label small text-muted mb-1">Estado</label>
+                                    <select name="estadoDeuda" class="form-select form-select-sm" onchange="this.form.submit()">
+                                        <option value="">Todas</option>
+                                        <option value="pendientes" {% if estadoDeuda == 'pendientes' %}selected{% endif %}>Solo Pendientes</option>
+                                        <option value="parciales" {% if estadoDeuda == 'parciales' %}selected{% endif %}>Parcialmente Pagadas</option>
+                                    </select>
                                 </div>
-                                {% if busqueda or cursoSelected or alumnoSelected %}
-                                <div class="col-md-1">
+                                {% if busqueda or cursoSelected or alumnoSelected or estadoDeuda or (alumnoId is defined and alumnoId) %}
+                                <div class="col-md-2">
+                                    <label class="form-label small text-muted mb-1 d-block">&nbsp;</label>
                                     <a href="{{ path('app_alumnos_pagos_index', {'tab': 'deudas'}) }}" class="btn btn-sm btn-outline-secondary w-100" title="Limpiar filtros">
-                                        <i class="bi bi-x-circle"></i>
+                                        <i class="bi bi-x-circle"></i> Limpiar Filtros
                                     </a>
                                 </div>
                                 {% endif %}
                             </div>
                             <input type="hidden" name="tab" value="deudas">
+                            {# Mantener el parámetro alumno si viene en la URL #}
+                            {# No mantener el parámetro alumno si se selecciona "Todos los alumnos" #}
+                            {% if alumnoSelected and alumnoSelected != '' %}
+                                <input type="hidden" name="alumno" value="{{ alumnoSelected }}">
+                            {% endif %}
                         </div>
                     </form>
                 </div>
@@ -339,9 +352,20 @@
                         <div class="card-body p-0">
                             {# Info de registros #}
                             <div class="px-3 py-2 border-bottom bg-light">
-                                <small class="text-muted">
-                                    Total de deudas pendientes: <strong>{{ deudasPendientes|length }}</strong>
-                                </small>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">
+                                        Total de deudas: <strong>{{ deudasPendientes.getTotalItemCount() }}</strong>
+                                    </small>
+                                    {% if deudasPendientes.getTotalItemCount() > 0 %}
+                                        {% set totalPendiente = 0 %}
+                                        {% for deuda in deudasPendientes %}
+                                            {% set totalPendiente = totalPendiente + deuda.montoPendiente %}
+                                        {% endfor %}
+                                        <small class="text-muted">
+                                            Total pendiente (esta página): <strong class="text-warning">${{ totalPendiente|number_format(2, ',', '.') }}</strong>
+                                        </small>
+                                    {% endif %}
+                                </div>
                             </div>
                             <div class="table-responsive">
                                 <table class="table table-striped table-hover mb-0">
@@ -349,9 +373,12 @@
                                         <tr>
                                             <th>Alumno</th>
                                             <th>Curso</th>
-                                            <th>Mes/Año</th>
-                                            <th>Monto</th>
-                                            <th>Acción</th>
+                                            <th>Período</th>
+                                            <th class="text-end">Monto Total</th>
+                                            <th class="text-end">Pagado</th>
+                                            <th class="text-end">Pendiente</th>
+                                            <th class="text-center">Estado</th>
+                                            <th class="text-center">Acción</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -360,32 +387,103 @@
                                             5: 'Mayo', 6: 'Junio', 7: 'Julio', 8: 'Agosto',
                                             9: 'Septiembre', 10: 'Octubre', 11: 'Noviembre', 12: 'Diciembre'
                                         } %}
-                                        {% for deuda in deudasPendientes %}
-                                        <tr>
-                                            <td>{{ deuda.alumno.apellido }}, {{ deuda.alumno.nombre }}</td>
-                                            <td>{{ deuda.curso.nombre }}</td>
-                                            <td>
-                                                <span class="badge bg-warning text-dark">
-                                                    {{ nombresMeses[deuda.mes] ?? deuda.mes }} {{ deuda.ano }}
-                                                </span>
-                                            </td>
-                                            <td><strong>${{ deuda.monto|number_format(2, ',', '.') }}</strong></td>
-                                            <td>
-                                                <a href="{{ path('app_alumnos_pagos_new', {'id': deuda.alumno.id, 'curso': deuda.curso.id}) }}" class="btn btn-sm btn-success">
-                                                    <i class="bi bi-cash-coin"></i> Pagar
-                                                </a>
-                                            </td>
-                </tr>
-                {% endfor %}
-                </tbody>
-            </table>
+                                        {% if deudasPendientes.getTotalItemCount() > 0 %}
+                                            {% for deuda in deudasPendientes %}
+                                                {% set montoTotal = deuda.montoTotal %}
+                                                {% set montoPagado = deuda.montoPagado %}
+                                                {% set montoPendiente = deuda.montoPendiente %}
+                                                {% set porcentajePagado = montoTotal > 0 ? (montoPagado / montoTotal * 100) : 0 %}
+                                            <tr>
+                                                <td>
+                                                    <strong>{{ deuda.alumno.apellido }}, {{ deuda.alumno.nombre }}</strong>
+                                                </td>
+                                                <td>{{ deuda.curso.nombre }}</td>
+                                                <td>
+                                                    <span class="badge bg-secondary">
+                                                        {{ nombresMeses[deuda.mes] ?? deuda.mes }} {{ deuda.ano }}
+                                                    </span>
+                                                </td>
+                                                <td class="text-end">
+                                                    ${{ montoTotal|number_format(2, ',', '.') }}
+                                                    {% if deuda.interes > 0 %}
+                                                        <small class="text-muted d-block">
+                                                            Base: ${{ deuda.monto|number_format(2, ',', '.') }} + 
+                                                            Int: ${{ deuda.interes|number_format(2, ',', '.') }}
+                                                        </small>
+                                                    {% endif %}
+                                                </td>
+                                                <td class="text-end">
+                                                    {% if montoPagado > 0 %}
+                                                        <span class="text-success">${{ montoPagado|number_format(2, ',', '.') }}</span>
+                                                    {% else %}
+                                                        <span class="text-muted">$0,00</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td class="text-end">
+                                                    <strong class="text-warning">${{ montoPendiente|number_format(2, ',', '.') }}</strong>
+                                                </td>
+                                                <td class="text-center">
+                                                    {% if montoPendiente <= 0.01 %}
+                                                        <span class="badge bg-success">Pagada</span>
+                                                    {% elseif porcentajePagado > 0 %}
+                                                        <span class="badge bg-info">Parcial</span>
+                                                        <div class="progress mt-1" style="height: 4px; width: 60px; margin: 0 auto;">
+                                                            <div class="progress-bar bg-success" role="progressbar" style="width: {{ porcentajePagado }}%"></div>
+                                                        </div>
+                                                    {% else %}
+                                                        <span class="badge bg-warning text-dark">Pendiente</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td class="text-center">
+                                                    {% if montoPendiente > 0 %}
+                                                        <a href="{{ path('app_alumnos_pagos_por_deuda', {'id': deuda.id}) }}" class="btn btn-sm btn-success" title="Registrar pago para esta deuda">
+                                                            <i class="bi bi-cash-coin"></i> Pagar
+                                                        </a>
+                                                    {% else %}
+                                                        <span class="text-muted small">Completa</span>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        {% else %}
+                                            <tr>
+                                                <td colspan="8" class="text-center py-4">
+                                                    <div class="text-muted">
+                                                        <i class="bi bi-info-circle"></i> No hay deudas pendientes con los filtros seleccionados.
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        {% endif %}
+                                    </tbody>
+                                </table>
                             </div>
+                            
+                            {# Paginación de deudas #}
+                            {% if deudasPendientes.pageCount > 1 %}
+                            <div class="px-3 py-2 border-top">
+                                {# Construir parámetros para mantener los filtros y la tab activa #}
+                                {% set routeParams = {'tab': 'deudas'} %}
+                                {# Mantener todos los filtros excepto los parámetros de paginación #}
+                                {% if app.request.query.get('alumnoId') %}
+                                    {% set routeParams = routeParams|merge({'alumnoId': app.request.query.get('alumnoId')}) %}
+                                {% endif %}
+                                {% if app.request.query.get('curso') %}
+                                    {% set routeParams = routeParams|merge({'curso': app.request.query.get('curso')}) %}
+                                {% endif %}
+                                {% if app.request.query.get('estadoDeuda') %}
+                                    {% set routeParams = routeParams|merge({'estadoDeuda': app.request.query.get('estadoDeuda')}) %}
+                                {% endif %}
+                                {% if app.request.query.get('busqueda') %}
+                                    {% set routeParams = routeParams|merge({'busqueda': app.request.query.get('busqueda')}) %}
+                                {% endif %}
+                                {{ knp_pagination_render(deudasPendientes, null, {}, {'pageParameterName': 'pageDeudas', 'routeParams': routeParams}) }}
+                            </div>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        {% endif %}
         </div>
 
     {# Paginación #}
@@ -410,16 +508,40 @@
     }
     
     // Mantener la pestaña activa según parámetro URL
-    document.addEventListener('DOMContentLoaded', function() {
+    function activateTabFromUrl() {
         const urlParams = new URLSearchParams(window.location.search);
         const activeTab = urlParams.get('tab');
+        const pageDeudas = urlParams.get('pageDeudas');
         
-        if (activeTab === 'deudas') {
+        // Si hay parámetro pageDeudas o tab=deudas, mostrar tab de deudas
+        if (activeTab === 'deudas' || pageDeudas) {
             const deudasTab = document.getElementById('deudas-tab');
             if (deudasTab) {
                 const tab = new bootstrap.Tab(deudasTab);
                 tab.show();
             }
+        } else {
+            // Por defecto mostrar tab de pagos
+            const pagosTab = document.getElementById('pagos-tab');
+            if (pagosTab) {
+                const tab = new bootstrap.Tab(pagosTab);
+                tab.show();
+            }
+        }
+    }
+    
+    // Ejecutar al cargar la página
+    document.addEventListener('DOMContentLoaded', activateTabFromUrl);
+    
+    // También ejecutar cuando cambie la URL (para paginación)
+    window.addEventListener('popstate', activateTabFromUrl);
+    
+    // Interceptar clics en enlaces de paginación para mantener la tab activa
+    document.addEventListener('click', function(e) {
+        const link = e.target.closest('a');
+        if (link && link.href && (link.href.includes('pageDeudas') || link.href.includes('tab=deudas'))) {
+            // Pequeño delay para asegurar que la URL cambie antes de activar la tab
+            setTimeout(activateTabFromUrl, 100);
         }
     });
 </script>

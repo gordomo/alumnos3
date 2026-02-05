@@ -1,4 +1,4 @@
-{{ form_start(form, {'attr': {'class': 'form-horizontal'}}) }}
+{{ form_start(form, {'attr': {'class': 'form-horizontal', 'id': 'user-form'}}) }}
 <div class="form-group">
     <div class="row mb-3">
         <div class="col-md-6">
@@ -18,6 +18,10 @@
             {% endif %}
         </div>
     </div>
+    {% if esPropioUsuario|default(false) %}
+        <input type="hidden" name="confirmar_edicion_propio" id="confirmar_edicion_propio" value="0">
+    {% endif %}
+    {% if not esPropioUsuario|default(false) and button_label|default('Guardar') == 'Guardar' %}
     <div class="row mb-3">
         <div class="col-md-12">
             <div class="alert alert-info">
@@ -25,12 +29,56 @@
             </div>
         </div>
     </div>
+    {% endif %}
     <div class="row">
         <div class="col text-end">
-            <button class="btn btn-success">{{ button_label|default('Guardar') }}</button>
+            <button type="submit" class="btn btn-success" id="submit-btn">{{ button_label|default('Guardar') }}</button>
             <a href="{{ path('instituto_user_index') }}" class="btn btn-secondary">Volver</a>
         </div>
     </div>
 </div>
 {{ form_end(form) }}
+
+{% if esPropioUsuario|default(false) %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('user-form');
+    const submitBtn = document.getElementById('submit-btn');
+    const confirmInput = document.getElementById('confirmar_edicion_propio');
+    
+    if (form && submitBtn && confirmInput) {
+        form.addEventListener('submit', function(e) {
+            // Si ya está confirmado, permitir el envío
+            if (confirmInput.value === '1') {
+                return true;
+            }
+            
+            // Prevenir el envío por defecto
+            e.preventDefault();
+            
+            // Mostrar confirmación
+            const passwordField = form.querySelector('input[name="instituto_user_type[password]"]');
+            const emailField = form.querySelector('input[name="instituto_user_type[email]"]');
+            const passwordValue = passwordField ? passwordField.value : '';
+            const emailValue = emailField ? emailField.value : '';
+            const emailOriginal = emailField ? emailField.getAttribute('data-original-email') || '' : '';
+            
+            let warningMessage = '';
+            if (passwordValue) {
+                warningMessage += '\n\n⚠️ Si modifica su contraseña, será deslogueado automáticamente.';
+            }
+            if (emailValue && emailValue !== emailOriginal) {
+                warningMessage += '\n\n⚠️ Si modifica su email, será deslogueado automáticamente.';
+            }
+            
+            if (confirm('¿Está seguro que desea modificar su propio usuario?' + warningMessage)) {
+                // Marcar como confirmado y enviar el formulario
+                confirmInput.value = '1';
+                form.submit();
+            }
+        });
+    }
+});
+</script>
+{% endif %}
 

@@ -128,7 +128,7 @@ class ProfesorController extends AbstractController
         $asistenciasArray = [];
 
         foreach ($asistencias as $asistencia) {
-            $asistenciasArray[$asistencia->getCurso()][$asistencia->getFecha()->format('Y/m/d')][$asistencia->getProfesor()->getId()] = array('presente' => $asistencia->getPresente(), 'reemplazante' => ($asistencia->getProfesorRemplazante()) ? $profesorRepository->find($asistencia->getProfesorRemplazante())->getApellido() : 'sin reemplazo');
+            $asistenciasArray[$asistencia->getCurso()][$asistencia->getFecha()->format('Y/m/d')][$asistencia->getProfesor()->getId()] = array('presente' => $asistencia->getPresente(), 'reemplazante' => ($asistencia->getProfesorRemplazante()) ? $profesorRepository->find($asistencia->getProfesorRemplazante())->getApellido() . ', ' . $profesorRepository->find($asistencia->getProfesorRemplazante())->getNombre() : 'sin reemplazo');
         }
 
         return $this->render('profesor/asistencias.html.twig',[

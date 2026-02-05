@@ -65,11 +65,13 @@ class DeudaAlumnoController extends AbstractController
         
         // Filtrar por estado de deuda
         if ($estadoDeuda === 'pendientes') {
-            $qb->andWhere('d.pagado = :pagado')
-               ->setParameter('pagado', false);
+            $qb->leftJoin('d.aplicaciones', 'pa')
+               ->groupBy('d.id')
+               ->having('COALESCE(SUM(pa.montoAplicado), 0) < d.monto + COALESCE(d.interes, 0)');
         } elseif ($estadoDeuda === 'pagadas') {
-            $qb->andWhere('d.pagado = :pagado')
-               ->setParameter('pagado', true);
+            $qb->leftJoin('d.aplicaciones', 'pa')
+               ->groupBy('d.id')
+               ->having('COALESCE(SUM(pa.montoAplicado), 0) >= d.monto + COALESCE(d.interes, 0)');
         }
         
         // Ordenar resultados

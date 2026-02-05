@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\DeudaAlumnoRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -46,24 +48,15 @@ class DeudaAlumno
     private $ano;
 
     /**
-     * @ORM\Column(type="boolean")
+     * @ORM\OneToMany(targetEntity=PagoAplicacion::class, mappedBy="deuda", cascade={"persist", "remove"})
      */
-    private $pagado = false;
-
-    /**
-     * @ORM\ManyToOne(targetEntity=AlumnosPagos::class)
-     */
-    private $pago;
+    private $aplicaciones;
 
     /**
      * @ORM\Column(type="datetime")
      */
     private $fechaCreacion;
 
-    /**
-     * @ORM\Column(type="datetime", nullable=true)
-     */
-    private $fechaPago;
 
     /**
      * @ORM\Column(type="float")
@@ -84,6 +77,7 @@ class DeudaAlumno
     public function __construct()
     {
         $this->fechaCreacion = new \DateTime();
+        $this->aplicaciones = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -162,32 +156,90 @@ class DeudaAlumno
         return $nombresMeses[$this->mes] . ' ' . $this->ano;
     }
 
-    public function isPagado(): ?bool
+    /**
+     * @return Collection<int, PagoAplicacion>
+     */
+    public function getAplicaciones(): Collection
     {
-        return $this->pagado;
+        return $this->aplicaciones;
     }
 
-    public function setPagado(bool $pagado): self
+    public function addAplicacion(PagoAplicacion $aplicacion): self
     {
-        $this->pagado = $pagado;
-
-        if ($pagado && $this->fechaPago === null) {
-            $this->fechaPago = new \DateTime();
+        if (!$this->aplicaciones->contains($aplicacion)) {
+            $this->aplicaciones[] = $aplicacion;
+            $aplicacion->setDeuda($this);
         }
 
         return $this;
     }
 
-    public function getPago(): ?AlumnosPagos
+    public function removeAplicacion(PagoAplicacion $aplicacion): self
     {
-        return $this->pago;
-    }
-
-    public function setPago(?AlumnosPagos $pago): self
-    {
-        $this->pago = $pago;
+        if ($this->aplicaciones->removeElement($aplicacion)) {
+            if ($aplicacion->getDeuda() === $this) {
+                $aplicacion->setDeuda(null);
+            }
+        }
 
         return $this;
+    }
+
+    /**
+     * Calcula el monto total pagado sumando todas las aplicaciones
+     */
+    public function getMontoPagado(): float
+    {
+        $total = 0;
+        foreach ($this->aplicaciones as $aplicacion) {
+            $total += $aplicacion->getMontoAplicado();
+        }
+        return $total;
+    }
+
+    /**
+     * Calcula el monto pendiente (monto total - monto pagado)
+     */
+    public function getMontoPendiente(): float
+    {
+        return max(0, $this->getMontoTotal() - $this->getMontoPagado());
+    }
+
+    /**
+     * Verifica si la deuda está completamente pagada
+     */
+    public function isPagado(): bool
+    {
+        return $this->getMontoPendiente() <= 0.01; // Tolerancia para comparaciones de float
+    }
+
+    /**
+     * Verifica si la deuda está parcialmente pagada
+     */
+    public function isParcialmentePagado(): bool
+    {
+        $montoPagado = $this->getMontoPagado();
+        return $montoPagado > 0 && $montoPagado < $this->getMontoTotal();
+    }
+
+    /**
+     * Obtiene la fecha del primer pago aplicado
+     */
+    public function getFechaPago(): ?\DateTimeInterface
+    {
+        if ($this->aplicaciones->isEmpty()) {
+            return null;
+        }
+        
+        $fechaMasAntigua = null;
+        foreach ($this->aplicaciones as $aplicacion) {
+            $fechaAplicacion = $aplicacion->getFechaAplicacion();
+            if ($fechaMasAntigua === null || $fechaAplicacion < $fechaMasAntigua) {
+                $fechaMasAntigua = $fechaAplicacion;
+            }
+        }
+        
+        return $fechaMasAntigua;
     }
 
     public function getFechaCreacion(): ?\DateTimeInterface
@@ -202,17 +254,6 @@ class DeudaAlumno
         return $this;
     }
 
-    public function getFechaPago(): ?\DateTimeInterface
-    {
-        return $this->fechaPago;
-    }
-
-    public function setFechaPago(?\DateTimeInterface $fechaPago): self
-    {
-        $this->fechaPago = $fechaPago;
-
-        return $this;
-    }
 
     public function getMonto(): ?float
     {

@@ -66,8 +66,12 @@
                 <label for="{{ form.monto.vars.id }}" class="form-label fw-semibold text-dark">
                     Monto <span class="text-danger">*</span>
                 </label>
-                <small class="text-muted d-block mb-1">Puede modificar el monto sugerido</small>
-                {{ form_widget(form.monto, {'attr': {'class': 'form-control monto-input-field'}}) }}
+                <small class="text-muted d-block mb-1">
+                    Puede modificar el monto sugerido. 
+                    <strong>Pago parcial:</strong> Ingrese un monto menor para pagar parcialmente. 
+                    <strong>Pago adelantado:</strong> Seleccione meses futuros (hasta 12 meses adelante).
+                </small>
+                {{ form_widget(form.monto, {'attr': {'class': 'form-control monto-input-field', 'min': '0.01', 'step': '0.01'}}) }}
                 {{ form_errors(form.monto) }}
             </div>
         </div>
@@ -321,7 +325,6 @@
                 // Si estamos en modo múltiple, NO hacer nada aquí (el listener en new.html.twig se encarga)
                 // También verificar si el evento ya fue manejado por otro listener
                 if (modoMultipleActivo || e.defaultPrevented) {
-                    console.log('DEBUG _form.html.twig - Ignorando cambio de descuento (modo múltiple activo o evento ya manejado)');
                     return;
                 }
                 
@@ -346,31 +349,43 @@
             if (campoMonto) {
                 console.log('Campo de monto encontrado, agregando event listeners:', campoMonto.id || campoMonto.name);
                 
-                // Event listener para input (tiempo real mientras se escribe)
-                campoMonto.addEventListener('input', function(e) {
-                    // Ignorar si la actualización es programática (viene de AJAX)
-                    if (e.target.dataset.updatingProgrammatically === 'true') {
-                        return;
-                    }
-                    console.log('Evento input detectado, valor:', e.target.value);
-                    actualizarPrecioFinalDesdeInput();
-                });
+                // Verificar si estamos en modo múltiple antes de agregar listeners
+                const modoPagoMultipleHidden = document.getElementById('modo-pago-multiple-hidden');
+                const modoMultipleActivo = modoPagoMultipleHidden && modoPagoMultipleHidden.value === '1';
                 
-                // Event listener para change (cuando se pierde el foco)
-                campoMonto.addEventListener('change', function(e) {
-                    // Ignorar si la actualización es programática (viene de AJAX)
-                    if (e.target.dataset.updatingProgrammatically === 'true') {
-                        return;
-                    }
-                    console.log('Evento change detectado, valor:', e.target.value);
-                    actualizarPrecioFinalDesdeInput();
-                });
-                
-                // También escuchar eventos keyup para capturar cambios
-                campoMonto.addEventListener('keyup', function(e) {
-                    console.log('Evento keyup detectado, valor:', e.target.value);
-                    actualizarPrecioFinalDesdeInput();
-                });
+                // Solo agregar listeners si NO estamos en modo múltiple
+                // En modo múltiple, el precio se calcula vía AJAX y no debe ser sobrescrito
+                if (!modoMultipleActivo) {
+                    // Event listener para input (tiempo real mientras se escribe)
+                    campoMonto.addEventListener('input', function(e) {
+                        // Ignorar si la actualización es programática (viene de AJAX)
+                        if (e.target.dataset.updatingProgrammatically === 'true') {
+                            return;
+                        }
+                        console.log('Evento input detectado, valor:', e.target.value);
+                        actualizarPrecioFinalDesdeInput();
+                    });
+                    
+                    // Event listener para change (cuando se pierde el foco)
+                    campoMonto.addEventListener('change', function(e) {
+                        // Ignorar si la actualización es programática (viene de AJAX)
+                        if (e.target.dataset.updatingProgrammatically === 'true') {
+                            return;
+                        }
+                        console.log('Evento change detectado, valor:', e.target.value);
+                        actualizarPrecioFinalDesdeInput();
+                    });
+                    
+                    // También escuchar eventos keyup para capturar cambios
+                    campoMonto.addEventListener('keyup', function(e) {
+                        // Ignorar si la actualización es programática (viene de AJAX)
+                        if (e.target.dataset.updatingProgrammatically === 'true') {
+                            return;
+                        }
+                        console.log('Evento keyup detectado, valor:', e.target.value);
+                        actualizarPrecioFinalDesdeInput();
+                    });
+                }
             } else {
                 console.error('No se pudo encontrar el campo de monto para agregar event listeners');
                 // Intentar nuevamente después de un delay

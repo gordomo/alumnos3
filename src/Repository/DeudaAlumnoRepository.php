@@ -52,15 +52,18 @@ class DeudaAlumnoRepository extends ServiceEntityRepository
      */
     public function findDeudaByAlumno(Alumno $alumno): array
     {
-        return $this->createQueryBuilder('d')
+        $todasDeudas = $this->createQueryBuilder('d')
             ->andWhere('d.alumno = :alumno')
-            ->andWhere('d.pagado = :pagado')
             ->setParameter('alumno', $alumno)
-            ->setParameter('pagado', false)
             ->orderBy('d.ano', 'ASC')
             ->addOrderBy('d.mes', 'ASC')
             ->getQuery()
             ->getResult();
+        
+        // Filtrar solo las que tienen monto pendiente
+        return array_filter($todasDeudas, function($deuda) {
+            return $deuda->getMontoPendiente() > 0;
+        });
     }
 
     /**
@@ -68,32 +71,36 @@ class DeudaAlumnoRepository extends ServiceEntityRepository
      */
     public function findDeudaByAlumnoAndCurso(Alumno $alumno, Curso $curso): array
     {
-        return $this->createQueryBuilder('d')
+        $todasDeudas = $this->createQueryBuilder('d')
             ->andWhere('d.alumno = :alumno')
             ->andWhere('d.curso = :curso')
-            ->andWhere('d.pagado = :pagado')
             ->setParameter('alumno', $alumno)
             ->setParameter('curso', $curso)
-            ->setParameter('pagado', false)
             ->orderBy('d.ano', 'ASC')
             ->addOrderBy('d.mes', 'ASC')
             ->getQuery()
             ->getResult();
+        
+        // Filtrar solo las que tienen monto pendiente
+        return array_filter($todasDeudas, function($deuda) {
+            return $deuda->getMontoPendiente() > 0;
+        });
     }
 
     /**
-     * Verifica si un alumno tiene alguna deuda
+     * Verifica si un alumno tiene alguna deuda pendiente
      */
     public function tieneDeuda(Alumno $alumno): bool
     {
-        return $this->createQueryBuilder('d')
-            ->select('COUNT(d.id)')
-            ->andWhere('d.alumno = :alumno')
-            ->andWhere('d.pagado = :pagado')
-            ->setParameter('alumno', $alumno)
-            ->setParameter('pagado', false)
-            ->getQuery()
-            ->getSingleScalarResult() > 0;
+        $todasDeudas = $this->findBy(['alumno' => $alumno]);
+        
+        foreach ($todasDeudas as $deuda) {
+            if ($deuda->getMontoPendiente() > 0) {
+                return true;
+            }
+        }
+        
+        return false;
     }
 
     /**
@@ -115,18 +122,13 @@ class DeudaAlumnoRepository extends ServiceEntityRepository
     }
 
     /**
+     * @deprecated Este método ya no es necesario. Los pagos se aplican automáticamente mediante PagoAplicacion.
      * Marca como pagadas todas las deudas asociadas a un pago
      */
     public function marcarPagadas(Alumno $alumno, Curso $curso, int $mes, int $ano, $pago): void
     {
-        $deuda = $this->findOneDeuda($alumno, $curso, $mes, $ano);
-        
-        if ($deuda) {
-            $deuda->setPagado(true);
-            $deuda->setPago($pago);
-            $deuda->setFechaPago(new \DateTime());
-            $this->getEntityManager()->flush();
-        }
+        // Este método está deprecado. Los pagos ahora se aplican mediante PagoService y PagoAplicacion.
+        // No hacer nada aquí ya que la lógica de aplicación de pagos está en PagoService.
     }
 
     /**
@@ -140,8 +142,9 @@ class DeudaAlumnoRepository extends ServiceEntityRepository
         $diaActual = (int)$fechaActual->format('j');
 
         $qb = $this->createQueryBuilder('d')
-            ->andWhere('d.pagado = :pagado')
-            ->setParameter('pagado', false);
+            ->leftJoin('d.aplicaciones', 'pa')
+            ->groupBy('d.id')
+            ->having('COALESCE(SUM(pa.montoAplicado), 0) < d.monto + COALESCE(d.interes, 0)');
 
         // Deudas de meses anteriores
         $qb->andWhere(

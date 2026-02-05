@@ -13,11 +13,20 @@ use Doctrine\ORM\EntityManagerInterface;
 class DeudaService
 {
     private EntityManagerInterface $entityManager;
+    private ?\App\Service\PagoService $pagoService = null;
     
     public function __construct(
         EntityManagerInterface $entityManager
     ) {
         $this->entityManager = $entityManager;
+    }
+    
+    /**
+     * Establece el servicio de pagos (inyección opcional para evitar dependencia circular)
+     */
+    public function setPagoService(\App\Service\PagoService $pagoService): void
+    {
+        $this->pagoService = $pagoService;
     }
     
     /**
@@ -97,7 +106,7 @@ class DeudaService
                     $deuda->setCursoHistorico($historico);
                     $deuda->setMes($mes);
                     $deuda->setAno($ano);
-                    $deuda->setPagado(false);
+                    // El estado se calcula automáticamente basado en las aplicaciones de pago
                     $deuda->setMonto($curso->getPrecio());
                     $deuda->setInstituto($alumno->getInstituto());
 
@@ -120,6 +129,7 @@ class DeudaService
     
     /**
      * Registra un pago para una deuda específica
+     * @deprecated Usar PagoService::registrarPago() en su lugar
      */
     public function registrarPago(DeudaAlumno $deuda, float $monto, \DateTime $fecha = null): AlumnosPagos
     {
@@ -134,28 +144,28 @@ class DeudaService
         $pago->setAno($deuda->getAno());
         $pago->setMonto($monto);
         $pago->setFecha($fecha);
-        $pago->setInstituto($deuda->getInstituto());
+        $pago->setMetodoPago('Efectivo'); // Valor por defecto
         
-        $deuda->setPagado(true);
-        $deuda->setPago($pago);
-        $deuda->setFechaPago($fecha);
+        // Buscar curso histórico
+        $historico = $this->entityManager->getRepository(\App\Entity\AlumnoCursoHistorico::class)
+            ->findOneBy([
+                'alumno' => $deuda->getAlumno(),
+                'curso' => $deuda->getCurso(),
+                'activo' => true
+            ]);
         
-        $this->entityManager->persist($pago);
-        $this->entityManager->flush();
+        if ($historico) {
+            $pago->setCursoHistorico($historico);
+        }
         
-        return $pago;
-    }
-    
-    /**
-     * Marca una deuda como pagada y asocia un pago existente
-     */
-    public function marcarComoPagada(DeudaAlumno $deuda, AlumnosPagos $pago): void
-    {
-        $deuda->setPagado(true);
-        $deuda->setPago($pago);
-        $deuda->setFechaPago($pago->getFecha() ?? new \DateTime());
+        // Usar PagoService para aplicar el pago
+        if ($this->pagoService === null) {
+            $this->pagoService = new \App\Service\PagoService($this->entityManager, $this);
+        }
         
-        $this->entityManager->flush();
+        $resultado = $this->pagoService->registrarPago($pago, [$deuda->getId()], false);
+        
+        return $resultado['pago'];
     }
     
     /**
@@ -167,11 +177,15 @@ class DeudaService
         // Primero, generar cualquier deuda vencida que no exista
         $this->generarDeudasVencidasFaltantes($alumno);
         
-        return $this->entityManager->getRepository(DeudaAlumno::class)
+        $deudas = $this->entityManager->getRepository(DeudaAlumno::class)
             ->findBy([
-                'alumno' => $alumno,
-                'pagado' => false
+                'alumno' => $alumno
             ], ['ano' => 'ASC', 'mes' => 'ASC']);
+        
+        // Filtrar solo las que tienen monto pendiente
+        return array_filter($deudas, function(DeudaAlumno $deuda) {
+            return $deuda->getMontoPendiente() > 0;
+        });
     }
     
     /**
@@ -179,11 +193,15 @@ class DeudaService
      */
     public function getDeudasPendientesPorCurso(Curso $curso): array
     {
-        return $this->entityManager->getRepository(DeudaAlumno::class)
+        $deudas = $this->entityManager->getRepository(DeudaAlumno::class)
             ->findBy([
-                'curso' => $curso,
-                'pagado' => false
+                'curso' => $curso
             ], ['alumno' => 'ASC', 'ano' => 'ASC', 'mes' => 'ASC']);
+        
+        // Filtrar solo las que tienen monto pendiente
+        return array_filter($deudas, function(DeudaAlumno $deuda) {
+            return $deuda->getMontoPendiente() > 0;
+        });
     }
     
     /**
@@ -191,11 +209,15 @@ class DeudaService
      */
     public function getDeudasPendientesPorInstituto(Instituto $instituto): array
     {
-        return $this->entityManager->getRepository(DeudaAlumno::class)
+        $deudas = $this->entityManager->getRepository(DeudaAlumno::class)
             ->findBy([
-                'instituto' => $instituto,
-                'pagado' => false
+                'instituto' => $instituto
             ], ['alumno' => 'ASC', 'curso' => 'ASC', 'ano' => 'ASC', 'mes' => 'ASC']);
+        
+        // Filtrar solo las que tienen monto pendiente
+        return array_filter($deudas, function(DeudaAlumno $deuda) {
+            return $deuda->getMontoPendiente() > 0;
+        });
     }
     
     /**
@@ -204,15 +226,23 @@ class DeudaService
     public function tieneDeudasPendientes(Alumno $alumno, Curso $curso = null): bool
     {
         $criteria = [
-            'alumno' => $alumno,
-            'pagado' => false
+            'alumno' => $alumno
         ];
         
         if ($curso) {
             $criteria['curso'] = $curso;
         }
         
-        return count($this->entityManager->getRepository(DeudaAlumno::class)->findBy($criteria)) > 0;
+        $deudas = $this->entityManager->getRepository(DeudaAlumno::class)->findBy($criteria);
+        
+        // Verificar si alguna tiene monto pendiente
+        foreach ($deudas as $deuda) {
+            if ($deuda->getMontoPendiente() > 0) {
+                return true;
+            }
+        }
+        
+        return false;
     }
     
     /**
@@ -308,44 +338,30 @@ class DeudaService
      */
     public function cancelarDeudasPendientesAlumnoCurso(Alumno $alumno, Curso $curso, bool $soloFuturas = true): int
     {
-        $criteria = [
-            'alumno' => $alumno,
-            'curso' => $curso,
-            'pagado' => false
-        ];
+        // Obtener todas las deudas del alumno y curso
+        $deudas = $this->entityManager->getRepository(DeudaAlumno::class)
+            ->findBy([
+                'alumno' => $alumno,
+                'curso' => $curso
+            ]);
         
-        // Si solo queremos cancelar deudas futuras
+        // Filtrar por fecha si es necesario
         if ($soloFuturas) {
             $fechaActual = new \DateTime();
             $mesActual = (int)$fechaActual->format('n');
             $anoActual = (int)$fechaActual->format('Y');
             
-            $qb = $this->entityManager->getRepository(DeudaAlumno::class)->createQueryBuilder('d');
-            $qb->where('d.alumno = :alumno')
-               ->andWhere('d.curso = :curso')
-               ->andWhere('d.pagado = :pagado')
-               ->andWhere(
-                    $qb->expr()->orX(
-                        // Años futuros
-                        $qb->expr()->gt('d.ano', ':anoActual'),
-                        // Mismo año, mes actual o futuro
-                        $qb->expr()->andX(
-                            $qb->expr()->eq('d.ano', ':anoActual'),
-                            $qb->expr()->gte('d.mes', ':mesActual')
-                        )
-                    )
-                )
-               ->setParameter('alumno', $alumno)
-               ->setParameter('curso', $curso)
-               ->setParameter('pagado', false)
-               ->setParameter('anoActual', $anoActual)
-               ->setParameter('mesActual', $mesActual);
-            
-            $deudas = $qb->getQuery()->getResult();
-        } else {
-            // Cancelar todas las deudas pendientes
-            $deudas = $this->entityManager->getRepository(DeudaAlumno::class)->findBy($criteria);
+            // Filtrar solo deudas futuras
+            $deudas = array_filter($deudas, function(DeudaAlumno $deuda) use ($mesActual, $anoActual) {
+                return ($deuda->getAno() > $anoActual) || 
+                       ($deuda->getAno() == $anoActual && $deuda->getMes() >= $mesActual);
+            });
         }
+        
+        // Filtrar solo las que tienen monto pendiente
+        $deudas = array_filter($deudas, function(DeudaAlumno $deuda) {
+            return $deuda->getMontoPendiente() > 0;
+        });
         
         // Eliminar las deudas encontradas
         $count = count($deudas);
@@ -427,12 +443,11 @@ class DeudaService
         $mesFinalizacion = (int)$fechaFin->format('n');
         $anoFinalizacion = (int)$fechaFin->format('Y');
         
-        // Obtener todas las deudas futuras no pagadas para este curso
+        // Obtener todas las deudas futuras para este curso
         $qb = $this->entityManager->createQueryBuilder();
         $qb->select('d')
            ->from(DeudaAlumno::class, 'd')
            ->where('d.curso = :curso')
-           ->andWhere('d.pagado = :pagado')
            ->andWhere(
                 $qb->expr()->orX(
                     // Años posteriores
@@ -445,15 +460,19 @@ class DeudaService
                 )
             )
            ->setParameter('curso', $curso)
-           ->setParameter('pagado', false)
            ->setParameter('anoFin', $anoFinalizacion)
            ->setParameter('mesFin', $mesFinalizacion);
            
         $deudasFuturas = $qb->getQuery()->getResult();
         
-        // Eliminar las deudas futuras
-        $cantidadEliminadas = count($deudasFuturas);
-        foreach ($deudasFuturas as $deuda) {
+        // Filtrar solo las que no tienen pagos aplicados (no se pueden eliminar deudas con pagos)
+        $deudasAEliminar = array_filter($deudasFuturas, function(DeudaAlumno $deuda) {
+            return $deuda->getAplicaciones()->isEmpty();
+        });
+        
+        // Eliminar las deudas futuras sin pagos
+        $cantidadEliminadas = count($deudasAEliminar);
+        foreach ($deudasAEliminar as $deuda) {
             $this->entityManager->remove($deuda);
         }
         
@@ -471,12 +490,16 @@ class DeudaService
      */
     public function verificarDeudasPendientesAlumnoInactivo(Alumno $alumno): array
     {
-        // Obtener todas las deudas no pagadas para este alumno
-        $deudasPendientes = $this->entityManager->getRepository(DeudaAlumno::class)
+        // Obtener todas las deudas para este alumno
+        $deudas = $this->entityManager->getRepository(DeudaAlumno::class)
             ->findBy([
-                'alumno' => $alumno,
-                'pagado' => false
+                'alumno' => $alumno
             ]);
+        
+        // Filtrar solo las que tienen monto pendiente
+        $deudasPendientes = array_filter($deudas, function(DeudaAlumno $deuda) {
+            return $deuda->getMontoPendiente() > 0;
+        });
             
         $totalDeudas = count($deudasPendientes);
         $montoPendiente = 0;
@@ -614,7 +637,7 @@ class DeudaService
                 $nuevaDeuda->setCursoHistorico($historicoActivo);
                 $nuevaDeuda->setMes($datos['mes']);
                 $nuevaDeuda->setAno($datos['ano']);
-                $nuevaDeuda->setPagado(false);
+                // El estado se calcula automáticamente basado en las aplicaciones de pago
                 $nuevaDeuda->setMonto($curso->getPrecio());
                 $nuevaDeuda->setInstituto($alumno->getInstituto());
                 
@@ -629,8 +652,9 @@ class DeudaService
     }
     
     /**
-     * Genera las deudas del mes actual para todos los alumnos activos de un instituto
+     * Genera las deudas faltantes desde el inicio del curso hasta el mes actual para todos los alumnos activos
      * Este método debe ser ejecutado el primer día de cada mes
+     * Genera todas las deudas faltantes desde el inicio del curso hasta el mes actual, no solo el mes actual
      * 
      * @param Instituto|null $instituto Si es null, procesa todos los institutos
      * @param bool $dryRun Si es true, no guarda los cambios en la base de datos
@@ -691,45 +715,87 @@ class DeudaService
                     continue;
                 }
                 
-                // Verificar si ya existe una deuda para este mes
-                $deudaExistente = $this->entityManager->getRepository(DeudaAlumno::class)
-                    ->findOneBy([
-                        'alumno' => $alumno,
-                        'curso' => $curso,
-                        'mes' => $mesActual,
-                        'ano' => $anoActual
-                    ]);
-                
-                if ($deudaExistente) {
-                    $estadisticas['deudasOmitidas']++;
-                    continue;
+                // Determinar el rango de fechas para generar deudas
+                // Inicio: fecha de inicio del curso o fecha de inicio del histórico
+                $fechaInicio = $fechaInicioCurso;
+                if (!$fechaInicio) {
+                    // Si no hay fecha de inicio del curso, usar la fecha de inicio del histórico
+                    $fechaInicioHistorico = $historico->getFechaInicio();
+                    if ($fechaInicioHistorico) {
+                        $fechaInicio = $fechaInicioHistorico;
+                    } else {
+                        // Si tampoco hay fecha de inicio del histórico, usar el mes actual
+                        $fechaInicio = new \DateTime();
+                        $fechaInicio->modify('first day of this month');
+                    }
                 }
                 
-                // Crear la deuda del mes actual
-                try {
-                    $deuda = new DeudaAlumno();
-                    $deuda->setAlumno($alumno);
-                    $deuda->setCurso($curso);
-                    $deuda->setCursoHistorico($historico);
-                    $deuda->setMes($mesActual);
-                    $deuda->setAno($anoActual);
-                    $deuda->setPagado(false);
-                    $deuda->setMonto($curso->getPrecio());
-                    $deuda->setInstituto($alumno->getInstituto());
+                // Fin: mes actual (no generar deudas futuras)
+                $fechaFin = clone $fechaActual;
+                $fechaFin->modify('last day of this month');
+                
+                // Si el curso tiene fecha fin y es anterior al mes actual, usar esa fecha
+                if ($fechaFinCurso && $fechaFinCurso < $fechaFin) {
+                    $fechaFin = clone $fechaFinCurso;
+                    $fechaFin->modify('last day of this month');
+                }
+                
+                // Asegurar que la fecha de inicio sea el primer día del mes
+                $fechaInicio->modify('first day of this month');
+                
+                // Generar deudas para todos los meses desde el inicio hasta el mes actual
+                $fechaIteracion = clone $fechaInicio;
+                
+                while ($fechaIteracion <= $fechaFin) {
+                    $mes = (int)$fechaIteracion->format('n');
+                    $ano = (int)$fechaIteracion->format('Y');
                     
-                    $this->entityManager->persist($deuda);
-                    $estadisticas['deudasCreadas']++;
+                    // Verificar si ya existe una deuda para este mes/año/curso
+                    $deudaExistente = $this->entityManager->getRepository(DeudaAlumno::class)
+                        ->findOneBy([
+                            'alumno' => $alumno,
+                            'curso' => $curso,
+                            'mes' => $mes,
+                            'ano' => $ano
+                        ]);
                     
-                    // Hacer flush cada 50 deudas para evitar problemas de memoria (solo si no es dry-run)
-                    if (!$dryRun && $estadisticas['deudasCreadas'] % 50 === 0) {
-                        $this->entityManager->flush();
+                    if ($deudaExistente) {
+                        $estadisticas['deudasOmitidas']++;
+                    } else {
+                        // Crear la deuda para este mes
+                        try {
+                            $deuda = new DeudaAlumno();
+                            $deuda->setAlumno($alumno);
+                            $deuda->setCurso($curso);
+                            $deuda->setCursoHistorico($historico);
+                            $deuda->setMes($mes);
+                            $deuda->setAno($ano);
+                            // El estado se calcula automáticamente basado en las aplicaciones de pago
+                            $deuda->setMonto($curso->getPrecio());
+                            $deuda->setInstituto($alumno->getInstituto());
+                            
+                            if (!$dryRun) {
+                                $this->entityManager->persist($deuda);
+                            }
+                            $estadisticas['deudasCreadas']++;
+                            
+                            // Hacer flush cada 50 deudas para evitar problemas de memoria (solo si no es dry-run)
+                            if (!$dryRun && $estadisticas['deudasCreadas'] % 50 === 0) {
+                                $this->entityManager->flush();
+                            }
+                        } catch (\Exception $e) {
+                            $estadisticas['errores'][] = [
+                                'alumno' => $alumno->getNombreCompleto(),
+                                'curso' => $curso->getNombre(),
+                                'mes' => $mes,
+                                'ano' => $ano,
+                                'error' => $e->getMessage()
+                            ];
+                        }
                     }
-                } catch (\Exception $e) {
-                    $estadisticas['errores'][] = [
-                        'alumno' => $alumno->getNombreCompleto(),
-                        'curso' => $curso->getNombre(),
-                        'error' => $e->getMessage()
-                    ];
+                    
+                    // Avanzar al siguiente mes
+                    $fechaIteracion->modify('+1 month');
                 }
             }
         }
@@ -815,7 +881,7 @@ class DeudaService
                     $deuda->setCursoHistorico($historico);
                     $deuda->setMes($mes);
                     $deuda->setAno($ano);
-                    $deuda->setPagado(false);
+                    // El estado se calcula automáticamente basado en las aplicaciones de pago
                     $deuda->setMonto($curso->getPrecio());
                     $deuda->setInstituto($alumno->getInstituto());
                     

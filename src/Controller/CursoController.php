@@ -214,6 +214,11 @@ class CursoController extends AbstractController
             }
         }
 
+        // Si viene el parámetro para limpiar conflictos, limpiar la sesión
+        if ($request->query->get('limpiar_conflictos')) {
+            $request->getSession()->remove('conflictos_horarios_warning');
+        }
+        
         // Verificar si hay advertencia de conflictos en la sesión
         $mostrarConfirmacionConflictos = false;
         if ($request->getSession()->has('conflictos_horarios_warning')) {
@@ -364,6 +369,11 @@ class CursoController extends AbstractController
             $form->get('horarioFin')->setData($curso->getHorarioFin()->format('H:i'));
         }
 
+        // Si viene el parámetro para limpiar conflictos, limpiar la sesión
+        if ($request->query->get('limpiar_conflictos')) {
+            $request->getSession()->remove('conflictos_horarios_warning');
+        }
+        
         // Verificar si hay advertencia de conflictos en la sesión
         $mostrarConfirmacionConflictos = false;
         if ($request->getSession()->has('conflictos_horarios_warning')) {

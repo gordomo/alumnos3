@@ -20,7 +20,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 class GenerarDeudasMensualesCommand extends Command
 {
     protected static $defaultName = 'app:generar-deudas-mensuales';
-    protected static $defaultDescription = 'Genera las deudas del mes actual para todos los alumnos activos';
+    protected static $defaultDescription = 'Genera las deudas faltantes desde el inicio del curso hasta el mes actual para todos los alumnos activos';
 
     private DeudaService $deudaService;
     private EntityManagerInterface $entityManager;
@@ -38,7 +38,7 @@ class GenerarDeudasMensualesCommand extends Command
     {
         $this
             ->setDescription(self::$defaultDescription)
-            ->setHelp('Este comando genera las deudas del mes actual para todos los alumnos activos en todos los institutos.')
+            ->setHelp('Este comando genera las deudas faltantes desde el inicio del curso hasta el mes actual para todos los alumnos activos. Si un curso comenzó en meses anteriores y no tiene deudas generadas, las creará automáticamente.')
             ->addOption(
                 'instituto-id',
                 'i',
@@ -82,7 +82,7 @@ class GenerarDeudasMensualesCommand extends Command
             $io->info("Procesando todos los institutos");
         }
 
-        $io->section('Generando deudas del mes actual...');
+        $io->section('Generando deudas faltantes desde el inicio de los cursos hasta el mes actual...');
         
         try {
             // Generar deudas (pasando el flag dryRun)

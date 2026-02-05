@@ -30,13 +30,55 @@
                         </h4>
                     </div>
                     <div class="card-body">
+                        {# Selector de curso si hay múltiples cursos #}
+                        {% set cursosUnicos = [] %}
+                        {% set cursosIdsVistos = [] %}
+                        {% if mesesAdeudados is defined and mesesAdeudados|length > 0 %}
+                            {% for mes in mesesAdeudados %}
+                                {% set cursoId = mes.curso_obj.id %}
+                                {% set cursoEncontrado = false %}
+                                {% for idVisto in cursosIdsVistos %}
+                                    {% if idVisto == cursoId %}
+                                        {% set cursoEncontrado = true %}
+                                    {% endif %}
+                                {% endfor %}
+                                {% if not cursoEncontrado %}
+                                    {% set cursosIdsVistos = cursosIdsVistos|merge([cursoId]) %}
+                                    {% set cursosUnicos = cursosUnicos|merge([mes.curso_obj]) %}
+                                {% endif %}
+                            {% endfor %}
+                        {% endif %}
+                        
+                        {% if cursosUnicos|length > 1 %}
+                            <div class="mb-4" style="border-left: 4px solid #0d6efd; background-color: #e7f3ff; padding: 1rem; border-radius: 4px;">
+                                <label for="filtro-curso-pago" class="form-label fw-bold text-dark mb-2">
+                                    <i class="bi bi-book" style="color: #0d6efd;"></i> Seleccionar Curso para Pagar
+                                </label>
+                                <select id="filtro-curso-pago" class="form-select form-select-lg">
+                                    <option value="">Todos los cursos</option>
+                                    {% for cursoObj in cursosUnicos %}
+                                        <option value="{{ cursoObj.id }}" {% if cursoSeleccionado is defined and cursoSeleccionado and cursoSeleccionado.id == cursoObj.id %}selected{% endif %}>
+                                            {{ cursoObj.nombre }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <small class="text-muted d-block mt-2">
+                                    <i class="bi bi-info-circle"></i> Puede seleccionar meses de diferentes cursos, pero es recomendable pagar por curso separadamente.
+                                </small>
+                            </div>
+                        {% endif %}
+                        
                         {# Meses adeudados #}
                         {% if mesesAdeudados is defined and mesesAdeudados|length > 0 %}
                             <div class="mb-4" style="border-left: 4px solid #ffc107; background-color: #fffbf0; padding: 1rem; border-radius: 4px;">
                                 <h5 class="mb-3 text-dark">
-                                    <i class="bi bi-exclamation-circle" style="color: #ff9800;"></i> Meses Adeudados
+                                    <i class="bi bi-exclamation-circle" style="color: #ff9800;"></i> Meses para Pagar
                                 </h5>
-                                <p class="text-muted mb-3">Seleccione los meses que desea pagar (puede seleccionar múltiples):</p>
+                                <p class="text-muted mb-3">
+                                    Seleccione los meses que desea pagar (puede seleccionar múltiples). 
+                                    <strong>Pago parcial:</strong> Ingrese un monto menor al total. 
+                                    <strong>Pago adelantado:</strong> Seleccione meses futuros (hasta 12 meses adelante).
+                                </p>
                                 {% set cursos = {} %}
                                 {% for mes in mesesAdeudados %}
                                     {% if not cursos[mes.curso] is defined %}
@@ -47,7 +89,8 @@
                                 
                                 <div class="row">
                                     {% for curso, meses in cursos %}
-                                        <div class="col-md-12 mb-3">
+                                        {% set cursoId = meses[0].curso_obj.id %}
+                                        <div class="col-md-12 mb-3 curso-meses-container" data-curso-id="{{ cursoId }}">
                                             <div class="card border-0" style="background-color: #ffffff;">
                                                 <div class="card-body">
                                                     <h6 class="card-title text-dark mb-3">
@@ -58,10 +101,18 @@
                                                     </h6>
                                                     <div class="row">
                                                         {% for mes in meses %}
+                                                            {% set esAdelantado = mes.esAdelantado is defined ? mes.esAdelantado : false %}
+                                                            {% set montoMostrar = mes.montoPendiente is defined ? mes.montoPendiente : mes.monto %}
+                                                            {% set fechaActual = date() %}
+                                                            {% set mesActual = fechaActual|date('n')|number_format %}
+                                                            {% set anoActual = fechaActual|date('Y')|number_format %}
+                                                            {% set esMesFuturo = (mes.ano > anoActual) or (mes.ano == anoActual and mes.mes > mesActual) %}
                                                             <div class="col-md-3 mb-2">
                                                                 <div class="mes-adeudado-checkbox-container position-relative" 
-                                                                     style="background-color: #f8f9fa; border: 2px solid #dee2e6; border-radius: 8px; padding: 1rem; cursor: pointer; transition: all 0.2s ease; user-select: none;"
-                                                                     data-mes-checkbox-id="mes_{{ mes.mes }}_{{ mes.ano }}_{{ mes.curso_obj.id }}">
+                                                                     style="background-color: {% if esAdelantado %}#e7f3ff{% else %}#f8f9fa{% endif %}; border: 2px solid {% if esAdelantado %}#0d6efd{% else %}#dee2e6{% endif %}; border-radius: 8px; padding: 1rem; cursor: pointer; transition: all 0.2s ease; user-select: none;"
+                                                                     data-mes-checkbox-id="mes_{{ mes.mes }}_{{ mes.ano }}_{{ mes.curso_obj.id }}"
+                                                                     data-es-adelantado="{{ esAdelantado ? 'true' : 'false' }}"
+                                                                     data-es-mes-futuro="{{ esMesFuturo ? 'true' : 'false' }}">
                                                                     <input type="checkbox" 
                                                                            class="mes-adeudado-checkbox position-absolute" 
                                                                            style="opacity: 0; position: absolute; pointer-events: none;"
@@ -73,11 +124,26 @@
                                                                            data-curso-id="{{ mes.curso_obj.id }}"
                                                                            data-curso-nombre="{{ mes.curso }}"
                                                                            data-monto-base="{{ mes.monto }}"
+                                                                           data-es-adelantado="{{ esAdelantado ? 'true' : 'false' }}"
                                                                            form="alumnos_pagos">
                                                                     <div class="d-flex align-items-center justify-content-between">
                                                                         <div>
-                                                                            <strong class="d-block text-dark">{{ mes.nombre }}</strong>
-                                                                            <small class="text-muted">${{ mes.monto | number_format(2, ',', '.') }}</small>
+                                                                            <strong class="d-block text-dark">
+                                                                                {{ mes.nombre }}
+                                                                                {% if esAdelantado %}
+                                                                                    <span class="badge bg-info ms-1" style="font-size: 0.7rem;">Adelantado</span>
+                                                                                {% elseif mes.montoPagado is defined and mes.montoPagado > 0 %}
+                                                                                    <span class="badge bg-warning text-dark ms-1" style="font-size: 0.7rem;">Parcial</span>
+                                                                                {% endif %}
+                                                                            </strong>
+                                                                            <small class="text-muted">
+                                                                                {% if mes.montoPagado is defined and mes.montoPagado > 0 %}
+                                                                                    Pendiente: ${{ montoMostrar | number_format(2, ',', '.') }}
+                                                                                    <br><small>Pagado: ${{ mes.montoPagado | number_format(2, ',', '.') }}</small>
+                                                                                {% else %}
+                                                                                    ${{ montoMostrar | number_format(2, ',', '.') }}
+                                                                                {% endif %}
+                                                                            </small>
                                                                         </div>
                                                                         <div class="mes-check-icon" style="width: 24px; height: 24px; border: 2px solid #dee2e6; border-radius: 4px; display: flex; align-items: center; justify-content: center; background-color: white; transition: all 0.2s ease;">
                                                                             <i class="bi bi-check" style="color: white; font-size: 16px; display: none;"></i>
@@ -306,6 +372,37 @@
             const reglaCalculoTexto = document.getElementById('regla-calculo-texto');
             const reglaCalculoDescripcion = document.getElementById('regla-calculo-descripcion');
             
+            // Filtro de curso
+            const filtroCurso = document.getElementById('filtro-curso-pago');
+            if (filtroCurso) {
+                filtroCurso.addEventListener('change', function() {
+                    const cursoIdSeleccionado = this.value;
+                    const cursoContainers = document.querySelectorAll('.curso-meses-container');
+                    
+                    cursoContainers.forEach(function(container) {
+                        const cursoId = container.dataset.cursoId;
+                        if (!cursoIdSeleccionado || cursoIdSeleccionado === cursoId) {
+                            container.style.display = '';
+                        } else {
+                            container.style.display = 'none';
+                            // Deseleccionar meses del curso oculto
+                            const checkboxesOcultos = container.querySelectorAll('.mes-adeudado-checkbox:checked');
+                            checkboxesOcultos.forEach(function(cb) {
+                                cb.checked = false;
+                                const container = cb.closest('.mes-adeudado-checkbox-container');
+                                if (container) {
+                                    actualizarEstiloMes(container, cb);
+                                }
+                            });
+                        }
+                    });
+                    
+                    // Actualizar resumen y precio
+                    actualizarResumenMeses();
+                    // No llamar a actualizarPrecioFinal() aquí porque puede interferir con el cálculo AJAX
+                });
+            }
+            
             // Función para actualizar la regla de cálculo
             function actualizarReglaCalculo(texto, descripcion) {
                 if (reglaCalculoTexto && texto) {
@@ -321,7 +418,12 @@
                 const checkIcon = container.querySelector('.mes-check-icon');
                 const checkIconInner = container.querySelector('.mes-check-icon i');
                 
+                // Verificar si el mouse está sobre el elemento antes de restaurar estilos
+                const isHovering = container._isHovering && container._isHovering();
+                
                 if (checkbox.checked) {
+                    // Si está seleccionado, siempre mostrar estilo seleccionado (ignorar hover)
+                    container.style.transform = 'translateY(0)';
                     container.style.backgroundColor = '#e7f1ff';
                     container.style.borderColor = '#0d6efd';
                     container.style.boxShadow = '0 2px 4px rgba(13, 110, 253, 0.2)';
@@ -333,9 +435,27 @@
                         }
                     }
                 } else {
-                    container.style.backgroundColor = '#f8f9fa';
-                    container.style.borderColor = '#dee2e6';
-                    container.style.boxShadow = 'none';
+                    // Si está deshabilitado, usar estilos de deshabilitado
+                    if (checkbox.disabled) {
+                        container.style.transform = 'translateY(0)';
+                        container.style.backgroundColor = '#f8f9fa';
+                        container.style.borderColor = '#dee2e6';
+                        container.style.opacity = '0.6';
+                        container.style.cursor = 'not-allowed';
+                        container.style.boxShadow = 'none';
+                    } else {
+                        // Si no está deshabilitado y no está en hover, usar estilos normales
+                        if (!isHovering) {
+                            container.style.transform = 'translateY(0)';
+                            container.style.backgroundColor = '#f8f9fa';
+                            container.style.borderColor = '#dee2e6';
+                            container.style.opacity = '1';
+                            container.style.cursor = 'pointer';
+                            container.style.boxShadow = 'none';
+                        }
+                        // Si está en hover, mantener el estilo de hover (no sobrescribir)
+                    }
+                    
                     if (checkIcon) {
                         checkIcon.style.backgroundColor = 'white';
                         checkIcon.style.borderColor = '#dee2e6';
@@ -363,14 +483,23 @@
                             
                             // Solo procesar si el checkbox no está deshabilitado
                             if (checkbox.disabled) {
+                                // Mostrar mensaje informativo
+                                const containerAnterior = checkbox.closest('.mes-adeudado-checkbox-container');
+                                if (containerAnterior && containerAnterior.title) {
+                                    alert(containerAnterior.title);
+                                } else {
+                                    alert('Debe seleccionar primero los meses anteriores pendientes antes de seleccionar este mes futuro.');
+                                }
                                 return;
                             }
                             
                             // Cambiar el estado del checkbox
-                            checkbox.checked = !checkbox.checked;
+                            const nuevoEstado = !checkbox.checked;
+                            checkbox.checked = nuevoEstado;
                             
                             // Disparar evento change manualmente para que otros listeners lo detecten
-                            const changeEvent = new Event('change',   { bubbles: true });
+                            // Esto activará la selección automática de meses anteriores si es necesario
+                            const changeEvent = new Event('change', { bubbles: true });
                             checkbox.dispatchEvent(changeEvent);
                             
                             // Actualizar estilo visual inmediatamente
@@ -380,9 +509,14 @@
                             actualizarResumenMeses();
                         });
                         
-                        // Efectos hover
+                        // Efectos hover - usar una referencia estable al checkbox
+                        const checkboxRef = checkbox;
+                        let isHovering = false;
+                        
                         container.addEventListener('mouseenter', function() {
-                            if (!checkbox.checked && !checkbox.disabled) {
+                            isHovering = true;
+                            // Verificar el estado actual del checkbox (puede haber cambiado)
+                            if (!checkboxRef.checked && !checkboxRef.disabled) {
                                 container.style.backgroundColor = '#e9ecef';
                                 container.style.borderColor = '#adb5bd';
                                 container.style.transform = 'translateY(-2px)';
@@ -391,11 +525,14 @@
                         });
                         
                         container.addEventListener('mouseleave', function() {
-                            if (!checkbox.checked) {
-                                actualizarEstiloMes(container, checkbox);
-                                container.style.transform = 'translateY(0)';
-                            }
+                            isHovering = false;
+                            // Siempre restaurar el estilo al salir del hover
+                            actualizarEstiloMes(container, checkboxRef);
                         });
+                        
+                        // Guardar referencia para poder restaurar hover después de actualizaciones automáticas
+                        container._checkboxRef = checkboxRef;
+                        container._isHovering = function() { return isHovering; };
                         
                         // Efecto active (click)
                         container.addEventListener('mousedown', function() {
@@ -421,13 +558,434 @@
             // Inicializar contenedores de meses ANTES de habilitar checkboxes
             inicializarContenedoresMeses();
             
+            // Actualizar estado de meses futuros al cargar la página (después de inicializar)
+            // Usar requestAnimationFrame para asegurar que el DOM esté completamente renderizado
+            requestAnimationFrame(function() {
+                actualizarEstadoMesesFuturos();
+            });
+            
+            // Función para validar que no se seleccionen meses futuros sin seleccionar los anteriores
+            function validarMesesConsecutivos(checkboxSeleccionado) {
+                const mes = parseInt(checkboxSeleccionado.dataset.mes);
+                const ano = parseInt(checkboxSeleccionado.dataset.ano);
+                const cursoId = checkboxSeleccionado.dataset.cursoId;
+                const esAdelantado = checkboxSeleccionado.dataset.esAdelantado === 'true';
+                const container = checkboxSeleccionado.closest('.mes-adeudado-checkbox-container');
+                const esMesFuturo = container?.dataset.esMesFuturo === 'true';
+                
+                // Si no es un mes adelantado o futuro, no hay restricción
+                if (!esAdelantado && !esMesFuturo) {
+                    return true;
+                }
+                
+                // Si es un mes adelantado/futuro, verificar que todos los meses anteriores estén seleccionados o pagados
+                const fechaActual = new Date();
+                const mesActual = fechaActual.getMonth() + 1; // JavaScript usa 0-11, necesitamos 1-12
+                const anoActual = fechaActual.getFullYear();
+                
+                // Crear fecha del mes seleccionado
+                const fechaSeleccionada = new Date(ano, mes - 1, 1);
+                const fechaActualMes = new Date(anoActual, mesActual - 1, 1);
+                
+                // Si el mes seleccionado es anterior o igual al actual, no hay problema
+                if (fechaSeleccionada <= fechaActualMes) {
+                    return true;
+                }
+                
+                // Verificar todos los meses desde el mes actual hasta el mes seleccionado (excluyendo el actual)
+                let fechaVerificacion = new Date(anoActual, mesActual - 1, 1);
+                fechaVerificacion.setMonth(fechaVerificacion.getMonth() + 1); // Empezar desde el mes siguiente
+                
+                while (fechaVerificacion < fechaSeleccionada) {
+                    const mesVerificar = fechaVerificacion.getMonth() + 1;
+                    const anoVerificar = fechaVerificacion.getFullYear();
+                    
+                    // Buscar checkbox para este mes anterior
+                    const checkboxAnterior = document.querySelector(
+                        `input[data-mes="${mesVerificar}"][data-ano="${anoVerificar}"][data-curso-id="${cursoId}"]`
+                    );
+                    
+                    if (checkboxAnterior) {
+                        const containerAnterior = checkboxAnterior.closest('.mes-adeudado-checkbox-container');
+                        const esAnteriorAdelantado = containerAnterior?.dataset.esAdelantado === 'true';
+                        
+                        // Si el mes anterior no está seleccionado y no es adelantado (es decir, es una deuda pendiente)
+                        if (!checkboxAnterior.checked && !esAnteriorAdelantado) {
+                            // Hay un mes anterior pendiente que no está seleccionado
+                            return false;
+                        }
+                    } else {
+                        // Si no existe checkbox para este mes, podría ser que:
+                        // 1. Ya está pagado completamente (no aparece en la lista)
+                        // 2. No se ha generado aún (mes muy futuro)
+                        // En este caso, permitir el pago adelantado
+                    }
+                    
+                    fechaVerificacion.setMonth(fechaVerificacion.getMonth() + 1);
+                }
+                
+                return true;
+            }
+            
+            // Función para deshabilitar meses futuros si hay meses anteriores pendientes
+            function actualizarEstadoMesesFuturos() {
+                const fechaActual = new Date();
+                const mesActual = fechaActual.getMonth() + 1;
+                const anoActual = fechaActual.getFullYear();
+                const fechaActualMes = new Date(anoActual, mesActual - 1, 1);
+                
+                mesesCheckboxes.forEach(function(checkbox) {
+                    const mes = parseInt(checkbox.dataset.mes);
+                    const ano = parseInt(checkbox.dataset.ano);
+                    const container = checkbox.closest('.mes-adeudado-checkbox-container');
+                    
+                    // Verificar si es realmente un mes futuro comparando con la fecha actual
+                    const fechaSeleccionada = new Date(ano, mes - 1, 1);
+                    
+                    // Si el mes NO es futuro (es anterior o igual al actual), siempre habilitado
+                    if (fechaSeleccionada <= fechaActualMes) {
+                        checkbox.disabled = false;
+                        if (container) {
+                            container.title = '';
+                            // Usar actualizarEstiloMes para mantener consistencia y restaurar hover
+                            actualizarEstiloMes(container, checkbox);
+                        }
+                        return;
+                    }
+                    
+                    // Si es un mes futuro, verificar si hay meses anteriores pendientes SIN seleccionar
+                    let tieneMesesAnterioresPendientes = false;
+                    let fechaVerificacion = new Date(anoActual, mesActual - 1, 1);
+                    fechaVerificacion.setMonth(fechaVerificacion.getMonth() + 1); // Empezar desde el mes siguiente al actual
+                    const cursoId = checkbox.dataset.cursoId;
+                    
+                    while (fechaVerificacion < fechaSeleccionada) {
+                        const mesVerificar = fechaVerificacion.getMonth() + 1;
+                        const anoVerificar = fechaVerificacion.getFullYear();
+                        
+                        const checkboxAnterior = document.querySelector(
+                            `input[data-mes="${mesVerificar}"][data-ano="${anoVerificar}"][data-curso-id="${cursoId}"]`
+                        );
+                        
+                        if (checkboxAnterior) {
+                            const containerAnterior = checkboxAnterior.closest('.mes-adeudado-checkbox-container');
+                            const esAnteriorAdelantado = containerAnterior?.dataset.esAdelantado === 'true';
+                            
+                            // Si el mes anterior NO está seleccionado Y NO es adelantado (es decir, es una deuda pendiente)
+                            // entonces hay un mes anterior pendiente sin seleccionar
+                            if (!checkboxAnterior.checked && !esAnteriorAdelantado) {
+                                tieneMesesAnterioresPendientes = true;
+                                break;
+                            }
+                        }
+                        
+                        fechaVerificacion.setMonth(fechaVerificacion.getMonth() + 1);
+                    }
+                    
+                    // Deshabilitar el checkbox si hay meses anteriores pendientes SIN seleccionar
+                    if (tieneMesesAnterioresPendientes) {
+                        checkbox.disabled = true;
+                        if (container) {
+                            container.title = 'Debe seleccionar primero los meses anteriores pendientes';
+                            // Usar actualizarEstiloMes para mantener consistencia
+                            actualizarEstiloMes(container, checkbox);
+                        }
+                    } else {
+                        checkbox.disabled = false;
+                        if (container) {
+                            container.title = '';
+                            // Usar actualizarEstiloMes para mantener consistencia y restaurar hover
+                            actualizarEstiloMes(container, checkbox);
+                        }
+                    }
+                });
+            }
+            
+            // Función para seleccionar automáticamente meses anteriores pendientes e intermedios
+            function seleccionarMesesAnterioresPendientes(checkboxSeleccionado) {
+                const mes = parseInt(checkboxSeleccionado.dataset.mes);
+                const ano = parseInt(checkboxSeleccionado.dataset.ano);
+                const cursoId = checkboxSeleccionado.dataset.cursoId;
+                
+                const fechaActual = new Date();
+                const mesActual = fechaActual.getMonth() + 1;
+                const anoActual = fechaActual.getFullYear();
+                const fechaActualMes = new Date(anoActual, mesActual - 1, 1);
+                const fechaSeleccionada = new Date(ano, mes - 1, 1);
+                
+                const mesesASeleccionar = [];
+                
+                // Si el mes seleccionado es futuro, seleccionar TODOS los meses anteriores (pendientes y adelantados)
+                if (fechaSeleccionada > fechaActualMes) {
+                    // Primero, encontrar el primer mes disponible en la lista para este curso
+                    // Esto incluye meses anteriores al mes actual que puedan estar pendientes
+                    let fechaPrimerMesDisponible = null;
+                    mesesCheckboxes.forEach(function(cb) {
+                        if (cb.dataset.cursoId === cursoId) {
+                            const mesCb = parseInt(cb.dataset.mes);
+                            const anoCb = parseInt(cb.dataset.ano);
+                            const fechaCb = new Date(anoCb, mesCb - 1, 1);
+                            
+                            if (!fechaPrimerMesDisponible || fechaCb < fechaPrimerMesDisponible) {
+                                fechaPrimerMesDisponible = fechaCb;
+                            }
+                        }
+                    });
+                    
+                    // Si encontramos un primer mes disponible, empezar desde ahí
+                    // Si no, empezar desde el mes siguiente al actual
+                    let fechaInicio = fechaPrimerMesDisponible || new Date(anoActual, mesActual - 1, 1);
+                    
+                    // Si el primer mes disponible es anterior al mes actual, empezar desde ahí
+                    // Si no, empezar desde el mes siguiente al actual
+                    if (fechaInicio < fechaActualMes) {
+                        // Empezar desde el primer mes disponible
+                        let fechaVerificacion = new Date(fechaInicio);
+                        
+                        // Seleccionar todos los meses desde el primero hasta el mes actual (si hay deudas pendientes)
+                        while (fechaVerificacion < fechaActualMes) {
+                            const mesVerificar = fechaVerificacion.getMonth() + 1;
+                            const anoVerificar = fechaVerificacion.getFullYear();
+                            
+                            const checkboxAnterior = document.querySelector(
+                                `input[data-mes="${mesVerificar}"][data-ano="${anoVerificar}"][data-curso-id="${cursoId}"]`
+                            );
+                            
+                            // Seleccionar meses anteriores pendientes (no adelantados)
+                            if (checkboxAnterior && !checkboxAnterior.checked) {
+                                const containerAnterior = checkboxAnterior.closest('.mes-adeudado-checkbox-container');
+                                const esAnteriorAdelantado = containerAnterior?.dataset.esAdelantado === 'true';
+                                
+                                // Solo seleccionar si NO es adelantado (es decir, es una deuda pendiente)
+                                if (!esAnteriorAdelantado && !mesesASeleccionar.includes(checkboxAnterior)) {
+                                    mesesASeleccionar.push(checkboxAnterior);
+                                }
+                            }
+                            
+                            fechaVerificacion.setMonth(fechaVerificacion.getMonth() + 1);
+                        }
+                    }
+                    
+                    // Ahora seleccionar todos los meses desde el mes siguiente al actual hasta el mes seleccionado
+                    let fechaVerificacion = new Date(anoActual, mesActual - 1, 1);
+                    fechaVerificacion.setMonth(fechaVerificacion.getMonth() + 1); // Empezar desde el mes siguiente al actual
+                    
+                    while (fechaVerificacion < fechaSeleccionada) {
+                        const mesVerificar = fechaVerificacion.getMonth() + 1;
+                        const anoVerificar = fechaVerificacion.getFullYear();
+                        
+                        const checkboxAnterior = document.querySelector(
+                            `input[data-mes="${mesVerificar}"][data-ano="${anoVerificar}"][data-curso-id="${cursoId}"]`
+                        );
+                        
+                        // Seleccionar cualquier mes anterior que no esté seleccionado (pendiente o adelantado)
+                        // IMPORTANTE: Seleccionar TODOS los meses anteriores, sin importar si son pendientes o adelantados
+                        if (checkboxAnterior && !checkboxAnterior.checked) {
+                            // Verificar si ya está en la lista para evitar duplicados
+                            if (!mesesASeleccionar.includes(checkboxAnterior)) {
+                                mesesASeleccionar.push(checkboxAnterior);
+                            }
+                        }
+                        
+                        fechaVerificacion.setMonth(fechaVerificacion.getMonth() + 1);
+                    }
+                }
+                
+                // También llenar huecos entre meses seleccionados (para casos donde se seleccionan meses no consecutivos)
+                // Obtener todos los meses seleccionados para este curso
+                const mesesSeleccionados = [];
+                mesesCheckboxes.forEach(function(cb) {
+                    if (cb.dataset.cursoId === cursoId && cb.checked) {
+                        const mesSel = parseInt(cb.dataset.mes);
+                        const anoSel = parseInt(cb.dataset.ano);
+                        mesesSeleccionados.push({
+                            fecha: new Date(anoSel, mesSel - 1, 1),
+                            checkbox: cb
+                        });
+                    }
+                });
+                
+                // Si hay múltiples meses seleccionados, llenar los huecos entre ellos
+                if (mesesSeleccionados.length > 1) {
+                    // Ordenar por fecha
+                    mesesSeleccionados.sort(function(a, b) {
+                        return a.fecha - b.fecha;
+                    });
+                    
+                    // Llenar huecos entre cada par de meses consecutivos seleccionados
+                    for (let i = 0; i < mesesSeleccionados.length - 1; i++) {
+                        const fechaInicio = mesesSeleccionados[i].fecha;
+                        const fechaFin = mesesSeleccionados[i + 1].fecha;
+                        
+                        let fechaVerificacion = new Date(fechaInicio);
+                        fechaVerificacion.setMonth(fechaVerificacion.getMonth() + 1);
+                        
+                        while (fechaVerificacion < fechaFin) {
+                            const mesVerificar = fechaVerificacion.getMonth() + 1;
+                            const anoVerificar = fechaVerificacion.getFullYear();
+                            
+                            const checkboxIntermedio = document.querySelector(
+                                `input[data-mes="${mesVerificar}"][data-ano="${anoVerificar}"][data-curso-id="${cursoId}"]`
+                            );
+                            
+                            if (checkboxIntermedio && !checkboxIntermedio.checked) {
+                                // Verificar si ya está en la lista para evitar duplicados
+                                if (!mesesASeleccionar.includes(checkboxIntermedio)) {
+                                    mesesASeleccionar.push(checkboxIntermedio);
+                                }
+                            }
+                            
+                            fechaVerificacion.setMonth(fechaVerificacion.getMonth() + 1);
+                        }
+                    }
+                }
+                
+                // Seleccionar automáticamente todos los meses encontrados
+                if (mesesASeleccionar.length > 0) {
+                    // Marcar que estamos en proceso de selección automática para evitar bucles
+                    const seleccionandoAutomaticamente = true;
+                    
+                    mesesASeleccionar.forEach(function(checkboxAnterior) {
+                        // Marcar temporalmente el checkbox para evitar procesamiento recursivo
+                        checkboxAnterior.dataset.seleccionandoAutomaticamente = 'true';
+                        
+                        checkboxAnterior.checked = true;
+                        
+                        // Actualizar estilo visual directamente (sin disparar eventos para evitar bucles)
+                        const containerAnterior = checkboxAnterior.closest('.mes-adeudado-checkbox-container');
+                        if (containerAnterior) {
+                            actualizarEstiloMes(containerAnterior, checkboxAnterior);
+                        }
+                        
+                        // Remover la marca después de un breve delay
+                        setTimeout(function() {
+                            delete checkboxAnterior.dataset.seleccionandoAutomaticamente;
+                        }, 100);
+                    });
+                    
+                    // Actualizar resumen después de seleccionar todos los meses automáticamente
+                    setTimeout(function() {
+                        if (typeof actualizarResumenMeses === 'function') {
+                            actualizarResumenMeses();
+                        }
+                        // Volver a ejecutar para asegurar que se seleccionen todos los meses necesarios
+                        actualizarEstadoMesesFuturos();
+                    }, 100);
+                    
+                    return true;
+                }
+                
+                return false;
+            }
+            
+            // Función para llenar automáticamente todos los huecos entre meses seleccionados
+            function llenarHuecosMesesSeleccionados() {
+                // Agrupar por curso
+                const cursosIds = new Set();
+                mesesCheckboxes.forEach(function(cb) {
+                    if (cb.checked) {
+                        cursosIds.add(cb.dataset.cursoId);
+                    }
+                });
+                
+                let mesesSeleccionadosAutomaticamente = false;
+                
+                cursosIds.forEach(function(cursoId) {
+                    // Obtener todos los meses seleccionados para este curso
+                    const mesesSeleccionados = [];
+                    mesesCheckboxes.forEach(function(cb) {
+                        if (cb.dataset.cursoId === cursoId && cb.checked) {
+                            const mesSel = parseInt(cb.dataset.mes);
+                            const anoSel = parseInt(cb.dataset.ano);
+                            mesesSeleccionados.push({
+                                fecha: new Date(anoSel, mesSel - 1, 1),
+                                checkbox: cb
+                            });
+                        }
+                    });
+                    
+                    if (mesesSeleccionados.length === 0) {
+                        return;
+                    }
+                    
+                    // Ordenar por fecha
+                    mesesSeleccionados.sort(function(a, b) {
+                        return a.fecha - b.fecha;
+                    });
+                    
+                    // Encontrar el primer y último mes seleccionado
+                    const primerMes = mesesSeleccionados[0];
+                    const ultimoMes = mesesSeleccionados[mesesSeleccionados.length - 1];
+                    
+                    // Llenar todos los meses entre el primero y el último
+                    let fechaVerificacion = new Date(primerMes.fecha);
+                    fechaVerificacion.setMonth(fechaVerificacion.getMonth() + 1);
+                    
+                    while (fechaVerificacion < ultimoMes.fecha) {
+                        const mesVerificar = fechaVerificacion.getMonth() + 1;
+                        const anoVerificar = fechaVerificacion.getFullYear();
+                        
+                        const checkboxIntermedio = document.querySelector(
+                            `input[data-mes="${mesVerificar}"][data-ano="${anoVerificar}"][data-curso-id="${cursoId}"]`
+                        );
+                        
+                        if (checkboxIntermedio && !checkboxIntermedio.checked) {
+                            checkboxIntermedio.checked = true;
+                            mesesSeleccionadosAutomaticamente = true;
+                            
+                            // Actualizar estilo visual
+                            const containerIntermedio = checkboxIntermedio.closest('.mes-adeudado-checkbox-container');
+                            if (containerIntermedio) {
+                                actualizarEstiloMes(containerIntermedio, checkboxIntermedio);
+                            }
+                        }
+                        
+                        fechaVerificacion.setMonth(fechaVerificacion.getMonth() + 1);
+                    }
+                });
+                
+                return mesesSeleccionadosAutomaticamente;
+            }
+            
             // Actualizar estilos cuando cambia el checkbox directamente (por ejemplo, con "Seleccionar todos")
             mesesCheckboxes.forEach(function(checkbox) {
                 checkbox.addEventListener('change', function() {
+                    // Ignorar si este cambio fue causado por selección automática
+                    if (this.dataset.seleccionandoAutomaticamente === 'true') {
+                        return;
+                    }
+                    
                     const container = document.querySelector(`[data-mes-checkbox-id="${this.id}"]`);
+                    
+                    // Si se está seleccionando un mes, seleccionar automáticamente meses anteriores pendientes
+                    if (this.checked) {
+                        // Ejecutar primero la selección de meses anteriores
+                        const mesesSeleccionadosAnteriores = seleccionarMesesAnterioresPendientes(this);
+                        
+                        // Luego llenar huecos entre meses seleccionados (esto puede agregar más meses)
+                        const mesesSeleccionadosHuecos = llenarHuecosMesesSeleccionados();
+                        
+                        // Si se seleccionaron meses automáticamente, actualizar resumen
+                        if (mesesSeleccionadosAnteriores || mesesSeleccionadosHuecos) {
+                            setTimeout(function() {
+                                if (typeof actualizarResumenMeses === 'function') {
+                                    actualizarResumenMeses();
+                                }
+                                // Volver a ejecutar para asegurar que todos los meses necesarios estén seleccionados
+                                actualizarEstadoMesesFuturos();
+                            }, 100);
+                        }
+                    } else {
+                        // Si se deselecciona, también llenar huecos (por si quedan meses seleccionados)
+                        llenarHuecosMesesSeleccionados();
+                    }
+                    
                     if (container) {
                         actualizarEstiloMes(container, this);
                     }
+                    
+                    // Actualizar estado de meses futuros después de cada cambio
+                    actualizarEstadoMesesFuturos();
                 });
             });
             
@@ -450,15 +1008,12 @@
                     }
                 });
                 
-                // Debug: Log para ver qué meses se están calculando
-                console.log('DEBUG calcularTotalMesesSeleccionados:', {
-                    total: total,
-                    cantidadMeses: mesesSeleccionados.length,
-                    meses: mesesSeleccionados
-                });
-                
                 return { total, mesesSeleccionados };
             }
+            
+            // Variable para evitar múltiples llamadas simultáneas
+            let calculandoMonto = false;
+            let ultimoCalculoPromise = null;
             
             // Función para calcular el monto total con descuentos e intereses
             function calcularMontoTotalConDescuentos() {
@@ -468,16 +1023,18 @@
                     return Promise.resolve({ monto: 0, montoBase: 0 });
                 }
                 
-                // Obtener descuentos promocionales seleccionados
-                const descuentosIds = Array.from(document.querySelectorAll('.descuento-promocional-checkbox:checked'))
-                    .map(cb => cb.value);
+                // Si ya hay un cálculo en curso, esperar a que termine y devolver ese resultado
+                if (calculandoMonto && ultimoCalculoPromise) {
+                    return ultimoCalculoPromise;
+                }
                 
-                // Debug: Log para ver qué se está enviando
-                console.log('DEBUG calcularMontoTotalConDescuentos:', {
-                    mesesSeleccionados: mesesSeleccionados,
-                    total: total,
-                    descuentosIds: descuentosIds
-                });
+                // Marcar que estamos calculando
+                calculandoMonto = true;
+                
+                // Obtener descuentos promocionales seleccionados
+                const checkboxesMarcados = document.querySelectorAll('.descuento-promocional-checkbox:checked');
+                const descuentosIds = Array.from(checkboxesMarcados)
+                    .map(cb => cb.value);
                 
                 // Preparar datos para enviar
                 const formData = new URLSearchParams();
@@ -490,7 +1047,7 @@
                 });
                 
                 // Llamar al endpoint AJAX
-                return fetch('{{ path("app_alumnos_pagos_calcular_monto") }}', {
+                ultimoCalculoPromise = fetch('{{ path("app_alumnos_pagos_calcular_monto") }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
@@ -499,6 +1056,7 @@
                 })
                 .then(response => response.json())
                 .then(data => {
+                    calculandoMonto = false;
                     if (data.error) {
                         console.error('Error:', data.error);
                         return { monto: total, montoBase: total };
@@ -506,9 +1064,12 @@
                     return data;
                 })
                 .catch(error => {
+                    calculandoMonto = false;
                     console.error('Error al calcular monto:', error);
                     return { monto: total, montoBase: total };
                 });
+                
+                return ultimoCalculoPromise;
             }
             
             // Función para actualizar el resumen de meses seleccionados
@@ -537,7 +1098,9 @@
                     // Calcular monto total con descuentos e intereses
                     if (modoMultipleActivo) {
                         calcularMontoTotalConDescuentos().then(function(data) {
-                            const montoFinal = data.monto || total;
+                            // Usar data.monto directamente, solo usar total como fallback si data.monto es null/undefined
+                            // No usar || porque 0 es un valor válido
+                            const montoFinal = (data.monto !== null && data.monto !== undefined) ? data.monto : total;
                             
                             // Actualizar precio final
                             if (precioFinalElement) {
@@ -553,15 +1116,27 @@
                                 // Marcar que la actualización es programática
                                 campoMonto.dataset.updatingProgrammatically = 'true';
                                 campoMonto.value = montoFinal.toFixed(2);
-                                // Remover la marca después de un pequeño delay
+                                // Remover la marca después de un pequeño delay más largo para evitar race conditions
                                 setTimeout(function() {
                                     delete campoMonto.dataset.updatingProgrammatically;
-                                }, 100);
+                                }, 300);
                             }
                             
                             // Actualizar regla de cálculo si viene en la respuesta
                             if (data.ordenCalculoTexto && data.ordenCalculoDescripcion) {
                                 actualizarReglaCalculo(data.ordenCalculoTexto, data.ordenCalculoDescripcion);
+                            }
+                            
+                            // Actualizar información de interés si viene en la respuesta
+                            if (data.motivoInteres && data.porcentajeInteres !== undefined) {
+                                // Buscar el contenedor de interés y actualizarlo
+                                const interesContainer = document.querySelector('[id*="interes"], [class*="interes"]');
+                                if (interesContainer && data.porcentajeInteres > 0) {
+                                    const motivoElement = interesContainer.querySelector('p.mb-1, .text-muted');
+                                    const porcentajeElement = interesContainer.querySelector('strong');
+                                    if (motivoElement) motivoElement.textContent = data.motivoInteres;
+                                    if (porcentajeElement) porcentajeElement.textContent = 'Interés aplicado: ' + data.porcentajeInteres + '%';
+                                }
                             }
                         });
                     }
@@ -739,14 +1314,6 @@
                     if (modoMultipleActivo) {
                         e.stopImmediatePropagation();
                         e.preventDefault();
-                        // Debug: Ver qué checkboxes de meses están marcados
-                        const mesesMarcados = Array.from(mesesCheckboxes).filter(cb => cb.checked);
-                        console.log('DEBUG cambio descuento (modo múltiple) - meses marcados:', mesesMarcados.length, mesesMarcados.map(cb => ({
-                            mes: cb.dataset.mes,
-                            ano: cb.dataset.ano,
-                            cursoId: cb.dataset.cursoId,
-                            montoBase: cb.dataset.montoBase
-                        })));
                         actualizarResumenMeses();
                     }
                 }, true); // Usar capture phase para ejecutarse antes que otros listeners
@@ -894,10 +1461,6 @@
                     }
                     
                     // Debug: Log para ver qué se está enviando
-                    console.log('DEBUG submit - meses marcados:', mesesMarcados.length);
-                    console.log('DEBUG submit - valores:', mesesMarcados.map(cb => cb.value));
-                    console.log('DEBUG submit - modo_pago_multiple:', modoPagoMultipleHidden ? modoPagoMultipleHidden.value : 'no encontrado');
-                    
                     if (mesesMarcados.length === 0) {
                         e.preventDefault();
                         e.stopPropagation();

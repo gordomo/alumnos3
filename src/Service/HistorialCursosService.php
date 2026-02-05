@@ -283,8 +283,8 @@ class HistorialCursosService
                 //    $deuda->setPagado(false);
                 // }
                 
-                // Por ahora, dejamos todas como pendientes para que el administrador decida
-                $deuda->setPagado(false);
+                // Por ahora, dejamos todas como pendientes (sin pagos aplicados)
+                // El estado se calcula automáticamente basado en las aplicaciones de pago
                 
                 $deuda->setMonto($curso->getPrecio());
                 
@@ -303,10 +303,9 @@ class HistorialCursosService
                 $deuda->setCursoHistorico($historico);
                 $deuda->setMes($mes);
                 $deuda->setAno($ano);
-                $deuda->setPagado(true);
-                $deuda->setPago($pagoExistente);
+                // La deuda se marcará como pagada automáticamente cuando se aplique el pago
+                // No es necesario setPagado() ni setPago() ya que ahora usamos PagoAplicacion
                 $deuda->setMonto($pagoExistente->getMonto());
-                $deuda->setFechaPago($pagoExistente->getFecha());
                 $deuda->setInstituto($alumno->getInstituto());
                 
                 $this->entityManager->persist($deuda);
@@ -321,6 +320,7 @@ class HistorialCursosService
 
     /**
      * Registra un pago y actualiza el historial correspondiente
+     * @deprecated Usar PagoService::registrarPago() en su lugar. Este método solo asocia el historial.
      */
     public function registrarPago(AlumnosPagos $pago): void
     {
@@ -357,70 +357,9 @@ class HistorialCursosService
         // Asociar el pago con el historial
         $pago->setCursoHistorico($historico);
         $this->entityManager->persist($pago);
-
-        // Marcar la deuda correspondiente como pagada
-        $mesBuscado = (int)$fechaPago->format('n');
-        $anoBuscado = (int)$fechaPago->format('Y');
         
-        error_log("DEBUG registrarPago - Buscando deuda: Alumno={$alumno->getId()}, Curso={$curso->getId()}, Mes={$mesBuscado}, Año={$anoBuscado}");
-        
-        // Buscar TODAS las deudas para este mes/curso (puede haber múltiples)
-        $deudas = $this->entityManager->getRepository(DeudaAlumno::class)
-            ->findBy([
-                'alumno' => $alumno,
-                'curso' => $curso,
-                'mes' => $mesBuscado,
-                'ano' => $anoBuscado
-            ]);
-        
-        error_log("DEBUG registrarPago - Deudas encontradas: " . count($deudas));
-        
-        // Marcar todas las deudas encontradas como pagadas
-        foreach ($deudas as $deuda) {
-            error_log("DEBUG registrarPago - Deuda encontrada: ID={$deuda->getId()}, Pagado antes={$deuda->isPagado()}");
-            $deuda->setPagado(true);
-            $deuda->setPago($pago);
-            $deuda->setFechaPago(new \DateTime());
-            error_log("DEBUG registrarPago - Deuda marcada como pagada: ID={$deuda->getId()}");
-        }
-        
-        $deuda = !empty($deudas) ? $deudas[0] : null;
-
-        if (!$deuda) {
-            error_log("DEBUG registrarPago - Deuda NO encontrada, creando nueva");
-            // Si no existe la deuda, crearla como pagada
-            $deuda = new DeudaAlumno();
-            $deuda->setAlumno($alumno);
-            $deuda->setCurso($curso);
-            $deuda->setCursoHistorico($historico);
-            $deuda->setMes($mesBuscado);
-            $deuda->setAno($anoBuscado);
-            $deuda->setPagado(true);
-            $deuda->setPago($pago);
-            $deuda->setMonto($pago->getMonto());
-            $deuda->setFechaPago(new \DateTime());
-            $deuda->setInstituto($alumno->getInstituto());
-
-            $this->entityManager->persist($deuda);
-        }
-
-        $this->entityManager->flush();
-        
-        // Refrescar la entidad del alumno para que la relación de deudas se actualice
-        $this->entityManager->refresh($alumno);
-        
-        // Verificar después del flush
-        $deudasVerificadas = $this->entityManager->getRepository(DeudaAlumno::class)
-            ->findBy([
-                'alumno' => $alumno,
-                'curso' => $curso,
-                'mes' => $mesBuscado,
-                'ano' => $anoBuscado
-            ]);
-        error_log("DEBUG registrarPago - Verificación post-flush: " . count($deudasVerificadas) . " deudas encontradas");
-        foreach ($deudasVerificadas as $deudaVerificada) {
-            error_log("DEBUG registrarPago - Deuda ID={$deudaVerificada->getId()}, Pagado={$deudaVerificada->isPagado()}");
-        }
+        // NOTA: La aplicación del pago a deudas ahora se hace en PagoService
+        // Este método solo se encarga de asociar el historial
     }
 
     /**
@@ -469,12 +408,16 @@ class HistorialCursosService
         $anoActual = (int)$fechaActual->format('Y');
         $diaActual = (int)$fechaActual->format('d');
 
-        // Obtener todas las deudas no pagadas del alumno
-        $deudas = $this->entityManager->getRepository(DeudaAlumno::class)
+        // Obtener todas las deudas del alumno y filtrar las que tienen monto pendiente
+        $todasDeudas = $this->entityManager->getRepository(DeudaAlumno::class)
             ->findBy([
-                'alumno' => $alumno,
-                'pagado' => false
+                'alumno' => $alumno
             ], ['ano' => 'ASC', 'mes' => 'ASC']);
+        
+        // Filtrar solo las que tienen monto pendiente
+        $deudas = array_filter($todasDeudas, function($deuda) {
+            return $deuda->getMontoPendiente() > 0;
+        });
 
         foreach ($deudas as $deuda) {
             $mes = $deuda->getMes();
@@ -557,13 +500,17 @@ class HistorialCursosService
             return $mesesAdeudados;
         }
 
-        // Obtener todas las deudas no pagadas del alumno para este curso
-        $deudas = $this->entityManager->getRepository(DeudaAlumno::class)
+        // Obtener todas las deudas del alumno para este curso y filtrar las que tienen monto pendiente
+        $todasDeudas = $this->entityManager->getRepository(DeudaAlumno::class)
             ->findBy([
                 'alumno' => $alumno,
-                'curso' => $curso,
-                'pagado' => false
+                'curso' => $curso
             ], ['ano' => 'ASC', 'mes' => 'ASC']);
+        
+        // Filtrar solo las que tienen monto pendiente
+        $deudas = array_filter($todasDeudas, function($deuda) {
+            return $deuda->getMontoPendiente() > 0;
+        });
 
         foreach ($deudas as $deuda) {
             $mes = $deuda->getMes();

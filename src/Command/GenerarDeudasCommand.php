@@ -43,7 +43,7 @@ class GenerarDeudasCommand extends Command
         $this
             ->addOption('force', 'f', InputOption::VALUE_NONE, 'Forzar la regeneración de todas las deudas, incluso si ya existen')
             ->addOption('sincronizar-pagos', 's', InputOption::VALUE_NONE, 'Sincronizar con pagos existentes')
-            ->addOption('verificar-faltantes', 'v', InputOption::VALUE_NONE, 'Verificar y generar deudas para alumnos que no tienen deudas generadas');
+            ->addOption('verificar-faltantes', null, InputOption::VALUE_NONE, 'Verificar y generar deudas para alumnos que no tienen deudas generadas');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -177,7 +177,7 @@ class GenerarDeudasCommand extends Command
                     $deuda->setCursoHistorico($historico);
                     $deuda->setMes($mes);
                     $deuda->setAno($ano);
-                    $deuda->setPagado(false);
+                    // El estado se calcula automáticamente basado en las aplicaciones de pago
                     $deuda->setMonto($curso->getPrecio());
                     $deuda->setInstituto($alumno->getInstituto());
 
@@ -225,9 +225,7 @@ class GenerarDeudasCommand extends Command
 
             if ($deuda) {
                 // Actualizar la deuda existente
-                $deuda->setPagado(true);
-                $deuda->setPago($pago);
-                $deuda->setFechaPago($pago->getFecha() ?? new \DateTime());
+                // Los pagos ahora se aplican mediante PagoAplicacion, no es necesario setPagado/setPago
                 $deuda->setMonto($pago->getMonto());
                 
                 // Buscar el curso histórico asociado
@@ -249,9 +247,7 @@ class GenerarDeudasCommand extends Command
                 $deuda->setCurso($curso);
                 $deuda->setMes($mes);
                 $deuda->setAno($ano);
-                $deuda->setPagado(true);
-                $deuda->setPago($pago);
-                $deuda->setFechaPago($pago->getFecha() ?? new \DateTime());
+                // Los pagos ahora se aplican mediante PagoAplicacion, no es necesario setPagado/setPago
                 $deuda->setMonto($pago->getMonto());
                 $deuda->setInstituto($alumno->getInstituto());
                 

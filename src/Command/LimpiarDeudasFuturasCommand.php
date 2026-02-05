@@ -69,8 +69,8 @@ class LimpiarDeudasFuturasCommand extends Command
         $qb = $this->entityManager->createQueryBuilder();
         $qb->select('d')
            ->from(DeudaAlumno::class, 'd')
-           ->where('d.pagado = :pagado')
-           ->andWhere(
+           ->leftJoin('d.aplicaciones', 'pa')
+           ->where(
                 $qb->expr()->orX(
                     // Años posteriores al actual
                     $qb->expr()->gt('d.ano', ':anoActual'),
@@ -81,7 +81,8 @@ class LimpiarDeudasFuturasCommand extends Command
                     )
                 )
             )
-           ->setParameter('pagado', false)
+           ->groupBy('d.id')
+           ->having('COALESCE(SUM(pa.montoAplicado), 0) < d.monto + COALESCE(d.interes, 0)')
            ->setParameter('anoActual', $anoActual)
            ->setParameter('mesActual', $mesActual)
            ->orderBy('d.ano', 'ASC')

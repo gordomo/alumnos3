@@ -6,81 +6,157 @@
 <div class="container-fluid py-4">
     <div class="row">
         <div class="col-12">
-            <div class="card mb-4">
-                <div class="card-header pb-0">
-                    <h6>Registrar Pago por Deuda</h6>
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-white border-bottom">
+                    <h4 class="mb-0 text-dark">
+                        <i class="bi bi-credit-card"></i> Registrar Pago
+                    </h4>
                 </div>
-                <div class="card-body px-4 pt-0 pb-2">
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h6 class="mb-0">Información de la Deuda</h6>
+                <div class="card-body px-4 pt-4 pb-4">
+                    {% for message in app.flashes('success') %}
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                    
+                    {% for message in app.flashes('danger') %}
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+
+                    <div class="row">
+                        <div class="col-md-5 mb-4">
+                            <div class="card h-100 border-0 shadow-sm">
+                                <div class="card-header bg-light">
+                                    <h5 class="mb-0 text-dark">
+                                        <i class="bi bi-info-circle"></i> Información de la Deuda
+                                    </h5>
                                 </div>
                                 <div class="card-body">
-                                    <div class="table-responsive">
-                                        <table class="table">
-                                            <tbody>
-                                                <tr>
-                                                    <th>Alumno:</th>
-                                                    <td>{{ deuda.alumno.nombre }} {{ deuda.alumno.apellido }}</td>
-                                                </tr>
-                                                <tr>
-                                                    <th>Curso:</th>
-                                                    <td>{{ deuda.curso.nombre }}</td>
-                                                </tr>
-                                                <tr>
-                                                    <th>Período:</th>
-                                                    <td>{{ deuda.periodo }}</td>
-                                                </tr>
-                                                <tr>
-                                                    <th>Monto Base:</th>
-                                                    <td>${{ deuda.monto|number_format(2, '.', ',') }}</td>
-                                                </tr>
-                                                <tr>
-                                                    <th>Interés:</th>
-                                                    <td>${{ deuda.interes|number_format(2, '.', ',') }}</td>
-                                                </tr>
-                                                <tr>
-                                                    <th>Monto Total:</th>
-                                                    <td class="fw-bold">${{ montoTotal|number_format(2, '.', ',') }}</td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
+                                    <div class="mb-3">
+                                        <label class="text-muted small">Alumno</label>
+                                        <p class="mb-0 fw-bold">{{ deuda.alumno.nombre }} {{ deuda.alumno.apellido }}</p>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="text-muted small">Curso</label>
+                                        <p class="mb-0 fw-bold">{{ deuda.curso.nombre }}</p>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="text-muted small">Período</label>
+                                        <p class="mb-0 fw-bold">{{ deuda.periodo }}</p>
+                                    </div>
+                                    
+                                    <hr>
+                                    
+                                    <div class="mb-3">
+                                        <div class="d-flex justify-content-between mb-1">
+                                            <span class="text-muted">Monto Base:</span>
+                                            <span>${{ deuda.monto|number_format(2, ',', '.') }}</span>
+                                        </div>
+                                        {% if deuda.interes > 0 %}
+                                        <div class="d-flex justify-content-between mb-1">
+                                            <span class="text-muted">Interés:</span>
+                                            <span class="text-warning">+${{ deuda.interes|number_format(2, ',', '.') }}</span>
+                                        </div>
+                                        {% endif %}
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span class="fw-bold">Monto Total:</span>
+                                            <span class="fw-bold">${{ montoTotal|number_format(2, ',', '.') }}</span>
+                                        </div>
+                                    </div>
+                                    
+                                    {% set montoPagado = deuda.montoPagado %}
+                                    {% set montoPendiente = deuda.montoPendiente %}
+                                    
+                                    {% if montoPagado > 0 %}
+                                    <div class="alert alert-info mb-3">
+                                        <div class="d-flex justify-content-between mb-1">
+                                            <span><i class="bi bi-check-circle"></i> Monto Pagado:</span>
+                                            <span class="fw-bold">${{ montoPagado|number_format(2, ',', '.') }}</span>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    <div class="alert {% if montoPendiente > 0 %}alert-warning{% else %}alert-success{% endif %} mb-0">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span>
+                                                <i class="bi bi-{% if montoPendiente > 0 %}exclamation-triangle{% else %}check-circle{% endif %}"></i>
+                                                <strong>Monto Pendiente:</strong>
+                                            </span>
+                                            <span class="fw-bold fs-5">${{ montoPendiente|number_format(2, ',', '.') }}</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h6 class="mb-0">Formulario de Pago</h6>
+                        
+                        <div class="col-md-7">
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-header bg-light">
+                                    <h5 class="mb-0 text-dark">
+                                        <i class="bi bi-cash-coin"></i> Formulario de Pago
+                                    </h5>
                                 </div>
                                 <div class="card-body">
-                                    <form method="post">
-                                        <div class="mb-3">
-                                            <label for="monto" class="form-label">Monto a Pagar</label>
-                                            <div class="input-group">
-                                                <span class="input-group-text">$</span>
-                                                <input type="number" id="monto" name="monto" class="form-control" step="0.01" min="0.01" required value="{{ montoTotal }}">
+                                    <form method="post" id="formPago">
+                                        <div class="mb-4">
+                                            <label for="monto" class="form-label fw-bold">
+                                                Monto a Pagar
+                                                <small class="text-muted">(Máximo: ${{ montoPendiente|number_format(2, ',', '.') }})</small>
+                                            </label>
+                                            <div class="input-group input-group-lg">
+                                                <span class="input-group-text bg-primary text-white">$</span>
+                                                <input 
+                                                    type="number" 
+                                                    id="monto" 
+                                                    name="monto" 
+                                                    class="form-control" 
+                                                    step="0.01" 
+                                                    min="0.01" 
+                                                    max="{{ montoPendiente }}"
+                                                    required 
+                                                    value="{{ montoPendiente }}"
+                                                    data-max="{{ montoPendiente }}"
+                                                >
+                                            </div>
+                                            <div class="form-text">
+                                                <span id="montoRestanteInfo" class="text-muted"></span>
                                             </div>
                                         </div>
-                                        <div class="mb-3">
-                                            <label for="metodoPago" class="form-label">Método de Pago</label>
-                                            <select id="metodoPago" name="metodoPago" class="form-select" required>
+                                        
+                                        <div class="mb-4">
+                                            <label for="metodoPago" class="form-label fw-bold">Método de Pago</label>
+                                            <select id="metodoPago" name="metodoPago" class="form-select form-select-lg" required>
                                                 <option value="">Seleccionar método...</option>
                                                 {% for metodo in metodosPago %}
                                                     <option value="{{ metodo }}">{{ metodo }}</option>
                                                 {% endfor %}
                                             </select>
                                         </div>
-                                        <div class="mb-3">
-                                            <label for="observacion" class="form-label">Observaciones</label>
-                                            <textarea id="observacion" name="observacion" class="form-control" rows="3"></textarea>
+                                        
+                                        <div class="mb-4">
+                                            <label for="observacion" class="form-label fw-bold">Observaciones</label>
+                                            <textarea 
+                                                id="observacion" 
+                                                name="observacion" 
+                                                class="form-control" 
+                                                rows="3"
+                                                placeholder="Notas adicionales sobre el pago (opcional)"
+                                            ></textarea>
                                         </div>
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <a href="{{ path('app_alumnos_pagos_index', {'alumno': deuda.alumno.id}) }}" class="btn btn-secondary">Cancelar</a>
-                                            <button type="submit" class="btn btn-primary">Registrar Pago</button>
+                                        
+                                        <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                                            <a href="{{ path('app_alumnos_pagos_index', {'alumno': deuda.alumno.id}) }}" class="btn btn-outline-secondary">
+                                                <i class="bi bi-arrow-left"></i> Cancelar
+                                            </a>
+                                            <button type="submit" class="btn btn-primary btn-lg">
+                                                <i class="bi bi-check-circle"></i> Registrar Pago
+                                            </button>
                                         </div>
                                     </form>
                                 </div>
@@ -92,4 +168,73 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const montoInput = document.getElementById('monto');
+    const montoRestanteInfo = document.getElementById('montoRestanteInfo');
+    const maxMonto = parseFloat(montoInput.dataset.max);
+    const form = document.getElementById('formPago');
+    
+    function actualizarInfoRestante() {
+        const montoIngresado = parseFloat(montoInput.value) || 0;
+        const restante = maxMonto - montoIngresado;
+        
+        if (montoIngresado > maxMonto) {
+            montoRestanteInfo.textContent = '⚠️ El monto no puede ser mayor al pendiente.';
+            montoRestanteInfo.className = 'text-danger fw-bold';
+            montoInput.classList.add('is-invalid');
+        } else if (montoIngresado <= 0) {
+            montoRestanteInfo.textContent = '⚠️ El monto debe ser mayor a $0.00.';
+            montoRestanteInfo.className = 'text-danger fw-bold';
+            montoInput.classList.add('is-invalid');
+        } else if (restante > 0) {
+            montoRestanteInfo.textContent = `💰 Saldo restante después del pago: $${restante.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            montoRestanteInfo.className = 'text-info';
+            montoInput.classList.remove('is-invalid');
+        } else {
+            montoRestanteInfo.textContent = '✅ La deuda quedará completamente pagada.';
+            montoRestanteInfo.className = 'text-success fw-bold';
+            montoInput.classList.remove('is-invalid');
+        }
+    }
+    
+    montoInput.addEventListener('input', actualizarInfoRestante);
+    montoInput.addEventListener('change', function() {
+        const valor = parseFloat(this.value);
+        if (valor > maxMonto) {
+            this.value = maxMonto.toFixed(2);
+            actualizarInfoRestante();
+        }
+    });
+    
+    form.addEventListener('submit', function(e) {
+        const montoIngresado = parseFloat(montoInput.value) || 0;
+        
+        if (montoIngresado <= 0) {
+            e.preventDefault();
+            alert('El monto debe ser mayor a $0.00');
+            montoInput.focus();
+            return false;
+        }
+        
+        if (montoIngresado > maxMonto) {
+            e.preventDefault();
+            alert(`El monto no puede ser mayor al pendiente ($${maxMonto.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})})`);
+            montoInput.focus();
+            return false;
+        }
+        
+        if (!document.getElementById('metodoPago').value) {
+            e.preventDefault();
+            alert('Por favor seleccione un método de pago');
+            document.getElementById('metodoPago').focus();
+            return false;
+        }
+    });
+    
+    // Inicializar información
+    actualizarInfoRestante();
+});
+</script>
 {% endblock %} 

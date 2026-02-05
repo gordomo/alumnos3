@@ -4,6 +4,8 @@ namespace App\Form;
 
 use App\Entity\Alumno;
 use App\Entity\Curso;
+use App\Form\DataTransformer\HermanosToEntitiesTransformer;
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
 use PhpOffice\PhpSpreadsheet\Calculation\TextData\Text;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
@@ -20,6 +22,13 @@ use Symfony\Component\Validator\Constraints\NotBlank;
 
 class AlumnoType extends AbstractType
 {
+    private EntityManagerInterface $entityManager;
+
+    public function __construct(EntityManagerInterface $entityManager)
+    {
+        $this->entityManager = $entityManager;
+    }
+
     public $alumno;
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
@@ -93,7 +102,14 @@ class AlumnoType extends AbstractType
                     'data-placeholder' => 'Seleccione hermanos...'
                 ],
                 'choice_value' => 'id'
-            ])
+            ]);
+        
+        // Agregar el transformer para convertir entre array de IDs y entidades
+        $builder->get('hermanos')->addModelTransformer(
+            new HermanosToEntitiesTransformer($this->entityManager)
+        );
+        
+        $builder
             ->add('curso', EntityType::class, [
                 'class' => Curso::class,
                 'label_attr' => ['class' => 'form-label'],

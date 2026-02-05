@@ -774,7 +774,7 @@ class Alumno
      * Obtiene el primer día de vencimiento configurado para el instituto
      * Utiliza caché estática para evitar consultas repetidas
      */
-    private function getPrimerDiaVencimiento(int $institutoId): int
+    public function getPrimerDiaVencimiento(int $institutoId): int
     {
         // Si ya tenemos el valor en caché, lo devolvemos
         if (isset(self::$cacheDiasVencimiento[$institutoId])) {
@@ -824,9 +824,10 @@ class Alumno
         $institutoId = $this->instituto->getId();
         $primerDiaVencimiento = $this->getPrimerDiaVencimiento($institutoId);
         
-        // Filtrar deudas que deben mostrarse
+        // Filtrar deudas que deben mostrarse (solo las que tienen monto pendiente)
         foreach ($this->deudas as $deuda) {
-            if (!$deuda->isPagado()) {
+            // Solo incluir deudas con monto pendiente
+            if ($deuda->getMontoPendiente() > 0) {
                 $mesDeuda = $deuda->getMes();
                 $anoDeuda = $deuda->getAno();
                 
@@ -838,7 +839,7 @@ class Alumno
                 elseif ($anoDeuda == $anoActual && $mesDeuda == $mesActual && $diaActual > $primerDiaVencimiento) {
                     $deudasParaMostrar[] = $deuda;
                 }
-                // No incluir deudas de meses futuros
+                // No incluir deudas de meses futuros por defecto
             }
         }
         

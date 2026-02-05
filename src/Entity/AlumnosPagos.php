@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\AlumnosPagosRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 
@@ -70,6 +72,21 @@ class AlumnosPagos
      * @ORM\JoinColumn(nullable=false)
      */
     private $cursoHistorico;
+
+    /**
+     * @ORM\OneToMany(targetEntity=PagoAplicacion::class, mappedBy="pago", cascade={"persist", "remove"})
+     */
+    private $aplicaciones;
+
+    /**
+     * @ORM\Column(type="decimal", precision=10, scale=2, nullable=true)
+     */
+    private $montoRestante;
+
+    public function __construct()
+    {
+        $this->aplicaciones = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -174,5 +191,65 @@ class AlumnosPagos
     {
         $this->cursoHistorico = $cursoHistorico;
         return $this;
+    }
+
+    /**
+     * @return Collection<int, PagoAplicacion>
+     */
+    public function getAplicaciones(): Collection
+    {
+        return $this->aplicaciones;
+    }
+
+    public function addAplicacion(PagoAplicacion $aplicacion): self
+    {
+        if (!$this->aplicaciones->contains($aplicacion)) {
+            $this->aplicaciones[] = $aplicacion;
+            $aplicacion->setPago($this);
+        }
+
+        return $this;
+    }
+
+    public function removeAplicacion(PagoAplicacion $aplicacion): self
+    {
+        if ($this->aplicaciones->removeElement($aplicacion)) {
+            if ($aplicacion->getPago() === $this) {
+                $aplicacion->setPago(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function getMontoRestante(): ?float
+    {
+        return $this->montoRestante;
+    }
+
+    public function setMontoRestante(?float $montoRestante): self
+    {
+        $this->montoRestante = $montoRestante;
+        return $this;
+    }
+
+    /**
+     * Calcula el monto restante basado en las aplicaciones
+     */
+    public function calcularMontoRestante(): float
+    {
+        $totalAplicado = 0;
+        foreach ($this->aplicaciones as $aplicacion) {
+            $totalAplicado += $aplicacion->getMontoAplicado();
+        }
+        return max(0, $this->monto - $totalAplicado);
+    }
+
+    /**
+     * Verifica si el pago tiene saldo disponible
+     */
+    public function tieneSaldoDisponible(): bool
+    {
+        return $this->calcularMontoRestante() > 0;
     }
 }

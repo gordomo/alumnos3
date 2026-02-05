@@ -190,11 +190,8 @@ class InstitutoUserController extends AbstractController
             return $this->redirectToRoute('instituto_user_index');
         }
         
-        // No permitir editar al mismo usuario actual
-        if ($user->getId() === $usuarioActual->getId()) {
-            $this->addFlash('warning', 'No puedes editar tu propio usuario desde aquí.');
-            return $this->redirectToRoute('instituto_user_index');
-        }
+        // Verificar si es el propio usuario
+        $esPropioUsuario = $user->getId() === $usuarioActual->getId();
         
         $form = $this->createForm(InstitutoUserType::class, $user, [
             'is_edit' => true
@@ -202,34 +199,38 @@ class InstitutoUserController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            // Si es el propio usuario, verificar confirmación
+            if ($esPropioUsuario && !$request->request->get('confirmar_edicion_propio')) {
+                $this->addFlash('warning', 'Debes confirmar que deseas modificar tu propio usuario.');
+                return $this->renderEditForm($user, $form, $esPropioUsuario);
+            }
+            
             // Verificar tokens antes de editar
             if (!$this->tokenService->hasEnoughTokens($usuarioActual->getInstituto(), 'usuario.edit')) {
                 $this->addFlash('danger', 'No tienes suficientes tokens para editar un usuario. Balance actual: ' . $this->tokenService->getBalance($usuarioActual->getInstituto())->getBalance());
-                return $this->renderForm('instituto/user/edit.html.twig', [
-                    'user' => $user,
-                    'form' => $form,
-                ]);
+                return $this->renderEditForm($user, $form, $esPropioUsuario);
             }
 
             $newEmail = $form->get('email')->getData();
             $newPassword = $form->get('password')->getData();
+            $passwordCambiada = false;
+            $emailCambiado = false;
             
             // Verificar si el email cambió y si ya existe
             if ($newEmail && $newEmail !== $user->getEmail()) {
                 $existingUser = $userRepository->findOneBy(['email' => $newEmail]);
                 if ($existingUser) {
                     $this->addFlash('danger', 'El correo electrónico "' . $newEmail . '" ya está registrado en el sistema.');
-                    return $this->renderForm('instituto/user/edit.html.twig', [
-                        'user' => $user,
-                        'form' => $form,
-                    ]);
+                    return $this->renderEditForm($user, $form, $esPropioUsuario);
                 }
+                $emailCambiado = true;
                 $user->setEmail($newEmail);
             }
             
             // Actualizar contraseña solo si se proporcionó una nueva
             if ($newPassword) {
                 $user->setPassword($passwordHasher->hashPassword($user, $newPassword));
+                $passwordCambiada = true;
             }
             
             // No modificar roles en edición - mantener los roles actuales del usuario
@@ -247,12 +248,42 @@ class InstitutoUserController extends AbstractController
             );
 
             $this->addFlash('success', 'Usuario actualizado exitosamente.');
+            
+            // Si es el propio usuario y cambió la contraseña o el email, desloguearlo
+            if ($esPropioUsuario && ($passwordCambiada || $emailCambiado)) {
+                // Invalidar la sesión actual
+                $request->getSession()->invalidate();
+                
+                $mensaje = 'Tu cuenta ha sido actualizada. ';
+                if ($passwordCambiada && $emailCambiado) {
+                    $mensaje .= 'Tu contraseña y email han sido modificados. ';
+                } elseif ($passwordCambiada) {
+                    $mensaje .= 'Tu contraseña ha sido actualizada. ';
+                } elseif ($emailCambiado) {
+                    $mensaje .= 'Tu email ha sido actualizado. ';
+                }
+                $mensaje .= 'Por favor, inicia sesión nuevamente.';
+                
+                $this->addFlash('info', $mensaje);
+                return $this->redirectToRoute('app_login');
+            }
+            
             return $this->redirectToRoute('instituto_user_index', [], Response::HTTP_SEE_OTHER);
         }
 
+        return $this->renderEditForm($user, $form, $esPropioUsuario);
+    }
+
+    /**
+     * Helper method para renderizar el formulario de edición con parámetros consistentes
+     */
+    private function renderEditForm(User $user, $form, bool $esPropioUsuario): Response
+    {
         return $this->renderForm('instituto/user/edit.html.twig', [
             'user' => $user,
             'form' => $form,
+            'esPropioUsuario' => $esPropioUsuario,
+            'emailOriginal' => $user->getEmail(), // Pasar el email original para comparación en JS
         ]);
     }
 

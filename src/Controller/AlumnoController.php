@@ -204,7 +204,11 @@ class AlumnoController extends AbstractController
                         );
                     }
                     
-                    $this->setearHermandad($request, $alumno, $alumnoRepository);
+                    // setearHermandad ahora se maneja automáticamente por el transformer del formulario
+                    // Solo necesitamos asegurarnos de que los hermanos se guarden correctamente
+                    // El transformer ya convirtió las entidades a IDs en el campo hermanos
+                    // Pero necesitamos establecer la relación bidireccional
+                    $this->setearHermandadBidireccional($alumno, $alumnoRepository);
                     
                     // Guardar todo
                     $this->entityManager->flush();
@@ -436,7 +440,11 @@ class AlumnoController extends AbstractController
                     }
                     
                     $alumnoRepository->add($alumno);
-                    $this->setearHermandad($request, $alumno, $alumnoRepository);
+                    // setearHermandad ahora se maneja automáticamente por el transformer del formulario
+                    // Solo necesitamos asegurarnos de que los hermanos se guarden correctamente
+                    // El transformer ya convirtió las entidades a IDs en el campo hermanos
+                    // Pero necesitamos establecer la relación bidireccional
+                    $this->setearHermandadBidireccional($alumno, $alumnoRepository);
 
                     $this->addFlash('success', 'Alumno actualizado correctamente.');
                     return $this->redirectToRoute('app_alumno_index', [], Response::HTTP_SEE_OTHER);
@@ -495,13 +503,13 @@ class AlumnoController extends AbstractController
         if (!$forceDelete) {
             $cursosActivos = $alumno->getCurso()->toArray();
             $asistencias = $alumno->getAsistencias()->toArray();
-            $deudasPendientes = $this->entityManager->getRepository(\App\Entity\DeudaAlumno::class)
-                ->createQueryBuilder('d')
-                ->where('d.alumno = :alumno')
-                ->andWhere('d.pagado = false')
-                ->setParameter('alumno', $alumno)
-                ->getQuery()
-                ->getResult();
+            // Obtener todas las deudas y filtrar las que tienen monto pendiente
+            $todasDeudas = $this->entityManager->getRepository(\App\Entity\DeudaAlumno::class)
+                ->findBy(['alumno' => $alumno]);
+            
+            $deudasPendientes = array_filter($todasDeudas, function($deuda) {
+                return $deuda->getMontoPendiente() > 0;
+            });
 
             // Si hay relaciones, guardar información y redirigir para mostrar advertencia
             if (!empty($cursosActivos) || !empty($asistencias) || !empty($deudasPendientes)) {
@@ -560,53 +568,62 @@ class AlumnoController extends AbstractController
         return $this->redirectToRoute('app_alumno_index', [], Response::HTTP_SEE_OTHER);
     }
 
-    private function setearHermandad($request, Alumno $alumno, $alumnoRepository) {
-        // Obtener los hermanos del formulario
-        $hermanosForm = $request->request->get('alumno')['hermanos'] ?? [];
+    /**
+     * Establece la relación bidireccional de hermanos
+     * El transformer del formulario ya guardó los IDs en el campo hermanos del alumno actual
+     * Este método se encarga de establecer la relación inversa (agregar este alumno como hermano de los otros)
+     */
+    private function setearHermandadBidireccional(Alumno $alumno, $alumnoRepository) {
+        // Obtener los IDs de hermanos que ya están guardados en el alumno (después del transformer)
+        $hermanosIdsNuevos = $alumno->getHermanos();
         
-        // Eliminar duplicados
-        $hermanosForm = array_unique($hermanosForm);
+        // Obtener todos los alumnos del mismo instituto para buscar relaciones anteriores
+        $todosAlumnos = $alumnoRepository->findBy(['instituto' => $alumno->getInstituto()]);
         
-        // Limpiar todas las relaciones anteriores
-        $hermanosActuales = $alumno->getHermanos();
-        foreach ($hermanosActuales as $hermanoId) {
+        // Limpiar todas las relaciones anteriores (remover este alumno de los hermanos anteriores)
+        foreach ($todosAlumnos as $otroAlumno) {
+            if ($otroAlumno->getId() === $alumno->getId()) {
+                continue; // Saltar el alumno actual
+            }
+            
+            $hermanosDelOtro = $otroAlumno->getHermanos();
+            if (in_array($alumno->getId(), $hermanosDelOtro)) {
+                // Este alumno estaba como hermano del otro, pero ahora puede que no lo sea
+                // Si no está en la nueva lista, removerlo
+                if (!in_array($otroAlumno->getId(), $hermanosIdsNuevos)) {
+                    $key = array_search($alumno->getId(), $hermanosDelOtro);
+                    if ($key !== false) {
+                        unset($hermanosDelOtro[$key]);
+                        $otroAlumno->setHermanos(array_values($hermanosDelOtro));
+                        $alumnoRepository->add($otroAlumno);
+                    }
+                }
+            }
+        }
+        
+        // Establecer las nuevas relaciones bidireccionales
+        foreach ($hermanosIdsNuevos as $hermanoId) {
             $hermano = $alumnoRepository->find($hermanoId);
-            if ($hermano) {
+            if ($hermano && $hermano->getId() !== $alumno->getId()) {
+                // Agregar el alumno actual como hermano del otro
                 $hermanosDelHermano = $hermano->getHermanos();
-                if (($key = array_search($alumno->getId(), $hermanosDelHermano)) !== false) {
-                    unset($hermanosDelHermano[$key]);
+                if (!in_array($alumno->getId(), $hermanosDelHermano)) {
+                    $hermanosDelHermano[] = $alumno->getId();
                     $hermano->setHermanos(array_values($hermanosDelHermano));
                     $alumnoRepository->add($hermano);
                 }
             }
         }
-        
-        // Limpiar los hermanos del alumno actual
-        $alumno->setHermanos([]);
-        $alumnoRepository->add($alumno);
-        
-        // Establecer las nuevas relaciones
-        foreach ($hermanosForm as $hermanoId) {
-            $hermano = $alumnoRepository->find($hermanoId);
-            if ($hermano && $hermano->getId() !== $alumno->getId()) {
-                // Agregar el hermano al alumno actual
-                $hermanosActuales = $alumno->getHermanos();
-                if (!in_array($hermanoId, $hermanosActuales)) {
-                    $hermanosActuales[] = $hermanoId;
-                    $alumno->setHermanos($hermanosActuales);
-                }
-                
-                // Agregar el alumno actual como hermano
-                $hermanosDelHermano = $hermano->getHermanos();
-                if (!in_array($alumno->getId(), $hermanosDelHermano)) {
-                    $hermanosDelHermano[] = $alumno->getId();
-                    $hermano->setHermanos($hermanosDelHermano);
-                }
-                
-                $alumnoRepository->add($alumno);
-                $alumnoRepository->add($hermano);
-            }
-        }
+    }
+    
+    /**
+     * @deprecated Este método ya no se usa, se reemplazó por setearHermandadBidireccional
+     * El transformer del formulario ahora maneja la conversión automáticamente
+     */
+    private function setearHermandad($request, Alumno $alumno, $alumnoRepository) {
+        // Este método se mantiene por compatibilidad pero ya no se usa
+        // El transformer del formulario maneja la conversión automáticamente
+        $this->setearHermandadBidireccional($alumno, $alumnoRepository);
     }
 
     /**

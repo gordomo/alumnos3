@@ -302,10 +302,10 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="window.location.reload();">
+                <button type="button" class="btn btn-secondary" id="cancelarModalBtn">
                     <i class="bi bi-x-circle"></i> Cancelar
                 </button>
-                <button type="button" class="btn btn-warning" id="confirmarConflictosBtn" onclick="window.showLoading();">
+                <button type="button" class="btn btn-warning" id="confirmarConflictosBtn">
                     <i class="bi bi-check-circle"></i> Sí, continuar de todas formas
                 </button>
             </div>
@@ -316,22 +316,57 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Cerrar modal al hacer clic fuera
     const modal = document.getElementById('conflictosHorariosModal');
+    const backdrop = document.querySelector('.modal-backdrop');
+    const cerrarBtn = document.getElementById('cerrarModalBtn');
+    const cancelarBtn = document.getElementById('cancelarModalBtn');
+    const confirmarBtn = document.getElementById('confirmarConflictosBtn');
+    const form = document.querySelector('form.form-horizontal');
+    
+    // Función para cerrar el modal y recargar la página
+    function cerrarModal() {
+        // Ocultar el modal
+        if (modal) {
+            modal.style.display = 'none';
+            modal.classList.remove('show');
+            modal.setAttribute('aria-hidden', 'true');
+        }
+        // Ocultar el backdrop
+        if (backdrop) {
+            backdrop.classList.remove('show');
+            backdrop.style.display = 'none';
+        }
+        // Recargar la página con el parámetro para limpiar conflictos
+        const url = new URL(window.location.href);
+        url.searchParams.set('limpiar_conflictos', '1');
+        window.location.href = url.toString();
+    }
+    
+    // Cerrar modal al hacer clic en la X
+    if (cerrarBtn) {
+        cerrarBtn.addEventListener('click', cerrarModal);
+    }
+    
+    // Cerrar modal al hacer clic en Cancelar
+    if (cancelarBtn) {
+        cancelarBtn.addEventListener('click', cerrarModal);
+    }
+    
+    // Cerrar modal al hacer clic fuera del modal (en el backdrop)
     if (modal) {
         modal.addEventListener('click', function(e) {
             if (e.target === this) {
-                window.location.reload();
+                cerrarModal();
             }
         });
     }
     
     // Manejar confirmación de conflictos
-    const confirmarBtn = document.getElementById('confirmarConflictosBtn');
-    const form = document.querySelector('form.form-horizontal');
-    
     if (confirmarBtn && form) {
         confirmarBtn.addEventListener('click', function() {
+            if (typeof window.showLoading === 'function') {
+                window.showLoading();
+            }
             // Agregar campo hidden para confirmar conflictos
             const hiddenInput = document.createElement('input');
             hiddenInput.type = 'hidden';

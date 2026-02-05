@@ -11,8 +11,19 @@
     <div class="row">
         <div class="col-12">
             <div class="card shadow-sm">
+                {% if esPropioUsuario %}
+                    <div class="alert alert-warning mb-0 border-0 border-bottom rounded-0" role="alert">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-exclamation-triangle-fill me-3 fs-5"></i>
+                            <div class="flex-grow-1">
+                                <h5 class="alert-heading mb-2">¿Está seguro que desea modificar su propio usuario?</h5>
+                                <p class="mb-0">Está editando su propia cuenta de usuario. Si modifica su contraseña o su email, será deslogueado automáticamente y deberá iniciar sesión nuevamente.</p>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
                 <div class="card-body">
-                    {{ include('instituto/user/_form.html.twig', {'button_label': 'Actualizar'}) }}
+                    {{ include('instituto/user/_form.html.twig', {'button_label': 'Actualizar', 'esPropioUsuario': esPropioUsuario|default(false), 'emailOriginal': emailOriginal|default('')}) }}
                 </div>
             </div>
         </div>
