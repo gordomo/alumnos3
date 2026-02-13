@@ -100,20 +100,20 @@ class AsistenciaInstitutoController extends AbstractController
                     ]);
                 }
                 
-                // Solo procesar alumnos que están en la lista de procesados (los que están en el formulario)
-                // Esto permite distinguir entre "sin registro" (null) y "ausente" (false)
                 $alumnosProcesadosIds = array_map('intval', $alumnosProcesados);
                 $asistenciasCreadas = 0;
                 $asistenciasActualizadas = 0;
+                $asistenciasEliminadas = 0;
                 
                 foreach ($alumnos as $alumno) {
                     $alumnoId = $alumno->getId();
                     
                     // Solo procesar si el alumno está en la lista de procesados
                     if (!in_array($alumnoId, $alumnosProcesadosIds)) {
-                        // Este alumno no está en el formulario, mantener su estado actual (no hacer nada)
                         continue;
                     }
+                    
+                    $valorAsistencia = $asistencias[$alumnoId] ?? 'sin_registro';
                     
                     // Buscar asistencia existente
                     $asistenciaExistente = $asistenciaRepository->findOneBy([
@@ -122,11 +122,18 @@ class AsistenciaInstitutoController extends AbstractController
                         'fecha' => $fechaAsistencia
                     ]);
                     
-                    // Determinar el estado: presente si el checkbox está marcado, ausente si no
-                    $presente = isset($asistencias[$alumnoId]) && ($asistencias[$alumnoId] === '1' || $asistencias[$alumnoId] === 1);
+                    if ($valorAsistencia === 'sin_registro') {
+                        if ($asistenciaExistente) {
+                            $entityManager->remove($asistenciaExistente);
+                            $asistenciasEliminadas++;
+                            $this->logger->debug('Eliminando asistencia (restablecer a sin registro)', ['alumno_id' => $alumnoId]);
+                        }
+                        continue;
+                    }
+                    
+                    $presente = ($valorAsistencia === '1' || $valorAsistencia === 1);
                     
                     if ($asistenciaExistente) {
-                        // Actualizar asistencia existente
                         $asistenciaExistente->setPresente($presente);
                         $asistenciaExistente->setObservaciones($observaciones[$alumnoId] ?? '');
                         $asistenciasActualizadas++;
@@ -137,7 +144,6 @@ class AsistenciaInstitutoController extends AbstractController
                             'observaciones' => $observaciones[$alumnoId] ?? ''
                         ]);
                     } else {
-                        // Crear nueva asistencia
                         $asistencia = new AsistenciaAlumnos();
                         $asistencia->setAlumno($alumno);
                         $asistencia->setCurso($curso);
@@ -163,14 +169,19 @@ class AsistenciaInstitutoController extends AbstractController
 
                 try {
                     $entityManager->flush();
-                    $totalProcesadas = $asistenciasCreadas + $asistenciasActualizadas;
+                    $totalProcesadas = $asistenciasCreadas + $asistenciasActualizadas + $asistenciasEliminadas;
                     $this->logger->info('Asistencias guardadas exitosamente', [
                         'creadas' => $asistenciasCreadas,
                         'actualizadas' => $asistenciasActualizadas,
+                        'eliminadas' => $asistenciasEliminadas,
                         'total' => $totalProcesadas
                     ]);
                     
-                    $this->addFlash('success', sprintf('Asistencias guardadas correctamente (%d registros).', $totalProcesadas));
+                    $mensaje = 'Asistencias guardadas correctamente';
+                    if ($totalProcesadas > 0) {
+                        $mensaje .= sprintf(' (%d registros)', $totalProcesadas);
+                    }
+                    $this->addFlash('success', $mensaje . '.');
                 } catch (\Exception $e) {
                     $this->logger->error('Error al guardar asistencias', [
                         'message' => $e->getMessage(),
@@ -199,7 +210,7 @@ class AsistenciaInstitutoController extends AbstractController
                     'fecha' => $fechaBusqueda
                 ]);
                 
-                $presente = $asistencia ? $asistencia->getPresente() : false;
+                $presente = $asistencia ? $asistencia->getPresente() : null;
                 
                 $this->logger->debug('Cargando asistencia para vista', [
                     'alumno_id' => $alumno->getId(),

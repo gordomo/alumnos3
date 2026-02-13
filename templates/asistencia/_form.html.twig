@@ -42,26 +42,27 @@
                                                             <span class="badge bg-danger">Ausente</span>
                                                         {% endif %}
                                                     {% else %}
-                                                        <div class="form-check form-switch">
-                                                            <input class="form-check-input asistencia-checkbox" type="checkbox" 
-                                                                   name="asistencias[{{ asistencia.alumno.id }}]" 
-                                                                   value="1" 
-                                                                   data-alumno-id="{{ asistencia.alumno.id }}"
-                                                                   {% if asistencia.presente %}checked{% endif %}>
-                                                            {# Campo oculto para indicar que este alumno está siendo procesado #}
-                                                            <input type="hidden" name="alumnos_procesados[]" value="{{ asistencia.alumno.id }}">
-                                                            <label class="form-check-label">
-                                                                {% if asistencia.presente is not null %}
-                                                                    {% if asistencia.presente %}
-                                                                        <span class="badge bg-success">Presente</span>
-                                                                    {% else %}
-                                                                        <span class="badge bg-danger">Ausente</span>
-                                                                    {% endif %}
-                                                                {% else %}
-                                                                    <span class="badge bg-secondary">Sin registro</span>
-                                                                {% endif %}
+                                                        <div class="btn-group btn-group-sm" role="group" data-alumno-id="{{ asistencia.alumno.id }}">
+                                                            <input type="radio" class="btn-check asistencia-radio" name="asistencias[{{ asistencia.alumno.id }}]" 
+                                                                   id="sin_registro_{{ asistencia.alumno.id }}" value="sin_registro"
+                                                                   {% if asistencia.presente is null %}checked{% endif %}>
+                                                            <label class="btn btn-outline-secondary" for="sin_registro_{{ asistencia.alumno.id }}" title="Sin dato registrado (no afecta el porcentaje)">
+                                                                -
+                                                            </label>
+                                                            <input type="radio" class="btn-check asistencia-radio" name="asistencias[{{ asistencia.alumno.id }}]" 
+                                                                   id="presente_{{ asistencia.alumno.id }}" value="1"
+                                                                   {% if asistencia.presente is same as(true) %}checked{% endif %}>
+                                                            <label class="btn btn-outline-success" for="presente_{{ asistencia.alumno.id }}" title="Presente">
+                                                                <i class="bi bi-check"></i>
+                                                            </label>
+                                                            <input type="radio" class="btn-check asistencia-radio" name="asistencias[{{ asistencia.alumno.id }}]" 
+                                                                   id="ausente_{{ asistencia.alumno.id }}" value="0"
+                                                                   {% if asistencia.presente is same as(false) %}checked{% endif %}>
+                                                            <label class="btn btn-outline-danger" for="ausente_{{ asistencia.alumno.id }}" title="Ausente">
+                                                                <i class="bi bi-x"></i>
                                                             </label>
                                                         </div>
+                                                        <input type="hidden" name="alumnos_procesados[]" value="{{ asistencia.alumno.id }}">
                                                     {% endif %}
                                                 </td>
                                                 <td>
@@ -123,70 +124,43 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const formAsistencias = document.getElementById('form-asistencias');
-        const checkboxes = document.querySelectorAll('.asistencia-checkbox');
+        const radioGroups = document.querySelectorAll('.btn-group[data-alumno-id]');
         const observacionesInputs = document.querySelectorAll('.observaciones-input');
         const btnGuardar = document.getElementById('btn-guardar');
         const cambiosPendientes = document.getElementById('cambios-pendientes');
         const contadorCambios = document.getElementById('contador-cambios');
         
-        let guardadoTimeout = null;
         let guardando = false;
         let hayCambios = false;
         let autoGuardadoTimeout = null;
-        const AUTO_GUARDADO_DELAY = 5000; // 5 segundos de inactividad antes de auto-guardar
+        const AUTO_GUARDADO_DELAY = 5000;
         
-        if (formAsistencias && checkboxes.length > 0) {
-            // Función para actualizar el label del badge según el estado del checkbox
-            function actualizarBadge(checkbox) {
-                const label = checkbox.closest('.form-check').querySelector('.form-check-label');
-                const badge = label.querySelector('.badge');
-                if (badge) {
-                    if (checkbox.checked) {
-                        badge.className = 'badge bg-success';
-                        badge.textContent = 'Presente';
-                    } else {
-                        badge.className = 'badge bg-danger';
-                        badge.textContent = 'Ausente';
-                    }
-                }
+        if (formAsistencias && radioGroups.length > 0) {
+            function obtenerValorSeleccionado(alumnoId) {
+                const radio = formAsistencias.querySelector('input[name="asistencias[' + alumnoId + ']"]:checked');
+                return radio ? radio.value : null;
             }
             
-            // Función para marcar que hay cambios pendientes
             function marcarCambios() {
                 hayCambios = true;
                 if (btnGuardar) btnGuardar.disabled = false;
                 if (cambiosPendientes) cambiosPendientes.style.display = 'block';
             }
             
-            // Función para limpiar el estado de cambios pendientes
-            function limpiarCambios() {
-                hayCambios = false;
-                if (btnGuardar) btnGuardar.disabled = true;
-                if (cambiosPendientes) cambiosPendientes.style.display = 'none';
-            }
-            
-            // Función para guardar el formulario
             function guardarFormulario() {
-                if (guardando) {
-                    return;
-                }
-                
-                // Permitir guardar siempre que se haya hecho clic en el botón o haya checkboxes modificados
-                // Esto es importante porque guardar marca explícitamente el estado (presente/ausente)
-                // incluso si visualmente no hay cambios (por ejemplo, cuando se carga por primera vez)
-                
+                if (guardando) return;
                 guardando = true;
                 hayCambios = false;
                 
-                // Actualizar el estado inicial después de guardar
-                checkboxes.forEach(function(checkbox) {
-                    estadoInicial.set(checkbox.dataset.alumnoId, checkbox.checked);
+                radioGroups.forEach(function(group) {
+                    const alumnoId = group.dataset.alumnoId;
+                    estadoInicial.set(alumnoId, obtenerValorSeleccionado(alumnoId));
                 });
                 observacionesInputs.forEach(function(input) {
                     input.defaultValue = input.value;
                 });
+                radioModificado.clear();
                 
-                // Actualizar UI durante el guardado
                 if (btnGuardar) {
                     btnGuardar.disabled = true;
                     btnGuardar.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Guardando...';
@@ -195,134 +169,79 @@
                     cambiosPendientes.style.display = 'block';
                     contadorCambios.textContent = 'Guardando...';
                 }
-                
-                // Limpiar timeout de auto-guardado si existe
                 if (autoGuardadoTimeout) {
                     clearTimeout(autoGuardadoTimeout);
                     autoGuardadoTimeout = null;
                 }
                 
-                // Actualizar el estado inicial después de guardar y limpiar modificados
-                checkboxes.forEach(function(checkbox) {
-                    estadoInicial.set(checkbox.dataset.alumnoId, checkbox.checked);
-                });
-                observacionesInputs.forEach(function(input) {
-                    input.defaultValue = input.value;
-                });
-                checkboxModificado.clear(); // Limpiar el set de modificados
-                
-                // Debug: verificar qué se está enviando
-                const formData = new FormData(formAsistencias);
-                console.log('Enviando formulario con datos:', Object.fromEntries(formData));
-                
                 formAsistencias.submit();
             }
             
-            // Guardar el estado inicial de cada checkbox para detectar cambios
             const estadoInicial = new Map();
-            const checkboxModificado = new Set(); // Track checkboxes que han sido modificados
+            const radioModificado = new Set();
             
-            checkboxes.forEach(function(checkbox) {
-                estadoInicial.set(checkbox.dataset.alumnoId, checkbox.checked);
-                actualizarBadge(checkbox);
+            radioGroups.forEach(function(group) {
+                const alumnoId = group.dataset.alumnoId;
+                estadoInicial.set(alumnoId, obtenerValorSeleccionado(alumnoId));
             });
             
-            // Si hay alumnos en el formulario, habilitar el botón de guardar desde el inicio
-            // Esto permite guardar el estado por defecto (ausente) sin necesidad de hacer cambios
-            if (checkboxes.length > 0 && btnGuardar) {
+            if (radioGroups.length > 0 && btnGuardar) {
                 btnGuardar.disabled = false;
-                hayCambios = true; // Marcar como si hubiera cambios para permitir guardar
+                hayCambios = true;
             }
             
-            // Función para verificar si hay cambios reales
             function hayCambiosReales() {
-                // Si hay checkboxes modificados, hay cambios
-                if (checkboxModificado.size > 0) {
-                    return true;
-                }
-                
-                // También verificar cambios en observaciones
+                if (radioModificado.size > 0) return true;
                 for (let input of observacionesInputs) {
-                    const alumnoId = input.dataset.alumnoId;
                     const valorActual = input.value;
                     const valorOriginal = input.defaultValue || '';
-                    if (valorActual !== valorOriginal) {
-                        return true;
-                    }
+                    if (valorActual !== valorOriginal) return true;
                 }
                 return false;
             }
             
-            // Manejar cambios en checkboxes
-            checkboxes.forEach(function(checkbox) {
-                checkbox.addEventListener('change', function() {
-                    const alumnoId = checkbox.dataset.alumnoId;
-                    console.log('Checkbox cambiado:', alumnoId, 'checked:', checkbox.checked);
-                    actualizarBadge(checkbox);
-                    
-                    // Marcar este checkbox como modificado
-                    checkboxModificado.add(alumnoId);
-                    
-                    // Siempre marcar cambios cuando se modifica un checkbox
-                    marcarCambios();
-                    
-                    // Limpiar timeout de auto-guardado anterior
-                    if (autoGuardadoTimeout) {
-                        clearTimeout(autoGuardadoTimeout);
-                    }
-                    
-                    // Programar auto-guardado después de 5 segundos de inactividad
-                    autoGuardadoTimeout = setTimeout(function() {
-                        if (hayCambios && hayCambiosReales()) {
-                            guardarFormulario();
-                        }
-                    }, AUTO_GUARDADO_DELAY);
+            radioGroups.forEach(function(group) {
+                const alumnoId = group.dataset.alumnoId;
+                const radios = group.querySelectorAll('.asistencia-radio');
+                radios.forEach(function(radio) {
+                    radio.addEventListener('change', function() {
+                        radioModificado.add(alumnoId);
+                        marcarCambios();
+                        if (autoGuardadoTimeout) clearTimeout(autoGuardadoTimeout);
+                        autoGuardadoTimeout = setTimeout(function() {
+                            if (hayCambios && hayCambiosReales()) guardarFormulario();
+                        }, AUTO_GUARDADO_DELAY);
+                    });
                 });
             });
             
-            // Manejar cambios en observaciones
             observacionesInputs.forEach(function(input) {
                 input.addEventListener('input', function() {
                     marcarCambios();
-                    
-                    // Limpiar timeout de auto-guardado anterior
-                    if (autoGuardadoTimeout) {
-                        clearTimeout(autoGuardadoTimeout);
-                    }
-                    
-                    // Programar auto-guardado después de 5 segundos de inactividad
+                    if (autoGuardadoTimeout) clearTimeout(autoGuardadoTimeout);
                     autoGuardadoTimeout = setTimeout(function() {
-                        if (hayCambios) {
-                            guardarFormulario();
-                        }
+                        if (hayCambios) guardarFormulario();
                     }, AUTO_GUARDADO_DELAY);
                 });
             });
             
-            // Manejar clic en botón de guardar
             if (btnGuardar) {
                 btnGuardar.addEventListener('click', function(e) {
                     e.preventDefault();
-                    // Marcar todos los checkboxes como procesados cuando se hace clic en guardar
-                    // Esto asegura que todos los alumnos visibles se guarden, incluso si no hubo cambios visuales
-                    checkboxes.forEach(function(checkbox) {
-                        checkboxModificado.add(checkbox.dataset.alumnoId);
+                    radioGroups.forEach(function(group) {
+                        radioModificado.add(group.dataset.alumnoId);
                     });
-                    // Forzar que haya cambios para permitir el guardado
                     hayCambios = true;
                     guardarFormulario();
                 });
             }
             
-            // Prevenir envío accidental del formulario con Enter
             formAsistencias.addEventListener('submit', function(e) {
                 if (!guardando) {
                     e.preventDefault();
-                    // Marcar todos los checkboxes como procesados cuando se envía el formulario
-                    checkboxes.forEach(function(checkbox) {
-                        checkboxModificado.add(checkbox.dataset.alumnoId);
+                    radioGroups.forEach(function(group) {
+                        radioModificado.add(group.dataset.alumnoId);
                     });
-                    // Forzar que haya cambios para permitir el guardado
                     hayCambios = true;
                     guardarFormulario();
                 }

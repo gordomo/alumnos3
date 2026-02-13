@@ -80,8 +80,11 @@ class AsistenciaAlumnosController extends AbstractController
                 }
                 $entityManager->flush();
 
-                // Crear nuevas asistencias
-                foreach ($asistencias as $alumnoId => $presente) {
+                // Crear nuevas asistencias (solo para presente o ausente; sin_registro no crea registro)
+                foreach ($asistencias as $alumnoId => $valor) {
+                    if ($valor === 'sin_registro') {
+                        continue;
+                    }
                     $alumno = $entityManager->getRepository(Alumno::class)->find($alumnoId);
                     if (!$alumno) {
                         continue;
@@ -91,7 +94,7 @@ class AsistenciaAlumnosController extends AbstractController
                     $asistencia->setAlumno($alumno);
                     $asistencia->setCurso($curso);
                     $asistencia->setFecha($fechaAsistencia);
-                    $asistencia->setPresente($presente === '1');
+                    $asistencia->setPresente($valor === '1');
                     $asistencia->setObservaciones($observaciones[$alumnoId] ?? '');
 
                     $entityManager->persist($asistencia);
@@ -122,7 +125,7 @@ class AsistenciaAlumnosController extends AbstractController
                 
                 $asistenciasPorAlumno[] = [
                     'alumno' => $alumno,
-                    'presente' => $asistencia ? $asistencia->getPresente() : false,
+                    'presente' => $asistencia ? $asistencia->getPresente() : null,
                     'observaciones' => $asistencia ? $asistencia->getObservaciones() : ''
                 ];
             }
