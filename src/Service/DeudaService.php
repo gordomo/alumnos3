@@ -825,7 +825,7 @@ class DeudaService
             'deudasOmitidas' => 0
         ];
         
-        if (!$alumno->isActivo()) {
+        if (!$alumno->getActivo()) {
             return $estadisticas;
         }
         
