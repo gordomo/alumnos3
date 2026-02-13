@@ -1,107 +1,57 @@
-{{ form_start(form, {'attr': {'id': 'alumnos_pagos', 'name': 'alumnos_pagos'}}) }}
-    {# Campo oculto para modo pago múltiple #}
-    <input type="hidden" name="modo_pago_multiple" id="modo-pago-multiple-hidden" value="0">
-    
-    {# Información del Alumno y Curso #}
-    <div class="row mb-3">
-        <div class="col-md-6">
-            <div class="mb-2">
-                <label for="{{ form.alumno.vars.id }}" class="form-label fw-semibold text-dark">
-                    Alumno <span class="text-danger">*</span>
-                </label>
-                {{ form_widget(form.alumno, {'attr': {'class': 'form-control'}}) }}
-                {{ form_errors(form.alumno) }}
-            </div>
-        </div>
-        {# Campo Curso oculto en modo múltiple - se determina automáticamente por los meses seleccionados #}
-        <div class="col-md-6" id="campo-curso-container">
-            <div class="mb-2">
-                <label for="{{ form.curso.vars.id }}" class="form-label fw-semibold text-dark">
-                    Curso <span class="text-danger">*</span>
-                </label>
-                {{ form_widget(form.curso, {'attr': {'class': 'form-control'}}) }}
-                {{ form_errors(form.curso) }}
-            </div>
-        </div>
+<div class="card mb-4 shadow-sm">
+    <div class="card-header" style="background-color: #e7f1ff; border-bottom: 2px solid #0d6efd;">
+        <h4 class="mb-0 text-dark">
+            <i class="bi bi-credit-card-2-front" style="color: #0d6efd;"></i> Registro del Pago
+        </h4>
+    </div>
+    <div class="card-body">
+    {# Curso - oculto en modo múltiple #}
+    <div class="mb-3" id="campo-curso-container">
+        <label for="{{ form.curso.vars.id }}" class="form-label fw-semibold text-dark mb-1">Curso <span class="text-danger">*</span></label>
+        {{ form_widget(form.curso, {'attr': {'class': 'form-select'}}) }}
+        {{ form_errors(form.curso) }}
     </div>
 
-    {# Información del Pago #}
-    <div class="row mb-3">
+    {# Fecha, Mes y Año #}
+    <div class="row mb-3 g-3">
         <div class="col-md-4">
-            <div class="mb-2">
-                <label for="{{ form.fecha.vars.id }}" class="form-label fw-semibold text-dark">
-                    Fecha de Pago <span class="text-danger">*</span>
-                </label>
-                {{ form_widget(form.fecha, {'attr': {'class': 'form-control'}}) }}
-                {{ form_errors(form.fecha) }}
-            </div>
+            <label for="{{ form.fecha.vars.id }}" class="form-label fw-semibold text-dark mb-1">Fecha de Pago <span class="text-danger">*</span></label>
+            {{ form_widget(form.fecha, {'attr': {'class': 'form-control'}}) }}
+            {{ form_errors(form.fecha) }}
         </div>
         {# Campo Mes oculto - se sincroniza con los checkboxes de meses adeudados #}
         <div class="col-md-4" id="campo-mes-container" style="display: none;">
-            <div class="mb-2">
-                <label for="{{ form.mes.vars.id }}" class="form-label fw-semibold text-dark">
-                    Mes <span class="text-danger">*</span>
-                </label>
-                <small class="text-muted d-block mb-1">Puede seleccionar múltiples meses</small>
-                {{ form_widget(form.mes, {'attr': {'class': 'form-control mes-select-multiple', 'size': '5'}}) }}
-                {{ form_errors(form.mes) }}
-            </div>
+            <label for="{{ form.mes.vars.id }}" class="form-label fw-semibold text-dark mb-1">Mes <span class="text-danger">*</span></label>
+            <small class="text-muted d-block mb-1" style="font-size: 0.8rem;">Puede seleccionar múltiples meses</small>
+            {{ form_widget(form.mes, {'attr': {'class': 'form-control mes-select-multiple', 'size': '5'}}) }}
+            {{ form_errors(form.mes) }}
         </div>
-        {# Campo Año oculto en modo múltiple - se oculta cuando hay meses adeudados #}
+        {# Campo Año oculto en modo múltiple #}
         <div class="col-md-4" id="campo-ano-container">
-            <div class="mb-2">
-                <label for="{{ form.ano.vars.id }}" class="form-label fw-semibold text-dark">
-                    Año <span class="text-danger">*</span>
-                </label>
-                {{ form_widget(form.ano, {'attr': {'class': 'form-control'}}) }}
-                {{ form_errors(form.ano) }}
-            </div>
+            <label for="{{ form.ano.vars.id }}" class="form-label fw-semibold text-dark mb-1">Año <span class="text-danger">*</span></label>
+            {{ form_widget(form.ano, {'attr': {'class': 'form-select'}}) }}
+            {{ form_errors(form.ano) }}
         </div>
     </div>
 
-    {# Monto y Método de Pago #}
-    <div class="row mb-3">
-        <div class="col-md-6">
-            <div class="mb-2">
-                <label for="{{ form.monto.vars.id }}" class="form-label fw-semibold text-dark">
-                    Monto <span class="text-danger">*</span>
-                </label>
-                <small class="text-muted d-block mb-1">
-                    Puede modificar el monto sugerido. 
-                    <strong>Pago parcial:</strong> Ingrese un monto menor para pagar parcialmente. 
-                    <strong>Pago adelantado:</strong> Seleccione meses futuros (hasta 12 meses adelante).
-                </small>
-                {{ form_widget(form.monto, {'attr': {'class': 'form-control monto-input-field', 'min': '0.01', 'step': '0.01'}}) }}
-                {{ form_errors(form.monto) }}
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="mb-2">
-                <label for="{{ form.metodoPago.vars.id }}" class="form-label fw-semibold text-dark">
-                    Método de Pago <span class="text-danger">*</span>
-                </label>
-                <small class="text-muted d-block mb-1" style="visibility: hidden;">&nbsp;</small>
-                {{ form_widget(form.metodoPago, {'attr': {'class': 'form-control'}}) }}
-                {{ form_errors(form.metodoPago) }}
-            </div>
-        </div>
+    {# Método de Pago - Monto/Precio a Cobrar está en la sección Cálculo del Pago #}
+    <div class="mb-3">
+        <label for="{{ form.metodoPago.vars.id }}" class="form-label fw-semibold text-dark mb-1">Método de Pago <span class="text-danger">*</span></label>
+        {{ form_widget(form.metodoPago, {'attr': {'class': 'form-select'}}) }}
+        {{ form_errors(form.metodoPago) }}
     </div>
 
     {# Observaciones #}
-    <div class="row mb-3">
-        <div class="col-md-12">
-            <div class="mb-2">
-                <label for="{{ form.observacion.vars.id }}" class="form-label fw-semibold text-dark">
-                    Observaciones
-                </label>
-                {{ form_widget(form.observacion, {'attr': {'class': 'form-control', 'rows': 3}}) }}
-                {{ form_errors(form.observacion) }}
-            </div>
-        </div>
+    <div class="mb-3">
+        <label for="{{ form.observacion.vars.id }}" class="form-label fw-semibold text-dark mb-1">
+            Observaciones
+        </label>
+        {{ form_widget(form.observacion, {'attr': {'class': 'form-control', 'rows': 3, 'placeholder': 'Notas opcionales sobre el pago...'}}) }}
+        {{ form_errors(form.observacion) }}
     </div>
 
     {# Botones de Acción #}
-    <div class="d-flex gap-2 mt-3 pt-2 border-top">
+    <div class="d-flex gap-2 mt-4 pt-3" style="border-top: 1px solid #dee2e6;">
         <button type="submit" class="btn btn-primary">
             <i class="bi bi-save"></i> {{ button_label|default('Guardar Pago') }}
         </button>
@@ -116,11 +66,12 @@
         {% endif %}
     </div>
 {{ form_end(form) }}
+    </div>
+</div>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const precioFinalContainer = document.getElementById('precio-final-container');
-        const precioFinalElement = document.getElementById('precio-final');
         const descuentosCheckboxes = document.querySelectorAll('.descuento-promocional-checkbox');
         
         // Obtener IDs del formulario
@@ -183,9 +134,11 @@
                 .filter(cb => cb.checked)
                 .map(cb => cb.value);
             
-            // Mostrar loading
-            if (precioFinalElement) {
-                precioFinalElement.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Calculando...';
+            // Mostrar loading en el campo monto
+            const campoMontoLoading = encontrarCampoMonto();
+            if (campoMontoLoading) {
+                campoMontoLoading.placeholder = 'Calculando...';
+                campoMontoLoading.disabled = true;
             }
             
             // Preparar datos para enviar
@@ -208,32 +161,25 @@
             .then(data => {
                 if (data.error) {
                     console.error('Error:', data.error);
-                    if (precioFinalElement) {
-                        precioFinalElement.textContent = 'Error: ' + data.error;
+                    const campoErr = encontrarCampoMonto();
+                    if (campoErr) {
+                        campoErr.placeholder = 'Error';
+                        campoErr.disabled = false;
                     }
                     return;
                 }
                 
                 const montoCalculado = parseFloat(data.monto);
                 
-                // Actualizar el precio final
-                if (precioFinalElement) {
-                    precioFinalElement.textContent = '$' + montoCalculado.toLocaleString('es-AR', {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2
-                    });
-                }
-                
-                // Actualizar el campo de monto del formulario
+                // Actualizar el campo de monto (Precio a Cobrar)
                 const campoMonto = encontrarCampoMonto();
                 
                 if (campoMonto) {
-                    // Formatear el número con punto como separador decimal (formato estándar para inputs number)
                     const nuevoValor = montoCalculado.toFixed(2);
-                    // Marcar que la actualización es programática
+                    campoMonto.placeholder = '0.00';
+                    campoMonto.disabled = false;
                     campoMonto.dataset.updatingProgrammatically = 'true';
                     campoMonto.value = nuevoValor;
-                    // Remover la marca después de un pequeño delay
                     setTimeout(function() {
                         delete campoMonto.dataset.updatingProgrammatically;
                     }, 100);
@@ -280,8 +226,10 @@
             })
             .catch(error => {
                 console.error('Error al calcular monto:', error);
-                if (precioFinalElement) {
-                    precioFinalElement.textContent = 'Error al calcular';
+                const campoErr = encontrarCampoMonto();
+                if (campoErr) {
+                    campoErr.placeholder = 'Error';
+                    campoErr.disabled = false;
                 }
             });
         }
@@ -292,28 +240,7 @@
             // Por ahora solo actualizamos el precio
         }
         
-        // Función para actualizar el precio final mostrado cuando se modifica el campo de monto
-        function actualizarPrecioFinalDesdeInput() {
-            const campoMonto = encontrarCampoMonto();
-            const precioFinalElement = document.getElementById('precio-final');
-            
-            if (campoMonto && precioFinalElement) {
-                let valor = campoMonto.value;
-                // Reemplazar coma por punto para parseFloat
-                valor = valor.replace(',', '.');
-                
-                if (valor && !isNaN(valor) && parseFloat(valor) > 0) {
-                    const montoFormateado = parseFloat(valor).toLocaleString('es-AR', {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2
-                    });
-                    precioFinalElement.textContent = '$' + montoFormateado;
-                    console.log('Precio final actualizado desde input:', montoFormateado);
-                }
-            } else {
-                console.warn('No se pudo encontrar campoMonto o precioFinalElement para actualizar');
-            }
-        }
+        // El campo monto ES el Precio a Cobrar - no hay display separado que actualizar
         
         // Event listeners para checkboxes de descuentos promocionales
         descuentosCheckboxes.forEach(function(checkbox) {
@@ -356,35 +283,7 @@
                 // Solo agregar listeners si NO estamos en modo múltiple
                 // En modo múltiple, el precio se calcula vía AJAX y no debe ser sobrescrito
                 if (!modoMultipleActivo) {
-                    // Event listener para input (tiempo real mientras se escribe)
-                    campoMonto.addEventListener('input', function(e) {
-                        // Ignorar si la actualización es programática (viene de AJAX)
-                        if (e.target.dataset.updatingProgrammatically === 'true') {
-                            return;
-                        }
-                        console.log('Evento input detectado, valor:', e.target.value);
-                        actualizarPrecioFinalDesdeInput();
-                    });
-                    
-                    // Event listener para change (cuando se pierde el foco)
-                    campoMonto.addEventListener('change', function(e) {
-                        // Ignorar si la actualización es programática (viene de AJAX)
-                        if (e.target.dataset.updatingProgrammatically === 'true') {
-                            return;
-                        }
-                        console.log('Evento change detectado, valor:', e.target.value);
-                        actualizarPrecioFinalDesdeInput();
-                    });
-                    
-                    // También escuchar eventos keyup para capturar cambios
-                    campoMonto.addEventListener('keyup', function(e) {
-                        // Ignorar si la actualización es programática (viene de AJAX)
-                        if (e.target.dataset.updatingProgrammatically === 'true') {
-                            return;
-                        }
-                        console.log('Evento keyup detectado, valor:', e.target.value);
-                        actualizarPrecioFinalDesdeInput();
-                    });
+                    // En modo simple, el usuario puede editar el monto; no hay display separado que actualizar
                 }
             } else {
                 console.error('No se pudo encontrar el campo de monto para agregar event listeners');
@@ -392,10 +291,7 @@
                 setTimeout(function() {
                     const campoMontoRetry = encontrarCampoMonto();
                     if (campoMontoRetry) {
-                        campoMontoRetry.addEventListener('input', actualizarPrecioFinalDesdeInput);
-                        campoMontoRetry.addEventListener('change', actualizarPrecioFinalDesdeInput);
-                        campoMontoRetry.addEventListener('keyup', actualizarPrecioFinalDesdeInput);
-                        console.log('Event listeners agregados en retry');
+                        console.log('Campo de monto encontrado en retry');
                     }
                 }, 500);
             }

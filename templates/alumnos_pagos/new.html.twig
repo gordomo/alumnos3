@@ -5,24 +5,44 @@
 
 {% block body %}
     <div class="mx-4 mt-4">
-        <div class="card shadow-sm">
-            <div class="card-header bg-white border-bottom">
-                <h1 class="h3 mb-0 text-dark">Nuevo Pago</h1>
-            </div>
-            <div class="card-body">
-                {% for message in app.flashes('error') %}
-                    <div class="alert alert-danger">
-                        {{ message }}
-                    </div>
-                {% endfor %}
+        <h1 class="h3 mb-4 text-dark">Nuevo Pago</h1>
 
-                {% for message in app.flashes('success') %}
-                    <div class="alert alert-success">
-                        {{ message }}
-                    </div>
-                {% endfor %}
+        {% for message in app.flashes('error') %}
+            <div class="alert alert-danger">{{ message }}</div>
+        {% endfor %}
+        {% for message in app.flashes('success') %}
+            <div class="alert alert-success">{{ message }}</div>
+        {% endfor %}
 
-                {# MÓDULO 1: INFORMACIÓN DE ESTADO #}
+        {{ form_start(form, {'attr': {'id': 'alumnos_pagos', 'name': 'alumnos_pagos'}}) }}
+                <input type="hidden" name="modo_pago_multiple" id="modo-pago-multiple-hidden" value="0">
+
+                {# MÓDULO 0: ALUMNO - Primer paso: a quién se le imputa el pago #}
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-header" style="background-color: #e7f1ff; border-bottom: 2px solid #0d6efd;">
+                        <h4 class="mb-0 text-dark">
+                            <i class="bi bi-person-badge" style="color: #0d6efd;"></i> Alumno
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <div style="border-left: 4px solid #0d6efd; background-color: #e7f3ff; padding: 1rem; border-radius: 4px;">
+                            <label for="{{ form.alumno.vars.id }}" class="form-label fw-bold text-dark mb-2">
+                                Seleccione a quién se le imputa el pago <span class="text-danger">*</span>
+                            </label>
+                            {{ form_widget(form.alumno, {'attr': {'class': 'form-select form-select-lg'}}) }}
+                            {{ form_errors(form.alumno) }}
+                        </div>
+                    </div>
+                </div>
+
+                {% if not alumno %}
+                <div class="alert alert-info mb-4" role="alert">
+                    <i class="bi bi-info-circle"></i> Seleccione un alumno de la lista para ver sus deudas y registrar un pago.
+                </div>
+                {% endif %}
+
+                {# MÓDULO 1: INFORMACIÓN DE ESTADO - visible solo cuando hay alumno seleccionado #}
+                {% if alumno %}
                 <div class="card mb-4 shadow-sm">
                     <div class="card-header" style="background-color: #f8f9fa; border-bottom: 2px solid #dee2e6;">
                         <h4 class="mb-0 text-dark">
@@ -160,65 +180,70 @@
                                 </div>
                             </div>
                         {% endif %}
-
-                        {# Información de los cursos con deudas #}
-                        {% if mesesAdeudados is defined and mesesAdeudados|length > 0 %}
-                            {# Agrupar cursos únicos por ID para evitar duplicados usando un enfoque más robusto #}
-                            {% set cursosUnicosArray = [] %}
-                            {% set cursosIdsVistos = [] %}
-                            {% for mes in mesesAdeudados %}
-                                {% set cursoId = mes.curso_obj.id %}
-                                {% set yaVisto = false %}
-                                {% for idVisto in cursosIdsVistos %}
-                                    {% if idVisto == cursoId %}
-                                        {% set yaVisto = true %}
-                                    {% endif %}
-                                {% endfor %}
-                                {% if not yaVisto %}
-                                    {% set cursosIdsVistos = cursosIdsVistos|merge([cursoId]) %}
-                                    {% set cursosUnicosArray = cursosUnicosArray|merge([mes.curso_obj]) %}
-                                {% endif %}
-                            {% endfor %}
-                            
-                            <div style="border-left: 4px solid #0d6efd; background-color: #e7f1ff; padding: 1rem; border-radius: 4px;">
-                                <h5 class="mb-3 text-dark">
-                                    <i class="bi bi-book" style="color: #0d6efd;"></i> Información de los Cursos
-                                </h5>
-                                <div class="row">
-                                    {% for cursoObj in cursosUnicosArray %}
-                                        <div class="col-md-{% if cursosUnicosArray|length > 1 %}6{% else %}12{% endif %} mb-3">
-                                            <div class="card border-0" style="background-color: #ffffff; border-left: 3px solid #0d6efd !important;">
-                                                <div class="card-body">
-                                                    <h6 class="card-title text-dark mb-2">
-                                                        <strong>{{ cursoObj.nombre }}</strong>
-                                                    </h6>
-                                                    <p class="mb-1 text-muted small">
-                                                        <strong>Precio base:</strong> <span class="text-dark">${{ cursoObj.precio | number_format(2, ',', '.')}}</span>
-                                                    </p>
-                                                    <p class="mb-0 text-muted small">
-                                                        <strong>Período:</strong> {{ cursoObj.fechaInicio | date('d/m/Y') }} - {{ cursoObj.fechaFin | date('d/m/Y') }}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    {% endfor %}
-                                </div>
-                            </div>
-                        {% elseif curso is defined and curso %}
-                            {# Fallback: mostrar información de un solo curso si no hay meses adeudados #}
-                            <div style="border-left: 4px solid #0d6efd; background-color: #e7f1ff; padding: 1rem; border-radius: 4px;">
-                                <h5 class="mb-2 text-dark">
-                                    <i class="bi bi-book" style="color: #0d6efd;"></i> Información del Curso
-                                </h5>
-                                <p class="mb-1"><strong class="text-dark">{{ curso.nombre }}</strong></p>
-                                <p class="mb-0 text-muted">
-                                    Precio base: <strong class="text-dark">${{ curso.precio | number_format(2, ',', '.')}}</strong> | 
-                                    Período: {{ curso.fechaInicio | date('d/m/Y') }} - {{ curso.fechaFin | date('d/m/Y') }}
-                                </p>
-                            </div>
-                        {% endif %}
                     </div>
                 </div>
+
+                {# MÓDULO 1B: INFORMACIÓN DE LOS CURSOS - card independiente alineado #}
+                {% if mesesAdeudados is defined and mesesAdeudados|length > 0 %}
+                    {% set cursosUnicosArray = [] %}
+                    {% set cursosIdsVistos = [] %}
+                    {% for mes in mesesAdeudados %}
+                        {% set cursoId = mes.curso_obj.id %}
+                        {% set yaVisto = false %}
+                        {% for idVisto in cursosIdsVistos %}
+                            {% if idVisto == cursoId %}
+                                {% set yaVisto = true %}
+                            {% endif %}
+                        {% endfor %}
+                        {% if not yaVisto %}
+                            {% set cursosIdsVistos = cursosIdsVistos|merge([cursoId]) %}
+                            {% set cursosUnicosArray = cursosUnicosArray|merge([mes.curso_obj]) %}
+                        {% endif %}
+                    {% endfor %}
+                    <div class="card mb-4 shadow-sm">
+                        <div class="card-header" style="background-color: #e7f1ff; border-bottom: 2px solid #0d6efd;">
+                            <h4 class="mb-0 text-dark">
+                                <i class="bi bi-book" style="color: #0d6efd;"></i> Información de los Cursos
+                            </h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                {% for cursoObj in cursosUnicosArray %}
+                                    <div class="col-md-{% if cursosUnicosArray|length > 1 %}6{% else %}12{% endif %} mb-3">
+                                        <div class="card border-0" style="background-color: #f8f9fa; border-left: 3px solid #0d6efd !important;">
+                                            <div class="card-body">
+                                                <h6 class="card-title text-dark mb-2">
+                                                    <strong>{{ cursoObj.nombre }}</strong>
+                                                </h6>
+                                                <p class="mb-1 text-muted small">
+                                                    <strong>Precio base:</strong> <span class="text-dark">${{ cursoObj.precio | number_format(2, ',', '.')}}</span>
+                                                </p>
+                                                <p class="mb-0 text-muted small">
+                                                    <strong>Período:</strong> {{ cursoObj.fechaInicio | date('d/m/Y') }} - {{ cursoObj.fechaFin | date('d/m/Y') }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                {% elseif curso is defined and curso %}
+                    <div class="card mb-4 shadow-sm">
+                        <div class="card-header" style="background-color: #e7f1ff; border-bottom: 2px solid #0d6efd;">
+                            <h4 class="mb-0 text-dark">
+                                <i class="bi bi-book" style="color: #0d6efd;"></i> Información del Curso
+                            </h4>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-1"><strong class="text-dark">{{ curso.nombre }}</strong></p>
+                            <p class="mb-0 text-muted">
+                                Precio base: <strong class="text-dark">${{ curso.precio | number_format(2, ',', '.')}}</strong> | 
+                                Período: {{ curso.fechaInicio | date('d/m/Y') }} - {{ curso.fechaFin | date('d/m/Y') }}
+                            </p>
+                        </div>
+                    </div>
+                {% endif %}
 
                 {# MÓDULO 2: CÁLCULO DEL PAGO #}
                 <div class="card mb-4 shadow-sm">
@@ -327,22 +352,25 @@
                             </div>
                         {% endif %}
 
-                        {# PRECIO FINAL #}
-                        {% if calculoMonto is defined and calculoMonto %}
-                            <div class="border-0" id="precio-final-container" style="background: linear-gradient(135deg, #d1e7dd 0%, #ffffff 100%); border-left: 4px solid #198754 !important; padding: 2rem; border-radius: 4px;">
-                                <div class="text-center">
-                                    <h4 class="mb-3" style="color: #198754;">Precio a Cobrar</h4>
-                                    <div class="display-3 fw-bold mb-2" id="precio-final" style="color: #198754; letter-spacing: -1px;">
-                                        ${{ calculoMonto.monto | number_format(2, ',', '.') }}
-                                    </div>
-                                    {% if calculoMonto.montoBase != calculoMonto.monto %}
-                                        <small class="text-muted">
-                                            Precio base: ${{ calculoMonto.montoBase | number_format(2, ',', '.') }}
-                                        </small>
-                                    {% endif %}
-                                </div>
+                        {# PRECIO A COBRAR - campo editable único (reemplaza Monto redundante) #}
+                        <div class="border-0" id="precio-final-container" style="background: linear-gradient(135deg, #d1e7dd 0%, #ffffff 100%); border-left: 4px solid #198754 !important; padding: 2rem; border-radius: 4px;">
+                            <label for="{{ form.monto.vars.id }}" class="form-label fw-bold mb-2" style="color: #198754; font-size: 1.1rem;">
+                                Precio a Cobrar
+                            </label>
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <span class="fw-bold" style="color: #198754; font-size: 1.5rem;">$</span>
+                                {{ form_widget(form.monto, {'attr': {'class': 'form-control form-control-lg monto-input-field', 'style': 'max-width: 12rem; font-size: 1.5rem; font-weight: 600;', 'min': '0.01', 'step': '0.01', 'placeholder': '0.00'}}) }}
                             </div>
-                        {% endif %}
+                            {{ form_errors(form.monto) }}
+                            {% if calculoMonto is defined and calculoMonto and calculoMonto.montoBase != calculoMonto.monto %}
+                                <small class="text-muted d-block mt-2">
+                                    Precio base: ${{ calculoMonto.montoBase | number_format(2, ',', '.') }}
+                                </small>
+                            {% endif %}
+                            <small class="text-muted d-block mt-1" style="font-size: 0.8rem;">
+                                Puede modificar. Pago parcial: ingrese menos. Adelantado: seleccione meses futuros.
+                            </small>
+                        </div>
                     </div>
                 </div>
 
@@ -356,18 +384,38 @@
                             'is_general': is_general,
                             'calculoMonto': calculoMonto is defined ? calculoMonto : null
                 }) }}
-            </div>
-        </div>
+                {% else %}
+                {{ form_end(form, {'render_rest': false}) }}
+                {% endif %}
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Redirigir al seleccionar alumno (actualiza URL con ?id=X para cargar deudas del alumno)
+            const alumnoSelect = document.getElementById('alumnos_pagos_alumno');
+            if (alumnoSelect) {
+                alumnoSelect.addEventListener('change', function() {
+                    const currentUrl = new URL(window.location.href);
+                    currentUrl.searchParams.set('id', this.value);
+                    // Mantener descuentos promocionales seleccionados en la URL
+                    const paramsToDelete = [];
+                    currentUrl.searchParams.forEach(function(value, key) {
+                        if (key.startsWith('descuentos_promocionales')) paramsToDelete.push(key);
+                    });
+                    paramsToDelete.forEach(function(key) { currentUrl.searchParams.delete(key); });
+                    const checkboxes = document.querySelectorAll('.descuento-promocional-checkbox:checked');
+                    checkboxes.forEach(function(cb) {
+                        currentUrl.searchParams.append('descuentos_promocionales[]', cb.value);
+                    });
+                    window.location.href = currentUrl.toString();
+                });
+            }
+
             const modoPagoMultiple = document.getElementById('modo-pago-multiple');
             const mesesCheckboxes = document.querySelectorAll('.mes-adeudado-checkbox');
             const mesesContainers = document.querySelectorAll('.mes-adeudado-checkbox-container');
             const resumenMeses = document.getElementById('resumen-meses-seleccionados');
             const listaMeses = document.getElementById('lista-meses-seleccionados');
-            const precioFinalElement = document.getElementById('precio-final');
             const campoMonto = document.querySelector('.monto-input-field') || document.querySelector('input[name="alumnos_pagos[monto]"]');
             const reglaCalculoTexto = document.getElementById('regla-calculo-texto');
             const reglaCalculoDescripcion = document.getElementById('regla-calculo-descripcion');
@@ -558,434 +606,115 @@
             // Inicializar contenedores de meses ANTES de habilitar checkboxes
             inicializarContenedoresMeses();
             
-            // Actualizar estado de meses futuros al cargar la página (después de inicializar)
-            // Usar requestAnimationFrame para asegurar que el DOM esté completamente renderizado
-            requestAnimationFrame(function() {
-                actualizarEstadoMesesFuturos();
-            });
+            // === LÓGICA SIMPLE: Solo se puede seleccionar un mes si el inmediato anterior está seleccionado ===
             
-            // Función para validar que no se seleccionen meses futuros sin seleccionar los anteriores
-            function validarMesesConsecutivos(checkboxSeleccionado) {
-                const mes = parseInt(checkboxSeleccionado.dataset.mes);
-                const ano = parseInt(checkboxSeleccionado.dataset.ano);
-                const cursoId = checkboxSeleccionado.dataset.cursoId;
-                const esAdelantado = checkboxSeleccionado.dataset.esAdelantado === 'true';
-                const container = checkboxSeleccionado.closest('.mes-adeudado-checkbox-container');
-                const esMesFuturo = container?.dataset.esMesFuturo === 'true';
-                
-                // Si no es un mes adelantado o futuro, no hay restricción
-                if (!esAdelantado && !esMesFuturo) {
-                    return true;
-                }
-                
-                // Si es un mes adelantado/futuro, verificar que todos los meses anteriores estén seleccionados o pagados
-                const fechaActual = new Date();
-                const mesActual = fechaActual.getMonth() + 1; // JavaScript usa 0-11, necesitamos 1-12
-                const anoActual = fechaActual.getFullYear();
-                
-                // Crear fecha del mes seleccionado
-                const fechaSeleccionada = new Date(ano, mes - 1, 1);
-                const fechaActualMes = new Date(anoActual, mesActual - 1, 1);
-                
-                // Si el mes seleccionado es anterior o igual al actual, no hay problema
-                if (fechaSeleccionada <= fechaActualMes) {
-                    return true;
-                }
-                
-                // Verificar todos los meses desde el mes actual hasta el mes seleccionado (excluyendo el actual)
-                let fechaVerificacion = new Date(anoActual, mesActual - 1, 1);
-                fechaVerificacion.setMonth(fechaVerificacion.getMonth() + 1); // Empezar desde el mes siguiente
-                
-                while (fechaVerificacion < fechaSeleccionada) {
-                    const mesVerificar = fechaVerificacion.getMonth() + 1;
-                    const anoVerificar = fechaVerificacion.getFullYear();
-                    
-                    // Buscar checkbox para este mes anterior
-                    const checkboxAnterior = document.querySelector(
-                        `input[data-mes="${mesVerificar}"][data-ano="${anoVerificar}"][data-curso-id="${cursoId}"]`
-                    );
-                    
-                    if (checkboxAnterior) {
-                        const containerAnterior = checkboxAnterior.closest('.mes-adeudado-checkbox-container');
-                        const esAnteriorAdelantado = containerAnterior?.dataset.esAdelantado === 'true';
-                        
-                        // Si el mes anterior no está seleccionado y no es adelantado (es decir, es una deuda pendiente)
-                        if (!checkboxAnterior.checked && !esAnteriorAdelantado) {
-                            // Hay un mes anterior pendiente que no está seleccionado
-                            return false;
-                        }
-                    } else {
-                        // Si no existe checkbox para este mes, podría ser que:
-                        // 1. Ya está pagado completamente (no aparece en la lista)
-                        // 2. No se ha generado aún (mes muy futuro)
-                        // En este caso, permitir el pago adelantado
-                    }
-                    
-                    fechaVerificacion.setMonth(fechaVerificacion.getMonth() + 1);
-                }
-                
-                return true;
+            // Obtener meses ordenados cronológicamente por curso (retorna Map cursoId -> [checkbox1, checkbox2, ...])
+            function getMesesOrdenadosPorCurso() {
+                const porCurso = {};
+                mesesCheckboxes.forEach(function(cb) {
+                    const cursoId = cb.dataset.cursoId;
+                    if (!porCurso[cursoId]) porCurso[cursoId] = [];
+                    porCurso[cursoId].push({
+                        checkbox: cb,
+                        mes: parseInt(cb.dataset.mes),
+                        ano: parseInt(cb.dataset.ano)
+                    });
+                });
+                Object.keys(porCurso).forEach(function(cursoId) {
+                    porCurso[cursoId].sort(function(a, b) {
+                        if (a.ano !== b.ano) return a.ano - b.ano;
+                        return a.mes - b.mes;
+                    });
+                });
+                return porCurso;
             }
             
-            // Función para deshabilitar meses futuros si hay meses anteriores pendientes
-            function actualizarEstadoMesesFuturos() {
-                const fechaActual = new Date();
-                const mesActual = fechaActual.getMonth() + 1;
-                const anoActual = fechaActual.getFullYear();
-                const fechaActualMes = new Date(anoActual, mesActual - 1, 1);
-                
+            // Verificar si un mes puede ser seleccionado (el inmediato anterior debe estar seleccionado)
+            function puedeSeleccionarMes(checkbox) {
+                const cursoId = checkbox.dataset.cursoId;
+                const mes = parseInt(checkbox.dataset.mes);
+                const ano = parseInt(checkbox.dataset.ano);
+                const mesesOrdenados = getMesesOrdenadosPorCurso()[cursoId];
+                if (!mesesOrdenados) return true;
+                const idx = mesesOrdenados.findIndex(function(m) {
+                    return m.checkbox === checkbox;
+                });
+                if (idx <= 0) return true; // El primero siempre se puede seleccionar
+                const anterior = mesesOrdenados[idx - 1].checkbox;
+                return anterior.checked;
+            }
+            
+            // Obtener el mes inmediatamente anterior en la lista del curso
+            function getMesAnterior(checkbox) {
+                const cursoId = checkbox.dataset.cursoId;
+                const mesesOrdenados = getMesesOrdenadosPorCurso()[cursoId];
+                if (!mesesOrdenados) return null;
+                const idx = mesesOrdenados.findIndex(function(m) { return m.checkbox === checkbox; });
+                return idx > 0 ? mesesOrdenados[idx - 1].checkbox : null;
+            }
+            
+            // Obtener todos los meses posteriores a uno dado (en orden cronológico)
+            function getMesesPosteriores(checkbox) {
+                const cursoId = checkbox.dataset.cursoId;
+                const mesesOrdenados = getMesesOrdenadosPorCurso()[cursoId];
+                if (!mesesOrdenados) return [];
+                const idx = mesesOrdenados.findIndex(function(m) { return m.checkbox === checkbox; });
+                if (idx < 0) return [];
+                return mesesOrdenados.slice(idx + 1).map(function(m) { return m.checkbox; });
+            }
+            
+            // Actualizar estado: deshabilitar meses cuyo anterior no está seleccionado
+            function actualizarEstadoMeses() {
                 mesesCheckboxes.forEach(function(checkbox) {
-                    const mes = parseInt(checkbox.dataset.mes);
-                    const ano = parseInt(checkbox.dataset.ano);
                     const container = checkbox.closest('.mes-adeudado-checkbox-container');
-                    
-                    // Verificar si es realmente un mes futuro comparando con la fecha actual
-                    const fechaSeleccionada = new Date(ano, mes - 1, 1);
-                    
-                    // Si el mes NO es futuro (es anterior o igual al actual), siempre habilitado
-                    if (fechaSeleccionada <= fechaActualMes) {
-                        checkbox.disabled = false;
-                        if (container) {
-                            container.title = '';
-                            // Usar actualizarEstiloMes para mantener consistencia y restaurar hover
-                            actualizarEstiloMes(container, checkbox);
-                        }
-                        return;
-                    }
-                    
-                    // Si es un mes futuro, verificar si hay meses anteriores pendientes SIN seleccionar
-                    let tieneMesesAnterioresPendientes = false;
-                    let fechaVerificacion = new Date(anoActual, mesActual - 1, 1);
-                    fechaVerificacion.setMonth(fechaVerificacion.getMonth() + 1); // Empezar desde el mes siguiente al actual
-                    const cursoId = checkbox.dataset.cursoId;
-                    
-                    while (fechaVerificacion < fechaSeleccionada) {
-                        const mesVerificar = fechaVerificacion.getMonth() + 1;
-                        const anoVerificar = fechaVerificacion.getFullYear();
-                        
-                        const checkboxAnterior = document.querySelector(
-                            `input[data-mes="${mesVerificar}"][data-ano="${anoVerificar}"][data-curso-id="${cursoId}"]`
-                        );
-                        
-                        if (checkboxAnterior) {
-                            const containerAnterior = checkboxAnterior.closest('.mes-adeudado-checkbox-container');
-                            const esAnteriorAdelantado = containerAnterior?.dataset.esAdelantado === 'true';
-                            
-                            // Si el mes anterior NO está seleccionado Y NO es adelantado (es decir, es una deuda pendiente)
-                            // entonces hay un mes anterior pendiente sin seleccionar
-                            if (!checkboxAnterior.checked && !esAnteriorAdelantado) {
-                                tieneMesesAnterioresPendientes = true;
-                                break;
-                            }
-                        }
-                        
-                        fechaVerificacion.setMonth(fechaVerificacion.getMonth() + 1);
-                    }
-                    
-                    // Deshabilitar el checkbox si hay meses anteriores pendientes SIN seleccionar
-                    if (tieneMesesAnterioresPendientes) {
-                        checkbox.disabled = true;
-                        if (container) {
-                            container.title = 'Debe seleccionar primero los meses anteriores pendientes';
-                            // Usar actualizarEstiloMes para mantener consistencia
-                            actualizarEstiloMes(container, checkbox);
-                        }
-                    } else {
-                        checkbox.disabled = false;
-                        if (container) {
-                            container.title = '';
-                            // Usar actualizarEstiloMes para mantener consistencia y restaurar hover
-                            actualizarEstiloMes(container, checkbox);
-                        }
+                    const puede = puedeSeleccionarMes(checkbox);
+                    checkbox.disabled = !puede;
+                    if (container) {
+                        container.title = puede ? '' : 'Debe seleccionar primero el mes inmediatamente anterior';
+                        actualizarEstiloMes(container, checkbox);
                     }
                 });
             }
             
-            // Función para seleccionar automáticamente meses anteriores pendientes e intermedios
-            function seleccionarMesesAnterioresPendientes(checkboxSeleccionado) {
-                const mes = parseInt(checkboxSeleccionado.dataset.mes);
-                const ano = parseInt(checkboxSeleccionado.dataset.ano);
-                const cursoId = checkboxSeleccionado.dataset.cursoId;
-                
-                const fechaActual = new Date();
-                const mesActual = fechaActual.getMonth() + 1;
-                const anoActual = fechaActual.getFullYear();
-                const fechaActualMes = new Date(anoActual, mesActual - 1, 1);
-                const fechaSeleccionada = new Date(ano, mes - 1, 1);
-                
-                const mesesASeleccionar = [];
-                
-                // Si el mes seleccionado es futuro, seleccionar TODOS los meses anteriores (pendientes y adelantados)
-                if (fechaSeleccionada > fechaActualMes) {
-                    // Primero, encontrar el primer mes disponible en la lista para este curso
-                    // Esto incluye meses anteriores al mes actual que puedan estar pendientes
-                    let fechaPrimerMesDisponible = null;
-                    mesesCheckboxes.forEach(function(cb) {
-                        if (cb.dataset.cursoId === cursoId) {
-                            const mesCb = parseInt(cb.dataset.mes);
-                            const anoCb = parseInt(cb.dataset.ano);
-                            const fechaCb = new Date(anoCb, mesCb - 1, 1);
-                            
-                            if (!fechaPrimerMesDisponible || fechaCb < fechaPrimerMesDisponible) {
-                                fechaPrimerMesDisponible = fechaCb;
-                            }
-                        }
-                    });
-                    
-                    // Si encontramos un primer mes disponible, empezar desde ahí
-                    // Si no, empezar desde el mes siguiente al actual
-                    let fechaInicio = fechaPrimerMesDisponible || new Date(anoActual, mesActual - 1, 1);
-                    
-                    // Si el primer mes disponible es anterior al mes actual, empezar desde ahí
-                    // Si no, empezar desde el mes siguiente al actual
-                    if (fechaInicio < fechaActualMes) {
-                        // Empezar desde el primer mes disponible
-                        let fechaVerificacion = new Date(fechaInicio);
-                        
-                        // Seleccionar todos los meses desde el primero hasta el mes actual (si hay deudas pendientes)
-                        while (fechaVerificacion < fechaActualMes) {
-                            const mesVerificar = fechaVerificacion.getMonth() + 1;
-                            const anoVerificar = fechaVerificacion.getFullYear();
-                            
-                            const checkboxAnterior = document.querySelector(
-                                `input[data-mes="${mesVerificar}"][data-ano="${anoVerificar}"][data-curso-id="${cursoId}"]`
-                            );
-                            
-                            // Seleccionar meses anteriores pendientes (no adelantados)
-                            if (checkboxAnterior && !checkboxAnterior.checked) {
-                                const containerAnterior = checkboxAnterior.closest('.mes-adeudado-checkbox-container');
-                                const esAnteriorAdelantado = containerAnterior?.dataset.esAdelantado === 'true';
-                                
-                                // Solo seleccionar si NO es adelantado (es decir, es una deuda pendiente)
-                                if (!esAnteriorAdelantado && !mesesASeleccionar.includes(checkboxAnterior)) {
-                                    mesesASeleccionar.push(checkboxAnterior);
-                                }
-                            }
-                            
-                            fechaVerificacion.setMonth(fechaVerificacion.getMonth() + 1);
-                        }
-                    }
-                    
-                    // Ahora seleccionar todos los meses desde el mes siguiente al actual hasta el mes seleccionado
-                    let fechaVerificacion = new Date(anoActual, mesActual - 1, 1);
-                    fechaVerificacion.setMonth(fechaVerificacion.getMonth() + 1); // Empezar desde el mes siguiente al actual
-                    
-                    while (fechaVerificacion < fechaSeleccionada) {
-                        const mesVerificar = fechaVerificacion.getMonth() + 1;
-                        const anoVerificar = fechaVerificacion.getFullYear();
-                        
-                        const checkboxAnterior = document.querySelector(
-                            `input[data-mes="${mesVerificar}"][data-ano="${anoVerificar}"][data-curso-id="${cursoId}"]`
-                        );
-                        
-                        // Seleccionar cualquier mes anterior que no esté seleccionado (pendiente o adelantado)
-                        // IMPORTANTE: Seleccionar TODOS los meses anteriores, sin importar si son pendientes o adelantados
-                        if (checkboxAnterior && !checkboxAnterior.checked) {
-                            // Verificar si ya está en la lista para evitar duplicados
-                            if (!mesesASeleccionar.includes(checkboxAnterior)) {
-                                mesesASeleccionar.push(checkboxAnterior);
-                            }
-                        }
-                        
-                        fechaVerificacion.setMonth(fechaVerificacion.getMonth() + 1);
-                    }
-                }
-                
-                // También llenar huecos entre meses seleccionados (para casos donde se seleccionan meses no consecutivos)
-                // Obtener todos los meses seleccionados para este curso
-                const mesesSeleccionados = [];
-                mesesCheckboxes.forEach(function(cb) {
-                    if (cb.dataset.cursoId === cursoId && cb.checked) {
-                        const mesSel = parseInt(cb.dataset.mes);
-                        const anoSel = parseInt(cb.dataset.ano);
-                        mesesSeleccionados.push({
-                            fecha: new Date(anoSel, mesSel - 1, 1),
-                            checkbox: cb
-                        });
-                    }
-                });
-                
-                // Si hay múltiples meses seleccionados, llenar los huecos entre ellos
-                if (mesesSeleccionados.length > 1) {
-                    // Ordenar por fecha
-                    mesesSeleccionados.sort(function(a, b) {
-                        return a.fecha - b.fecha;
-                    });
-                    
-                    // Llenar huecos entre cada par de meses consecutivos seleccionados
-                    for (let i = 0; i < mesesSeleccionados.length - 1; i++) {
-                        const fechaInicio = mesesSeleccionados[i].fecha;
-                        const fechaFin = mesesSeleccionados[i + 1].fecha;
-                        
-                        let fechaVerificacion = new Date(fechaInicio);
-                        fechaVerificacion.setMonth(fechaVerificacion.getMonth() + 1);
-                        
-                        while (fechaVerificacion < fechaFin) {
-                            const mesVerificar = fechaVerificacion.getMonth() + 1;
-                            const anoVerificar = fechaVerificacion.getFullYear();
-                            
-                            const checkboxIntermedio = document.querySelector(
-                                `input[data-mes="${mesVerificar}"][data-ano="${anoVerificar}"][data-curso-id="${cursoId}"]`
-                            );
-                            
-                            if (checkboxIntermedio && !checkboxIntermedio.checked) {
-                                // Verificar si ya está en la lista para evitar duplicados
-                                if (!mesesASeleccionar.includes(checkboxIntermedio)) {
-                                    mesesASeleccionar.push(checkboxIntermedio);
-                                }
-                            }
-                            
-                            fechaVerificacion.setMonth(fechaVerificacion.getMonth() + 1);
-                        }
-                    }
-                }
-                
-                // Seleccionar automáticamente todos los meses encontrados
-                if (mesesASeleccionar.length > 0) {
-                    // Marcar que estamos en proceso de selección automática para evitar bucles
-                    const seleccionandoAutomaticamente = true;
-                    
-                    mesesASeleccionar.forEach(function(checkboxAnterior) {
-                        // Marcar temporalmente el checkbox para evitar procesamiento recursivo
-                        checkboxAnterior.dataset.seleccionandoAutomaticamente = 'true';
-                        
-                        checkboxAnterior.checked = true;
-                        
-                        // Actualizar estilo visual directamente (sin disparar eventos para evitar bucles)
-                        const containerAnterior = checkboxAnterior.closest('.mes-adeudado-checkbox-container');
-                        if (containerAnterior) {
-                            actualizarEstiloMes(containerAnterior, checkboxAnterior);
-                        }
-                        
-                        // Remover la marca después de un breve delay
-                        setTimeout(function() {
-                            delete checkboxAnterior.dataset.seleccionandoAutomaticamente;
-                        }, 100);
-                    });
-                    
-                    // Actualizar resumen después de seleccionar todos los meses automáticamente
-                    setTimeout(function() {
-                        if (typeof actualizarResumenMeses === 'function') {
-                            actualizarResumenMeses();
-                        }
-                        // Volver a ejecutar para asegurar que se seleccionen todos los meses necesarios
-                        actualizarEstadoMesesFuturos();
-                    }, 100);
-                    
-                    return true;
-                }
-                
-                return false;
-            }
-            
-            // Función para llenar automáticamente todos los huecos entre meses seleccionados
-            function llenarHuecosMesesSeleccionados() {
-                // Agrupar por curso
-                const cursosIds = new Set();
-                mesesCheckboxes.forEach(function(cb) {
-                    if (cb.checked) {
-                        cursosIds.add(cb.dataset.cursoId);
-                    }
-                });
-                
-                let mesesSeleccionadosAutomaticamente = false;
-                
-                cursosIds.forEach(function(cursoId) {
-                    // Obtener todos los meses seleccionados para este curso
-                    const mesesSeleccionados = [];
-                    mesesCheckboxes.forEach(function(cb) {
-                        if (cb.dataset.cursoId === cursoId && cb.checked) {
-                            const mesSel = parseInt(cb.dataset.mes);
-                            const anoSel = parseInt(cb.dataset.ano);
-                            mesesSeleccionados.push({
-                                fecha: new Date(anoSel, mesSel - 1, 1),
-                                checkbox: cb
-                            });
-                        }
-                    });
-                    
-                    if (mesesSeleccionados.length === 0) {
-                        return;
-                    }
-                    
-                    // Ordenar por fecha
-                    mesesSeleccionados.sort(function(a, b) {
-                        return a.fecha - b.fecha;
-                    });
-                    
-                    // Encontrar el primer y último mes seleccionado
-                    const primerMes = mesesSeleccionados[0];
-                    const ultimoMes = mesesSeleccionados[mesesSeleccionados.length - 1];
-                    
-                    // Llenar todos los meses entre el primero y el último
-                    let fechaVerificacion = new Date(primerMes.fecha);
-                    fechaVerificacion.setMonth(fechaVerificacion.getMonth() + 1);
-                    
-                    while (fechaVerificacion < ultimoMes.fecha) {
-                        const mesVerificar = fechaVerificacion.getMonth() + 1;
-                        const anoVerificar = fechaVerificacion.getFullYear();
-                        
-                        const checkboxIntermedio = document.querySelector(
-                            `input[data-mes="${mesVerificar}"][data-ano="${anoVerificar}"][data-curso-id="${cursoId}"]`
-                        );
-                        
-                        if (checkboxIntermedio && !checkboxIntermedio.checked) {
-                            checkboxIntermedio.checked = true;
-                            mesesSeleccionadosAutomaticamente = true;
-                            
-                            // Actualizar estilo visual
-                            const containerIntermedio = checkboxIntermedio.closest('.mes-adeudado-checkbox-container');
-                            if (containerIntermedio) {
-                                actualizarEstiloMes(containerIntermedio, checkboxIntermedio);
-                            }
-                        }
-                        
-                        fechaVerificacion.setMonth(fechaVerificacion.getMonth() + 1);
-                    }
-                });
-                
-                return mesesSeleccionadosAutomaticamente;
-            }
+            requestAnimationFrame(function() {
+                actualizarEstadoMeses();
+            });
             
             // Actualizar estilos cuando cambia el checkbox directamente (por ejemplo, con "Seleccionar todos")
             mesesCheckboxes.forEach(function(checkbox) {
                 checkbox.addEventListener('change', function() {
-                    // Ignorar si este cambio fue causado por selección automática
-                    if (this.dataset.seleccionandoAutomaticamente === 'true') {
-                        return;
-                    }
+                    // Evitar recursión al deseleccionar posteriores en cascada
+                    if (window._deseleccionandoPosteriores) return;
                     
                     const container = document.querySelector(`[data-mes-checkbox-id="${this.id}"]`);
                     
-                    // Si se está seleccionando un mes, seleccionar automáticamente meses anteriores pendientes
                     if (this.checked) {
-                        // Ejecutar primero la selección de meses anteriores
-                        const mesesSeleccionadosAnteriores = seleccionarMesesAnterioresPendientes(this);
-                        
-                        // Luego llenar huecos entre meses seleccionados (esto puede agregar más meses)
-                        const mesesSeleccionadosHuecos = llenarHuecosMesesSeleccionados();
-                        
-                        // Si se seleccionaron meses automáticamente, actualizar resumen
-                        if (mesesSeleccionadosAnteriores || mesesSeleccionadosHuecos) {
-                            setTimeout(function() {
-                                if (typeof actualizarResumenMeses === 'function') {
-                                    actualizarResumenMeses();
-                                }
-                                // Volver a ejecutar para asegurar que todos los meses necesarios estén seleccionados
-                                actualizarEstadoMesesFuturos();
-                            }, 100);
+                        // Al seleccionar: si no debería poder (ej. por manipulación), revertir
+                        if (!puedeSeleccionarMes(this)) {
+                            this.checked = false;
                         }
                     } else {
-                        // Si se deselecciona, también llenar huecos (por si quedan meses seleccionados)
-                        llenarHuecosMesesSeleccionados();
+                        // Al deseleccionar: quitar todos los meses posteriores (dependen de este)
+                        const posteriores = getMesesPosteriores(this);
+                        if (posteriores.length > 0) {
+                            window._deseleccionandoPosteriores = true;
+                            posteriores.forEach(function(cb) {
+                                cb.checked = false;
+                                const c = document.querySelector(`[data-mes-checkbox-id="${cb.id}"]`);
+                                if (c) actualizarEstiloMes(c, cb);
+                            });
+                            window._deseleccionandoPosteriores = false;
+                        }
                     }
                     
                     if (container) {
                         actualizarEstiloMes(container, this);
                     }
                     
-                    // Actualizar estado de meses futuros después de cada cambio
-                    actualizarEstadoMesesFuturos();
+                    actualizarEstadoMeses();
+                    if (typeof actualizarResumenMeses === 'function') {
+                        actualizarResumenMeses();
+                    }
                 });
             });
             
@@ -1102,16 +831,7 @@
                             // No usar || porque 0 es un valor válido
                             const montoFinal = (data.monto !== null && data.monto !== undefined) ? data.monto : total;
                             
-                            // Actualizar precio final
-                            if (precioFinalElement) {
-                                const montoFormateado = montoFinal.toLocaleString('es-AR', {
-                                    minimumFractionDigits: 2,
-                                    maximumFractionDigits: 2
-                                });
-                                precioFinalElement.textContent = '$' + montoFormateado;
-                            }
-                            
-                            // Actualizar campo de monto sin disparar eventos (para evitar conflictos con listeners)
+                            // Actualizar campo Precio a Cobrar (input único) (para evitar conflictos con listeners)
                             if (campoMonto) {
                                 // Marcar que la actualización es programática
                                 campoMonto.dataset.updatingProgrammatically = 'true';
@@ -1144,9 +864,6 @@
                     // Si no hay meses seleccionados, mostrar $0.00
                     if (resumenMeses) {
                         resumenMeses.style.display = 'none';
-                    }
-                    if (precioFinalElement) {
-                        precioFinalElement.textContent = '$0,00';
                     }
                     if (campoMonto) {
                         campoMonto.dataset.updatingProgrammatically = 'true';
@@ -1212,10 +929,8 @@
                 modoPagoMultiple.addEventListener('change', function() {
                     modoMultipleActivo = this.checked;
                     if (this.checked) {
-                        // Habilitar checkboxes de meses
-                        mesesCheckboxes.forEach(function(checkbox) {
-                            checkbox.disabled = false;
-                        });
+                        // Aplicar regla de meses consecutivos (solo primer mes habilitado por curso)
+                        actualizarEstadoMeses();
                         // Mostrar y habilitar el select múltiple
                         if (selectMesMultiple) {
                             const colMes = selectMesMultiple.closest('.col-md-4');
@@ -1327,31 +1042,42 @@
                 });
             }
             
-            // Botones "Seleccionar todos"
+            // Botones "Seleccionar todos" - selecciona en orden cronológico (respeta regla: anterior debe estar seleccionado)
             document.querySelectorAll('.seleccionar-todos-btn').forEach(function(btn) {
                 btn.addEventListener('click', function() {
+                    if (!modoMultipleActivo) return;
                     const cursoNombre = this.dataset.curso;
                     const checkboxesCurso = Array.from(mesesCheckboxes).filter(function(cb) {
                         return cb.dataset.cursoNombre === cursoNombre;
                     });
                     
-                    const todosMarcados = checkboxesCurso.every(function(cb) { return cb.checked; });
+                    const porCurso = getMesesOrdenadosPorCurso();
+                    const cursoId = checkboxesCurso[0]?.dataset.cursoId;
+                    const ordenados = porCurso[cursoId] || [];
                     
-                    checkboxesCurso.forEach(function(checkbox) {
-                        if (modoMultipleActivo && !checkbox.disabled) {
-                            checkbox.checked = !todosMarcados;
-                            // Actualizar estilo visual
-                            const container = document.querySelector(`[data-mes-checkbox-id="${checkbox.id}"]`);
-                            if (container) {
-                                actualizarEstiloMes(container, checkbox);
+                    const todosMarcados = ordenados.every(function(m) { return m.checkbox.checked; });
+                    
+                    if (todosMarcados) {
+                        // Deseleccionar todos (en orden inverso)
+                        ordenados.slice().reverse().forEach(function(m) {
+                            m.checkbox.checked = false;
+                            const container = document.querySelector(`[data-mes-checkbox-id="${m.checkbox.id}"]`);
+                            if (container) actualizarEstiloMes(container, m.checkbox);
+                        });
+                    } else {
+                        // Seleccionar en orden: primero, segundo, etc. (respeta dependencia)
+                        ordenados.forEach(function(m) {
+                            if (!m.checkbox.disabled) {
+                                m.checkbox.checked = true;
+                                const container = document.querySelector(`[data-mes-checkbox-id="${m.checkbox.id}"]`);
+                                if (container) actualizarEstiloMes(container, m.checkbox);
+                                actualizarEstadoMeses(); // habilitar el siguiente
                             }
-                        }
-                    });
-                    
-                    if (modoMultipleActivo) {
-                        // No sincronizar con select en modo múltiple
-                        actualizarResumenMeses();
+                        });
                     }
+                    
+                    actualizarEstadoMeses();
+                    if (typeof actualizarResumenMeses === 'function') actualizarResumenMeses();
                 });
             });
             
@@ -1400,12 +1126,9 @@
                 }
             }
             
-            // Inicializar estado al final: habilitar checkboxes si hay meses adeudados
+            // Inicializar estado al final: aplicar regla de meses consecutivos (solo primer mes habilitado por curso)
             if (hayMesesAdeudados) {
-                // Habilitar checkboxes automáticamente
-                mesesCheckboxes.forEach(function(checkbox) {
-                    checkbox.disabled = false;
-                });
+                actualizarEstadoMeses();
                 
                 // Configurar select múltiple
                 if (selectMesMultiple) {

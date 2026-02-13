@@ -69,7 +69,7 @@
                                             {% for profeInner in todosLosProfes %}
                                                 {% if profeInner.id != profe.id %}
                                                     <li >
-                                                        <a href="{{ path('falta_profe', {'id': profe.id, 'remplazo': profeInner.id, 'fecha': fecha, 'curso': curso.id}) }}" class="dropdown-item">{{ profeInner.apellido }}</a>
+                                                        <a href="{{ path('falta_profe', {'id': profe.id, 'remplazo': profeInner.id, 'fecha': fecha, 'curso': curso.id}) }}" class="dropdown-item">{{ profeInner.apellido }}, {{ profeInner.nombre }}</a>
                                                     </li>
                                                 {% endif %}
                                             {% endfor %}

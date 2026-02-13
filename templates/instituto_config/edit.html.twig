@@ -581,13 +581,12 @@
     </div>
 
 <script>
-    // Manejar hash en URL para activar pestaña específica
+    // Manejar hash en URL para activar pestaña específica (después de guardar, redirige con #edit-XXX)
     document.addEventListener('DOMContentLoaded', function() {
-        // Activar pestaña según hash
         const hash = window.location.hash;
         if (hash) {
-            const tabId = hash.replace('#', '');
-            const tabElement = document.getElementById('edit-' + tabId + '-tab');
+            const tabId = hash.replace('#', ''); // ej: "edit-general", "edit-pagos", etc.
+            const tabElement = document.getElementById(tabId + '-tab');
             if (tabElement) {
                 const tab = new bootstrap.Tab(tabElement);
                 tab.show();

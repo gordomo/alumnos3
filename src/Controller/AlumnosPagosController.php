@@ -67,8 +67,45 @@ class AlumnosPagosController extends AbstractController
         $metodoSelected = $request->get('metodoPago', '');
         $fechaDesde = $request->get('fechaDesde', '');
         $fechaHasta = $request->get('fechaHasta', '');
+        $rango = $request->get('rango', '');
         $sort = $request->get('sort', 'fecha');
         $order = $request->get('order', 'desc');
+
+        // Calcular rango de fechas según el filtro "rango" (semana, mes, año)
+        if ($rango && in_array($rango, ['semana', 'mes', 'ano'], true)) {
+            $fechaRefInput = $fechaDesde ?: (new \DateTime())->format('Y-m-d');
+            try {
+                $fechaRef = new \DateTime($fechaRefInput);
+                if ($rango === 'semana') {
+                    // Semana: lunes a domingo de la semana que contiene la fecha seleccionada
+                    $diaSemana = (int) $fechaRef->format('N'); // 1=lunes, 7=domingo
+                    $fechaDesdeObj = clone $fechaRef;
+                    $fechaDesdeObj->modify('-' . ($diaSemana - 1) . ' days')->setTime(0, 0, 0);
+                    $fechaHastaObj = clone $fechaDesdeObj;
+                    $fechaHastaObj->modify('+6 days')->setTime(23, 59, 59);
+                    $fechaDesde = $fechaDesdeObj->format('Y-m-d');
+                    $fechaHasta = $fechaHastaObj->format('Y-m-d');
+                } elseif ($rango === 'mes') {
+                    // Mes completo tomando como referencia la fecha seleccionada
+                    $fechaDesdeObj = clone $fechaRef;
+                    $fechaDesdeObj->modify('first day of this month')->setTime(0, 0, 0);
+                    $fechaHastaObj = clone $fechaRef;
+                    $fechaHastaObj->modify('last day of this month')->setTime(23, 59, 59);
+                    $fechaDesde = $fechaDesdeObj->format('Y-m-d');
+                    $fechaHasta = $fechaHastaObj->format('Y-m-d');
+                } elseif ($rango === 'ano') {
+                    // Año completo tomando como referencia la fecha seleccionada
+                    $fechaDesdeObj = clone $fechaRef;
+                    $fechaDesdeObj->modify('first day of january')->setTime(0, 0, 0);
+                    $fechaHastaObj = clone $fechaRef;
+                    $fechaHastaObj->modify('last day of december')->setTime(23, 59, 59);
+                    $fechaDesde = $fechaDesdeObj->format('Y-m-d');
+                    $fechaHasta = $fechaHastaObj->format('Y-m-d');
+                }
+            } catch (\Exception $e) {
+                // Si hay error al parsear, mantener fechas originales
+            }
+        }
         
         // Obtener el ID del alumno del formulario (prioridad) o de la URL
         // Priorizar el parámetro del formulario sobre el de la URL
@@ -292,6 +329,26 @@ class AlumnosPagosController extends AbstractController
             $qbDeudas->andWhere('c.id = :cursoDeuda')
                      ->setParameter('cursoDeuda', $cursoSelected);
         }
+
+        // Filtro por período (mes/año) cuando rango y fecha están configurados
+        if ($rango && in_array($rango, ['semana', 'mes', 'ano'], true) && $fechaDesde) {
+            try {
+                $fechaRef = new \DateTime($fechaDesde);
+                if ($rango === 'mes' || $rango === 'semana') {
+                    $mesDebt = (int) $fechaRef->format('n');
+                    $anoDebt = (int) $fechaRef->format('Y');
+                    $qbDeudas->andWhere('d.mes = :mesDebt AND d.ano = :anoDebt')
+                             ->setParameter('mesDebt', $mesDebt)
+                             ->setParameter('anoDebt', $anoDebt);
+                } elseif ($rango === 'ano') {
+                    $anoDebt = (int) $fechaRef->format('Y');
+                    $qbDeudas->andWhere('d.ano = :anoDebt')
+                             ->setParameter('anoDebt', $anoDebt);
+                }
+            } catch (\Exception $e) {
+                // Si hay error al parsear, no aplicar filtro
+            }
+        }
         
         // Ordenar por año y mes (más antiguas primero)
         $qbDeudas->orderBy('d.ano', 'ASC')
@@ -356,6 +413,7 @@ class AlumnosPagosController extends AbstractController
             'metodoSelected' => $metodoSelected,
             'fechaDesde' => $fechaDesde,
             'fechaHasta' => $fechaHasta,
+            'rango' => $rango,
             'busqueda' => $busqueda,
             'sort' => $sort,
             'order' => $order,
@@ -409,40 +467,39 @@ class AlumnosPagosController extends AbstractController
             return $a->getDiaVencimiento() <=> $b->getDiaVencimiento();
         });
 
-        // Si hay meses adeudados (deudas anteriores)
-        if (!empty($mesesAdeudados)) {
+        // Determinar si hay meses estrictamente anteriores (no incluye el mes actual)
+        $tieneMesesAnteriores = false;
+        foreach ($mesesAdeudados as $mesData) {
+            $mes = is_array($mesData) ? ($mesData['mes'] ?? null) : ($mesData->mes ?? null);
+            $ano = is_array($mesData) ? ($mesData['ano'] ?? null) : ($mesData->ano ?? null);
+            if ($mes !== null && $ano !== null && ($ano < $anoActual || ($ano == $anoActual && $mes < $mesActual))) {
+                $tieneMesesAnteriores = true;
+                break;
+            }
+        }
+
+        // Solo aplicar interés máximo cuando hay meses anteriores vencidos (ej: pagando enero en febrero)
+        // Para el mes actual vencido (ej: febrero pagado el día 13, entre día 10 y 20), usar el escalón correspondiente
+        if ($tieneMesesAnteriores) {
             // Para deudas de meses anteriores, aplicar el máximo interés configurado
             $maxInteres = 0;
-            $vencimientoAplicado = null;
-            
             foreach ($vencimientosOrdenados as $vencimiento) {
                 if ($vencimiento->getPorcentajeInteres() > $maxInteres) {
                     $maxInteres = $vencimiento->getPorcentajeInteres();
-                    $vencimientoAplicado = $vencimiento;
                 }
             }
-            
             $porcentajeInteres = $maxInteres;
             $motivoInteres = "Máximo interés aplicado por deudas anteriores (" . count($mesesAdeudados) . " meses)";
-        } 
-        // Si es para el mes actual
-        else {
-            // Determinar el vencimiento aplicable según el día actual
+        } else {
+            // Mes actual o solo meses futuros: determinar escalón según el día de pago
             $vencimientoAplicado = null;
-            
-            // Recorrer vencimientos ordenados por día (ascendente)
             foreach ($vencimientosOrdenados as $vencimiento) {
-                // Si el día actual ya pasó este vencimiento
                 if ($diaActual > $vencimiento->getDiaVencimiento()) {
                     $vencimientoAplicado = $vencimiento;
-                    // Seguimos iterando para encontrar el último vencimiento aplicable
                 } else {
-                    // Si encontramos un vencimiento que aún no pasó, salimos del bucle
                     break;
                 }
             }
-            
-            // Si existe un vencimiento aplicable, usamos su interés
             if ($vencimientoAplicado) {
                 $porcentajeInteres = $vencimientoAplicado->getPorcentajeInteres();
                 $motivoInteres = "Interés del " . $porcentajeInteres . "% por pago después del día " . $vencimientoAplicado->getDiaVencimiento();
@@ -552,16 +609,21 @@ class AlumnosPagosController extends AbstractController
     public function new(Request $request, AlumnoRepository $alumnoRepository, DescuentoPromocionalRepository $descuentoPromocionalRepository): Response
     {
         $alumnoId = $request->query->get('id');
-        if($alumnoId){
+        if ($alumnoId) {
             $alumno = $alumnoRepository->find($alumnoId);
         } else {
-            $alumno = $alumnoRepository->findOneBy(['instituto' => $this->getUser()->getInstituto()]);
+            // Sin id en URL: no preseleccionar alumno; el usuario debe seleccionar manualmente
+            $alumno = null;
         }
         $alumnosPago = new AlumnosPagos();
         $alumnosPago->setAlumno($alumno);
         $alumnosPago->setFecha(new \DateTime());
         $alumnosPago->setMetodoPago('Efectivo');
 
+        $mesesAdeudados = [];
+        $ordenCalculo = 'interes_primero';
+
+        if ($alumno) {
         // Refrescar la entidad del alumno para asegurar que la relación de deudas esté actualizada
         $this->entityManager->refresh($alumno);
 
@@ -785,6 +847,18 @@ class AlumnosPagosController extends AbstractController
         $cursos = [];
         foreach ($cursosHistoricos as $cursoHistorico) {
             $cursos[] = $cursoHistorico->getCurso();
+        }
+        } else {
+            // Sin alumno: valores por defecto para el formulario
+            $instituto = $this->getUser()->getInstituto();
+            $vencimientos = $instituto->getVencimientos();
+            $configuracion = $instituto->getConfiguracion();
+            $descuentosPromocionales = $descuentoPromocionalRepository->findActivosByConfiguracion($configuracion);
+            $descuentosPromocionalesSeleccionados = [];
+            $cursoSeleccionado = null;
+            $calculoMonto = null;
+            $cursos = [];
+            $ordenCalculo = $configuracion ? $configuracion->getOrdenCalculoInteresesDescuentos() : 'interes_primero';
         }
 
         // Crear el formulario
@@ -1105,9 +1179,11 @@ class AlumnosPagosController extends AbstractController
                     }
                     
                     // Distribuir el monto total proporcionalmente entre los meses
+                    // Usar el monto ingresado por el usuario (Precio a Cobrar), no el calculado
+                    $montoUsuario = $alumnosPago->getMonto() > 0 ? $alumnosPago->getMonto() : $montoTotalFinal;
                     $pagosCreados = 0;
                     $errores = [];
-                    
+
                     foreach ($mesesInfo as $mesInfo) {
                         // Buscar la deuda correspondiente a este mes/año/curso
                         $deuda = $this->entityManager->getRepository(\App\Entity\DeudaAlumno::class)
@@ -1117,10 +1193,10 @@ class AlumnosPagosController extends AbstractController
                                 'mes' => $mesInfo['mes'],
                                 'ano' => $mesInfo['ano']
                             ]);
-                        
+
                         // Calcular monto proporcional para este mes
                         $proporcion = $mesInfo['montoBase'] / $montoTotalBase;
-                        $montoMes = $montoTotalFinal * $proporcion;
+                        $montoMes = $montoUsuario * $proporcion;
                         
                         // Crear nuevo pago
                         $nuevoPago = new AlumnosPagos();
@@ -1229,20 +1305,9 @@ class AlumnosPagosController extends AbstractController
                             $descuentosPromocionalesIds = [];
                         }
                         
-                        // Recalcular el monto con los descuentos promocionales seleccionados
-                        if ($alumnosPago->getCurso()) {
-                            $mesesAdeudadosCurso = $this->historialCursosService->verificarMesesAdeudadosPorCurso($alumno, $alumnosPago->getCurso());
-                            $descuentosPromocionalesSeleccionados = [];
-                            foreach ($descuentosPromocionalesIds as $id) {
-                                $descuento = $descuentoPromocionalRepository->find($id);
-                                if ($descuento && $descuento->getActivo()) {
-                                    $descuentosPromocionalesSeleccionados[] = $descuento;
-                                }
-                            }
-                            $calculoMonto = $this->calcularMonto($alumno, $alumnosPago->getCurso(), $vencimientos, $mesesAdeudadosCurso, $descuentosPromocionalesSeleccionados);
-                            $alumnosPago->setMonto($calculoMonto['monto']);
-                        }
-                        
+                        // No sobrescribir el monto: usar el valor ingresado por el usuario en "Precio a Cobrar"
+                        // ($alumnosPago ya tiene el monto del formulario vía handleRequest)
+
                     // Verificar si ya existe un pago para este alumno, curso, mes y año
                     $pagoExistente = $this->entityManager->getRepository(AlumnosPagos::class)->findOneBy([
                         'alumno' => $alumnosPago->getAlumno(),
@@ -1319,9 +1384,11 @@ class AlumnosPagosController extends AbstractController
             }
         }
 
-        // Obtener configuración del orden de cálculo
-        $configuracion = $alumno->getInstituto()->getConfiguracion();
-        $ordenCalculo = $configuracion ? $configuracion->getOrdenCalculoInteresesDescuentos() : 'interes_primero';
+        // Obtener configuración del orden de cálculo (ordenCalculo ya fue asignado en el if/else de alumno)
+        if ($alumno) {
+            $configuracion = $alumno->getInstituto()->getConfiguracion();
+            $ordenCalculo = $configuracion ? $configuracion->getOrdenCalculoInteresesDescuentos() : 'interes_primero';
+        }
 
         return $this->render('alumnos_pagos/new.html.twig', [
             'form' => $form->createView(),

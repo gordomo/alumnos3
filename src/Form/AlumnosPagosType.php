@@ -11,6 +11,7 @@ use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -44,6 +45,7 @@ class AlumnosPagosType extends AbstractType
                 'choice_label' => function(Alumno $alumno) {
                     return  $alumno->getApellido() . ' ' . $alumno->getNombre();
                 },
+                'placeholder' => 'Seleccione un alumno...',
                 'label' => 'Alumno',
                 'label_attr' => ['class' => 'form-label'],
                 'required' => true,
@@ -140,11 +142,11 @@ class AlumnosPagosType extends AbstractType
                     new NotBlank(['message' => 'El método de pago es obligatorio'])
                 ]
             ])
-            ->add('observacion', TextType::class, [
+            ->add('observacion', TextareaType::class, [
                 'label' => 'Observación',
                 'label_attr' => ['class' => 'form-label'],
                 'required' => false,
-                'attr' => ['class' => 'form-control']
+                'attr' => ['class' => 'form-control', 'rows' => 4, 'placeholder' => 'Notas opcionales sobre el pago...']
             ]);
 
         

@@ -47,13 +47,15 @@
                     {% endfor %}
                     <th scope="col" class="border-start text-center">Total Faltas</th>
                     <th scope="col" class="border-start text-center">Total Horas</th>
-                    <th scope="col" class="border-start text-center">Total Horas</th>
+                    <th scope="col" class="border-start text-center">Total Horas Reemplazo</th>
+                    <th scope="col" class="border-start text-center">Total Precio</th>
                 </tr>
             </thead>
             <tbody>
                 {% for profeId, asistencia in asistencias %}
                     {% set totalFaltas = 0 %}
                     {% set totalHoras = 0 %}
+                    {% set totalHorasReemplazo = 0 %}
                     {% if profesoresInfo[profeId] is defined %}
                         <tr scope="row">
                             <th style="min-width: 200px; width: 200px; white-space: nowrap;">
@@ -72,7 +74,7 @@
                                                         {% set totalFaltas = totalFaltas + asis['horas'] %}
                                                     {% elseif asis["reemplazo"] is defined %}
                                                         <i style="font-size: 25px; color: green" class="bi bi-check" data-toggle="tooltip" title="{{ asis["reemplazo"]['reemplazoA'] }}"></i>
-                                                        {% set totalHoras = totalHoras + asis['reemplazo']['horas'] %}
+                                                        {% set totalHorasReemplazo = totalHorasReemplazo + asis['reemplazo']['horas'] %}
                                                     {% else %}
                                                         <i style="font-size: 25px; color: green" class="bi bi-check" data-toggle="tooltip" title="{{ asis['curso'] }}"></i>
                                                         {% set totalHoras = totalHoras + asis['horas'] %}
@@ -100,8 +102,22 @@
                                 {% endif %}
                             </td>
                             <td class="border-start text-center">
+                                {% set totalReemplazoRedondeadas = totalHorasReemplazo | split('.') %}
+                                {% if totalReemplazoRedondeadas[1] is defined %}
+                                    {% if totalReemplazoRedondeadas[1] == 25 %}
+                                        {{ totalReemplazoRedondeadas[0] }}:15hs
+                                    {% elseif totalReemplazoRedondeadas[1] == 5 %}
+                                        {{ totalReemplazoRedondeadas[0] }}:30hs
+                                    {% elseif totalReemplazoRedondeadas[1] == 75 %}
+                                        {{ totalReemplazoRedondeadas[0] }}:45hs
+                                    {% endif %}
+                                {% else %}
+                                    {{ totalReemplazoRedondeadas[0] }}:00hs
+                                {% endif %}
+                            </td>
+                            <td class="border-start text-center">
                                 {% if asistencia['precioHora'] is defined %}
-                                    ${{ totalHoras * asistencia['precioHora'] }}
+                                    ${{ (totalHoras + totalHorasReemplazo) * asistencia['precioHora'] }}
                                 {% endif %}
                             </td>
                         </tr>

@@ -206,11 +206,13 @@ class ProfesorController extends AbstractController
             foreach ($faltas as $falta) {
                 $profeFalta = $falta->getProfesor();
                 $profeFaltaId = $profeFalta->getId();
-                $reemplazante = $profesorRepository->find($falta->getProfesorRemplazante());
+                $reemplazanteIdRaw = $falta->getProfesorRemplazante();
+                $reemplazante = ($reemplazanteIdRaw && $reemplazanteIdRaw > 0) ? $profesorRepository->find($reemplazanteIdRaw) : null;
                 $reemplazanteId = $reemplazante ? $reemplazante->getId() : null;
+                $nombreReemplazante = $reemplazante ? ($reemplazante->getApellido() . ', ' . $reemplazante->getNombre()) : 'Sin Reemplazo';
                 $curso = $cursoRepository->find($falta->getCurso());
                 $nombreCurso = (!empty($curso)) ? $curso->getNombre() : 'El curso fue eliminado';
-                $faltaArr[] = ["falta" => true, "remplazante" => $reemplazante ? ($reemplazante->getApellido() . ', ' . $reemplazante->getNombre()) : 'Sin Reemplazo', "curso" => $nombreCurso, 'horas' => $curso->getDuracion()];
+                $faltaArr[] = ["falta" => true, "remplazante" => $nombreReemplazante, "curso" => $nombreCurso, 'horas' => $curso->getDuracion()];
 
                 if ($reemplazante) {
                     $reemplazantes[$reemplazanteId][$fecha][]['reemplazo'] = ["reemplazoA" =>"Reemplazó a " . $profeFalta->getApellido() . ", " . $profeFalta->getNombre() . " en "  . $cursoRepository->find($falta->getCurso())->getNombre(), 'horas' => $curso->getDuracion()];

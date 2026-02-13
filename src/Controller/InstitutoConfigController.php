@@ -126,9 +126,11 @@ class InstitutoConfigController extends AbstractController
                     foreach ($errors as $error) {
                         $this->addFlash('danger', $error->getMessage());
                     }
+                    return $this->redirectToRoute('instituto_config_edit', ['_fragment' => 'edit-general']);
                     }
                 } catch (\Exception $e) {
                     $this->addFlash('danger', 'Ocurrió un error al guardar los cambios: ' . $e->getMessage());
+                    return $this->redirectToRoute('instituto_config_edit', ['_fragment' => 'edit-general']);
                 }
                 
             } elseif ($section === 'descuentos') {
@@ -155,9 +157,11 @@ class InstitutoConfigController extends AbstractController
                     foreach ($errorsConfig as $error) {
                         $this->addFlash('danger', $error->getMessage());
                     }
+                    return $this->redirectToRoute('instituto_config_edit', ['_fragment' => 'edit-descuentos']);
                 }
             } catch (\Exception $e) {
                 $this->addFlash('danger', 'Ocurrió un error al guardar los cambios: ' . $e->getMessage());
+                return $this->redirectToRoute('instituto_config_edit', ['_fragment' => 'edit-descuentos']);
                 }
                 
             } elseif ($section === 'notificaciones') {
@@ -179,9 +183,11 @@ class InstitutoConfigController extends AbstractController
                         foreach ($errorsConfig as $error) {
                             $this->addFlash('danger', $error->getMessage());
                         }
+                        return $this->redirectToRoute('instituto_config_edit', ['_fragment' => 'edit-notificaciones']);
                     }
                 } catch (\Exception $e) {
                     $this->addFlash('danger', 'Ocurrió un error al guardar los cambios: ' . $e->getMessage());
+                    return $this->redirectToRoute('instituto_config_edit', ['_fragment' => 'edit-notificaciones']);
                 }
             }
         }

@@ -19,15 +19,109 @@ final class Version20251215181352 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
-        // this up() migration is auto-generated, please modify it to your needs
-        $this->addSql('CREATE TABLE billing_invoice (id INT AUTO_INCREMENT NOT NULL, instituto_id INT NOT NULL, period_year INT NOT NULL, period_month INT NOT NULL, active_students_count INT NOT NULL, price_per_student NUMERIC(10, 2) NOT NULL, total_amount NUMERIC(10, 2) NOT NULL, status VARCHAR(20) NOT NULL, paid_at DATETIME DEFAULT NULL, notes LONGTEXT DEFAULT NULL, created_at DATETIME NOT NULL, updated_at DATETIME NOT NULL, INDEX IDX_FB4B9C936C6EF28 (instituto_id), INDEX idx_billing_period (instituto_id, period_year, period_month), INDEX idx_billing_status (status), INDEX idx_created_at (created_at), PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB');
-        $this->addSql('ALTER TABLE billing_invoice ADD CONSTRAINT FK_FB4B9C936C6EF28 FOREIGN KEY (instituto_id) REFERENCES instituto (id)');
-        $this->addSql('ALTER TABLE token_balance DROP FOREIGN KEY FK_42FB067D6C6EF28');
-        $this->addSql('ALTER TABLE token_transaction DROP FOREIGN KEY FK_5E06574BA76ED395');
-        $this->addSql('ALTER TABLE token_transaction DROP FOREIGN KEY FK_5E06574B6C6EF28');
-        $this->addSql('DROP TABLE token_action');
-        $this->addSql('DROP TABLE token_balance');
-        $this->addSql('DROP TABLE token_transaction');
+        // Crear tabla billing_invoice solo si no existe
+        $this->addSql("
+            SET @table_exists = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES 
+                WHERE TABLE_SCHEMA = DATABASE() 
+                AND TABLE_NAME = 'billing_invoice');
+            SET @sqlstmt = IF(@table_exists = 0, 
+                'CREATE TABLE billing_invoice (id INT AUTO_INCREMENT NOT NULL, instituto_id INT NOT NULL, period_year INT NOT NULL, period_month INT NOT NULL, active_students_count INT NOT NULL, price_per_student NUMERIC(10, 2) NOT NULL, total_amount NUMERIC(10, 2) NOT NULL, status VARCHAR(20) NOT NULL, paid_at DATETIME DEFAULT NULL, notes LONGTEXT DEFAULT NULL, created_at DATETIME NOT NULL, updated_at DATETIME NOT NULL, INDEX IDX_FB4B9C936C6EF28 (instituto_id), INDEX idx_billing_period (instituto_id, period_year, period_month), INDEX idx_billing_status (status), INDEX idx_created_at (created_at), PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB', 
+                'SELECT 1');
+            PREPARE stmt FROM @sqlstmt;
+            EXECUTE stmt;
+            DEALLOCATE PREPARE stmt;
+        ");
+        
+        // Agregar foreign key solo si no existe
+        $this->addSql("
+            SET @fk_exists = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS 
+                WHERE TABLE_SCHEMA = DATABASE() 
+                AND TABLE_NAME = 'billing_invoice' 
+                AND CONSTRAINT_NAME = 'FK_FB4B9C936C6EF28');
+            SET @sqlstmt = IF(@fk_exists = 0, 
+                'ALTER TABLE billing_invoice ADD CONSTRAINT FK_FB4B9C936C6EF28 FOREIGN KEY (instituto_id) REFERENCES instituto (id)', 
+                'SELECT 1');
+            PREPARE stmt FROM @sqlstmt;
+            EXECUTE stmt;
+            DEALLOCATE PREPARE stmt;
+        ");
+        
+        // Eliminar foreign keys de token_balance solo si existen
+        $this->addSql("
+            SET @fk_exists = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS 
+                WHERE TABLE_SCHEMA = DATABASE() 
+                AND TABLE_NAME = 'token_balance' 
+                AND CONSTRAINT_NAME = 'FK_42FB067D6C6EF28');
+            SET @sqlstmt = IF(@fk_exists > 0, 
+                'ALTER TABLE token_balance DROP FOREIGN KEY FK_42FB067D6C6EF28', 
+                'SELECT 1');
+            PREPARE stmt FROM @sqlstmt;
+            EXECUTE stmt;
+            DEALLOCATE PREPARE stmt;
+        ");
+        
+        $this->addSql("
+            SET @fk_exists = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS 
+                WHERE TABLE_SCHEMA = DATABASE() 
+                AND TABLE_NAME = 'token_transaction' 
+                AND CONSTRAINT_NAME = 'FK_5E06574BA76ED395');
+            SET @sqlstmt = IF(@fk_exists > 0, 
+                'ALTER TABLE token_transaction DROP FOREIGN KEY FK_5E06574BA76ED395', 
+                'SELECT 1');
+            PREPARE stmt FROM @sqlstmt;
+            EXECUTE stmt;
+            DEALLOCATE PREPARE stmt;
+        ");
+        
+        $this->addSql("
+            SET @fk_exists = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS 
+                WHERE TABLE_SCHEMA = DATABASE() 
+                AND TABLE_NAME = 'token_transaction' 
+                AND CONSTRAINT_NAME = 'FK_5E06574B6C6EF28');
+            SET @sqlstmt = IF(@fk_exists > 0, 
+                'ALTER TABLE token_transaction DROP FOREIGN KEY FK_5E06574B6C6EF28', 
+                'SELECT 1');
+            PREPARE stmt FROM @sqlstmt;
+            EXECUTE stmt;
+            DEALLOCATE PREPARE stmt;
+        ");
+        
+        // Eliminar tablas de tokens solo si existen
+        $this->addSql("
+            SET @table_exists = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES 
+                WHERE TABLE_SCHEMA = DATABASE() 
+                AND TABLE_NAME = 'token_action');
+            SET @sqlstmt = IF(@table_exists > 0, 
+                'DROP TABLE token_action', 
+                'SELECT 1');
+            PREPARE stmt FROM @sqlstmt;
+            EXECUTE stmt;
+            DEALLOCATE PREPARE stmt;
+        ");
+        
+        $this->addSql("
+            SET @table_exists = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES 
+                WHERE TABLE_SCHEMA = DATABASE() 
+                AND TABLE_NAME = 'token_balance');
+            SET @sqlstmt = IF(@table_exists > 0, 
+                'DROP TABLE token_balance', 
+                'SELECT 1');
+            PREPARE stmt FROM @sqlstmt;
+            EXECUTE stmt;
+            DEALLOCATE PREPARE stmt;
+        ");
+        
+        $this->addSql("
+            SET @table_exists = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES 
+                WHERE TABLE_SCHEMA = DATABASE() 
+                AND TABLE_NAME = 'token_transaction');
+            SET @sqlstmt = IF(@table_exists > 0, 
+                'DROP TABLE token_transaction', 
+                'SELECT 1');
+            PREPARE stmt FROM @sqlstmt;
+            EXECUTE stmt;
+            DEALLOCATE PREPARE stmt;
+        ");
     }
 
     public function down(Schema $schema): void
