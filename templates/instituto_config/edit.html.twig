@@ -581,16 +581,24 @@
     </div>
 
 <script>
-    // Manejar hash en URL para activar pestaña específica (después de guardar, redirige con #edit-XXX)
+    // Activar la pestaña según ?tab=xxx (desde "Editar Configuración") o #edit-xxx (después de guardar)
     document.addEventListener('DOMContentLoaded', function() {
-        const hash = window.location.hash;
-        if (hash) {
-            const tabId = hash.replace('#', ''); // ej: "edit-general", "edit-pagos", etc.
-            const tabElement = document.getElementById(tabId + '-tab');
-            if (tabElement) {
-                const tab = new bootstrap.Tab(tabElement);
-                tab.show();
-            }
+        let tabElement = null;
+        const params = new URLSearchParams(window.location.search);
+        const tabParam = params.get('tab');
+        if (tabParam) {
+            // ?tab=descuentos -> edit-descuentos-tab
+            const tabIdMap = { general: 'edit-general', pagos: 'edit-pagos', descuentos: 'edit-descuentos', notificaciones: 'edit-notificaciones' };
+            const tabId = tabIdMap[tabParam] || 'edit-general';
+            tabElement = document.getElementById(tabId + '-tab');
+        }
+        if (!tabElement && window.location.hash) {
+            const hash = window.location.hash.replace('#', '');
+            tabElement = document.getElementById(hash + '-tab');
+        }
+        if (tabElement) {
+            const tab = new bootstrap.Tab(tabElement);
+            tab.show();
         }
     });
 </script>

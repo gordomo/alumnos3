@@ -28,7 +28,7 @@
                 <div class="card shadow-sm">
                     <div class="card-body">
                         <div class="text-end mb-4">
-                            <a href="{{ path('instituto_config_edit') }}" class="btn btn-primary">
+                            <a href="{{ path('instituto_config_edit') }}" id="btn-editar-config" class="btn btn-primary">
                                 <i class="bi bi-pencil"></i> Editar Configuración
                             </a>
                         </div>
@@ -320,4 +320,21 @@
     </div>
     </div>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const btnEditar = document.getElementById('btn-editar-config');
+            if (btnEditar) {
+                btnEditar.addEventListener('click', function(e) {
+                    const tabActivo = document.querySelector('#configTabs .nav-link.active');
+                    if (tabActivo) {
+                        const target = tabActivo.getAttribute('data-bs-target');
+                        const tabId = target ? target.replace('#', '') : 'general';
+                        const url = new URL(btnEditar.href);
+                        url.searchParams.set('tab', tabId);
+                        btnEditar.href = url.toString();
+                    }
+                });
+            }
+        });
+    </script>
 {% endblock %} 
