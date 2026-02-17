@@ -81,6 +81,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // Función para verificar si un enlace es de navegación
     function isNavigationLink(link) {
         
+        // No mostrar loading para enlaces solo con hash (scroll en la misma página, no hay navegación real)
+        const href = link.getAttribute('href');
+        if (href && href.charAt(0) === '#') {
+            return false;
+        }
+        
         // No mostrar loading para enlaces que abren en nueva pestaña
         if (link.target === '_blank') return false;
         

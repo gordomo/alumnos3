@@ -22,12 +22,15 @@
         {% endif %}
         <div id="page-content-wrapper">
             <div class="container-fluid p-0">
+                {% if app.user %}
                 <div class="row g-0">
                     <div class="col-12">
                         <h1 class="title">
-                        {% block panelTitle %}{% endblock %}</h1>
+                            {% block panelTitle %}{% endblock %}
+                        </h1>
                     </div>
                 </div>
+                {% endif %}
                 <div class="row">
                     <div class="container">
                         {% block body %}{% endblock %}
