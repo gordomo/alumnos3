@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="teal" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#5c6f6c"/>
+      <stop offset="100%" style="stop-color:#849d9a"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#d4a373"/>
+      <stop offset="100%" style="stop-color:#c49262"/>
+    </linearGradient>
+  </defs>
+  <!-- Base: cuadrado/documento (teal) -->
+  <rect x="8" y="28" width="48" height="28" rx="4" fill="url(#teal)"/>
+  <rect x="16" y="36" width="32" height="2" rx="1" fill="rgba(255,255,255,0.3)"/>
+  <rect x="16" y="42" width="24" height="2" rx="1" fill="rgba(255,255,255,0.2)"/>
+  <!-- Cubo isométrico (accent) - bloque de construcción -->
+  <path d="M20 20 L38 8 L38 28 L20 40 Z" fill="url(#accent)"/>
+  <path d="M38 8 L56 20 L56 40 L38 28 Z" fill="rgba(196,146,98,0.85)"/>
+  <path d="M20 20 L38 8 L56 20 L38 28 Z" fill="rgba(212,163,115,0.95)"/>
+  <!-- Engranaje (teal) - builder -->
+  <g transform="translate(48, 20)">
+    <circle r="12" fill="url(#teal)"/>
+    <g fill="url(#teal)">
+      <rect x="-2" y="-14" width="4" height="6"/>
+      <rect x="-2" y="-14" width="4" height="6" transform="rotate(45)"/>
+      <rect x="-2" y="-14" width="4" height="6" transform="rotate(90)"/>
+      <rect x="-2" y="-14" width="4" height="6" transform="rotate(135)"/>
+      <rect x="-2" y="-14" width="4" height="6" transform="rotate(180)"/>
+      <rect x="-2" y="-14" width="4" height="6" transform="rotate(225)"/>
+      <rect x="-2" y="-14" width="4" height="6" transform="rotate(270)"/>
+      <rect x="-2" y="-14" width="4" height="6" transform="rotate(315)"/>
+    </g>
+    <circle r="5" fill="white"/>
+  </g>
+</svg>

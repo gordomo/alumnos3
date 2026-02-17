@@ -81,9 +81,25 @@ document.addEventListener('DOMContentLoaded', function() {
     // Función para verificar si un enlace es de navegación
     function isNavigationLink(link) {
         
-        // No mostrar loading para enlaces solo con hash (scroll en la misma página, no hay navegación real)
+        // No mostrar loading para enlaces de ancla/hash en la misma página
         const href = link.getAttribute('href');
         if (href && href.charAt(0) === '#') {
+            return false;
+        }
+
+        // También cubrir hashes absolutos: /ruta#seccion o https://sitio/ruta#seccion
+        // si apuntan a la misma página actual, no deben activar loading
+        if (href && href.includes('#')) {
+            const currentUrl = new URL(window.location.href);
+            const linkUrl = new URL(link.href, window.location.origin);
+            const samePage = currentUrl.origin === linkUrl.origin && currentUrl.pathname === linkUrl.pathname;
+            if (samePage && linkUrl.hash) {
+                return false;
+            }
+        }
+
+        // Si el link ya tiene hash en su URL resuelta y solo cambia sección, tampoco cargar
+        if (link.hash && link.pathname === window.location.pathname && link.origin === window.location.origin) {
             return false;
         }
         

@@ -80,6 +80,115 @@
             padding: 2rem;
         }
 
+        /* Header + Hero Redesign */
+        .landing-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 0.85rem 1rem;
+            margin-bottom: 1.25rem;
+            border-radius: 16px;
+            background: rgba(16, 43, 41, 0.45);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 14px 36px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .landing-header-brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.85rem;
+            text-decoration: none;
+            color: white;
+            min-width: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .landing-header-brand:hover {
+            color: white;
+            text-decoration: none;
+            opacity: 0.92;
+        }
+
+        .landing-header-logo {
+            display: inline-flex;
+            flex-shrink: 0;
+            padding: 0.35rem;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.5);
+        }
+
+        .landing-header-logo svg {
+            width: 42px;
+            height: 42px;
+        }
+
+        .landing-header-text {
+            display: flex;
+            flex-direction: column;
+            gap: 0.1rem;
+            min-width: 0;
+        }
+
+        .landing-header-name {
+            font-size: 1.35rem;
+            font-weight: 800;
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+            white-space: nowrap;
+        }
+
+        .landing-header-tagline {
+            font-size: 0.78rem;
+            font-weight: 500;
+            opacity: 0.85;
+            white-space: nowrap;
+        }
+
+        .landing-header-nav {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .landing-header-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            height: 38px;
+            padding: 0 1rem;
+            border-radius: 999px;
+            color: rgba(255, 255, 255, 0.92);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.06);
+            transition: all 0.25s ease;
+        }
+
+        .landing-header-link:hover {
+            color: white;
+            text-decoration: none;
+            background: rgba(255, 255, 255, 0.16);
+            border-color: rgba(255, 255, 255, 0.35);
+            transform: translateY(-1px);
+        }
+
+        .landing-header-link--primary {
+            background: linear-gradient(135deg, var(--accent-color), #c49262);
+            border-color: transparent;
+            color: white;
+            box-shadow: 0 8px 20px rgba(212, 163, 115, 0.35);
+        }
+
+        .landing-header-link--primary:hover {
+            background: linear-gradient(135deg, #d7aa7e, #c08b58);
+            color: white;
+        }
+
         .auth-wrapper {
             width: 100%;
         }
@@ -87,42 +196,69 @@
         /* Hero Section */
         .hero-section {
             text-align: center;
-            padding: 3rem 0 2rem;
+            padding: 3rem 1.5rem;
             color: white;
+            margin-bottom: 2rem;
+            border-radius: 24px;
+            background: linear-gradient(160deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.08));
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            box-shadow: 0 18px 45px rgba(0, 0, 0, 0.22);
+            backdrop-filter: blur(9px);
+        }
+
+        .hero-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255, 255, 255, 0.92);
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 999px;
+            padding: 0.5rem 0.95rem;
+            margin-bottom: 1.1rem;
         }
 
         .hero-section h1 {
-            font-size: 5rem;
-            font-weight: 700;
+            font-size: clamp(2.1rem, 6vw, 4rem);
+            font-weight: 800;
             margin-bottom: 1rem;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
-            line-height: 1.2;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         .hero-section p {
-            font-size: 1.25rem;
-            margin-bottom: 2rem;
-            opacity: 0.95;
+            font-size: 1.1rem;
+            margin: 0 auto 2rem;
+            opacity: 0.96;
             line-height: 1.6;
+            max-width: 760px;
         }
 
         .login-button-hero {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            min-width: 220px;
-            height: 52px;
-            background: var(--accent-color);
+            min-width: 210px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--accent-color), #c49262);
             color: white;
-            padding: 1rem 2.5rem;
+            padding: 0.9rem 2.2rem;
             border-radius: 50px;
-            font-size: 1.1rem;
-            font-weight: 600;
+            font-size: 1rem;
+            font-weight: 700;
             text-decoration: none;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 0.8px;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(212, 163, 115, 0.4);
+            box-shadow: 0 10px 24px rgba(212, 163, 115, 0.35);
             border: none;
             cursor: pointer;
         }
@@ -156,17 +292,17 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            min-width: 220px;
-            height: 52px;
-            background: transparent;
+            min-width: 210px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.08);
             color: white;
-            padding: 1rem 2.5rem;
+            padding: 0.9rem 2.2rem;
             border-radius: 50px;
-            font-size: 1.1rem;
-            font-weight: 600;
+            font-size: 1rem;
+            font-weight: 700;
             text-decoration: none;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 0.8px;
             transition: all 0.3s ease;
             border: 2px solid rgba(255, 255, 255, 0.9);
             cursor: pointer;
@@ -187,33 +323,25 @@
 
         /* Promo Banner */
         .promo-banner {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            background: white;
-            color: #1a3a38;
-            padding: 0.75rem 1.5rem;
+            gap: 0.6rem;
+            width: 100%;
+            text-align: center;
+            max-width: 100%;
+            margin: 0 auto 1.5rem;
+            background: rgba(255, 255, 255, 0.94);
+            color: #264c49;
+            padding: 0.75rem 1.25rem;
             border-radius: 50px;
             font-weight: 700;
-            font-size: 1rem;
-            letter-spacing: 0.5px;
-            margin-bottom: 2rem;
-            box-shadow: 0 4px 20px rgba(212, 163, 115, 0.4);
-            animation: promoPulse 3s ease-in-out infinite;
+            font-size: 2rem;
+            letter-spacing: 0.2px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+            border: 1px solid rgba(255, 255, 255, 0.6);
         }
 
         .promo-banner i {
-            font-size: 1.2rem;
-        }
-
-        @keyframes promoPulse {
-            0%, 100% { box-shadow: 0 4px 20px rgba(212, 163, 115, 0.4); }
-            50% { box-shadow: 0 6px 28px rgba(212, 163, 115, 0.55); }
-        }
-
-        @media (max-width: 576px) {
-            .promo-banner { font-size: 0.9rem; padding: 0.6rem 1.2rem; }
+            font-size: 2rem;
+            color: var(--accent-color);
         }
 
         /* Features Section */
@@ -282,6 +410,18 @@
         }
 
         @media (max-width: 992px) {
+            .landing-header {
+                flex-wrap: wrap;
+                justify-content: center;
+                text-align: center;
+                padding: 0.85rem;
+            }
+
+            .landing-header-nav {
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+
             .features-grid {
                 grid-template-columns: repeat(2, 1fr);
                 gap: 1.5rem;
@@ -298,17 +438,27 @@
 
         @media (max-width: 768px) {
             .hero-section {
-                padding: 2rem 0 1.5rem;
+                padding: 2.2rem 1rem;
+            }
+
+            .hero-kicker {
+                font-size: 0.76rem;
             }
 
             .hero-section h1 {
-                font-size: 2.5rem;
-                letter-spacing: 1.5px;
+                font-size: 2.45rem;
+                letter-spacing: -0.01em;
             }
 
             .hero-section p {
                 font-size: 1rem;
-                padding: 0 1rem;
+                padding: 0;
+            }
+
+            .landing-header-link {
+                height: 36px;
+                padding: 0 0.85rem;
+                font-size: 0.85rem;
             }
 
             .cta-text {
@@ -366,12 +516,37 @@
                 padding: 1rem;
             }
 
+            .landing-header {
+                border-radius: 14px;
+                margin-bottom: 1rem;
+            }
+
+            .landing-header-logo svg {
+                width: 36px;
+                height: 36px;
+            }
+
+            .landing-header-name {
+                font-size: 1.1rem;
+            }
+
+            .landing-header-tagline {
+                font-size: 0.72rem;
+            }
+
+            .promo-banner {
+                width: 100%;
+                font-size: 0.9rem;
+                padding: 0.75rem 1rem;
+            }
+
             .hero-section {
-                padding: 1.5rem 0 1rem;
+                padding: 1.8rem 0.9rem;
+                border-radius: 18px;
             }
 
             .hero-section h1 {
-                font-size: 2rem;
+                font-size: 1.9rem;
             }
 
             .hero-section p {
@@ -387,7 +562,7 @@
             .login-button-hero,
             .register-button-hero {
                 padding: 0.875rem 2rem;
-                font-size: 1.1rem;
+                font-size: 0.95rem;
                 width: 100%;
                 max-width: 280px;
                 text-align: center;
@@ -713,16 +888,66 @@
 </div>
 
 <div class="landing-container">
-    <!-- Promo Banner -->
-    <div class="promo-banner">
-        <i class="bi bi-tag-fill"></i>
-        <span>Precio promocional hasta junio 2026</span>
-    </div>
+    <!-- Header principal -->
+    <header class="landing-header">
+        <a href="{{ path('app_start') }}" class="landing-header-brand" data-no-loading>
+            <span class="landing-header-logo" aria-label="InstituteBuilder">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="48" height="48">
+                    <defs>
+                        <linearGradient id="logo-teal" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#5c6f6c"/>
+                            <stop offset="100%" style="stop-color:#849d9a"/>
+                        </linearGradient>
+                        <linearGradient id="logo-accent" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" style="stop-color:#d4a373"/>
+                            <stop offset="100%" style="stop-color:#c49262"/>
+                        </linearGradient>
+                    </defs>
+                    <rect x="8" y="28" width="48" height="28" rx="4" fill="url(#logo-teal)"/>
+                    <rect x="16" y="36" width="32" height="2" rx="1" fill="rgba(255,255,255,0.3)"/>
+                    <rect x="16" y="42" width="24" height="2" rx="1" fill="rgba(255,255,255,0.2)"/>
+                    <path d="M20 20 L38 8 L38 28 L20 40 Z" fill="url(#logo-accent)"/>
+                    <path d="M38 8 L56 20 L56 40 L38 28 Z" fill="rgba(196,146,98,0.85)"/>
+                    <path d="M20 20 L38 8 L56 20 L38 28 Z" fill="rgba(212,163,115,0.95)"/>
+                    <g transform="translate(48, 20)">
+                        <circle r="12" fill="url(#logo-teal)"/>
+                        <g fill="url(#logo-teal)">
+                            <rect x="-2" y="-14" width="4" height="6"/>
+                            <rect x="-2" y="-14" width="4" height="6" transform="rotate(45)"/>
+                            <rect x="-2" y="-14" width="4" height="6" transform="rotate(90)"/>
+                            <rect x="-2" y="-14" width="4" height="6" transform="rotate(135)"/>
+                            <rect x="-2" y="-14" width="4" height="6" transform="rotate(180)"/>
+                            <rect x="-2" y="-14" width="4" height="6" transform="rotate(225)"/>
+                            <rect x="-2" y="-14" width="4" height="6" transform="rotate(270)"/>
+                            <rect x="-2" y="-14" width="4" height="6" transform="rotate(315)"/>
+                        </g>
+                        <circle r="5" fill="white"/>
+                    </g>
+                </svg>
+            </span>
+            <div class="landing-header-text">
+                <span class="landing-header-name">InstituteBuilder</span>
+                <span class="landing-header-tagline">Gestión inteligente para institutos</span>
+            </div>
+        </a>
+        <nav class="landing-header-nav" aria-label="Navegación principal">
+            <a href="#features-section" class="landing-header-link" data-no-loading>Funciones</a>
+            <a href="#pricing-section" class="landing-header-link" data-no-loading>Precios</a>
+            {% if is_home is not defined or is_home %}
+            <a href="#auth-section" class="landing-header-link landing-header-link--primary" data-no-loading onclick="scrollToAuthForm('login', event)">Comenzar</a>
+            {% else %}
+            <a href="{{ path('app_start') }}" class="landing-header-link landing-header-link--primary" data-no-loading>Comenzar</a>
+            {% endif %}
+        </nav>
+    </header>
+
+    
 
     <!-- Hero Section -->
     <div class="hero-section">
-        <h1>Gestiona tu Instituto de Forma Inteligente</h1>
-        <p>La solución completa para administrar alumnos, profesores, cursos y pagos</p>
+        <span class="hero-kicker"><i class="bi bi-stars"></i> Plataforma completa en la nube</span>
+        <h1>Gestiona tu instituto con una experiencia moderna y simple</h1>
+        <p>Centraliza alumnos, profesores, asistencia, cursos y pagos en un solo sistema. Menos tareas manuales, más tiempo para crecer.</p>
         {% if is_home is not defined or is_home %}
         <div class="hero-buttons">
             <a href="#auth-section" class="login-button-hero" data-no-loading onclick="scrollToAuthForm('login', event)">
@@ -736,7 +961,7 @@
     </div>
 
     <!-- Features Section -->
-    <div class="features-section">
+    <div class="features-section" id="features-section">
         <h2 style="text-align: center; color: var(--primary-color); margin-bottom: 1rem;">¿Por qué elegir nuestro sistema?</h2>
         <div class="features-grid">
             <div class="feature-card">
@@ -783,9 +1008,13 @@
             </div>
         </div>
     </div>
-
+    <!-- Promo Banner -->
+    <div class="promo-banner">
+        <i class="bi bi-tag-fill"></i>
+        <span>Promoción activa hasta junio 2026</span>
+    </div>
     <!-- Pricing Section -->
-    <div class="features-section" style="margin-bottom: 2rem;">
+    <div class="features-section" id="pricing-section" style="margin-bottom: 2rem;">
         <h2 style="text-align: center; color: var(--primary-color); margin-bottom: 1rem;">
             <i class="bi bi-cash-stack" style="color: var(--accent-color); margin-right: 0.5rem;"></i>
             Precio Fijo por Alumno: Simple y Transparente
