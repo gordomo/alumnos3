@@ -2,17 +2,74 @@
 
 {% block title %}Ver Usuario{% endblock %}
 
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        :root {
+            --usr-primary: #5c6f6c;
+            --usr-secondary: #849d9a;
+            --usr-surface: #ffffff;
+            --usr-text: #1f2a2d;
+            --usr-muted: #647079;
+            --usr-border: #e5eceb;
+            --usr-shadow: 0 10px 28px rgba(19, 44, 43, 0.1);
+        }
+
+        .user-show-page {
+            padding: 1.2rem 0.75rem;
+        }
+
+        .user-show-card {
+            border: 1px solid var(--usr-border);
+            border-radius: 14px;
+            box-shadow: var(--usr-shadow);
+            overflow: hidden;
+        }
+
+        .user-show-table th {
+            width: 220px;
+            background: #f5f9f8;
+            color: #4a5a60;
+            font-size: 0.82rem;
+            text-transform: uppercase;
+            letter-spacing: 0.25px;
+            font-weight: 700;
+        }
+
+        .user-show-table td {
+            color: #27343a;
+            font-weight: 500;
+        }
+
+        .role-badge {
+            border-radius: 999px;
+            padding: 0.3rem 0.55rem;
+            font-size: 0.73rem;
+            font-weight: 600;
+        }
+
+        .role-badge--main {
+            background: linear-gradient(135deg, var(--usr-primary), var(--usr-secondary)) !important;
+        }
+
+        .user-show-actions .btn {
+            border-radius: 10px;
+            min-width: 110px;
+        }
+    </style>
+{% endblock %}
+
 {% block panelTitle %}
     Detalle del Usuario
 {% endblock %}
 
 {% block body %}
-<div class="container-fluid mt-4">
+<div class="container-fluid mt-3 user-show-page">
     <div class="row">
         <div class="col-12">
-            <div class="card shadow-sm">
+            <div class="card user-show-card">
                 <div class="card-body">
-                    <table class="table table-bordered">
+                    <table class="table table-bordered user-show-table">
                         <tbody>
                             <tr>
                                 <th>ID</th>
@@ -33,9 +90,9 @@
                                     {% if user.roles %}
                                         {% for role in user.roles %}
                                             {% if role in role_names|keys %}
-                                                <span class="badge bg-primary me-1">{{ role_names[role] }}</span>
+                                                <span class="badge role-badge role-badge--main me-1">{{ role_names[role] }}</span>
                                             {% else %}
-                                                <span class="badge bg-secondary me-1">{{ role }}</span>
+                                                <span class="badge bg-secondary role-badge me-1">{{ role }}</span>
                                             {% endif %}
                                         {% endfor %}
                                     {% endif %}
@@ -47,7 +104,7 @@
                             </tr>
                         </tbody>
                     </table>
-                    <div class="text-end">
+                    <div class="text-end user-show-actions">
                         <a href="{{ path('instituto_user_index') }}" class="btn btn-secondary">Volver</a>
                         <a href="{{ path('instituto_user_edit', {'id': user.id}) }}" class="btn btn-primary">Editar</a>
                     </div>

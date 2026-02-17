@@ -2,23 +2,281 @@
 
 {% block title %}Alumno index{% endblock %}
 
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        :root {
+            --alu-primary: #5c6f6c;
+            --alu-secondary: #849d9a;
+            --alu-surface: #ffffff;
+            --alu-text: #1f2a2d;
+            --alu-muted: #647079;
+            --alu-border: #e5eceb;
+            --alu-shadow: 0 10px 28px rgba(19, 44, 43, 0.1);
+        }
+
+        .alumno-page {
+            padding: 1.2rem 0.75rem;
+            padding-bottom: 5.9rem;
+        }
+
+        .alumno-toolbar {
+            background: var(--alu-surface);
+            border: 1px solid var(--alu-border);
+            border-radius: 14px;
+            box-shadow: var(--alu-shadow);
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .alumno-search .form-control,
+        .alumno-search .btn {
+            height: 40px;
+            border-radius: 10px;
+        }
+
+        .alumno-search .form-control {
+            border-color: #d9e4e2;
+            box-shadow: none;
+        }
+
+        .alumno-search .form-control:focus {
+            border-color: var(--alu-secondary);
+            box-shadow: 0 0 0 0.2rem rgba(132, 157, 154, 0.16);
+        }
+
+        .alumno-search .btn-outline-secondary {
+            border-color: #d9e4e2;
+            color: #556067;
+        }
+
+        .alumno-search .btn-outline-secondary:hover {
+            background: #f1f6f5;
+            color: #3f4a50;
+        }
+
+        .alumno-tabs.nav-pills .nav-link {
+            border-radius: 10px;
+            color: #3f5359;
+            border: 1px solid #dbe5e3;
+            background: #f8fbfa;
+            font-weight: 600;
+            padding: 0.4rem 0.75rem;
+        }
+
+        .alumno-tabs.nav-pills .nav-link.active {
+            background: linear-gradient(135deg, var(--alu-primary), var(--alu-secondary));
+            border-color: transparent;
+            color: #fff;
+            box-shadow: 0 8px 22px rgba(92, 111, 108, 0.28);
+        }
+
+        #filtroCursos {
+            border-radius: 10px;
+            border-color: #d9e4e2;
+            min-width: 180px;
+            height: 38px;
+            font-size: 0.88rem;
+        }
+
+        .alumno-alert-inline {
+            border-radius: 10px;
+            border: 1px solid #f1cccc;
+            background: #fff5f5;
+            color: #7c3f3f;
+            margin: 0.75rem 0 0;
+        }
+
+        .alumno-total {
+            color: #495b61;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 0.8rem;
+        }
+
+        .alumno-panel {
+            background: var(--alu-surface);
+            border: 1px solid var(--alu-border);
+            border-radius: 14px;
+            box-shadow: var(--alu-shadow);
+            overflow: hidden;
+        }
+
+        .alumno-table {
+            margin-bottom: 0;
+        }
+
+        .alumno-table thead th {
+            background: #f5f9f8;
+            color: #4a5a60;
+            font-weight: 700;
+            font-size: 0.82rem;
+            letter-spacing: 0.2px;
+            border-bottom: 1px solid #dce7e4;
+            padding: 0.72rem 0.6rem;
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+
+        .alumno-table td {
+            vertical-align: middle;
+            padding: 0.66rem 0.6rem;
+            border-top-color: #ecf2f1;
+            color: #27343a;
+            font-size: 0.92rem;
+        }
+
+        .alumno-table tbody tr:hover {
+            background: #fbfdfd;
+        }
+
+        .alumno-table tr.inactivo {
+            background: rgba(246, 248, 249, 0.65);
+        }
+
+        .alumno-sort-link {
+            color: #425257;
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .alumno-sort-link:hover {
+            color: #2f4348;
+        }
+
+        .curso-chip {
+            display: inline-flex;
+            align-items: center;
+            margin: 0.1rem 0.25rem 0.1rem 0;
+            padding: 0.22rem 0.5rem;
+            border-radius: 999px;
+            border: 1px solid #d9e4e2;
+            background: #f6faf9;
+            color: #425257;
+            font-size: 0.78rem;
+        }
+
+        .actions-group {
+            display: inline-flex;
+            gap: 0.3rem;
+            flex-wrap: wrap;
+        }
+
+        .actions-group .btn {
+            border-radius: 8px;
+            width: 38px !important;
+            min-width: 38px !important;
+            padding: 0.2rem;
+        }
+
+        .debt-alert {
+            color: #d64545;
+            font-size: 1rem;
+            margin-left: 0.15rem;
+        }
+
+        .alumno-pagination {
+            padding: 0.85rem 1rem 1rem;
+            display: flex;
+            justify-content: center;
+            border-top: 1px solid #eef3f2;
+        }
+
+        .alumno-pagination .pagination {
+            margin-bottom: 0;
+        }
+
+        .alumno-pagination .page-link {
+            border-radius: 8px;
+            border-color: #d9e4e2;
+            color: #4b5d61;
+            margin: 0 0.15rem;
+        }
+
+        .alumno-pagination .page-item.active .page-link {
+            background: var(--alu-primary);
+            border-color: var(--alu-primary);
+            color: #fff;
+        }
+
+        .alumno-floating-actions {
+            position: fixed;
+            right: 1rem;
+            bottom: 1rem;
+            z-index: 1030;
+        }
+
+        .alumno-floating-btn {
+            border: none;
+            border-radius: 999px;
+            padding: 0.58rem 0.95rem;
+            font-size: 0.84rem;
+            font-weight: 700;
+            color: #fff;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: linear-gradient(135deg, #2c9e67, #228556);
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .alumno-floating-btn:hover {
+            color: #fff;
+            transform: translateY(-1px);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.26);
+            text-decoration: none;
+        }
+
+        @media (max-width: 768px) {
+            .alumno-page {
+                padding: 0.9rem 0.2rem;
+                padding-bottom: 6.2rem;
+            }
+
+            .alumno-toolbar {
+                padding: 0.85rem;
+            }
+
+            .alumno-tabs {
+                margin-top: 0.75rem;
+                width: 100%;
+                justify-content: flex-start;
+                flex-wrap: wrap;
+                gap: 0.4rem;
+            }
+
+            .alumno-floating-actions {
+                right: 0.75rem;
+                bottom: 0.75rem;
+            }
+
+            .alumno-floating-btn {
+                padding: 0.54rem 0.85rem;
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+{% endblock %}
+
 {% block panelTitle %}
-    Alumnos <a href="{{ path('app_alumno_new') }}" class="btn btn-success btn-sm">Nuevo Alumno</a>
+    Alumnos
 {% endblock %}
 
 {% block body %}
-<div class="container-fluid mt-4">
-    <div class="row">
-        <div class="col-5">
+<div class="container-fluid mt-3 alumno-page">
+    <div class="row alumno-toolbar">
+        <div class="col-md-5">
             <form method="post" action="{{ path('app_alumno_index', {'activo': activo }) }}">
-                <div class="input-group mb-3">
+                <div class="input-group alumno-search">
                     <input name="busqueda" type="text" class="form-control" placeholder="Buscar por Nombre y Apellido" value="{{ busqueda }}" aria-label="Recipient's username" aria-describedby="button-addon2">
                     <button class="btn btn-outline-secondary" type="submit" id="button-addon2"><i class="bi bi-search"></i></button>
                 </div>
             </form>
         </div>
-        <div class="col-7">
-            <ul class="nav nav-pills">
+        <div class="col-md-7 d-flex justify-content-md-end align-items-center">
+            <ul class="nav nav-pills alumno-tabs">
                 <li class="nav-item">
                     <a class="nav-link {% if activo == 'todos' %} active {% endif %}" aria-current="page" href="{{ path('app_alumno_index') }}">Todos</a>
                 </li>
@@ -58,7 +316,7 @@
             </ul>
         </div>
         {% if alumnosQueNoGuardadamos | length > 0 %}
-            <div class="col-12 alert alert-danger" role="alert" style="padding: 0.4rem 1rem; margin: 5px 10px">
+            <div class="col-12 alert alumno-alert-inline" role="alert">
                 <h5>Alumnos que no pudimos agregar: </h5>
                 {% for alumnoQueNoGuardadamos in alumnosQueNoGuardadamos %}
                     Nombre: {{ alumnoQueNoGuardadamos.nombre }} {{ alumnoQueNoGuardadamos.apellido }} - Email: {{ alumnoQueNoGuardadamos.email }} - DNI: {{ alumnoQueNoGuardadamos.dni }}<br>
@@ -67,19 +325,22 @@
         {% endif %}
     </div>
     {% if total > 0 %}
-        <p class="mt-3">total: {{ total }} alumnos {% if activo == '1' %}activo{% elseif activo == '0' %}inactivo{% endif %}{% if (total > 1 and activo != 'todos') %}s{% endif %}</p>
+        <p class="alumno-total">Total: {{ total }} alumnos {% if activo == '1' %}activo{% elseif activo == '0' %}inactivo{% endif %}{% if (total > 1 and activo != 'todos') %}s{% endif %}</p>
     {% endif %}
-    <table class="table">
+
+    <div class="alumno-panel">
+    <div class="table-responsive">
+    <table class="table alumno-table">
         <thead>
             <tr>
                 <th>
-                    <a href="{{ path('app_alumno_index', {'sort': 'apellido', 'order': sort == 'apellido' ? (order == 'asc' ? 'desc' : 'asc') : 'asc'}) }}" class="text-decoration-none text-dark">
+                    <a href="{{ path('app_alumno_index', {'activo': activo, 'cursoSelected': cursoSelected, 'busqueda': busqueda, 'sort': 'apellido', 'order': sort == 'apellido' ? (order == 'asc' ? 'desc' : 'asc') : 'asc'}) }}" class="alumno-sort-link">
                         Apellido
                         <i class="bi bi-arrow-{{ sort == 'apellido' ? (order == 'asc' ? 'up' : 'down') : 'up-down' }}"></i>
                     </a>
                 </th>
                 <th>
-                    <a href="{{ path('app_alumno_index', {'sort': 'nombre', 'order': sort == 'nombre' ? (order == 'asc' ? 'desc' : 'asc') : 'asc'}) }}" class="text-decoration-none text-dark">
+                    <a href="{{ path('app_alumno_index', {'activo': activo, 'cursoSelected': cursoSelected, 'busqueda': busqueda, 'sort': 'nombre', 'order': sort == 'nombre' ? (order == 'asc' ? 'desc' : 'asc') : 'asc'}) }}" class="alumno-sort-link">
                         Nombre
                         <i class="bi bi-arrow-{{ sort == 'nombre' ? (order == 'asc' ? 'up' : 'down') : 'up-down' }}"></i>
                     </a>
@@ -99,51 +360,58 @@
                 <td>{{ alumno.email }}</td>
                 <td>
                     {% for curso in alumno.curso %}
-                        {{ curso.nombre }}
-                        {% if not loop.last %}
-                            /
-                        {% endif %}
+                        <span class="curso-chip">{{ curso.nombre }}</span>
+                    {% else %}
+                        <span class="text-muted">Sin cursos</span>
                     {% endfor %}
                 </td>
                 <td>
-                    <a href="{{ path('app_alumno_show', {'id': alumno.id}) }}" style="min-width: auto;width: 45px;" class="btn btn-sm btn-outline-primary" title="Ver" data-toggle="tooltip" data-placement="left">
-                        <i class="bi bi-eye"></i>
-                    </a>
-                    <a href="{{ path('app_alumno_edit', {'id': alumno.id}) }}" style="min-width: auto;width: 45px;" class="btn btn-sm btn-outline-secondary" title="Editar" data-toggle="tooltip" data-placement="top">
-                        <i class="bi bi-pencil"></i>
-                    </a>
-                    <button type="button" class="btn btn-sm btn-outline-info" style="min-width: auto;width: 45px;" title="Gestionar Cursos" data-toggle="tooltip" data-placement="top" data-bs-toggle="modal" data-bs-target="#cursosModal{{ alumno.id }}">
-                        <i class="bi bi-book"></i>
-                    </button>
-                    {% if (alumno.activo) %}
-                        <a href="{{ path('app_alumnos_pagos_new', {'id': alumno.id}) }}" style="min-width: auto;width: 45px;" class="btn btn-sm btn-success" title="Registrar Pago" data-toggle="tooltip" data-placement="top">
-                            <i class="bi bi-cash"></i>
+                    <div class="actions-group">
+                        <a href="{{ path('app_alumno_show', {'id': alumno.id}) }}" class="btn btn-sm btn-outline-primary" title="Ver" data-toggle="tooltip" data-placement="left">
+                            <i class="bi bi-eye"></i>
                         </a>
-                    {% endif %}
-                    <a href="{{ path('app_alumnos_pagos_index', {'alumno': alumno.id}) }}" style="min-width: auto;width: 45px;" class="btn btn-sm btn-outline-success" title="Ver Pagos" data-toggle="tooltip" data-placement="top">
-                        <i class="bi bi-eye"></i>
-                    </a>
-                    <a href="{{ path('app_alumno_deudas', {'id': alumno.id}) }}" style="min-width: auto;width: 45px;" class="btn btn-sm btn-outline-warning" title="Gestionar Deudas" data-toggle="tooltip" data-placement="top">
-                        <i class="bi bi-cash-coin"></i>
-                    </a>
-                    {{ alumno.tieneDeudasVencidas() and alumno.activo ? '<i class="bi bi-bell p-2" style="color: red" data-toggle="tooltip" title="Tiene deudas vencidas"></i>' : '' }}
+                        <a href="{{ path('app_alumno_edit', {'id': alumno.id}) }}" class="btn btn-sm btn-outline-secondary" title="Editar" data-toggle="tooltip" data-placement="top">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <button type="button" class="btn btn-sm btn-outline-info" title="Gestionar Cursos" data-toggle="tooltip" data-placement="top" data-bs-toggle="modal" data-bs-target="#cursosModal{{ alumno.id }}">
+                            <i class="bi bi-book"></i>
+                        </button>
+                        {% if (alumno.activo) %}
+                            <a href="{{ path('app_alumnos_pagos_new', {'id': alumno.id}) }}" class="btn btn-sm btn-success" title="Registrar Pago" data-toggle="tooltip" data-placement="top">
+                                <i class="bi bi-cash"></i>
+                            </a>
+                        {% endif %}
+                        <a href="{{ path('app_alumnos_pagos_index', {'alumno': alumno.id}) }}" class="btn btn-sm btn-outline-success" title="Ver Pagos" data-toggle="tooltip" data-placement="top">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        <a href="{{ path('app_alumno_deudas', {'id': alumno.id}) }}" class="btn btn-sm btn-outline-warning" title="Gestionar Deudas" data-toggle="tooltip" data-placement="top">
+                            <i class="bi bi-cash-coin"></i>
+                        </a>
+                        {% if alumno.tieneDeudasVencidas() and alumno.activo %}
+                            <i class="bi bi-bell debt-alert" data-toggle="tooltip" title="Tiene deudas vencidas"></i>
+                        {% endif %}
+                    </div>
                 </td>
             </tr>
             {{ include('alumno/_cursos_modal.html.twig') }}
         {% else %}
             <tr>
-                <td colspan="23">No se encontraron registros</td>
+                <td colspan="6" class="text-center py-4 text-muted">No se encontraron registros</td>
             </tr>
         {% endfor %}
         </tbody>
-        <tfoot>
-        <tr>
-            <td colspan="8">
-                {{ knp_pagination_render(alumnos) }}
-            </td>
-        </tr>
-        </tfoot>
     </table>
+    </div>
+    <div class="alumno-pagination">
+        {{ knp_pagination_render(alumnos) }}
+    </div>
+    </div>
+</div>
+
+<div class="alumno-floating-actions">
+    <a href="{{ path('app_alumno_new') }}" class="alumno-floating-btn">
+        <i class="bi bi-plus-circle"></i> Nuevo Alumno
+    </a>
 </div>
 {% endblock %}
 

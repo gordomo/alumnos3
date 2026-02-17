@@ -6,49 +6,199 @@
     Informes
 {% endblock %}
 
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        :root {
+            --inf-primary: #5c6f6c;
+            --inf-secondary: #849d9a;
+            --inf-surface: #ffffff;
+            --inf-text: #1f2a2d;
+            --inf-muted: #647079;
+            --inf-border: #e5eceb;
+            --inf-shadow: 0 10px 28px rgba(19, 44, 43, 0.1);
+        }
+
+        .informes-page {
+            padding: 1.2rem 0.75rem;
+        }
+
+        .informes-toolbar {
+            background: var(--inf-surface);
+            border: 1px solid var(--inf-border);
+            border-radius: 14px;
+            box-shadow: var(--inf-shadow);
+            padding: 1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .informes-toolbar-label {
+            color: var(--inf-muted);
+            font-size: 0.84rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.35px;
+            margin-bottom: 0.2rem;
+        }
+
+        .informes-toolbar input[name="daterange"] {
+            height: 40px;
+            border-radius: 10px;
+            border: 1px solid #d9e4e2;
+            padding: 0 0.85rem;
+            min-width: 240px;
+            color: #3d4f55;
+            font-weight: 600;
+        }
+
+        .informes-toolbar input[name="daterange"]:focus {
+            outline: none;
+            border-color: var(--inf-secondary);
+            box-shadow: 0 0 0 0.2rem rgba(132, 157, 154, 0.16);
+        }
+
+        .informes-meta {
+            color: #3f4f55;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .informes-panel {
+            background: var(--inf-surface);
+            border: 1px solid var(--inf-border);
+            border-radius: 14px;
+            box-shadow: var(--inf-shadow);
+            overflow: hidden;
+        }
+
+        .informes-table {
+            min-width: 1200px;
+            margin-bottom: 0;
+        }
+
+        .informes-table th,
+        .informes-table td {
+            border-top-color: #ecf2f1;
+            vertical-align: middle;
+            text-align: center;
+            padding: 0.62rem 0.5rem;
+            font-size: 0.84rem;
+        }
+
+        .informes-table thead th {
+            background: #f5f9f8;
+            color: #4a5a60;
+            font-weight: 700;
+            letter-spacing: 0.2px;
+            border-bottom: 1px solid #dce7e4;
+            white-space: nowrap;
+        }
+
+        .informes-table th:first-child,
+        .informes-table td:first-child {
+            min-width: 220px;
+            width: 220px;
+            white-space: nowrap;
+            text-align: left;
+        }
+
+        .informes-table th:first-child {
+            position: sticky;
+            left: 0;
+            z-index: 10;
+            background-color: #f5f9f8;
+        }
+
+        .informes-table td:first-child {
+            position: sticky;
+            left: 0;
+            z-index: 5;
+            background-color: #fff;
+            font-weight: 700;
+            color: #2b3a40;
+        }
+
+        .informes-table tbody tr:nth-of-type(odd) td:first-child {
+            background-color: #fbfdfd;
+        }
+
+        .informes-table .totals-head {
+            min-width: 110px;
+        }
+
+        .status-mark {
+            font-size: 1.1rem;
+            line-height: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #f1f6f5;
+        }
+
+        .status-mark--ok {
+            color: #1f9a5e;
+            background: #e8f6ef;
+        }
+
+        .status-mark--no {
+            color: #d64545;
+            background: #fdeeee;
+        }
+
+        .money-total {
+            font-weight: 800;
+            color: #218c58;
+        }
+
+        @media (max-width: 768px) {
+            .informes-page {
+                padding: 0.9rem 0.2rem;
+            }
+
+            .informes-toolbar {
+                padding: 0.85rem;
+            }
+
+            .informes-toolbar input[name="daterange"] {
+                min-width: 200px;
+            }
+        }
+    </style>
+{% endblock %}
+
 {% block body %}
-<style>
-    .table th:first-child,
-    .table td:first-child {
-        min-width: 200px;
-        width: 200px;
-        white-space: nowrap;
-    }
-    .table th:first-child {
-        position: sticky;
-        left: 0;
-        background-color: #f8f9fa;
-        z-index: 10;
-    }
-    .table td:first-child {
-        position: sticky;
-        left: 0;
-        background-color: white;
-        z-index: 5;
-    }
-    .table-striped tbody tr:nth-of-type(odd) td:first-child {
-        background-color: rgba(0,0,0,.05);
-    }
-</style>
-<div class="container-fluid mt-4">
-        <div class="row">
-            <div class="col-md-6">
-                <label for="filtroFechas">Desde/Hasta</label>
+<div class="container-fluid mt-3 informes-page">
+        <div class="informes-toolbar">
+            <div>
+                <div class="informes-toolbar-label">Rango de Fechas</div>
                 <input type="text" id="filtroFechas" name="daterange" value="{{ desde }}"/>
             </div>
+            <div class="informes-meta">
+                {{ asistencias|length }} profesores en el informe
+            </div>
         </div>
-        <br>
-        <table class="table table-striped table-responsive">
+
+        <div class="informes-panel">
+        <div class="table-responsive">
+        <table class="table table-striped informes-table">
             <thead>
                 <tr>
-                    <th scope="col" style="min-width: 200px; width: 200px;">Profes</th>
+                    <th scope="col">Profes</th>
                     {% for fechas in rango %}
                         <th scope="col" class="border-start text-center">{{ fechas }}</th>
                     {% endfor %}
-                    <th scope="col" class="border-start text-center">Total Faltas</th>
-                    <th scope="col" class="border-start text-center">Total Horas</th>
-                    <th scope="col" class="border-start text-center">Total Horas Reemplazo</th>
-                    <th scope="col" class="border-start text-center">Total Precio</th>
+                    <th scope="col" class="border-start text-center totals-head">Total Faltas</th>
+                    <th scope="col" class="border-start text-center totals-head">Total Horas</th>
+                    <th scope="col" class="border-start text-center totals-head">Horas Reemplazo</th>
+                    <th scope="col" class="border-start text-center totals-head">Total Precio</th>
                 </tr>
             </thead>
             <tbody>
@@ -58,7 +208,7 @@
                     {% set totalHorasReemplazo = 0 %}
                     {% if profesoresInfo[profeId] is defined %}
                         <tr scope="row">
-                            <th style="min-width: 200px; width: 200px; white-space: nowrap;">
+                            <th>
                                 {{ profesoresInfo[profeId].nombreCompleto }}
                             </th>
                             {% for fechas in rango %}
@@ -67,16 +217,15 @@
                                         {% if asistencia[fechas] | length > 0  %}
                                             {% for asis in asistencia[fechas] %}
                                                     {% if asis['falta'] is defined and asis['falta']%}
-                                                        <i style="font-size: 25px; color: red"
-                                                           class="bi bi-x"
+                                                        <i class="bi bi-x status-mark status-mark--no"
                                                            data-toggle="tooltip"
                                                            title="{% if asis['remplazante'] is defined %} Fue reemplazado por {{ asis['remplazante'] }} {% else %} Sin Reemplazo  {% endif %} en {{ asis['curso'] }}"></i>
                                                         {% set totalFaltas = totalFaltas + asis['horas'] %}
                                                     {% elseif asis["reemplazo"] is defined %}
-                                                        <i style="font-size: 25px; color: green" class="bi bi-check" data-toggle="tooltip" title="{{ asis["reemplazo"]['reemplazoA'] }}"></i>
+                                                        <i class="bi bi-check status-mark status-mark--ok" data-toggle="tooltip" title="{{ asis["reemplazo"]['reemplazoA'] }}"></i>
                                                         {% set totalHorasReemplazo = totalHorasReemplazo + asis['reemplazo']['horas'] %}
                                                     {% else %}
-                                                        <i style="font-size: 25px; color: green" class="bi bi-check" data-toggle="tooltip" title="{{ asis['curso'] }}"></i>
+                                                        <i class="bi bi-check status-mark status-mark--ok" data-toggle="tooltip" title="{{ asis['curso'] }}"></i>
                                                         {% set totalHoras = totalHoras + asis['horas'] %}
                                                 {% endif %}
                                             {% endfor %}
@@ -117,7 +266,7 @@
                             </td>
                             <td class="border-start text-center">
                                 {% if asistencia['precioHora'] is defined %}
-                                    ${{ (totalHoras + totalHorasReemplazo) * asistencia['precioHora'] }}
+                                    <span class="money-total">${{ (totalHoras + totalHorasReemplazo) * asistencia['precioHora'] }}</span>
                                 {% endif %}
                             </td>
                         </tr>
@@ -125,6 +274,8 @@
                 {% endfor %}
             </tbody>
         </table>
+        </div>
+        </div>
     </div>
 {% endblock %}
 

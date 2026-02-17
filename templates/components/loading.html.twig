@@ -55,6 +55,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Obtener la URL base del sitio de forma dinámica
     const siteUrl = window.location.origin;
+    let lastUrl = new URL(window.location.href);
     
     // Función para mostrar el loading
     window.showLoading = function() {
@@ -186,11 +187,32 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Manejar navegación del navegador (botones adelante/atrás)
     window.addEventListener('popstate', function() {
+        const currentUrl = new URL(window.location.href);
+        const isSameDocumentHashNavigation =
+            currentUrl.origin === lastUrl.origin &&
+            currentUrl.pathname === lastUrl.pathname &&
+            currentUrl.search === lastUrl.search &&
+            currentUrl.hash !== lastUrl.hash;
+
+        if (isSameDocumentHashNavigation) {
+            hideLoading();
+            lastUrl = currentUrl;
+            return;
+        }
+
         if (isBackNavigation()) {
             hideLoading();
         } else {
             showLoading();
         }
+
+        lastUrl = currentUrl;
+    });
+
+    // Si solo cambia el hash de la URL, nunca debe mostrarse el overlay de carga
+    window.addEventListener('hashchange', function() {
+        hideLoading();
+        lastUrl = new URL(window.location.href);
     });
 
     // Manejar el evento pageshow para detectar navegación

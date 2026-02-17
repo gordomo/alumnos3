@@ -2,18 +2,273 @@
 
 {% block title %}Curso index{% endblock %}
 
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        :root {
+            --curso-primary: #5c6f6c;
+            --curso-secondary: #849d9a;
+            --curso-accent: #d4a373;
+            --curso-surface: #ffffff;
+            --curso-text: #1f2a2d;
+            --curso-muted: #647079;
+            --curso-border: #e5eceb;
+            --curso-shadow: 0 10px 28px rgba(19, 44, 43, 0.1);
+        }
+
+        .curso-page {
+            padding: 1.2rem 0.75rem;
+            padding-bottom: 6rem;
+        }
+
+        .curso-toolbar {
+            background: var(--curso-surface);
+            border: 1px solid var(--curso-border);
+            border-radius: 14px;
+            box-shadow: var(--curso-shadow);
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .curso-search-form .form-control,
+        .curso-search-form .btn {
+            height: 40px;
+            border-radius: 10px;
+        }
+
+        .curso-search-form .form-control {
+            border-color: #d9e4e2;
+            box-shadow: none;
+        }
+
+        .curso-search-form .form-control:focus {
+            border-color: var(--curso-secondary);
+            box-shadow: 0 0 0 0.2rem rgba(132, 157, 154, 0.16);
+        }
+
+        .curso-search-form .btn-outline-secondary {
+            border-color: #d9e4e2;
+            color: #556067;
+        }
+
+        .curso-search-form .btn-outline-secondary:hover {
+            background: #f1f6f5;
+            color: #3f4a50;
+        }
+
+        .curso-tabs.nav-pills .nav-link {
+            border-radius: 10px;
+            color: #3f5359;
+            border: 1px solid #dbe5e3;
+            background: #f8fbfa;
+            font-weight: 600;
+        }
+
+        .curso-tabs.nav-pills .nav-link.active {
+            background: linear-gradient(135deg, var(--curso-primary), var(--curso-secondary));
+            border-color: transparent;
+            color: #fff;
+            box-shadow: 0 8px 22px rgba(92, 111, 108, 0.28);
+        }
+
+        .curso-tabs .badge {
+            border-radius: 999px;
+            font-size: 0.72rem;
+            padding: 0.3rem 0.5rem;
+        }
+
+        .curso-panel {
+            background: var(--curso-surface);
+            border: 1px solid var(--curso-border);
+            border-radius: 14px;
+            box-shadow: var(--curso-shadow);
+            overflow: hidden;
+        }
+
+        .curso-panel .table {
+            margin-bottom: 0;
+        }
+
+        .curso-table thead th {
+            background: #f5f9f8;
+            color: #4a5a60;
+            font-weight: 700;
+            font-size: 0.82rem;
+            letter-spacing: 0.2px;
+            border-bottom: 1px solid #dce7e4;
+            padding: 0.72rem 0.6rem;
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+
+        .curso-table td {
+            vertical-align: middle;
+            padding: 0.66rem 0.6rem;
+            border-top-color: #ecf2f1;
+            color: #27343a;
+            font-size: 0.92rem;
+        }
+
+        .curso-table tbody tr:hover {
+            background: #fbfdfd;
+        }
+
+        .curso-table .sort-link {
+            color: #425257;
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .curso-table .sort-link:hover {
+            color: #2f4348;
+        }
+
+        .profesor-badge {
+            background: #e5f4f1;
+            color: #2a5a56;
+            border: 1px solid #cde5e0;
+            font-size: 0.8rem;
+            padding: 0.35rem 0.55rem;
+            border-radius: 999px;
+            white-space: nowrap;
+            display: inline-flex;
+            margin-bottom: 0.25rem;
+        }
+
+        .dia-badge {
+            background: #f0f4f7;
+            color: #4b5a61;
+            border: 1px solid #dbe4ea;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .time-badge {
+            background: #f8fafb;
+            color: #41535a;
+            border: 1px solid #dce7ec;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            padding: 0.25rem 0.45rem;
+        }
+
+        .dropdown-toggle-clean {
+            border-radius: 8px;
+            border-color: #d9e4e2;
+            color: #556067;
+        }
+
+        .dropdown-toggle-clean:hover {
+            background: #f3f7f6;
+            border-color: #cfdcda;
+            color: #3e4f55;
+        }
+
+        .curso-pagination {
+            margin-top: 1rem;
+            display: flex;
+            justify-content: center;
+        }
+
+        .curso-pagination .pagination {
+            margin-bottom: 0;
+        }
+
+        .curso-pagination .page-link {
+            border-radius: 8px;
+            border-color: #d9e4e2;
+            color: #4b5d61;
+            margin: 0 0.15rem;
+        }
+
+        .curso-pagination .page-item.active .page-link {
+            background: var(--curso-primary);
+            border-color: var(--curso-primary);
+            color: #fff;
+        }
+
+        .curso-floating-actions {
+            position: fixed;
+            right: 1rem;
+            bottom: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            z-index: 1030;
+        }
+
+        .curso-floating-btn {
+            border: none;
+            border-radius: 999px;
+            padding: 0.58rem 0.95rem;
+            font-size: 0.84rem;
+            font-weight: 700;
+            color: #fff;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .curso-floating-btn:hover {
+            color: #fff;
+            transform: translateY(-1px);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.26);
+            text-decoration: none;
+        }
+
+        .curso-floating-btn--new {
+            background: linear-gradient(135deg, #2c9e67, #228556);
+        }
+
+        .curso-floating-btn--calendar {
+            background: linear-gradient(135deg, #2f7ef0, #2368ce);
+        }
+
+        @media (max-width: 768px) {
+            .curso-page {
+                padding: 0.9rem 0.2rem;
+                padding-bottom: 6.5rem;
+            }
+
+            .curso-toolbar {
+                padding: 0.85rem;
+            }
+
+            .curso-tabs {
+                margin-top: 0.8rem;
+                width: 100%;
+                justify-content: flex-start;
+            }
+
+            .curso-floating-actions {
+                right: 0.75rem;
+                bottom: 0.75rem;
+            }
+
+            .curso-floating-btn {
+                padding: 0.54rem 0.85rem;
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+{% endblock %}
+
 {% block panelTitle %}
-    Cursos 
-    <a href="{{ path('app_curso_new') }}" class="btn btn-success btn-sm">Nuevo Curso</a>
-    <a href="{{ path('app_curso_calendario') }}" class="btn btn-primary btn-sm">Ver Calendario</a>
+    Cursos
 {% endblock %}
 
 {% block body %}
-<div class="container-fluid mt-4">
+{% set currentTab = app.request.query.get('tab') ?: (app.request.query.get('page_disabled') ? 'disabled' : 'active') %}
+<div class="container-fluid mt-3 curso-page">
     {# Barra de búsqueda y filtros #}
-    <div class="row mb-3">
+    <div class="row mb-3 curso-toolbar">
         <div class="col-md-6">
-            <form method="get" action="{{ path('app_curso_index') }}" class="d-flex gap-2">
+            <form method="get" action="{{ path('app_curso_index') }}" class="d-flex gap-2 curso-search-form">
                 <div class="input-group">
                     <input name="busqueda" type="text" class="form-control" placeholder="Buscar por nombre" value="{{ busqueda is defined ? busqueda : '' }}" aria-label="Buscar curso">
                     <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i></button>
@@ -26,14 +281,14 @@
             </form>
         </div>
         <div class="col-md-6 d-flex justify-content-end align-items-center">
-            <ul class="nav nav-pills" id="myTab" role="tablist">
+            <ul class="nav nav-pills curso-tabs" id="myTab" role="tablist">
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button" role="tab" aria-controls="home" aria-selected="true">
+                    <button class="nav-link {{ currentTab == 'active' ? 'active' : '' }}" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button" role="tab" aria-controls="home" aria-selected="{{ currentTab == 'active' ? 'true' : 'false' }}">
                         Activos <span class="badge bg-primary ms-1">{{ totalCursos }}</span>
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="false">
+                    <button class="nav-link {{ currentTab == 'disabled' ? 'active' : '' }}" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="{{ currentTab == 'disabled' ? 'true' : 'false' }}">
                         Deshabilitados <span class="badge bg-secondary ms-1">{{ totalCursosDeshabilitados }}</span>
                     </button>
                 </li>
@@ -41,9 +296,10 @@
         </div>
     </div>
     <div class="tab-content" id="myTabContent">
-        <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
+        <div class="tab-pane fade {{ currentTab == 'active' ? 'show active' : '' }}" id="home" role="tabpanel" aria-labelledby="home-tab">
+            <div class="curso-panel">
             <div class="table-responsive">
-                <table class="table table-striped table-hover align-middle">
+                <table class="table table-striped table-hover align-middle curso-table">
                     <thead class="table-light">
                         <tr>
                             <th class="w-auto">
@@ -52,7 +308,7 @@
                                     'order': order == 'asc' ? 'desc' : 'asc',
                                     'sort': 'nombre',
                                     'busqueda': busqueda
-                                }) }}" class="text-decoration-none text-dark">
+                                }) }}" class="sort-link">
                                     Nombre
                                     <i class="bi bi-arrow-{{ sort == 'nombre' ? (order == 'asc' ? 'up' : 'down') : 'up-down' }}"></i>
                                 </a>
@@ -64,7 +320,7 @@
                                     'order': order == 'asc' ? 'desc' : 'asc',
                                     'sort': 'precio',
                                     'busqueda': busqueda
-                                }) }}" class="text-decoration-none text-dark">
+                                }) }}" class="sort-link">
                                     Precio
                                     <i class="bi bi-arrow-{{ sort == 'precio' ? (order == 'asc' ? 'up' : 'down') : 'up-down' }}"></i>
                                 </a>
@@ -84,7 +340,7 @@
                             <td>
                                 {% for profesor in curso.profesores %}
                                     <div class="mb-1">
-                                        <span class="badge bg-info text-dark" style="font-size: 0.9rem; padding: 0.5rem 0.75rem; white-space: nowrap;">{{ profesor.apellido }} {{ profesor.nombre }}</span>
+                                        <span class="profesor-badge">{{ profesor.apellido }} {{ profesor.nombre }}</span>
                                     </div>
                                 {% else %}
                                     <span class="text-danger"><i class="bi bi-exclamation-triangle"></i> Sin profesores</span>
@@ -93,14 +349,14 @@
                             <td><strong class="text-success">${{ curso.precio | number_format(2, ',', '.') }}</strong></td>
                             <td>
                                 {% for key in curso.dias %}
-                                    <span class="badge bg-secondary mb-1">{{ key }}</span>
+                                    <span class="dia-badge">{{ key }}</span>
                                 {% endfor %}
                             </td>
                             <td>
                                 {% if curso.horarioInicio|date('H:i') == curso.horarioFin|date('H:i') %}
                                     <span class="text-danger small"><i class="bi bi-exclamation-triangle"></i> Sin horario</span>
                                 {% else %}
-                                    <span class="badge bg-light text-dark">{{ curso.horarioInicio|date('H:i') }}hs - {{ curso.horarioFin|date('H:i') }}hs</span>
+                                    <span class="time-badge">{{ curso.horarioInicio|date('H:i') }}hs - {{ curso.horarioFin|date('H:i') }}hs</span>
                                 {% endif %} 
                             </td>
                             <td>
@@ -109,14 +365,14 @@
                                 {% else %}
                                     {% set horas = (curso.duracion)|round(0, 'floor') %}
                                     {% set minutos = ((curso.duracion - horas) * 60)|round(0, 'floor') %}
-                                    <span class="badge bg-light text-dark">{{ horas }}:{{ '%02d'|format(minutos) }}hs</span>
+                                    <span class="time-badge">{{ horas }}:{{ '%02d'|format(minutos) }}hs</span>
                                 {% endif %} 
                             </td>
                             <td>{{ curso.fechaInicio|date('d/m/Y') }}</td>
                             <td>{{ curso.fechaFin|date('d/m/Y') }}</td>
                             <td class="text-center position-relative">
                                 <div class="dropdown dropstart">
-                                    <button class="btn btn-sm btn-outline-secondary" type="button" id="dropdownMenuButton{{ curso.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle-clean" type="button" id="dropdownMenuButton{{ curso.id }}" data-bs-toggle="dropdown" aria-expanded="false">
                                         <i class="bi bi-three-dots-vertical"></i>
                                     </button>
                                     <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton{{ curso.id }}">
@@ -154,10 +410,15 @@
                     </tbody>
                 </table>
             </div>
+            <div class="curso-pagination">
+                {{ knp_pagination_render(cursos, null, {'tab': 'active'}) }}
+            </div>
+            </div>
         </div>
-        <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+        <div class="tab-pane fade {{ currentTab == 'disabled' ? 'show active' : '' }}" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+            <div class="curso-panel">
             <div class="table-responsive">
-                <table class="table table-striped table-hover align-middle">
+                <table class="table table-striped table-hover align-middle curso-table">
                     <thead class="table-light">
                         <tr>
                             <th class="w-auto">Nombre</th>
@@ -178,7 +439,7 @@
                             <td>
                                 {% for profesor in curso.profesores %}
                                     <div class="mb-1">
-                                        <span class="badge bg-info text-dark" style="font-size: 0.9rem; padding: 0.5rem 0.75rem; white-space: nowrap;">{{ profesor.apellido }} {{ profesor.nombre }}</span>
+                                        <span class="profesor-badge">{{ profesor.apellido }} {{ profesor.nombre }}</span>
                                     </div>
                                 {% else %}
                                     <span class="text-danger"><i class="bi bi-exclamation-triangle"></i> Sin profesores</span>
@@ -187,22 +448,22 @@
                             <td><strong class="text-success">${{ curso.precio | number_format(2, ',', '.') }}</strong></td>
                             <td>
                                 {% for key in curso.dias %}
-                                    <span class="badge bg-secondary mb-1">{{ key }}</span>
+                                    <span class="dia-badge">{{ key }}</span>
                                 {% endfor %}
                             </td>
                             <td>
-                                <span class="badge bg-light text-dark">{{ curso.horarioInicio|date('H:i') }}hs - {{ curso.horarioFin|date('H:i') }}hs</span>
+                                <span class="time-badge">{{ curso.horarioInicio|date('H:i') }}hs - {{ curso.horarioFin|date('H:i') }}hs</span>
                             </td>
                             <td>
                                 {% set horas = (curso.duracion)|round(0, 'floor') %}
                                 {% set minutos = ((curso.duracion - horas) * 60)|round(0, 'floor') %}
-                                <span class="badge bg-light text-dark">{{ horas }}:{{ '%02d'|format(minutos) }}hs</span>
+                                <span class="time-badge">{{ horas }}:{{ '%02d'|format(minutos) }}hs</span>
                             </td>
                             <td>{{ curso.fechaInicio|date('d/m/Y') }}</td>
                             <td>{{ curso.fechaFin|date('d/m/Y') }}</td>
                             <td class="text-center position-relative">
                                 <div class="dropdown dropstart">
-                                    <button class="btn btn-sm btn-outline-secondary" type="button" id="dropdownMenuButtonDisabled{{ curso.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle-clean" type="button" id="dropdownMenuButtonDisabled{{ curso.id }}" data-bs-toggle="dropdown" aria-expanded="false">
                                         <i class="bi bi-three-dots-vertical"></i>
                                     </button>
                                     <ul class="dropdown-menu" aria-labelledby="dropdownMenuButtonDisabled{{ curso.id }}">
@@ -231,7 +492,20 @@
                     </tbody>
                 </table>
             </div>
+            <div class="curso-pagination">
+                {{ knp_pagination_render(cursosDeshabilitados, null, {'tab': 'disabled'}) }}
+            </div>
+            </div>
         </div>
     </div>
+</div>
+
+<div class="curso-floating-actions">
+    <a href="{{ path('app_curso_new') }}" class="curso-floating-btn curso-floating-btn--new">
+        <i class="bi bi-plus-circle"></i> Nuevo Curso
+    </a>
+    <a href="{{ path('app_curso_calendario') }}" class="curso-floating-btn curso-floating-btn--calendar">
+        <i class="bi bi-calendar3"></i> Ver Calendario
+    </a>
 </div>
 {% endblock %}

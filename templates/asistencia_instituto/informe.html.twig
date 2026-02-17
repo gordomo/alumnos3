@@ -2,15 +2,163 @@
 
 {% block title %}Informe de Asistencias{% endblock %}
 
-{% block body %}
-<div class="container-fluid mt-4">
-    <div class="row mb-4">
-        <div class="col-12">
-            <h1>Informe de Asistencias</h1>
-        </div>
-    </div>
+{% block panelTitle %}
+    Informe de Asistencias
+{% endblock %}
 
-    <div class="row mb-4">
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        :root {
+            --ainf-primary: #5c6f6c;
+            --ainf-secondary: #849d9a;
+            --ainf-surface: #ffffff;
+            --ainf-text: #1f2a2d;
+            --ainf-muted: #647079;
+            --ainf-border: #e5eceb;
+            --ainf-shadow: 0 10px 28px rgba(19, 44, 43, 0.1);
+        }
+
+        .asistencia-informe-page {
+            padding: 1.2rem 0.75rem;
+        }
+
+        .asistencia-informe-title {
+            margin: 0 0 1rem;
+            color: var(--ainf-muted);
+            font-size: 0.95rem;
+            font-weight: 500;
+            letter-spacing: 0;
+        }
+
+        .asistencia-informe-toolbar {
+            background: var(--ainf-surface);
+            border: 1px solid var(--ainf-border);
+            border-radius: 14px;
+            box-shadow: var(--ainf-shadow);
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .asistencia-informe-toolbar .form-label {
+            color: var(--ainf-muted);
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.35px;
+        }
+
+        .asistencia-informe-toolbar .form-control,
+        .asistencia-informe-toolbar .form-select,
+        .asistencia-informe-toolbar .btn {
+            height: 40px;
+            border-radius: 10px;
+        }
+
+        .asistencia-informe-toolbar .form-control,
+        .asistencia-informe-toolbar .form-select {
+            border-color: #d9e4e2;
+            box-shadow: none;
+        }
+
+        .asistencia-informe-toolbar .form-control:focus,
+        .asistencia-informe-toolbar .form-select:focus {
+            border-color: var(--ainf-secondary);
+            box-shadow: 0 0 0 0.2rem rgba(132, 157, 154, 0.16);
+        }
+
+        .asistencia-informe-toolbar .btn-primary {
+            border: none;
+            background: linear-gradient(135deg, var(--ainf-primary), var(--ainf-secondary));
+            font-weight: 700;
+        }
+
+        .asistencia-informe-card {
+            border: 1px solid var(--ainf-border);
+            border-radius: 14px;
+            box-shadow: var(--ainf-shadow);
+            overflow: hidden;
+        }
+
+        .asistencia-informe-card .card-header {
+            background: linear-gradient(180deg, #fcfdfd 0%, #f7faf9 100%);
+            border-bottom: 1px solid var(--ainf-border);
+            padding: 0.9rem 1rem;
+        }
+
+        .asistencia-informe-card .card-title {
+            color: var(--ainf-text);
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .asistencia-informe-export .btn {
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        .asistencia-informe-table th {
+            background: #f5f9f8;
+            color: #4a5a60;
+            font-weight: 700;
+            font-size: 0.82rem;
+            border-bottom-color: #dce7e4;
+            white-space: nowrap;
+        }
+
+        .asistencia-informe-table td {
+            color: #27343a;
+            font-size: 0.9rem;
+            vertical-align: middle;
+            border-top-color: #ecf2f1;
+        }
+
+        .status-icon {
+            font-size: 1.1rem;
+            line-height: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #f1f6f5;
+        }
+
+        .status-icon--ok {
+            color: #1f9a5e;
+            background: #e8f6ef;
+        }
+
+        .status-icon--no {
+            color: #d64545;
+            background: #fdeeee;
+        }
+
+        .asistencia-informe-progress {
+            height: 30px;
+            min-width: 120px;
+            background-color: #e9ecef;
+            position: relative;
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .asistencia-informe-progress-label {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            line-height: 30px;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 1px 1px 2px #000, -1px -1px 2px #000;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid mt-3 asistencia-informe-page">
+    <div class="row mb-4 asistencia-informe-toolbar">
         <div class="col-12">
             <form method="get" action="{{ path('app_instituto_asistencias_informe') }}" class="row g-3">
                 <div class="col-md-3">
@@ -46,7 +194,7 @@
     {% if curso %}
         <div class="row mb-3">
             <div class="col-md-12">
-                <div class="card">
+                <div class="card asistencia-informe-card">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="card-title mb-0">
                             Informe de Asistencias - {{ curso.nombre }}
@@ -58,7 +206,7 @@
                                 - {{ fechaInicio|date('F Y')|capitalize }}
                             {% endif %}
                         </h5>
-                        <div>
+                        <div class="asistencia-informe-export">
                             <a href="{{ path('app_instituto_asistencias_exportar', {'formato': 'pdf', 'curso': curso.id, 'tipo': tipoInforme, 'fecha': fecha}) }}" class="btn btn-sm btn-outline-secondary">
                                 <i class="bi bi-file-pdf"></i> PDF
                             </a>
@@ -74,7 +222,7 @@
                         <div class="table-responsive">
                             {% if tipoInforme == 'dia' %}
                                 {# Informe diario - similar a la vista normal #}
-                                <table class="table table-striped">
+                                <table class="table table-striped asistencia-informe-table">
                                     <thead>
                                         <tr>
                                             <th>Alumno</th>
@@ -90,9 +238,9 @@
                                                     <td>
                                                         {% if asistencia.presente is not null %}
                                                             {% if asistencia.presente %}
-                                                                <i style="font-size: 25px; color: green" class="bi bi-check" title="Presente"></i>
+                                                                <i class="bi bi-check status-icon status-icon--ok" title="Presente"></i>
                                                             {% else %}
-                                                                <i style="font-size: 25px; color: red" class="bi bi-x" title="Ausente"></i>
+                                                                <i class="bi bi-x status-icon status-icon--no" title="Ausente"></i>
                                                             {% endif %}
                                                         {% else %}
                                                             <span class="badge bg-secondary">Sin registro</span>
@@ -110,7 +258,7 @@
                                 </table>
                             {% else %}
                                 {# Informes semanales y mensuales - tabla con todas las fechas #}
-                                <table class="table table-bordered table-striped table-sm">
+                                <table class="table table-bordered table-striped table-sm asistencia-informe-table">
                                     <thead>
                                         <tr>
                                             <th style="min-width: 150px;">Alumno</th>
@@ -134,10 +282,10 @@
                                                             {% if asistenciaInfo.presente is not null %}
                                                                 {% set diasConAsistenciaTomada = diasConAsistenciaTomada + 1 %}
                                                                 {% if asistenciaInfo.presente %}
-                                                                    <i style="font-size: 25px; color: green" class="bi bi-check" title="{{ asistenciaInfo.observaciones }}"></i>
+                                                                    <i class="bi bi-check status-icon status-icon--ok" title="{{ asistenciaInfo.observaciones }}"></i>
                                                                     {% set asistenciaCount = asistenciaCount + 1 %}
                                                                 {% else %}
-                                                                    <i style="font-size: 25px; color: red" class="bi bi-x" title="{{ asistenciaInfo.observaciones }}"></i>
+                                                                    <i class="bi bi-x status-icon status-icon--no" title="{{ asistenciaInfo.observaciones }}"></i>
                                                                 {% endif %}
                                                             {% else %}
                                                                 <span class="badge bg-secondary" style="font-size: 0.875rem; padding: 0.35rem 0.65rem;">-</span>
@@ -148,14 +296,14 @@
                                                     <td class="text-center align-middle" style="min-width: 150px; vertical-align: middle;">
                                                         {% if diasConAsistenciaTomada > 0 %}
                                                             {% set porcentaje = (asistenciaCount / diasConAsistenciaTomada) * 100 %}
-                                                            <div class="progress" style="height: 30px; width: 100%; min-width: 120px; background-color: #e9ecef; position: relative;">
+                                                            <div class="progress asistencia-informe-progress" style="width: 100%;">
                                                                 <div class="progress-bar bg-success" role="progressbar" 
                                                                      style="width: {{ porcentaje }}%;" 
                                                                      aria-valuenow="{{ porcentaje }}" 
                                                                      aria-valuemin="0" 
                                                                      aria-valuemax="100">
                                                                 </div>
-                                                                <span style="position: absolute; width: 100%; text-align: center; line-height: 30px; font-weight: bold; color: #fff; text-shadow: 1px 1px 2px #000, -1px -1px 2px #000, 1px -1px 2px #000, -1px 1px 2px #000;">
+                                                                <span class="asistencia-informe-progress-label">
                                                                     {{ porcentaje|round }}% ({{ asistenciaCount }}/{{ diasConAsistenciaTomada }})
                                                                 </span>
                                                             </div>
@@ -185,7 +333,7 @@
             {# Gráfico para el resumen de asistencias (semanal y mensual) #}
             <div class="row">
                 <div class="col-md-12">
-                    <div class="card">
+                    <div class="card asistencia-informe-card">
                         <div class="card-header">
                             <h5 class="card-title mb-0">Resumen de Asistencias</h5>
                         </div>

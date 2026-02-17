@@ -2,15 +2,175 @@
 
 {% block title %}Usuarios del Instituto{% endblock %}
 
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        :root {
+            --usr-primary: #5c6f6c;
+            --usr-secondary: #849d9a;
+            --usr-surface: #ffffff;
+            --usr-text: #1f2a2d;
+            --usr-muted: #647079;
+            --usr-border: #e5eceb;
+            --usr-shadow: 0 10px 28px rgba(19, 44, 43, 0.1);
+        }
+
+        .user-page {
+            padding: 1.2rem 0.75rem;
+            padding-bottom: 5.9rem;
+        }
+
+        .user-filter-card {
+            border: 1px solid var(--usr-border);
+            border-radius: 14px;
+            box-shadow: var(--usr-shadow);
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background: var(--usr-surface);
+        }
+
+        .user-filter-card .form-label {
+            color: var(--usr-muted);
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.35px;
+        }
+
+        .user-filter-card .form-control,
+        .user-filter-card .form-select,
+        .user-filter-card .btn {
+            height: 40px;
+            border-radius: 10px;
+        }
+
+        .user-filter-card .form-control,
+        .user-filter-card .form-select {
+            border-color: #d9e4e2;
+            box-shadow: none;
+        }
+
+        .user-filter-card .form-control:focus,
+        .user-filter-card .form-select:focus {
+            border-color: var(--usr-secondary);
+            box-shadow: 0 0 0 0.2rem rgba(132, 157, 154, 0.16);
+        }
+
+        .user-panel {
+            background: var(--usr-surface);
+            border: 1px solid var(--usr-border);
+            border-radius: 14px;
+            box-shadow: var(--usr-shadow);
+            overflow: hidden;
+        }
+
+        .user-table {
+            margin-bottom: 0;
+        }
+
+        .user-table thead th {
+            background: #f5f9f8;
+            color: #4a5a60;
+            font-weight: 700;
+            font-size: 0.82rem;
+            letter-spacing: 0.2px;
+            border-bottom: 1px solid #dce7e4;
+            padding: 0.72rem 0.6rem;
+            white-space: nowrap;
+        }
+
+        .user-table td {
+            color: #27343a;
+            font-size: 0.92rem;
+            border-top-color: #ecf2f1;
+            vertical-align: middle;
+        }
+
+        .role-badge {
+            border-radius: 999px;
+            padding: 0.3rem 0.55rem;
+            font-size: 0.73rem;
+            font-weight: 600;
+        }
+
+        .role-badge--main {
+            background: linear-gradient(135deg, var(--usr-primary), var(--usr-secondary)) !important;
+        }
+
+        .user-actions {
+            display: inline-flex;
+            gap: 0.3rem;
+        }
+
+        .user-actions .btn {
+            border-radius: 8px;
+        }
+
+        .user-footer {
+            padding: 0.85rem 1rem 1rem;
+            border-top: 1px solid #eef3f2;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .user-pagination .pagination {
+            margin-bottom: 0;
+        }
+
+        .user-pagination .page-link {
+            border-radius: 8px;
+            border-color: #d9e4e2;
+            color: #4b5d61;
+            margin: 0 0.15rem;
+        }
+
+        .user-pagination .page-item.active .page-link {
+            background: var(--usr-primary);
+            border-color: var(--usr-primary);
+            color: #fff;
+        }
+
+        .user-floating-actions {
+            position: fixed;
+            right: 1rem;
+            bottom: 1rem;
+            z-index: 1030;
+        }
+
+        .user-floating-btn {
+            border: none;
+            border-radius: 999px;
+            padding: 0.58rem 0.95rem;
+            font-size: 0.84rem;
+            font-weight: 700;
+            color: #fff;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: linear-gradient(135deg, #2c9e67, #228556);
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+        }
+
+        .user-floating-btn:hover {
+            color: #fff;
+            text-decoration: none;
+        }
+    </style>
+{% endblock %}
+
 {% block panelTitle %}
-    Usuarios del Instituto <a href="{{ path('instituto_user_new') }}" class="btn btn-success btn-sm">Crear Nuevo</a>
+    Usuarios del Instituto
 {% endblock %}
 
 {% block body %}
-<div class="container-fluid mt-4">
+<div class="container-fluid mt-3 user-page">
     <div class="row mb-3">
         <div class="col-12">
-            <form method="get" class="row g-3">
+            <form method="get" class="row g-3 user-filter-card">
                 <div class="col-md-6">
                     <label for="busqueda" class="form-label">Buscar por Email</label>
                     <input type="text" class="form-control" id="busqueda" name="busqueda" value="{{ busqueda }}" placeholder="Buscar usuario...">
@@ -32,8 +192,9 @@
         </div>
     </div>
     <div class="row mb-3">
+        <div class="user-panel p-0">
         <div class="table-responsive">
-            <table class="table table-striped table-hover">
+            <table class="table table-striped table-hover user-table">
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -56,14 +217,15 @@
                                 {% if user.roles %}
                                     {% for role in user.roles %}
                                         {% if role in role_names|keys %}
-                                            <span class="badge bg-primary me-1">{{ role_names[role] }}</span>
+                                            <span class="badge role-badge role-badge--main me-1">{{ role_names[role] }}</span>
                                         {% else %}
-                                            <span class="badge bg-secondary me-1">{{ role }}</span>
+                                            <span class="badge bg-secondary role-badge me-1">{{ role }}</span>
                                         {% endif %}
                                     {% endfor %}
                                 {% endif %}
                             </td>
                             <td>
+                                <div class="user-actions">
                                 <a href="{{ path('instituto_user_show', {'id': user.id}) }}" 
                                    class="btn btn-sm btn-outline-info" 
                                    title="Ver" 
@@ -77,6 +239,7 @@
                                     <i class="bi bi-pencil"></i>
                                 </a>
                                 {{ include('instituto/user/_delete_form.html.twig', {'user': user}) }}
+                                </div>
                             </td>
                         </tr>
                     {% else %}
@@ -87,19 +250,22 @@
                 </tbody>
             </table>
         </div>
-    </div>
-    <div class="row">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
+            <div class="user-footer">
                 <div>
                     Mostrando {{ users|length }} de {{ users.getTotalItemCount }} usuarios
                 </div>
-                <div>
+                <div class="user-pagination">
                     {{ knp_pagination_render(users) }}
                 </div>
             </div>
         </div>
     </div>
+</div>
+
+<div class="user-floating-actions">
+    <a href="{{ path('instituto_user_new') }}" class="user-floating-btn">
+        <i class="bi bi-plus-circle"></i> Crear Nuevo
+    </a>
 </div>
 {% endblock %}
 

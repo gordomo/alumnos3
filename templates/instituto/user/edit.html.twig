@@ -2,17 +2,49 @@
 
 {% block title %}Editar Usuario{% endblock %}
 
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        :root {
+            --usr-primary: #5c6f6c;
+            --usr-secondary: #849d9a;
+            --usr-surface: #ffffff;
+            --usr-border: #e5eceb;
+            --usr-shadow: 0 10px 28px rgba(19, 44, 43, 0.1);
+        }
+
+        .user-edit-page {
+            padding: 1.2rem 0.75rem;
+        }
+
+        .user-edit-card {
+            border: 1px solid var(--usr-border);
+            border-radius: 14px;
+            box-shadow: var(--usr-shadow);
+            overflow: hidden;
+        }
+
+        .user-edit-warning {
+            border: 0;
+            border-bottom: 1px solid rgba(0,0,0,0.08);
+            border-radius: 0;
+            background: #fff7e8;
+            color: #6a4a1d;
+        }
+    </style>
+{% endblock %}
+
 {% block panelTitle %}
     Editar Usuario
 {% endblock %}
 
 {% block body %}
-<div class="container-fluid mt-4">
+<div class="container-fluid mt-3 user-edit-page">
     <div class="row">
         <div class="col-12">
-            <div class="card shadow-sm">
+            <div class="card user-edit-card">
                 {% if esPropioUsuario %}
-                    <div class="alert alert-warning mb-0 border-0 border-bottom rounded-0" role="alert">
+                    <div class="alert alert-warning mb-0 user-edit-warning" role="alert">
                         <div class="d-flex align-items-center">
                             <i class="bi bi-exclamation-triangle-fill me-3 fs-5"></i>
                             <div class="flex-grow-1">

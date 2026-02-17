@@ -5,14 +5,141 @@
 {% block stylesheets %}
     {{ parent() }}
     <style>
-        .collapse-icon {
-            transition: transform 0.3s ease;
+        :root {
+            --cfg-primary: #5c6f6c;
+            --cfg-secondary: #849d9a;
+            --cfg-accent: #d4a373;
+            --cfg-surface: #ffffff;
+            --cfg-text: #1f2a2d;
+            --cfg-muted: #647079;
+            --cfg-border: #e5eceb;
+            --cfg-shadow: 0 10px 28px rgba(19, 44, 43, 0.1);
         }
-        [data-bs-toggle="collapse"][aria-expanded="true"] .collapse-icon {
-            transform: rotate(180deg);
+
+        .config-page {
+            padding: 1.2rem 0.75rem;
         }
-        [data-bs-toggle="collapse"]:hover {
-            background-color: rgba(0,0,0,0.02);
+
+        .config-shell {
+            border: 1px solid var(--cfg-border);
+            border-radius: 14px;
+            box-shadow: var(--cfg-shadow);
+            overflow: hidden;
+        }
+
+        .config-toolbar {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 1rem;
+        }
+
+        .config-edit-btn {
+            border: none;
+            border-radius: 10px;
+            padding: 0.5rem 0.9rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--cfg-primary), var(--cfg-secondary));
+            box-shadow: 0 10px 24px rgba(92, 111, 108, 0.25);
+        }
+
+        .config-edit-btn:hover {
+            background: linear-gradient(135deg, #5f7471, #77908d);
+        }
+
+        .config-tabs.nav-tabs {
+            border-bottom: none;
+            gap: 0.45rem;
+        }
+
+        .config-tabs .nav-link {
+            border-radius: 10px;
+            color: #3f5359;
+            border: 1px solid #dbe5e3;
+            background: #f8fbfa;
+            font-weight: 600;
+        }
+
+        .config-tabs .nav-link.active {
+            background: linear-gradient(135deg, var(--cfg-primary), var(--cfg-secondary));
+            border-color: transparent;
+            color: #fff;
+            box-shadow: 0 8px 22px rgba(92, 111, 108, 0.28);
+        }
+
+        .config-section-card {
+            border: 1px solid var(--cfg-border);
+            border-radius: 14px;
+            box-shadow: var(--cfg-shadow);
+            overflow: hidden;
+        }
+
+        .config-section-header {
+            color: #fff;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+        }
+
+        .config-section-header--general {
+            background: linear-gradient(135deg, #2f7ef0, #2368ce);
+        }
+
+        .config-section-header--payments {
+            background: linear-gradient(135deg, #d4a373, #c38f5d);
+            color: #2f2417;
+        }
+
+        .config-section-header--discounts {
+            background: linear-gradient(135deg, #28b5d4, #1f98b4);
+        }
+
+        .config-section-header--promos {
+            background: linear-gradient(135deg, #2c9e67, #228556);
+        }
+
+        .config-section-header--notify {
+            background: linear-gradient(135deg, #6c7f88, #5a6b73);
+        }
+
+        .config-section-title {
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .config-data-table th {
+            width: 32%;
+            color: #5a6c73;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            font-weight: 700;
+        }
+
+        .config-data-table td {
+            color: #27343a;
+            font-weight: 500;
+        }
+
+        .config-grid-table thead th {
+            background: #f5f9f8;
+            color: #4a5a60;
+            font-weight: 700;
+            font-size: 0.82rem;
+            border-bottom-color: #dce7e4;
+        }
+
+        .config-grid-table td {
+            color: #27343a;
+            vertical-align: middle;
+            border-top-color: #ecf2f1;
+        }
+
+        @media (max-width: 768px) {
+            .config-page {
+                padding: 0.9rem 0.2rem;
+            }
+
+            .config-data-table th {
+                width: 45%;
+            }
         }
     </style>
 {% endblock %}
@@ -22,19 +149,19 @@
 {% endblock %}
 
 {% block body %}
-    <div class="container-fluid mt-4">
+    <div class="container-fluid mt-3 config-page">
         <div class="row">
             <div class="col-md-12">
-                <div class="card shadow-sm">
+                <div class="card config-shell">
                     <div class="card-body">
-                        <div class="text-end mb-4">
-                            <a href="{{ path('instituto_config_edit') }}" id="btn-editar-config" class="btn btn-primary">
+                        <div class="config-toolbar">
+                            <a href="{{ path('instituto_config_edit') }}" id="btn-editar-config" class="btn btn-primary config-edit-btn">
                                 <i class="bi bi-pencil"></i> Editar Configuración
                             </a>
                         </div>
 
                         <!-- Pestañas -->
-                        <ul class="nav nav-tabs mb-4" id="configTabs" role="tablist">
+                        <ul class="nav nav-tabs config-tabs mb-4" id="configTabs" role="tablist">
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link active" id="general-tab" data-bs-toggle="tab" data-bs-target="#general" type="button" role="tab" aria-controls="general" aria-selected="true">
                                     <i class="bi bi-building"></i> Información General
@@ -61,9 +188,9 @@
                         <div class="tab-content" id="configTabsContent">
                             <!-- Pestaña: Información General -->
                             <div class="tab-pane fade show active" id="general" role="tabpanel" aria-labelledby="general-tab">
-                        <div class="card mb-4">
-                                    <div class="card-header bg-primary text-white">
-                                        <h4 class="card-title mb-0">
+                        <div class="card config-section-card mb-4">
+                                    <div class="card-header config-section-header config-section-header--general">
+                                        <h4 class="card-title config-section-title mb-0">
                                             <i class="bi bi-building"></i> Información General del Instituto
                                         </h4>
                             </div>
@@ -83,22 +210,40 @@
                                         {% endif %}
                                     </div>
                                     <div class="col-md-8">
-                                                <table class="table table-borderless">
+                                                <table class="table table-borderless config-data-table">
                                             <tr>
                                                         <th width="30%">Nombre:</th>
                                                         <td><strong>{{ instituto.nombre }}</strong></td>
                                             </tr>
                                             <tr>
                                                 <th>Email:</th>
-                                                        <td>{{ instituto.email ?? '<span class="text-muted">No especificado</span>' }}</td>
+                                                        <td>
+                                                            {% if instituto.email %}
+                                                                {{ instituto.email }}
+                                                            {% else %}
+                                                                <span class="text-muted">No especificado</span>
+                                                            {% endif %}
+                                                        </td>
                                             </tr>
                                             <tr>
                                                 <th>Teléfono:</th>
-                                                        <td>{{ instituto.tel ?? '<span class="text-muted">No especificado</span>' }}</td>
+                                                        <td>
+                                                            {% if instituto.tel %}
+                                                                {{ instituto.tel }}
+                                                            {% else %}
+                                                                <span class="text-muted">No especificado</span>
+                                                            {% endif %}
+                                                        </td>
                                             </tr>
                                             <tr>
                                                 <th>Dirección:</th>
-                                                        <td>{{ instituto.dir ?? '<span class="text-muted">No especificada</span>' }}</td>
+                                                        <td>
+                                                            {% if instituto.dir %}
+                                                                {{ instituto.dir }}
+                                                            {% else %}
+                                                                <span class="text-muted">No especificada</span>
+                                                            {% endif %}
+                                                        </td>
                                             </tr>
                                         </table>
                                     </div>
@@ -110,15 +255,15 @@
                             <!-- Pestaña: Pagos y Vencimientos -->
                             <div class="tab-pane fade" id="pagos" role="tabpanel" aria-labelledby="pagos-tab">
                                 <!-- Vencimientos -->
-                                <div class="card">
-                                    <div class="card-header bg-warning text-dark">
-                                        <h4 class="card-title mb-0">
+                                <div class="card config-section-card">
+                                    <div class="card-header config-section-header config-section-header--payments">
+                                        <h4 class="card-title config-section-title mb-0">
                                             <i class="bi bi-calendar-event"></i> Vencimientos e Intereses
                                         </h4>
                                     </div>
                                     <div class="card-body">
                                         <div class="table-responsive">
-                                            <table class="table table-bordered table-striped table-hover">
+                                            <table class="table table-bordered table-striped table-hover config-grid-table">
                                                 <thead>
                                                     <tr>
                                                         <th>Día de Vencimiento</th>
@@ -148,16 +293,16 @@
                             <!-- Pestaña: Descuentos -->
                             <div class="tab-pane fade" id="descuentos" role="tabpanel" aria-labelledby="descuentos-tab">
                                 <!-- Configuración de Descuentos -->
-                                <div class="card mb-4">
-                                    <div class="card-header bg-info text-white">
-                                        <h4 class="card-title mb-0">
+                                <div class="card config-section-card mb-4">
+                                    <div class="card-header config-section-header config-section-header--discounts">
+                                        <h4 class="card-title config-section-title mb-0">
                                             <i class="bi bi-percent"></i> Configuración de Descuentos
                                         </h4>
                             </div>
                             <div class="card-body">
                                 <div class="row">
                                     <div class="col-md-12">
-                                                <table class="table table-borderless">
+                                                <table class="table table-borderless config-data-table">
                                                     <tr>
                                                         <th width="40%">Descuento por pago en efectivo:</th>
                                                         <td>
@@ -209,15 +354,15 @@
                         </div>
 
                                 <!-- Descuentos Promocionales -->
-                                <div class="card">
-                                    <div class="card-header bg-success text-white">
-                                        <h4 class="card-title mb-0">
+                                <div class="card config-section-card">
+                                    <div class="card-header config-section-header config-section-header--promos">
+                                        <h4 class="card-title config-section-title mb-0">
                                             <i class="bi bi-tag"></i> Descuentos Promocionales
                                         </h4>
                             </div>
                             <div class="card-body">
                                 <div class="table-responsive">
-                                            <table class="table table-bordered table-striped table-hover">
+                                            <table class="table table-bordered table-striped table-hover config-grid-table">
                                         <thead>
                                             <tr>
                                                 <th>Nombre</th>
@@ -254,16 +399,16 @@
 
                             <!-- Pestaña: Notificaciones -->
                             <div class="tab-pane fade" id="notificaciones" role="tabpanel" aria-labelledby="notificaciones-tab">
-                        <div class="card">
-                                    <div class="card-header bg-secondary text-white">
-                                        <h4 class="card-title mb-0">
+                        <div class="card config-section-card">
+                                    <div class="card-header config-section-header config-section-header--notify">
+                                        <h4 class="card-title config-section-title mb-0">
                                             <i class="bi bi-envelope"></i> Configuración de Notificaciones por Email
                                         </h4>
                                     </div>
                                     <div class="card-body">
                                         <div class="row">
                                             <div class="col-md-12">
-                                                <table class="table table-borderless">
+                                                <table class="table table-borderless config-data-table">
                                                     <tr>
                                                         <th width="40%">Enviar emails con facturas/recibos:</th>
                                                         <td>

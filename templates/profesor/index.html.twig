@@ -2,37 +2,263 @@
 
 {% block title %}Profesor index{% endblock %}
 
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        :root {
+            --profe-primary: #5c6f6c;
+            --profe-secondary: #849d9a;
+            --profe-accent: #d4a373;
+            --profe-surface: #ffffff;
+            --profe-text: #1f2a2d;
+            --profe-muted: #647079;
+            --profe-border: #e5eceb;
+            --profe-shadow: 0 10px 28px rgba(19, 44, 43, 0.1);
+        }
+
+        .profesor-page {
+            padding: 1.2rem 0.75rem;
+            padding-bottom: 5.8rem;
+        }
+
+        .profesor-toolbar {
+            background: var(--profe-surface);
+            border: 1px solid var(--profe-border);
+            border-radius: 14px;
+            box-shadow: var(--profe-shadow);
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .profesor-search .form-control,
+        .profesor-search .btn {
+            height: 40px;
+            border-radius: 10px;
+        }
+
+        .profesor-search .form-control {
+            border-color: #d9e4e2;
+            box-shadow: none;
+        }
+
+        .profesor-search .form-control:focus {
+            border-color: var(--profe-secondary);
+            box-shadow: 0 0 0 0.2rem rgba(132, 157, 154, 0.16);
+        }
+
+        .profesor-search .btn-outline-secondary {
+            border-color: #d9e4e2;
+            color: #556067;
+        }
+
+        .profesor-search .btn-outline-secondary:hover {
+            background: #f1f6f5;
+            color: #3f4a50;
+        }
+
+        .profesor-reset-btn {
+            border-radius: 10px;
+            font-weight: 600;
+            height: 40px;
+        }
+
+        .profesor-panel {
+            background: var(--profe-surface);
+            border: 1px solid var(--profe-border);
+            border-radius: 14px;
+            box-shadow: var(--profe-shadow);
+            overflow: hidden;
+        }
+
+        .profesor-table {
+            margin-bottom: 0;
+        }
+
+        .profesor-table thead th {
+            background: #f5f9f8;
+            color: #4a5a60;
+            font-weight: 700;
+            font-size: 0.82rem;
+            letter-spacing: 0.2px;
+            border-bottom: 1px solid #dce7e4;
+            padding: 0.72rem 0.6rem;
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+
+        .profesor-table td {
+            vertical-align: middle;
+            padding: 0.66rem 0.6rem;
+            border-top-color: #ecf2f1;
+            color: #27343a;
+            font-size: 0.92rem;
+        }
+
+        .profesor-table tbody tr:hover {
+            background: #fbfdfd;
+        }
+
+        .profesor-sort-link {
+            color: #425257;
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .profesor-sort-link:hover {
+            color: #2f4348;
+        }
+
+        .curso-chip {
+            display: inline-flex;
+            align-items: center;
+            margin: 0.1rem 0.25rem 0.1rem 0;
+            padding: 0.22rem 0.5rem;
+            border-radius: 999px;
+            border: 1px solid #d9e4e2;
+            background: #f6faf9;
+            color: #425257;
+            font-size: 0.78rem;
+            text-decoration: none;
+        }
+
+        .curso-chip:hover {
+            background: #edf6f4;
+            color: #2f4348;
+            text-decoration: none;
+        }
+
+        .money-value {
+            font-weight: 700;
+            color: #218c58;
+        }
+
+        .actions-group {
+            display: inline-flex;
+            gap: 0.35rem;
+        }
+
+        .actions-group .btn {
+            border-radius: 8px;
+            padding: 0.2rem 0.55rem;
+        }
+
+        .profesor-pagination {
+            padding: 0.85rem 1rem 1rem;
+            display: flex;
+            justify-content: center;
+            border-top: 1px solid #eef3f2;
+        }
+
+        .profesor-pagination .pagination {
+            margin-bottom: 0;
+        }
+
+        .profesor-pagination .page-link {
+            border-radius: 8px;
+            border-color: #d9e4e2;
+            color: #4b5d61;
+            margin: 0 0.15rem;
+        }
+
+        .profesor-pagination .page-item.active .page-link {
+            background: var(--profe-primary);
+            border-color: var(--profe-primary);
+            color: #fff;
+        }
+
+        .profesor-empty {
+            color: #718088;
+            font-style: italic;
+        }
+
+        .profesor-floating-actions {
+            position: fixed;
+            right: 1rem;
+            bottom: 1rem;
+            z-index: 1030;
+        }
+
+        .profesor-floating-btn {
+            border: none;
+            border-radius: 999px;
+            padding: 0.58rem 0.95rem;
+            font-size: 0.84rem;
+            font-weight: 700;
+            color: #fff;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: linear-gradient(135deg, #2c9e67, #228556);
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .profesor-floating-btn:hover {
+            color: #fff;
+            transform: translateY(-1px);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.26);
+            text-decoration: none;
+        }
+
+        @media (max-width: 768px) {
+            .profesor-page {
+                padding: 0.9rem 0.2rem;
+                padding-bottom: 6.2rem;
+            }
+
+            .profesor-toolbar {
+                padding: 0.85rem;
+            }
+
+            .profesor-floating-actions {
+                right: 0.75rem;
+                bottom: 0.75rem;
+            }
+
+            .profesor-floating-btn {
+                padding: 0.54rem 0.85rem;
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+{% endblock %}
+
 {% block panelTitle %}
-    Profesores <a href="{{ path('app_profesor_new') }}"class="btn btn-success btn-sm">Nuevo Profesor</a>
+    Profesores
 {% endblock %}
 
 {% block body %}
-<div class="container-fluid mt-4">
-    <div class="row">
-        <div class="col-6">
-            <form method="get" action="{{ path('app_profesor_index') }}">
-                <div class="input-group mb-3">
-                    <input name="busqueda" type="text" class="form-control" placeholder="Buscar por Nombre y Apellido" aria-label="Recipient's username" aria-describedby="button-addon2">
+<div class="container-fluid mt-3 profesor-page">
+    <div class="row profesor-toolbar">
+        <div class="col-md-6">
+            <form method="get" action="{{ path('app_profesor_index') }}" class="profesor-search">
+                <div class="input-group">
+                    <input name="busqueda" type="text" class="form-control" placeholder="Buscar por nombre y apellido" value="{{ busqueda ? busqueda : '' }}" aria-label="Buscar profesor">
                     <button class="btn btn-outline-secondary" type="submit" id="button-addon2"><i class="bi bi-search"></i></button>
                 </div>
             </form>
         </div>
-        <div class="col-6">
-            <a class="btn btn-primary" href="{{ path('app_profesor_index') }}">ver todos</a>
+        <div class="col-md-6 d-flex justify-content-md-end align-items-center mt-2 mt-md-0">
+            <a class="btn btn-outline-primary profesor-reset-btn" href="{{ path('app_profesor_index') }}">
+                <i class="bi bi-arrow-clockwise me-1"></i> Ver todos
+            </a>
         </div>
     </div>
-    <br>
-    <table class="table">
+
+    <div class="profesor-panel">
+    <div class="table-responsive">
+    <table class="table profesor-table">
         <thead>
             <tr>
                 <th>
-                    <a href="{{ path('app_profesor_index', {'sort': 'apellido', 'order': sort == 'apellido' ? (order == 'asc' ? 'desc' : 'asc') : 'asc'}) }}" class="text-decoration-none text-dark">
+                    <a href="{{ path('app_profesor_index', {'sort': 'apellido', 'order': sort == 'apellido' ? (order == 'asc' ? 'desc' : 'asc') : 'asc', 'busqueda': busqueda}) }}" class="profesor-sort-link">
                         Apellido
                         <i class="bi bi-arrow-{{ sort == 'apellido' ? (order == 'asc' ? 'up' : 'down') : 'up-down' }}"></i>
                     </a>
                 </th>
                 <th>
-                    <a href="{{ path('app_profesor_index', {'sort': 'nombre', 'order': sort == 'nombre' ? (order == 'asc' ? 'desc' : 'asc') : 'asc'}) }}" class="text-decoration-none text-dark">
+                    <a href="{{ path('app_profesor_index', {'sort': 'nombre', 'order': sort == 'nombre' ? (order == 'asc' ? 'desc' : 'asc') : 'asc', 'busqueda': busqueda}) }}" class="profesor-sort-link">
                         Nombre
                         <i class="bi bi-arrow-{{ sort == 'nombre' ? (order == 'asc' ? 'up' : 'down') : 'up-down' }}"></i>
                     </a>
@@ -54,36 +280,44 @@
                 <td>{{ profesor.email }}</td>
                 <td>
                     {% for curso in profesor.cursos %}
-                        <a href="{{ path('app_curso_edit', {'id': curso.id}) }}">{{ curso.nombre }}</a><br>
+                        <a href="{{ path('app_curso_edit', {'id': curso.id}) }}" class="curso-chip">{{ curso.nombre }}</a>
+                    {% else %}
+                        <span class="text-muted">Sin cursos</span>
                     {% endfor %}
                 </td>
                 <td>
-                    ${{ profesor.precioHora }}
+                    <span class="money-value">${{ profesor.precioHora }}</span>
                 </td>
-                <td>${{ profesor.viatico }}</td>
+                <td><span class="money-value">${{ profesor.viatico }}</span></td>
                 <td>
-                    <a href="{{ path('app_profesor_show', {'id': profesor.id}) }}" class="btn btn-sm btn-outline-primary" title="Ver" data-toggle="tooltip" data-placement="left">
-                        <i class="bi bi-eye"></i>
-                    </a>
-                    <a href="{{ path('app_profesor_edit', {'id': profesor.id}) }}" class="btn btn-sm btn-outline-secondary" title="Editar" data-toggle="tooltip" data-placement="top">
-                        <i class="bi bi-pencil"></i>
-                    </a>
+                    <div class="actions-group">
+                        <a href="{{ path('app_profesor_show', {'id': profesor.id}) }}" class="btn btn-sm btn-outline-primary" title="Ver" data-toggle="tooltip" data-placement="left">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        <a href="{{ path('app_profesor_edit', {'id': profesor.id}) }}" class="btn btn-sm btn-outline-secondary" title="Editar" data-toggle="tooltip" data-placement="top">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                    </div>
                 </td>
             </tr>
         {% else %}
             <tr>
-                <td colspan="6">No se encontraron registros</td>
+                <td colspan="8" class="text-center profesor-empty py-4">No se encontraron registros</td>
             </tr>
         {% endfor %}
         </tbody>
-        <tfoot>
-            <tr>
-                <td colspan="8">
-                    {{ knp_pagination_render(profesors) }}
-                </td>
-            </tr>
-        </tfoot>
     </table>
+    </div>
+    <div class="profesor-pagination">
+        {{ knp_pagination_render(profesors) }}
+    </div>
+    </div>
 </div>
-    
+
+<div class="profesor-floating-actions">
+    <a href="{{ path('app_profesor_new') }}" class="profesor-floating-btn">
+        <i class="bi bi-plus-circle"></i> Nuevo Profesor
+    </a>
+</div>
+
 {% endblock %}

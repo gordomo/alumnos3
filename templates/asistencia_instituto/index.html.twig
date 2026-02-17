@@ -2,15 +2,152 @@
 
 {% block title %}Asistencias de Alumnos - {{ app.user.instituto.nombre }}{% endblock %}
 
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        :root {
+            --asi-primary: #5c6f6c;
+            --asi-secondary: #849d9a;
+            --asi-surface: #ffffff;
+            --asi-text: #1f2a2d;
+            --asi-muted: #647079;
+            --asi-border: #e5eceb;
+            --asi-shadow: 0 10px 28px rgba(19, 44, 43, 0.1);
+        }
+
+        .asistencia-page {
+            padding: 1.2rem 0.75rem;
+        }
+
+        .asistencia-intro {
+            margin-bottom: 1rem;
+        }
+
+        .asistencia-title {
+            margin: 0;
+            color: var(--asi-text);
+            font-size: 1.65rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        .asistencia-subtitle {
+            margin: 0.35rem 0 0;
+            color: var(--asi-muted);
+            font-size: 0.93rem;
+        }
+
+        .asistencia-toolbar {
+            background: var(--asi-surface);
+            border: 1px solid var(--asi-border);
+            border-radius: 14px;
+            box-shadow: var(--asi-shadow);
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .asistencia-toolbar .form-label {
+            color: var(--asi-muted);
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.35px;
+        }
+
+        .asistencia-toolbar .form-control,
+        .asistencia-toolbar .form-select {
+            height: 40px;
+            border-radius: 10px;
+            border-color: #d9e4e2;
+            box-shadow: none;
+        }
+
+        .asistencia-toolbar .form-control:focus,
+        .asistencia-toolbar .form-select:focus {
+            border-color: var(--asi-secondary);
+            box-shadow: 0 0 0 0.2rem rgba(132, 157, 154, 0.16);
+        }
+
+        .asistencia-page .card {
+            border: 1px solid var(--asi-border);
+            border-radius: 14px;
+            box-shadow: var(--asi-shadow);
+            overflow: hidden;
+        }
+
+        .asistencia-page .card-header {
+            background: linear-gradient(180deg, #fcfdfd 0%, #f7faf9 100%);
+            border-bottom: 1px solid var(--asi-border);
+            padding: 0.9rem 1rem;
+        }
+
+        .asistencia-page .card-title {
+            color: var(--asi-text);
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .asistencia-page .table th {
+            background: #f5f9f8;
+            color: #4a5a60;
+            font-weight: 700;
+            font-size: 0.82rem;
+            border-bottom-color: #dce7e4;
+        }
+
+        .asistencia-page .table td {
+            color: #27343a;
+            font-size: 0.9rem;
+            vertical-align: middle;
+            border-top-color: #ecf2f1;
+        }
+
+        .asistencia-page .btn-group .btn {
+            border-radius: 8px !important;
+            min-width: 32px;
+        }
+
+        .asistencia-page .btn-group.btn-group-sm {
+            display: inline-flex;
+            gap: 0.28rem;
+        }
+
+        .asistencia-page .btn-group > .btn:not(:first-child),
+        .asistencia-page .btn-group > :not(.btn-check) + .btn {
+            margin-left: 0 !important;
+        }
+
+        .asistencia-page .observaciones-input {
+            border-radius: 9px;
+            border-color: #d9e4e2;
+            height: 36px;
+        }
+
+        .asistencia-page .observaciones-input:focus {
+            border-color: var(--asi-secondary);
+            box-shadow: 0 0 0 0.2rem rgba(132, 157, 154, 0.16);
+        }
+
+        @media (max-width: 768px) {
+            .asistencia-page {
+                padding: 0.9rem 0.2rem;
+            }
+
+            .asistencia-title {
+                font-size: 1.35rem;
+            }
+        }
+    </style>
+{% endblock %}
+
 {% block body %}
-<div class="container-fluid mt-4">
-    <div class="row mb-4">
-        <div class="col-12">
-            <h1>Asistencias de Alumnos - {{ app.user.instituto.nombre }}</h1>
-        </div>
+<div class="container-fluid mt-3 asistencia-page">
+    <div class="asistencia-intro">
+        <h1 class="asistencia-title">Asistencias de Alumnos</h1>
+        <p class="asistencia-subtitle">Instituto: {{ app.user.instituto.nombre }}. Selecciona fecha y curso para registrar o revisar asistencias.</p>
     </div>
 
-    <div class="row mb-4">
+    <div class="row mb-4 asistencia-toolbar">
         <div class="col-12">
             <form method="get" action="{{ path('app_instituto_asistencias_index') }}" class="row g-3" id="form-filtro-asistencias">
                 <div class="col-md-6">

@@ -2,40 +2,225 @@
 
 {% block title %}Pagos{% endblock %}
 
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        :root {
+            --pag-primary: #5c6f6c;
+            --pag-secondary: #849d9a;
+            --pag-surface: #ffffff;
+            --pag-text: #1f2a2d;
+            --pag-muted: #647079;
+            --pag-border: #e5eceb;
+            --pag-shadow: 0 10px 28px rgba(19, 44, 43, 0.1);
+        }
+
+        .pagos-page {
+            width: 100%;
+            max-width: 100%;
+            padding: 1rem 0.25rem 6.1rem !important;
+        }
+
+        .pagos-page .row {
+            --bs-gutter-x: 0.5rem;
+        }
+
+        .pagos-tabs {
+            border-bottom: none;
+            gap: 0.4rem;
+        }
+
+        .pagos-tabs .nav-link {
+            border-radius: 10px;
+            color: #3f5359;
+            border: 1px solid #dbe5e3;
+            background: #f8fbfa;
+            font-weight: 600;
+        }
+
+        .pagos-tabs .nav-link.active {
+            background: linear-gradient(135deg, var(--pag-primary), var(--pag-secondary));
+            border-color: transparent;
+            color: #fff;
+            box-shadow: 0 8px 22px rgba(92, 111, 108, 0.28);
+        }
+
+        .pagos-filter-card,
+        .pagos-panel-card {
+            width: 100%;
+            border: 1px solid var(--pag-border);
+            border-radius: 14px;
+            box-shadow: var(--pag-shadow);
+            overflow: hidden;
+        }
+
+        .pagos-panel-card .table-responsive {
+            width: 100%;
+        }
+
+        .pagos-filter-card .card-body {
+            padding-top: 0.7rem !important;
+            padding-bottom: 0.7rem !important;
+        }
+
+        .pagos-filter-card .form-control,
+        .pagos-filter-card .form-select,
+        .pagos-filter-card .btn {
+            height: 36px;
+            border-radius: 9px;
+        }
+
+        .pagos-filter-card .form-control,
+        .pagos-filter-card .form-select {
+            border-color: #d9e4e2;
+            box-shadow: none;
+        }
+
+        .pagos-filter-card .form-control:focus,
+        .pagos-filter-card .form-select:focus {
+            border-color: var(--pag-secondary);
+            box-shadow: 0 0 0 0.2rem rgba(132, 157, 154, 0.15);
+        }
+
+        .pagos-filter-card .form-label {
+            font-size: 0.75rem !important;
+            text-transform: uppercase;
+            letter-spacing: 0.25px;
+            font-weight: 700;
+            color: var(--pag-muted) !important;
+        }
+
+        .pagos-table thead th,
+        .deudas-table thead th {
+            background: #f5f9f8;
+            color: #4a5a60;
+            font-weight: 700;
+            font-size: 0.82rem;
+            border-bottom-color: #dce7e4;
+            white-space: nowrap;
+        }
+
+        .pagos-table td,
+        .deudas-table td {
+            color: #27343a;
+            font-size: 0.9rem;
+            border-top-color: #ecf2f1;
+            vertical-align: middle;
+        }
+
+        .pagos-table .text-dark {
+            color: #425257 !important;
+            font-weight: 700;
+        }
+
+        .pagos-table .badge.bg-secondary {
+            background: #6d7980 !important;
+            font-weight: 600;
+        }
+
+        .acciones-pago-group {
+            display: inline-flex;
+            gap: 0.3rem;
+        }
+
+        .acciones-pago-group .btn {
+            border-radius: 8px;
+        }
+
+        .pagos-pagination .pagination {
+            margin-bottom: 0;
+        }
+
+        .pagos-pagination .page-link {
+            border-radius: 8px;
+            border-color: #d9e4e2;
+            color: #4b5d61;
+            margin: 0 0.15rem;
+        }
+
+        .pagos-pagination .page-item.active .page-link {
+            background: var(--pag-primary);
+            border-color: var(--pag-primary);
+            color: #fff;
+        }
+
+        .pagos-floating-actions {
+            position: fixed;
+            right: 1rem;
+            bottom: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            z-index: 1030;
+        }
+
+        .pagos-floating-btn {
+            border: none;
+            border-radius: 999px;
+            padding: 0.58rem 0.95rem;
+            font-size: 0.84rem;
+            font-weight: 700;
+            color: #fff;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .pagos-floating-btn:hover {
+            color: #fff;
+            transform: translateY(-1px);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.26);
+            text-decoration: none;
+        }
+
+        .pagos-floating-btn--new {
+            background: linear-gradient(135deg, #2c9e67, #228556);
+        }
+
+        .pagos-floating-btn--deuda {
+            background: linear-gradient(135deg, #f2b644, #d29523);
+            color: #3a2a07;
+        }
+
+        .pagos-floating-btn--deuda:hover {
+            color: #3a2a07;
+        }
+
+        @media (max-width: 992px) {
+            .pagos-filter-card .row.flex-nowrap {
+                flex-wrap: wrap !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .pagos-page {
+                padding: 0.8rem 0.1rem 6.4rem !important;
+            }
+
+            .pagos-floating-actions {
+                right: 0.75rem;
+                bottom: 0.75rem;
+            }
+
+            .pagos-floating-btn {
+                padding: 0.54rem 0.85rem;
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+{% endblock %}
+
 {% block panelTitle %}
     Pagos
-    <a href="{{ path('app_alumnos_pagos_new', alumnoId ? {'alumnoId': alumnoId} : {}) }}" class="btn btn-success btn-sm">
-        Nuevo Pago
-    </a>
-    {% if alumnoId %}
-        <a href="{{ path('app_alumno_deudas', {'id': alumnoId}) }}" class="btn btn-warning btn-sm">
-            Gestionar Deudas
-        </a>
-    {% endif %}
 {% endblock %}
 
 {% block body %}
-<style>
-    .container-fluid {
-        max-width: 100% !important;
-        width: 100% !important;
-        padding-left: 1.5rem !important;
-        padding-right: 1.5rem !important;
-    }
-    .card {
-        width: 100% !important;
-        max-width: 100% !important;
-    }
-    .table-responsive {
-        width: 100% !important;
-    }
-    table {
-        width: 100% !important;
-    }
-</style>
-<div class="container-fluid mt-4" style="width: 100%; max-width: 100%;">
+<div class="container-fluid mt-3 pagos-page">
     {# Tabs Navigation #}
-    <ul class="nav nav-tabs mb-3" id="pagosTabs" role="tablist">
+    <ul class="nav nav-tabs pagos-tabs mb-3" id="pagosTabs" role="tablist">
         <li class="nav-item" role="presentation">
             <button class="nav-link {% if activeTab == 'pagos' or activeTab is empty %}active{% endif %}" id="pagos-tab" data-bs-toggle="tab" data-bs-target="#pagos" type="button" role="tab" aria-controls="pagos" aria-selected="{% if activeTab == 'pagos' or activeTab is empty %}true{% else %}false{% endif %}">
                 <i class="bi bi-cash-coin"></i> Pagos
@@ -61,7 +246,7 @@
             {# Filtros para Pagos #}
             <div class="row mb-3">
                 <div class="col-12">
-                    <form method="get" class="card shadow-sm">
+                    <form method="get" class="card pagos-filter-card">
                         <div class="card-body py-2">
                             <div class="row g-2 align-items-end flex-nowrap">
                                 <div class="col">
@@ -133,7 +318,7 @@
             {# Tabla de Pagos #}
             <div class="row">
                 <div class="col-12">
-                    <div class="card shadow-sm">
+                    <div class="card pagos-panel-card">
                         <div class="card-body p-0">
                             {# Info de paginación #}
                             {% if total > 0 %}
@@ -150,7 +335,7 @@
                             </div>
                             {% endif %}
             <div class="table-responsive">
-                                <table class="table table-striped table-hover mb-0">
+                                <table class="table table-striped table-hover mb-0 pagos-table">
                                     <thead class="table-light">
                 <tr>
                     <th>
@@ -214,7 +399,7 @@
                     <td>{{ nombresMeses[pago.mes] ?? pago.mes }}</td>
                     <td>{{ pago.ano }}</td>
                                             <td>
-                                                <div class="btn-group" role="group">
+                                                <div class="acciones-pago-group" role="group">
                                                     <a href="{{ path('app_alumnos_pagos_show', {'id': pago.id}) }}" target="_blank" class="btn btn-sm btn-outline-primary" title="Imprimir" data-toggle="tooltip">
                             <i class="bi bi-printer"></i>
                         </a>
@@ -247,7 +432,7 @@
             {% if pagos.pageCount > 1 %}
             <div class="row mt-3">
                 <div class="col-12">
-                    <div class="d-flex justify-content-center">
+                        <div class="d-flex justify-content-center pagos-pagination">
                         {{ knp_pagination_render(pagos) }}
                     </div>
                 </div>
@@ -260,7 +445,7 @@
             {# Filtros para Deudas - mismos que Pagos + Estado #}
             <div class="row mb-3">
                 <div class="col-12">
-                    <form method="get" class="card shadow-sm">
+                    <form method="get" class="card pagos-filter-card">
                         <div class="card-body py-2">
                             <div class="row g-2 align-items-end flex-nowrap">
                                 <div class="col">
@@ -330,7 +515,7 @@
             
             <div class="row">
                 <div class="col-12">
-                    <div class="card shadow-sm">
+                    <div class="card pagos-panel-card">
                         <div class="card-body p-0">
                             {# Info de registros #}
                             {% if deudasPendientes.getTotalItemCount() > 0 %}
@@ -354,7 +539,7 @@
                             </div>
                             {% endif %}
                             <div class="table-responsive">
-                                <table class="table table-striped table-hover mb-0">
+                                <table class="table table-striped table-hover mb-0 deudas-table">
                                     <thead class="table-light">
                                         <tr>
                                             <th>Alumno</th>
@@ -445,7 +630,7 @@
                             
                             {# Paginación de deudas #}
                             {% if deudasPendientes.pageCount > 1 %}
-                            <div class="px-3 py-2 border-top">
+                            <div class="px-3 py-2 border-top pagos-pagination">
                                 {# Construir parámetros para mantener los filtros y la tab activa #}
                                 {% set routeParams = {'tab': 'deudas'} %}
                                 {# Mantener todos los filtros excepto los parámetros de paginación #}
@@ -481,11 +666,22 @@
     {% if pagos.pageCount > 1 %}
     <div class="row mt-3">
         <div class="col-12">
-            <div class="d-flex justify-content-center">
+            <div class="d-flex justify-content-center pagos-pagination">
         {{ knp_pagination_render(pagos) }}
             </div>
         </div>
     </div>
+    {% endif %}
+</div>
+
+<div class="pagos-floating-actions">
+    <a href="{{ path('app_alumnos_pagos_new', alumnoId ? {'alumnoId': alumnoId} : {}) }}" class="pagos-floating-btn pagos-floating-btn--new">
+        <i class="bi bi-plus-circle"></i> Nuevo Pago
+    </a>
+    {% if alumnoId %}
+        <a href="{{ path('app_alumno_deudas', {'id': alumnoId}) }}" class="pagos-floating-btn pagos-floating-btn--deuda">
+            <i class="bi bi-cash-coin"></i> Gestionar Deudas
+        </a>
     {% endif %}
 </div>
 

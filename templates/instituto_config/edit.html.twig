@@ -2,19 +2,139 @@
 
 {% block title %}Editar Configuración del Instituto{% endblock %}
 
+{% block panelTitle %}
+    Configuración del Instituto
+{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        :root {
+            --cfg-primary: #5c6f6c;
+            --cfg-secondary: #849d9a;
+            --cfg-accent: #d4a373;
+            --cfg-surface: #ffffff;
+            --cfg-text: #1f2a2d;
+            --cfg-muted: #647079;
+            --cfg-border: #e5eceb;
+            --cfg-shadow: 0 10px 28px rgba(19, 44, 43, 0.1);
+        }
+
+        .config-edit-page {
+            padding: 1.2rem 0.75rem;
+        }
+
+        .config-edit-shell {
+            border: 1px solid var(--cfg-border);
+            border-radius: 14px;
+            box-shadow: var(--cfg-shadow);
+            overflow: hidden;
+        }
+
+        .config-edit-main-header {
+            background: linear-gradient(135deg, var(--cfg-primary), var(--cfg-secondary)) !important;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+        }
+
+        .config-edit-main-header .h3 {
+            font-weight: 700;
+            letter-spacing: -0.01em;
+        }
+
+        .config-edit-tabs.nav-tabs {
+            border-bottom: none;
+            gap: 0.45rem;
+        }
+
+        .config-edit-tabs .nav-link {
+            border-radius: 10px;
+            color: #3f5359;
+            border: 1px solid #dbe5e3;
+            background: #f8fbfa;
+            font-weight: 600;
+        }
+
+        .config-edit-tabs .nav-link.active {
+            background: linear-gradient(135deg, var(--cfg-primary), var(--cfg-secondary));
+            border-color: transparent;
+            color: #fff;
+            box-shadow: 0 8px 22px rgba(92, 111, 108, 0.28);
+        }
+
+        .config-edit-page .card {
+            border: 1px solid var(--cfg-border);
+            border-radius: 14px;
+            box-shadow: var(--cfg-shadow);
+        }
+
+        .config-edit-page .card-header.bg-light {
+            background: linear-gradient(180deg, #fcfdfd 0%, #f7faf9 100%) !important;
+            border-bottom: 1px solid var(--cfg-border);
+        }
+
+        .config-edit-page .card-header.bg-warning {
+            background: linear-gradient(135deg, #d4a373, #c38f5d) !important;
+            color: #2f2417 !important;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+        }
+
+        .config-edit-page .card-header.bg-info {
+            background: linear-gradient(135deg, #28b5d4, #1f98b4) !important;
+            color: #fff !important;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+        }
+
+        .config-edit-page .card-header.bg-success {
+            background: linear-gradient(135deg, #2c9e67, #228556) !important;
+            color: #fff !important;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+        }
+
+        .config-edit-page .card-header.bg-secondary {
+            background: linear-gradient(135deg, #6c7f88, #5a6b73) !important;
+            color: #fff !important;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+        }
+
+        .config-edit-page .form-control,
+        .config-edit-page .form-select {
+            border-radius: 10px;
+            border-color: #d9e4e2;
+            box-shadow: none;
+        }
+
+        .config-edit-page .form-control:focus,
+        .config-edit-page .form-select:focus {
+            border-color: var(--cfg-secondary);
+            box-shadow: 0 0 0 0.2rem rgba(132, 157, 154, 0.16);
+        }
+
+        .config-edit-page .btn-lg {
+            border-radius: 10px;
+            padding: 0.55rem 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .config-edit-page {
+                padding: 0.9rem 0.2rem;
+            }
+        }
+    </style>
+{% endblock %}
+
 {% block body %}
-<div class="container-fluid mt-4">
+<div class="container-fluid mt-3 config-edit-page">
     <div class="row">
         <div class="col-md-12">
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white">
+            <div class="card shadow-sm config-edit-shell">
+                <div class="card-header bg-primary text-white config-edit-main-header">
                     <h1 class="h3 mb-0">
                         <i class="bi bi-gear"></i> Editar Configuración del Instituto
                     </h1>
                 </div>
                 <div class="card-body">
                     <!-- Pestañas -->
-                    <ul class="nav nav-tabs mb-4" id="editTabs" role="tablist">
+                    <ul class="nav nav-tabs config-edit-tabs mb-4" id="editTabs" role="tablist">
                         <li class="nav-item" role="presentation">
                             <button class="nav-link active" id="edit-general-tab" data-bs-toggle="tab" data-bs-target="#edit-general" type="button" role="tab" aria-controls="edit-general" aria-selected="true">
                                 <i class="bi bi-building"></i> Información General

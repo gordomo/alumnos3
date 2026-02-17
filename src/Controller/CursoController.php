@@ -18,6 +18,8 @@ use App\Service\DeudaService;
 use App\Service\TokenService;
 use App\Service\HorarioConflictService;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Knp\Component\Pager\PaginatorInterface;
+use Doctrine\ORM\QueryBuilder;
 
 /**
  * @Route("/instituto/curso")
@@ -39,7 +41,7 @@ class CursoController extends AbstractController
     /**
      * @Route("/", name="app_curso_index", methods={"GET"})
      */
-    public function index(CursoRepository $cursoRepository, Request $request): Response
+    public function index(CursoRepository $cursoRepository, Request $request, PaginatorInterface $paginator): Response
     {
         // Get search parameter from request
         $busqueda = $request->get('busqueda');
@@ -55,16 +57,30 @@ class CursoController extends AbstractController
         $instituto = $user->getInstituto();
 
         // Obtener cursos activos y deshabilitados
-        $cursos = $this->createQuery($cursoRepository, $instituto, $sort, $order, false, $busqueda);
-        $cursosDeshabilitados = $this->createQuery($cursoRepository, $instituto, $sort, $order, true, $busqueda);
+        $cursosQueryBuilder = $this->createQuery($cursoRepository, $instituto, $sort, $order, false, $busqueda);
+        $cursosDeshabilitadosQueryBuilder = $this->createQuery($cursoRepository, $instituto, $sort, $order, true, $busqueda);
+
+        $cursos = $paginator->paginate(
+            $cursosQueryBuilder,
+            $request->query->getInt('page_active', 1),
+            12,
+            ['pageParameterName' => 'page_active']
+        );
+
+        $cursosDeshabilitados = $paginator->paginate(
+            $cursosDeshabilitadosQueryBuilder,
+            $request->query->getInt('page_disabled', 1),
+            12,
+            ['pageParameterName' => 'page_disabled']
+        );
 
         return $this->render('curso/index.html.twig', [
             'cursos' => $cursos,
             'order' => $order,
             'sort' => $sort,
-            'totalCursos' => count($cursos),
+            'totalCursos' => $cursos->getTotalItemCount(),
             'cursosDeshabilitados' => $cursosDeshabilitados,
-            'totalCursosDeshabilitados' => count($cursosDeshabilitados),
+            'totalCursosDeshabilitados' => $cursosDeshabilitados->getTotalItemCount(),
             'busqueda' => $busqueda,
         ]);
     }
@@ -79,7 +95,7 @@ class CursoController extends AbstractController
         string $order,
         bool $disabled,
         ?string $busqueda = null
-    ): array {
+    ): QueryBuilder {
         $qb = $cursoRepository->createQueryBuilder('c')
             ->where('c.instituto = :instituto')
             ->setParameter('instituto', $instituto);
@@ -105,7 +121,7 @@ class CursoController extends AbstractController
 
         $qb->orderBy($sort === 'precio' ? 'c.precio + 0' : 'c.'.$sort, $order);
 
-        return $qb->getQuery()->getResult();
+        return $qb;
     }
 
     /**

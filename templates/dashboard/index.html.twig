@@ -2,202 +2,446 @@
 
 {% block title %}Dashboard{% endblock %}
 
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        :root {
+            --db-primary: #5c6f6c;
+            --db-secondary: #849d9a;
+            --db-accent: #d4a373;
+            --db-surface: #ffffff;
+            --db-text: #1f2a2d;
+            --db-muted: #647079;
+            --db-border: #e5eceb;
+            --db-shadow: 0 10px 28px rgba(19, 44, 43, 0.1);
+        }
+
+        .dashboard-shell {
+            padding: 1.25rem;
+        }
+
+        .dashboard-intro {
+            margin-bottom: 1rem;
+        }
+
+        .dashboard-title {
+            margin: 0;
+            color: var(--db-text);
+            font-size: 1.8rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        .dashboard-subtitle {
+            margin: 0.35rem 0 0;
+            color: var(--db-muted);
+            font-size: 0.95rem;
+        }
+
+        .metric-card {
+            border: 0;
+            border-radius: 14px;
+            color: #fff;
+            box-shadow: var(--db-shadow);
+            height: 100%;
+        }
+
+        .metric-card .card-body {
+            padding: 1rem 1.1rem;
+        }
+
+        .metric-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.8rem;
+            font-weight: 700;
+            opacity: 0.9;
+            margin-bottom: 0.45rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-value {
+            margin: 0;
+            font-size: 2rem;
+            font-weight: 800;
+            line-height: 1.1;
+        }
+
+        .metric-note {
+            margin: 0.4rem 0 0;
+            font-size: 0.82rem;
+            opacity: 0.9;
+        }
+
+        .metric-card--total {
+            background: linear-gradient(140deg, #2f7ef0 0%, #2468ce 100%);
+        }
+
+        .metric-card--critical {
+            background: linear-gradient(140deg, #f45b5b 0%, #d94141 100%);
+        }
+
+        .metric-card--amount {
+            background: linear-gradient(140deg, #28b5d4 0%, #1f98b4 100%);
+        }
+
+        .metric-card--months {
+            background: linear-gradient(140deg, #2e9f68 0%, #258555 100%);
+        }
+
+        .dashboard-panel {
+            background: var(--db-surface);
+            border: 1px solid var(--db-border);
+            border-radius: 14px;
+            box-shadow: var(--db-shadow);
+            overflow: hidden;
+        }
+
+        .dashboard-panel + .dashboard-panel {
+            margin-top: 1.5rem;
+        }
+
+        .dashboard-panel-header {
+            padding: 1rem 1.2rem;
+            border-bottom: 1px solid var(--db-border);
+            background: linear-gradient(180deg, #fcfdfd 0%, #f7faf9 100%);
+        }
+
+        .dashboard-panel-title {
+            margin: 0;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--db-text);
+        }
+
+        .dashboard-panel-body {
+            padding: 1rem 1.2rem 1.2rem;
+        }
+
+        .dashboard-filter {
+            margin-bottom: 1rem;
+        }
+
+        .dashboard-filter .form-control,
+        .dashboard-filter .btn {
+            height: 40px;
+            border-radius: 10px;
+        }
+
+        .dashboard-filter .form-control {
+            border-color: #d9e4e2;
+            box-shadow: none;
+        }
+
+        .dashboard-filter .form-control:focus {
+            border-color: var(--db-secondary);
+            box-shadow: 0 0 0 0.2rem rgba(132, 157, 154, 0.18);
+        }
+
+        .dashboard-filter .btn-outline-secondary {
+            border-color: #d9e4e2;
+            color: #556067;
+        }
+
+        .dashboard-filter .btn-outline-secondary:hover {
+            background: #f1f6f5;
+            color: #3f4a50;
+            border-color: #cfdcda;
+        }
+
+        .dashboard-table {
+            margin-bottom: 0;
+        }
+
+        .dashboard-table thead th {
+            background: #f5f9f8;
+            color: #4a5a60;
+            font-weight: 700;
+            font-size: 0.82rem;
+            letter-spacing: 0.2px;
+            border-bottom: 1px solid #dce7e4;
+            padding: 0.72rem 0.6rem;
+            vertical-align: middle;
+        }
+
+        .dashboard-table td {
+            vertical-align: middle;
+            padding: 0.66rem 0.6rem;
+            border-top-color: #ecf2f1;
+            color: #27343a;
+            font-size: 0.92rem;
+        }
+
+        .dashboard-table tbody tr:hover {
+            background: #fbfdfd;
+        }
+
+        .meses-adeudados {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            color: #365a56;
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+
+        .meses-adeudados:hover {
+            color: #214745;
+            text-decoration: underline;
+        }
+
+        .actions-group {
+            display: inline-flex;
+            gap: 0.35rem;
+        }
+
+        .actions-group .btn {
+            border-radius: 8px;
+            padding: 0.2rem 0.55rem;
+        }
+
+        .empty-row {
+            color: #718088;
+            font-style: italic;
+        }
+
+        .navigation .pagination {
+            margin-bottom: 0;
+        }
+
+        .navigation .page-link {
+            border-radius: 8px;
+            border-color: #d9e4e2;
+            color: #4b5d61;
+            margin: 0 0.15rem;
+        }
+
+        .navigation .page-item.active .page-link {
+            background: var(--db-primary);
+            border-color: var(--db-primary);
+            color: #fff;
+        }
+
+        .navigation .page-link:hover {
+            background: #f0f6f5;
+            border-color: #c8d8d5;
+            color: #395155;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-shell {
+                padding: 1rem 0.25rem;
+            }
+
+            .dashboard-title {
+                font-size: 1.45rem;
+            }
+
+            .metric-value {
+                font-size: 1.6rem;
+            }
+
+            .dashboard-panel-header,
+            .dashboard-panel-body {
+                padding-left: 0.9rem;
+                padding-right: 0.9rem;
+            }
+        }
+    </style>
+{% endblock %}
+
 {% block panelTitle %}
     Dashboard
 {% endblock %}
 
 {% block body %}
-    <div class="container-fluid mt-4">
+    <div class="container-fluid mt-3 dashboard-shell">
         <div class="row mb-4">
             <div class="col-md-3">
-                <div class="card bg-primary text-white">
+                <div class="card metric-card metric-card--total">
                     <div class="card-body">
-                        <h5 class="card-title">Total Deudores</h5>
-                        <h2 class="card-text">{{ totalDeudores }}</h2>
-                        <p class="card-text small">{{ porcentajeDeudores|number_format(2, ',', '.') }}% del total de alumnos</p>
+                        <span class="metric-label"><i class="bi bi-people-fill"></i> Total Deudores</span>
+                        <h2 class="metric-value">{{ totalDeudores }}</h2>
+                        <p class="metric-note">{{ porcentajeDeudores|number_format(2, ',', '.') }}% del total de alumnos</p>
                     </div>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="card bg-warning text-white">
+                <div class="card metric-card metric-card--critical">
                     <div class="card-body">
-                        <h5 class="card-title">Deudores Críticos</h5>
-                        <h2 class="card-text">{{ deudoresCriticos }}</h2>
-                        <p class="card-text small">Más de 3 meses sin pagar</p>
+                        <span class="metric-label"><i class="bi bi-exclamation-triangle-fill"></i> Deudores Críticos</span>
+                        <h2 class="metric-value">{{ deudoresCriticos }}</h2>
+                        <p class="metric-note">Más de 3 meses sin pagar</p>
                     </div>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="card bg-info text-white">
+                <div class="card metric-card metric-card--amount">
                     <div class="card-body">
-                        <h5 class="card-title">Monto Total Adeudado</h5>
-                        <h2 class="card-text">${{ montoTotalAdeudado|number_format(2, ',', '.') }}</h2>
-                        <p class="card-text small">Promedio: ${{ montoPromedioAdeudado|number_format(2, ',', '.') }}</p>
+                        <span class="metric-label"><i class="bi bi-cash-stack"></i> Monto Total Adeudado</span>
+                        <h2 class="metric-value">${{ montoTotalAdeudado|number_format(2, ',', '.') }}</h2>
+                        <p class="metric-note">Promedio: ${{ montoPromedioAdeudado|number_format(2, ',', '.') }}</p>
                     </div>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="card bg-success text-white">
+                <div class="card metric-card metric-card--months">
                     <div class="card-body">
-                        <h5 class="card-title">Promedio de Meses</h5>
-                        <h2 class="card-text">{{ promedioMesesAdeudados|number_format(1) }}</h2>
-                        <p class="card-text small">Por deudor</p>
+                        <span class="metric-label"><i class="bi bi-calendar2-week-fill"></i> Promedio de Meses</span>
+                        <h2 class="metric-value">{{ promedioMesesAdeudados|number_format(1) }}</h2>
+                        <p class="metric-note">Por deudor</p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="row mb-4">
-            <div class="col-md-12">
-                <div class="card" style="box-shadow: 5px 5px 10px;">
-                    <div class="card-header">
-                        <h5 class="card-title mb-0">Distribución de Deudas por Curso</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-striped table-sm">
-                                <thead>
-                                    <tr>
-                                        <th>Curso</th>
-                                        <th>Deudores</th>
-                                        <th>Monto Total</th>
-                                        <th>% del Total</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for curso in deudasPorCurso %}
-                                        <tr>
-                                            <td>{{ curso.nombre }}</td>
-                                            <td>{{ curso.deudores }}</td>
-                                            <td>${{ curso.monto|number_format(2, ',', '.') }}</td>
-                                            <td>{{ curso.porcentaje|number_format(1) }}%</td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+        <div class="dashboard-panel">
+            <div class="dashboard-panel-header">
+                <h5 class="dashboard-panel-title">Distribución de Deudas por Curso</h5>
+            </div>
+            <div class="dashboard-panel-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-sm dashboard-table">
+                        <thead>
+                            <tr>
+                                <th>Curso</th>
+                                <th>Deudores</th>
+                                <th>Monto Total</th>
+                                <th>% del Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for curso in deudasPorCurso %}
+                                <tr>
+                                    <td>{{ curso.nombre }}</td>
+                                    <td>{{ curso.deudores }}</td>
+                                    <td>${{ curso.monto|number_format(2, ',', '.') }}</td>
+                                    <td>{{ curso.porcentaje|number_format(1) }}%</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
 
-        <div class="row">
-            <div class="col-md-12">
-                <div class="card" style="box-shadow: 5px 5px 10px;">
-                    <div class="card-header">
-                        <h3 class="card-title">Lista de Deudores</h3>
-                    </div>
-                    <div class="card-body">
-                        <form method="get" class="mb-3">
-                            <div class="row">
-                                <div class="col-md-4">
-                                    <div class="input-group">
-                                        <input type="text" name="busqueda" class="form-control" placeholder="Buscar alumno..." value="{{ busqueda }}">
-                                        <div class="input-group-append">
-                                            <button class="btn btn-outline-secondary" type="submit">
-                                                <i class="bi bi-search"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <select name="sort" class="form-control">
-                                        <option value="alumnoNombre" {% if sort == 'alumnoNombre' %}selected{% endif %}>Ordenar por Nombre</option>
-                                        <option value="ultimoPago" {% if sort == 'ultimoPago' %}selected{% endif %}>Ordenar por Último Pago</option>
-                                        <option value="mesesAdeudados" {% if sort == 'mesesAdeudados' %}selected{% endif %}>Ordenar por Meses Adeudados</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-4">
-                                    <select name="order" class="form-control">
-                                        <option value="asc" {% if order == 'asc' %}selected{% endif %}>Ascendente</option>
-                                        <option value="desc" {% if order == 'desc' %}selected{% endif %}>Descendente</option>
-                                    </select>
+        <div class="dashboard-panel">
+            <div class="dashboard-panel-header">
+                <h3 class="dashboard-panel-title">Lista de Deudores</h3>
+            </div>
+            <div class="dashboard-panel-body">
+                <form method="get" class="dashboard-filter">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="input-group">
+                                <input type="text" name="busqueda" class="form-control" placeholder="Buscar alumno..." value="{{ busqueda }}">
+                                <div class="input-group-append">
+                                    <button class="btn btn-outline-secondary" type="submit">
+                                        <i class="bi bi-search"></i>
+                                    </button>
                                 </div>
                             </div>
-                        </form>
+                        </div>
+                        <div class="col-md-4">
+                            <select name="sort" class="form-control">
+                                <option value="alumnoNombre" {% if sort == 'alumnoNombre' %}selected{% endif %}>Ordenar por Nombre</option>
+                                <option value="ultimoPago" {% if sort == 'ultimoPago' %}selected{% endif %}>Ordenar por Último Pago</option>
+                                <option value="mesesAdeudados" {% if sort == 'mesesAdeudados' %}selected{% endif %}>Ordenar por Meses Adeudados</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <select name="order" class="form-control">
+                                <option value="asc" {% if order == 'asc' %}selected{% endif %}>Ascendente</option>
+                                <option value="desc" {% if order == 'desc' %}selected{% endif %}>Descendente</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
 
-                        <div class="table-responsive">
-                            <table class="table table-sm table-striped">
-                                <thead>
-                                    <tr>
-                                        <th>Alumno</th>
-                                        <th>Último Pago</th>
-                                        <th>Meses Adeudados</th>
-                                        <th>Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for deudor in pagination %}
-                                        <tr>
-                                            <td>{{ deudor.alumno.apellido }}, {{ deudor.alumno.nombre }}</td>
-                                            <td>
-                                                {% if deudor.ultimoPago %}
-                                                    {{ deudor.ultimoPago.fecha|date('d/m/Y') }}
-                                                {% else %}
-                                                    Sin pagos
-                                                {% endif %}
-                                            </td>
-                                            <td>
-                                                <span class="meses-adeudados" data-bs-toggle="modal" data-bs-target="#mesesModal{{ deudor.alumno.id }}" style="cursor: pointer;">
-                                                    {{ deudor.mesesAdeudados|slice(0, 2)|map(mes => mes.nombre)|join(', ') }}
-                                                    {% if deudor.mesesAdeudados|length > 2 %}
-                                                        <span class="text-muted">(+{{ deudor.mesesAdeudados|length - 2 }} más)</span>
-                                                    {% endif %}
-                                                </span>
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped dashboard-table">
+                        <thead>
+                            <tr>
+                                <th>Alumno</th>
+                                <th>Último Pago</th>
+                                <th>Meses Adeudados</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for deudor in pagination %}
+                                <tr>
+                                    <td>{{ deudor.alumno.apellido }}, {{ deudor.alumno.nombre }}</td>
+                                    <td>
+                                        {% if deudor.ultimoPago %}
+                                            {{ deudor.ultimoPago.fecha|date('d/m/Y') }}
+                                        {% else %}
+                                            Sin pagos
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="meses-adeudados" data-bs-toggle="modal" data-bs-target="#mesesModal{{ deudor.alumno.id }}" style="cursor: pointer;">
+                                            {{ deudor.mesesAdeudados|slice(0, 2)|map(mes => mes.nombre)|join(', ') }}
+                                            {% if deudor.mesesAdeudados|length > 2 %}
+                                                <span class="text-muted">(+{{ deudor.mesesAdeudados|length - 2 }} más)</span>
+                                            {% endif %}
+                                        </span>
 
-                                                <!-- Modal para mostrar todos los meses -->
-                                                <div class="modal fade" id="mesesModal{{ deudor.alumno.id }}" tabindex="-1" aria-labelledby="mesesModalLabel{{ deudor.alumno.id }}" aria-hidden="true">
-                                                    <div class="modal-dialog">
-                                                        <div class="modal-content">
-                                                            <div class="modal-header">
-                                                                <h5 class="modal-title" id="mesesModalLabel{{ deudor.alumno.id }}">
-                                                                    Meses Adeudados - {{ deudor.alumno.apellido }}, {{ deudor.alumno.nombre }}
-                                                                </h5>
-                                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                            </div>
-                                                            <div class="modal-body">
-                                                                <div class="list-group">
-                                                                    {% for mes in deudor.mesesAdeudados %}
-                                                                        <div class="list-group-item">
-                                                                            <div class="d-flex justify-content-between align-items-center">
-                                                                                <div>
-                                                                                    <h6 class="mb-1">{{ mes.nombre }}</h6>
-                                                                                    <small class="text-muted">Curso: {{ mes.curso }}</small>
-                                                                                </div>
-                                                                                <div class="text-end">
-                                                                                    <strong>${{ mes.curso_obj.precio|number_format(2, ',', '.') }}</strong>
-                                                                                </div>
-                                                                            </div>
+                                        <!-- Modal para mostrar todos los meses -->
+                                        <div class="modal fade" id="mesesModal{{ deudor.alumno.id }}" tabindex="-1" aria-labelledby="mesesModalLabel{{ deudor.alumno.id }}" aria-hidden="true">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title" id="mesesModalLabel{{ deudor.alumno.id }}">
+                                                            Meses Adeudados - {{ deudor.alumno.apellido }}, {{ deudor.alumno.nombre }}
+                                                        </h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <div class="list-group">
+                                                            {% for mes in deudor.mesesAdeudados %}
+                                                                <div class="list-group-item">
+                                                                    <div class="d-flex justify-content-between align-items-center">
+                                                                        <div>
+                                                                            <h6 class="mb-1">{{ mes.nombre }}</h6>
+                                                                            <small class="text-muted">Curso: {{ mes.curso }}</small>
                                                                         </div>
-                                                                    {% endfor %}
+                                                                        <div class="text-end">
+                                                                            <strong>${{ mes.curso_obj.precio|number_format(2, ',', '.') }}</strong>
+                                                                        </div>
+                                                                    </div>
                                                                 </div>
-                                                            </div>
+                                                            {% endfor %}
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </td>
-                                            <td>
-                                                <a href="{{ path('app_alumno_show', {'id': deudor.alumno.id}) }}" title="Ver" data-toggle="tooltip" data-placement="left"  class="btn btn-sm btn-outline-primary">
-                                                    <i class="bi bi-eye"></i>
-                                                </a>
-                                                <a href="{{ path('app_alumnos_pagos_new', {'id': deudor.alumno.id}) }}" title="Registrar Pago" data-toggle="tooltip" data-placement="top" class="btn btn-sm btn-outline-success">
-                                                    <i class="bi bi-cash"></i>
-                                                </a>
-                                            </td>
-                                        </tr>
-                                    {% else %}
-                                        <tr>
-                                            <td colspan="4" class="text-center">No hay deudores registrados</td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="actions-group">
+                                            <a href="{{ path('app_alumno_show', {'id': deudor.alumno.id}) }}" title="Ver" data-toggle="tooltip" data-placement="left" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <a href="{{ path('app_alumnos_pagos_new', {'id': deudor.alumno.id}) }}" title="Registrar Pago" data-toggle="tooltip" data-placement="top" class="btn btn-sm btn-outline-success">
+                                                <i class="bi bi-cash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <td colspan="4" class="text-center empty-row">No hay deudores registrados</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
 
-                        <div class="navigation d-flex justify-content-center mt-4">
-                            {{ knp_pagination_render(pagination) }}
-                        </div>
-                    </div>
+                <div class="navigation d-flex justify-content-center mt-4">
+                    {{ knp_pagination_render(pagination) }}
                 </div>
             </div>
         </div>

@@ -6,29 +6,203 @@
     Asistencias
 {% endblock %}
 
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        :root {
+            --asis-primary: #5c6f6c;
+            --asis-secondary: #849d9a;
+            --asis-surface: #ffffff;
+            --asis-text: #1f2a2d;
+            --asis-muted: #647079;
+            --asis-border: #e5eceb;
+            --asis-shadow: 0 10px 28px rgba(19, 44, 43, 0.1);
+        }
+
+        .asistencias-page {
+            padding: 1.2rem 0.75rem;
+        }
+
+        .asistencias-toolbar {
+            background: var(--asis-surface);
+            border: 1px solid var(--asis-border);
+            border-radius: 14px;
+            box-shadow: var(--asis-shadow);
+            padding: 1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .asistencias-toolbar-label {
+            color: var(--asis-muted);
+            font-size: 0.84rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.35px;
+            margin-bottom: 0.2rem;
+        }
+
+        .asistencias-toolbar input[name="daterange"] {
+            height: 40px;
+            border-radius: 10px;
+            border: 1px solid #d9e4e2;
+            padding: 0 0.85rem;
+            min-width: 180px;
+            color: #3d4f55;
+            font-weight: 600;
+        }
+
+        .asistencias-toolbar input[name="daterange"]:focus {
+            outline: none;
+            border-color: var(--asis-secondary);
+            box-shadow: 0 0 0 0.2rem rgba(132, 157, 154, 0.16);
+        }
+
+        .asistencias-meta {
+            color: #3f4f55;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .asistencias-panel {
+            background: var(--asis-surface);
+            border: 1px solid var(--asis-border);
+            border-radius: 14px;
+            box-shadow: var(--asis-shadow);
+            overflow: hidden;
+        }
+
+        .asistencias-table {
+            margin-bottom: 0;
+            min-width: 1100px;
+        }
+
+        .asistencias-table thead th {
+            background: #f5f9f8;
+            color: #4a5a60;
+            font-weight: 700;
+            font-size: 0.82rem;
+            letter-spacing: 0.2px;
+            border-bottom: 1px solid #dce7e4;
+            padding: 0.72rem 0.6rem;
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+
+        .asistencias-table thead th:first-child {
+            position: sticky;
+            left: 0;
+            z-index: 2;
+            background: #f5f9f8;
+            min-width: 170px;
+        }
+
+        .asistencias-table td {
+            vertical-align: top;
+            padding: 0.66rem 0.55rem;
+            border-top-color: #ecf2f1;
+            color: #27343a;
+            font-size: 0.9rem;
+        }
+
+        .asistencias-table td:first-child {
+            position: sticky;
+            left: 0;
+            z-index: 1;
+            background: #fff;
+            min-width: 170px;
+            font-weight: 700;
+        }
+
+        .asistencias-cell-empty {
+            color: #9aa7ad;
+            font-size: 0.82rem;
+            font-style: italic;
+            display: inline-block;
+            margin-top: 0.25rem;
+        }
+
+        .btn-profes {
+            border-radius: 10px;
+            border: none;
+            width: 100%;
+            text-align: left;
+            padding: 0.45rem 0.55rem;
+            margin-bottom: 0.4rem;
+            font-size: 0.78rem;
+            font-weight: 700;
+            line-height: 1.25;
+            box-shadow: 0 5px 12px rgba(0, 0, 0, 0.16);
+        }
+
+        .btn-profes.btn-success {
+            background: linear-gradient(135deg, #2c9e67, #228556);
+        }
+
+        .btn-profes.btn-danger {
+            background: linear-gradient(135deg, #e05757, #c94141);
+        }
+
+        .btn-profes i {
+            color: #fff8bf !important;
+            font-style: normal;
+            font-weight: 600;
+            font-size: 0.7rem;
+        }
+
+        .dropdown-menu {
+            border-radius: 10px;
+            border: 1px solid #dfe9e6;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.16);
+            max-height: 260px;
+            overflow-y: auto;
+        }
+
+        @media (max-width: 768px) {
+            .asistencias-page {
+                padding: 0.9rem 0.2rem;
+            }
+
+            .asistencias-toolbar {
+                padding: 0.85rem;
+            }
+        }
+    </style>
+{% endblock %}
+
 {% block body %}
-    <div class="container-fluid mt-4">
-        <div class="row">
-            <div class="col-md-12">
-                <label for="filtroFechas">Semana del:</label>
+    <div class="container-fluid mt-3 asistencias-page">
+        <div class="asistencias-toolbar">
+            <div>
+                <div class="asistencias-toolbar-label">Semana del</div>
                 <input type="text" id="filtroFechas" name="daterange" value="{{ firstday }}"/>
             </div>
+            <div class="asistencias-meta">
+                {{ cursos|length }} cursos en la grilla semanal
+            </div>
         </div>
-        <br>
-        <table class="table">
-            <thead>
-            <tr>
-                <th>cursos</th>
-                {% for fechas in rango %}
-                    <th>{{ fechas }}</th>
-                {% endfor %}
-            </tr>
-            </thead>
-            <tbody>
-            {% for curso in cursos %}
+
+        <div class="asistencias-panel">
+            <div class="table-responsive">
+                <table class="table asistencias-table">
+                    <thead>
+                        <tr>
+                            <th>Cursos</th>
+                            {% for fechas in rango %}
+                                <th>{{ fechas }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for curso in cursos %}
                 <tr>
                     <td>{{ curso.nombre }}</td>
                     {% for key, fecha in rango %}
+                        {% set dayIndex = key %}
                         {% if (key == 0) %}
                             {% set key = 'Lunes' %}
                         {% elseif (key == 1) %}
@@ -48,6 +222,7 @@
                             {% if key in curso.dias %}
                                 {% for profe in curso.profesores %}
                                     {% set btnClass = 'btn-success' %}
+                                    {% set reemplazante = null %}
                                     <div class="dropdown">
                                         {% if asistencias[curso.id][fecha][profe.id] is defined %}
                                             {% if not asistencias[curso.id][fecha][profe.id].presente %}
@@ -55,13 +230,13 @@
                                                 {% set reemplazante = asistencias[curso.id][fecha][profe.id].reemplazante %}
                                             {% endif %}
                                         {% endif %}
-                                        <button class="btn {{ btnClass }} btn-sm dropdown-toggle btn-profes" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <button class="btn {{ btnClass }} btn-sm dropdown-toggle btn-profes" type="button" id="dropdownMenuButton{{ curso.id }}_{{ dayIndex }}_{{ profe.id }}" data-bs-toggle="dropdown" aria-expanded="false">
                                             {{ profe.apellido }}, {{ profe.nombre }}
-                                            {% if  reemplazante is defined %}
+                                            {% if reemplazante %}
                                                 <br><i style="color: yellow;">{{ reemplazante }}</i>
                                             {% endif %}
                                         </button>
-                                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton{{ curso.id }}_{{ dayIndex }}_{{ profe.id }}">
                                             <li><h6 class="dropdown-header">Reemplazó:</h6></li>
                                             <li >
                                                 <a href="{{ path('falta_profe', {'id': profe.id, 'remplazo': 0, 'fecha': fecha, 'curso': curso.id}) }}" class="dropdown-item">sin reemplazo</a>
@@ -81,15 +256,18 @@
                                             {% endif %}
                                         </ul>
                                     </div>
-                                    <br>
                                 {% endfor %}
+                            {% else %}
+                                <span class="asistencias-cell-empty">Sin clase</span>
                             {% endif %}
                         </td>
                     {% endfor %}
                 </tr>
             {% endfor %}
-            </tbody>
-        </table>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 {% endblock %}
 
