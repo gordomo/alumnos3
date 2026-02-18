@@ -62,7 +62,7 @@ class PagoService
                     continue;
                 }
                 
-                $aplicacion = $this->aplicarPagoADeuda($pago, $deuda, $montoRestante);
+                $aplicacion = $this->aplicarPagoADeuda($pago, $deuda, $montoRestante, true);
                 if ($aplicacion) {
                     $aplicaciones[] = $aplicacion;
                     $montoRestante -= $aplicacion->getMontoAplicado();
@@ -73,7 +73,7 @@ class PagoService
             $deudaEspecifica = $this->buscarDeudaEspecifica($pago);
             
             if ($deudaEspecifica && $deudaEspecifica->getMontoPendiente() > 0) {
-                $aplicacion = $this->aplicarPagoADeuda($pago, $deudaEspecifica, $montoRestante);
+                $aplicacion = $this->aplicarPagoADeuda($pago, $deudaEspecifica, $montoRestante, true);
                 if ($aplicacion) {
                     $aplicaciones[] = $aplicacion;
                     $montoRestante -= $aplicacion->getMontoAplicado();
@@ -82,7 +82,7 @@ class PagoService
                 // Si no existe la deuda y se permite adelantado, crear la deuda
                 $deudaEspecifica = $this->crearDeudaParaPagoAdelantado($pago);
                 if ($deudaEspecifica) {
-                    $aplicacion = $this->aplicarPagoADeuda($pago, $deudaEspecifica, $montoRestante);
+                    $aplicacion = $this->aplicarPagoADeuda($pago, $deudaEspecifica, $montoRestante, true);
                     if ($aplicacion) {
                         $aplicaciones[] = $aplicacion;
                         $montoRestante -= $aplicacion->getMontoAplicado();
@@ -109,7 +109,7 @@ class PagoService
                     }
                     
                     if (!$yaAplicada) {
-                        $aplicacion = $this->aplicarPagoADeuda($pago, $deuda, $montoRestante);
+                        $aplicacion = $this->aplicarPagoADeuda($pago, $deuda, $montoRestante, true);
                         if ($aplicacion) {
                             $aplicaciones[] = $aplicacion;
                             $montoRestante -= $aplicacion->getMontoAplicado();
@@ -141,7 +141,8 @@ class PagoService
     private function aplicarPagoADeuda(
         AlumnosPagos $pago,
         DeudaAlumno $deuda,
-        float $montoDisponible
+        float $montoDisponible,
+        bool $cerrarDeudaSiMontoMenor = false
     ): ?PagoAplicacion {
         // Calcular cuánto se puede aplicar
         $montoPendiente = $deuda->getMontoPendiente();
@@ -163,6 +164,15 @@ class PagoService
         $aplicacion->setDeuda($deuda);
         $aplicacion->setMontoAplicado($montoAplicar);
         $aplicacion->setFechaAplicacion(new \DateTime());
+
+        // Política: sin pagos parciales en deudas seleccionadas.
+        // Si se paga menos que lo pendiente, ajustamos el total de la deuda al monto efectivamente pagado
+        // para que quede cancelada.
+        if ($cerrarDeudaSiMontoMenor && $montoAplicar < $montoPendiente) {
+            $montoPagadoAcumulado = $deuda->getMontoPagado() + $montoAplicar;
+            $deuda->setMonto($montoPagadoAcumulado);
+            $deuda->setInteres(0);
+        }
 
         $this->entityManager->persist($aplicacion);
 
@@ -280,7 +290,7 @@ class PagoService
                 break;
             }
             
-            $aplicacion = $this->aplicarPagoADeuda($pago, $deuda, $montoRestante);
+            $aplicacion = $this->aplicarPagoADeuda($pago, $deuda, $montoRestante, true);
             if ($aplicacion) {
                 $aplicaciones[] = $aplicacion;
                 $montoRestante -= $aplicacion->getMontoAplicado();

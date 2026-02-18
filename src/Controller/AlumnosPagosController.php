@@ -1752,6 +1752,10 @@ class AlumnosPagosController extends AbstractController
     public function show(AlumnosPagos $pago): Response
     {
         $instituto = $this->getUser()->getInstituto();
+        if ($pago->getAlumno()->getInstituto() !== $instituto) {
+            $this->addFlash('danger', 'No tiene acceso a este pago.');
+            return $this->redirectToRoute('app_alumnos_pagos_index');
+        }
         
         return $this->render('alumnos_pagos/show.html.twig', [
             'alumnos_pago' => $pago,
@@ -1764,6 +1768,12 @@ class AlumnosPagosController extends AbstractController
      */
     public function edit(Request $request, AlumnosPagos $pago, VencimientoRepository $vencimientoRepository, CursoRepository $cursoRepository, AlumnoRepository $alumnoRepository): Response
     {
+        $instituto = $this->getUser()->getInstituto();
+        if ($pago->getAlumno()->getInstituto() !== $instituto) {
+            $this->addFlash('danger', 'No tiene acceso a este pago.');
+            return $this->redirectToRoute('app_alumnos_pagos_index');
+        }
+
         $alumno = $pago->getAlumno();
 
         $alumnoId = $request->query->get('id');
@@ -1776,8 +1786,6 @@ class AlumnosPagosController extends AbstractController
             $curso = $cursoRepository->find($cursoId);
             $pago->setCurso($curso);
         }
-        $instituto = $this->getUser()->getInstituto();
-        
         // Obtener los cursos históricos del alumno
         $cursosHistoricos = $alumno->getCursosHistoricos();
         $cursos = [];
@@ -1866,6 +1874,12 @@ class AlumnosPagosController extends AbstractController
      */
     public function delete(Request $request, AlumnosPagos $pago): Response
     {
+        $institutoUsuario = $this->getUser()->getInstituto();
+        if ($pago->getAlumno()->getInstituto() !== $institutoUsuario) {
+            $this->addFlash('danger', 'No tiene acceso a este pago.');
+            return $this->redirectToRoute('app_alumnos_pagos_index');
+        }
+
         $instituto = $pago->getAlumno()->getInstituto();
         
         // Verificar tokens antes de eliminar

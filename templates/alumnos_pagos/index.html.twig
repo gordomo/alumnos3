@@ -339,43 +339,113 @@
                                     <thead class="table-light">
                 <tr>
                     <th>
-                                                <a href="{{ path('app_alumnos_pagos_index', {'sort': 'fecha', 'order': sort == 'fecha' ? (order == 'asc' ? 'desc' : 'asc') : 'desc'}) }}" class="text-decoration-none text-dark">
+                                                <a href="{{ path('app_alumnos_pagos_index', {
+                                                    'tab': 'pagos',
+                                                    'sort': 'fecha',
+                                                    'order': sort == 'fecha' ? (order == 'asc' ? 'desc' : 'asc') : 'desc',
+                                                    'busqueda': busqueda,
+                                                    'alumnoId': alumnoSelected,
+                                                    'curso': cursoSelected,
+                                                    'metodoPago': metodoSelected,
+                                                    'rango': rango,
+                                                    'fechaDesde': fechaDesde
+                                                }) }}" class="text-decoration-none text-dark">
                             Fecha
                             <i class="bi bi-arrow-{{ sort == 'fecha' ? (order == 'asc' ? 'up' : 'down') : 'up-down' }}"></i>
                         </a>
                     </th>
                     <th>
-                        <a href="{{ path('app_alumnos_pagos_index', {'sort': 'alumno', 'order': sort == 'alumno' ? (order == 'asc' ? 'desc' : 'asc') : 'asc'}) }}" class="text-decoration-none text-dark">
+                        <a href="{{ path('app_alumnos_pagos_index', {
+                            'tab': 'pagos',
+                            'sort': 'alumno',
+                            'order': sort == 'alumno' ? (order == 'asc' ? 'desc' : 'asc') : 'asc',
+                            'busqueda': busqueda,
+                            'alumnoId': alumnoSelected,
+                            'curso': cursoSelected,
+                            'metodoPago': metodoSelected,
+                            'rango': rango,
+                            'fechaDesde': fechaDesde
+                        }) }}" class="text-decoration-none text-dark">
                             Alumno
                             <i class="bi bi-arrow-{{ sort == 'alumno' ? (order == 'asc' ? 'up' : 'down') : 'up-down' }}"></i>
                         </a>
                     </th>
                     <th>
-                        <a href="{{ path('app_alumnos_pagos_index', {'sort': 'curso', 'order': sort == 'curso' ? (order == 'asc' ? 'desc' : 'asc') : 'asc'}) }}" class="text-decoration-none text-dark">
+                        <a href="{{ path('app_alumnos_pagos_index', {
+                            'tab': 'pagos',
+                            'sort': 'curso',
+                            'order': sort == 'curso' ? (order == 'asc' ? 'desc' : 'asc') : 'asc',
+                            'busqueda': busqueda,
+                            'alumnoId': alumnoSelected,
+                            'curso': cursoSelected,
+                            'metodoPago': metodoSelected,
+                            'rango': rango,
+                            'fechaDesde': fechaDesde
+                        }) }}" class="text-decoration-none text-dark">
                             Curso
                             <i class="bi bi-arrow-{{ sort == 'curso' ? (order == 'asc' ? 'up' : 'down') : 'up-down' }}"></i>
                         </a>
                     </th>
                     <th>
-                                                <a href="{{ path('app_alumnos_pagos_index', {'sort': 'monto', 'order': sort == 'monto' ? (order == 'asc' ? 'desc' : 'asc') : 'desc'}) }}" class="text-decoration-none text-dark">
+                                                <a href="{{ path('app_alumnos_pagos_index', {
+                                                    'tab': 'pagos',
+                                                    'sort': 'monto',
+                                                    'order': sort == 'monto' ? (order == 'asc' ? 'desc' : 'asc') : 'desc',
+                                                    'busqueda': busqueda,
+                                                    'alumnoId': alumnoSelected,
+                                                    'curso': cursoSelected,
+                                                    'metodoPago': metodoSelected,
+                                                    'rango': rango,
+                                                    'fechaDesde': fechaDesde
+                                                }) }}" class="text-decoration-none text-dark">
                             Monto
                             <i class="bi bi-arrow-{{ sort == 'monto' ? (order == 'asc' ? 'up' : 'down') : 'up-down' }}"></i>
                         </a>
                     </th>
                     <th>
-                        <a href="{{ path('app_alumnos_pagos_index', {'sort': 'metodoPago', 'order': sort == 'metodoPago' ? (order == 'asc' ? 'desc' : 'asc') : 'asc'}) }}" class="text-decoration-none text-dark">
+                        <a href="{{ path('app_alumnos_pagos_index', {
+                            'tab': 'pagos',
+                            'sort': 'metodoPago',
+                            'order': sort == 'metodoPago' ? (order == 'asc' ? 'desc' : 'asc') : 'asc',
+                            'busqueda': busqueda,
+                            'alumnoId': alumnoSelected,
+                            'curso': cursoSelected,
+                            'metodoPago': metodoSelected,
+                            'rango': rango,
+                            'fechaDesde': fechaDesde
+                        }) }}" class="text-decoration-none text-dark">
                                                     Método
                             <i class="bi bi-arrow-{{ sort == 'metodoPago' ? (order == 'asc' ? 'up' : 'down') : 'up-down' }}"></i>
                         </a>
                     </th>
                     <th>
-                        <a href="{{ path('app_alumnos_pagos_index', {'sort': 'mes', 'order': sort == 'mes' ? (order == 'asc' ? 'desc' : 'asc') : 'asc'}) }}" class="text-decoration-none text-dark">
+                        <a href="{{ path('app_alumnos_pagos_index', {
+                            'tab': 'pagos',
+                            'sort': 'mes',
+                            'order': sort == 'mes' ? (order == 'asc' ? 'desc' : 'asc') : 'asc',
+                            'busqueda': busqueda,
+                            'alumnoId': alumnoSelected,
+                            'curso': cursoSelected,
+                            'metodoPago': metodoSelected,
+                            'rango': rango,
+                            'fechaDesde': fechaDesde
+                        }) }}" class="text-decoration-none text-dark">
                             Mes
                             <i class="bi bi-arrow-{{ sort == 'mes' ? (order == 'asc' ? 'up' : 'down') : 'up-down' }}"></i>
                         </a>
                     </th>
                     <th>
-                                                <a href="{{ path('app_alumnos_pagos_index', {'sort': 'ano', 'order': sort == 'ano' ? (order == 'asc' ? 'desc' : 'asc') : 'desc'}) }}" class="text-decoration-none text-dark">
+                                                <a href="{{ path('app_alumnos_pagos_index', {
+                                                    'tab': 'pagos',
+                                                    'sort': 'ano',
+                                                    'order': sort == 'ano' ? (order == 'asc' ? 'desc' : 'asc') : 'desc',
+                                                    'busqueda': busqueda,
+                                                    'alumnoId': alumnoSelected,
+                                                    'curso': cursoSelected,
+                                                    'metodoPago': metodoSelected,
+                                                    'rango': rango,
+                                                    'fechaDesde': fechaDesde
+                                                }) }}" class="text-decoration-none text-dark">
                             Año
                             <i class="bi bi-arrow-{{ sort == 'ano' ? (order == 'asc' ? 'up' : 'down') : 'up-down' }}"></i>
                         </a>
@@ -433,7 +503,35 @@
             <div class="row mt-3">
                 <div class="col-12">
                         <div class="d-flex justify-content-center pagos-pagination">
-                        {{ knp_pagination_render(pagos) }}
+                        {% set pagosRouteParams = {'tab': 'pagos'} %}
+                        {% if app.request.query.get('alumnoId') %}
+                            {% set pagosRouteParams = pagosRouteParams|merge({'alumnoId': app.request.query.get('alumnoId')}) %}
+                        {% endif %}
+                        {% if app.request.query.get('alumno') and not app.request.query.get('alumnoId') %}
+                            {% set pagosRouteParams = pagosRouteParams|merge({'alumno': app.request.query.get('alumno')}) %}
+                        {% endif %}
+                        {% if app.request.query.get('curso') %}
+                            {% set pagosRouteParams = pagosRouteParams|merge({'curso': app.request.query.get('curso')}) %}
+                        {% endif %}
+                        {% if app.request.query.get('metodoPago') %}
+                            {% set pagosRouteParams = pagosRouteParams|merge({'metodoPago': app.request.query.get('metodoPago')}) %}
+                        {% endif %}
+                        {% if app.request.query.get('busqueda') %}
+                            {% set pagosRouteParams = pagosRouteParams|merge({'busqueda': app.request.query.get('busqueda')}) %}
+                        {% endif %}
+                        {% if app.request.query.get('rango') %}
+                            {% set pagosRouteParams = pagosRouteParams|merge({'rango': app.request.query.get('rango')}) %}
+                        {% endif %}
+                        {% if app.request.query.get('fechaDesde') %}
+                            {% set pagosRouteParams = pagosRouteParams|merge({'fechaDesde': app.request.query.get('fechaDesde')}) %}
+                        {% endif %}
+                        {% if app.request.query.get('sort') %}
+                            {% set pagosRouteParams = pagosRouteParams|merge({'sort': app.request.query.get('sort')}) %}
+                        {% endif %}
+                        {% if app.request.query.get('order') %}
+                            {% set pagosRouteParams = pagosRouteParams|merge({'order': app.request.query.get('order')}) %}
+                        {% endif %}
+                        {{ knp_pagination_render(pagos, null, {}, {'routeParams': pagosRouteParams}) }}
                     </div>
                 </div>
             </div>
@@ -662,16 +760,6 @@
         </div>
         </div>
 
-    {# Paginación #}
-    {% if pagos.pageCount > 1 %}
-    <div class="row mt-3">
-        <div class="col-12">
-            <div class="d-flex justify-content-center pagos-pagination">
-        {{ knp_pagination_render(pagos) }}
-            </div>
-        </div>
-    </div>
-    {% endif %}
 </div>
 
 <div class="pagos-floating-actions">
