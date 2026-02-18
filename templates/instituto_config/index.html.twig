@@ -467,6 +467,16 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            const urlActual = new URL(window.location.href);
+            const tabParam = urlActual.searchParams.get('tab');
+            if (tabParam) {
+                const tabElement = document.getElementById(tabParam + '-tab');
+                if (tabElement) {
+                    const tab = new bootstrap.Tab(tabElement);
+                    tab.show();
+                }
+            }
+
             const btnEditar = document.getElementById('btn-editar-config');
             if (btnEditar) {
                 btnEditar.addEventListener('click', function(e) {

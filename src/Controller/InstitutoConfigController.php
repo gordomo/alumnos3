@@ -79,7 +79,7 @@ class InstitutoConfigController extends AbstractController
             $tel = $request->request->get('tel');
             if (strlen($tel) > 25) {
                     $this->addFlash('danger', 'El número de teléfono no puede tener más de 25 caracteres.');
-                    return $this->redirectToRoute('instituto_config_index');
+                    return $this->redirectToRoute('instituto_config_index', ['tab' => 'general']);
             }
             $instituto->setTel($tel);
             
@@ -100,7 +100,7 @@ class InstitutoConfigController extends AbstractController
                         );
                     } catch (FileException $e) {
                         $this->addFlash('danger', 'No se pudo subir el logo.');
-                            return $this->redirectToRoute('instituto_config_index');
+                            return $this->redirectToRoute('instituto_config_index', ['tab' => 'general']);
                     }
                     
                     // Eliminar el logo anterior si existe
@@ -121,16 +121,16 @@ class InstitutoConfigController extends AbstractController
                     if (count($errors) === 0) {
                     $entityManager->flush();
                         $this->addFlash('success', 'La información general se ha actualizado correctamente.');
-                        return $this->redirectToRoute('instituto_config_index');
+                        return $this->redirectToRoute('instituto_config_index', ['tab' => 'general']);
                 } else {
                     foreach ($errors as $error) {
                         $this->addFlash('danger', $error->getMessage());
                     }
-                    return $this->redirectToRoute('instituto_config_index');
+                    return $this->redirectToRoute('instituto_config_index', ['tab' => 'general']);
                     }
                 } catch (\Exception $e) {
                     $this->addFlash('danger', 'Ocurrió un error al guardar los cambios: ' . $e->getMessage());
-                    return $this->redirectToRoute('instituto_config_index');
+                    return $this->redirectToRoute('instituto_config_index', ['tab' => 'general']);
                 }
                 
             } elseif ($section === 'descuentos') {
@@ -152,16 +152,16 @@ class InstitutoConfigController extends AbstractController
                         $entityManager->persist($configuracion);
                         $entityManager->flush();
                         $this->addFlash('success', 'La configuración de descuentos se ha actualizado correctamente.');
-                        return $this->redirectToRoute('instituto_config_edit', ['_fragment' => 'edit-descuentos']);
+                        return $this->redirectToRoute('instituto_config_index', ['tab' => 'descuentos']);
                     } else {
                     foreach ($errorsConfig as $error) {
                         $this->addFlash('danger', $error->getMessage());
                     }
-                    return $this->redirectToRoute('instituto_config_edit', ['_fragment' => 'edit-descuentos']);
+                    return $this->redirectToRoute('instituto_config_index', ['tab' => 'descuentos']);
                 }
             } catch (\Exception $e) {
                 $this->addFlash('danger', 'Ocurrió un error al guardar los cambios: ' . $e->getMessage());
-                return $this->redirectToRoute('instituto_config_edit', ['_fragment' => 'edit-descuentos']);
+                return $this->redirectToRoute('instituto_config_index', ['tab' => 'descuentos']);
                 }
                 
             } elseif ($section === 'notificaciones') {
@@ -178,16 +178,16 @@ class InstitutoConfigController extends AbstractController
                         $entityManager->persist($configuracion);
                         $entityManager->flush();
                         $this->addFlash('success', 'La configuración de notificaciones se ha actualizado correctamente.');
-                        return $this->redirectToRoute('instituto_config_index');
+                        return $this->redirectToRoute('instituto_config_index', ['tab' => 'notificaciones']);
                     } else {
                         foreach ($errorsConfig as $error) {
                             $this->addFlash('danger', $error->getMessage());
                         }
-                        return $this->redirectToRoute('instituto_config_index');
+                        return $this->redirectToRoute('instituto_config_index', ['tab' => 'notificaciones']);
                     }
                 } catch (\Exception $e) {
                     $this->addFlash('danger', 'Ocurrió un error al guardar los cambios: ' . $e->getMessage());
-                    return $this->redirectToRoute('instituto_config_index');
+                    return $this->redirectToRoute('instituto_config_index', ['tab' => 'notificaciones']);
                 }
             }
         }
@@ -231,7 +231,7 @@ class InstitutoConfigController extends AbstractController
                 $entityManager->persist($vencimiento);
                 $entityManager->flush();
                 $this->addFlash('success', 'Vencimiento creado correctamente.');
-                return $this->redirectToRoute('instituto_config_edit', ['_fragment' => 'edit-pagos']);
+                return $this->redirectToRoute('instituto_config_index', ['tab' => 'pagos']);
             } else {
                 foreach ($errors as $error) {
                     $this->addFlash('danger', $error->getMessage());
@@ -264,7 +264,7 @@ class InstitutoConfigController extends AbstractController
                 $entityManager->persist($vencimiento);
                 $entityManager->flush();
                 $this->addFlash('success', 'Vencimiento actualizado correctamente.');
-                return $this->redirectToRoute('instituto_config_edit', ['_fragment' => 'edit-pagos']);
+                return $this->redirectToRoute('instituto_config_index', ['tab' => 'pagos']);
             } else {
                 foreach ($errors as $error) {
                     $this->addFlash('danger', $error->getMessage());
@@ -289,7 +289,7 @@ class InstitutoConfigController extends AbstractController
             $this->addFlash('success', 'Vencimiento eliminado correctamente.');
         }
 
-        return $this->redirectToRoute('instituto_config_edit', ['_fragment' => 'edit-pagos']);
+        return $this->redirectToRoute('instituto_config_index', ['tab' => 'pagos']);
     }
 
     /**
@@ -318,7 +318,7 @@ class InstitutoConfigController extends AbstractController
                 $entityManager->flush();
 
                 $this->addFlash('success', 'Descuento promocional creado correctamente.');
-                return $this->redirectToRoute('instituto_config_edit', ['_fragment' => 'edit-descuentos']);
+                return $this->redirectToRoute('instituto_config_index', ['tab' => 'descuentos']);
             } else {
                 foreach ($errors as $error) {
                     $this->addFlash('danger', $error->getMessage());
@@ -379,7 +379,7 @@ class InstitutoConfigController extends AbstractController
                 );
                 
                 $this->addFlash('success', 'Descuento promocional actualizado correctamente.');
-                return $this->redirectToRoute('instituto_config_edit', ['_fragment' => 'edit-descuentos']);
+                return $this->redirectToRoute('instituto_config_index', ['tab' => 'descuentos']);
             } else {
                 foreach ($errors as $error) {
                     $this->addFlash('danger', $error->getMessage());
@@ -409,7 +409,7 @@ class InstitutoConfigController extends AbstractController
         // Verificar tokens antes de eliminar
         if (!$this->tokenService->hasEnoughTokens($instituto, 'descuento.delete')) {
             $this->addFlash('danger', 'No tienes suficientes tokens para eliminar un descuento. Balance actual: ' . $this->tokenService->getBalance($instituto)->getBalance());
-            return $this->redirectToRoute('instituto_config_edit', ['_fragment' => 'edit-descuentos']);
+            return $this->redirectToRoute('instituto_config_index', ['tab' => 'descuentos']);
         }
 
         if ($this->isCsrfTokenValid('delete'.$descuentoPromocional->getId(), $request->request->get('_token'))) {
@@ -429,6 +429,6 @@ class InstitutoConfigController extends AbstractController
             $this->addFlash('success', 'Descuento promocional eliminado correctamente.');
         }
 
-        return $this->redirectToRoute('instituto_config_edit', ['_fragment' => 'edit-descuentos']);
+        return $this->redirectToRoute('instituto_config_index', ['tab' => 'descuentos']);
     }
 } 
