@@ -29,7 +29,7 @@
                             <label for="{{ form.alumno.vars.id }}" class="form-label fw-bold text-dark mb-2">
                                 Seleccione a quién se le imputa el pago <span class="text-danger">*</span>
                             </label>
-                            {{ form_widget(form.alumno, {'attr': {'class': 'form-select form-select-lg'}}) }}
+                            {{ form_widget(form.alumno, {'attr': {'class': 'form-select form-select-lg chosen-select', 'data-placeholder': 'Buscar alumno por nombre o apellido...'}}) }}
                             {{ form_errors(form.alumno) }}
                         </div>
                     </div>

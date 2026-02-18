@@ -37,6 +37,9 @@ class AlumnosPagosType extends AbstractType
         $cursos = $options['cursos'];
         $curso = $options['curso'];
         $vencimientos = $options['vencimientos'];
+        $modoEdicion = $options['modo_edicion'];
+        $bloquearMontoEnEdicion = $options['bloquear_monto_en_edicion'];
+        $mesMultiple = $options['mes_multiple'];
 
         
             $builder->add('alumno', EntityType::class, [
@@ -50,6 +53,7 @@ class AlumnosPagosType extends AbstractType
                 'label_attr' => ['class' => 'form-label'],
                 'required' => true,
                 'attr' => ['class' => 'form-control chosen-select'],
+                'disabled' => $modoEdicion,
                 'constraints' => [
                     new NotBlank(['message' => 'El alumno es obligatorio'])
                 ]
@@ -85,9 +89,10 @@ class AlumnosPagosType extends AbstractType
                 'label' => 'Mes',
                 'label_attr' => ['class' => 'form-label'],
                 'required' => false,
-                'multiple' => true,
+                'multiple' => $mesMultiple,
                 'expanded' => false,
                 'mapped' => false, // No mapear directamente a la entidad
+                'disabled' => $modoEdicion,
                 'attr' => ['class' => 'form-control mes-select-multiple', 'size' => '5'],
             ])
             ->add('ano', ChoiceType::class, [
@@ -95,6 +100,7 @@ class AlumnosPagosType extends AbstractType
                 'label' => 'Año',
                 'label_attr' => ['class' => 'form-label'],
                 'required' => true,
+                'disabled' => $modoEdicion,
                 'attr' => ['class' => 'form-control chosen-select'],
                 'constraints' => [
                     new NotBlank(['message' => 'El año es obligatorio'])
@@ -110,6 +116,7 @@ class AlumnosPagosType extends AbstractType
                 'label' => 'Curso', 
                 'label_attr' => ['class' => 'form-label'],
                 'required' => true,
+                'disabled' => $modoEdicion,
                 'attr' => ['class' => 'form-control chosen-select'],
                 'constraints' => [
                     new NotBlank(['message' => 'El curso es obligatorio'])
@@ -120,6 +127,7 @@ class AlumnosPagosType extends AbstractType
                 'label_attr' => ['class' => 'form-label'],
                 'required' => true,
                 'scale' => 2,
+                'disabled' => $modoEdicion && $bloquearMontoEnEdicion,
                 'attr' => ['class' => 'form-control'],
                 'constraints' => [
                     new NotBlank(['message' => 'El monto es obligatorio']),
@@ -159,7 +167,10 @@ class AlumnosPagosType extends AbstractType
             'alumnos' => [],
             'cursos' => [],
             'curso' => null,
-            'vencimientos' => []
+            'vencimientos' => [],
+            'modo_edicion' => false,
+            'bloquear_monto_en_edicion' => true,
+            'mes_multiple' => true
         ]);
     }
 

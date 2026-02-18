@@ -1775,6 +1775,11 @@ class AlumnosPagosController extends AbstractController
         }
 
         $alumno = $pago->getAlumno();
+        $alumnoOriginal = $pago->getAlumno();
+        $cursoOriginal = $pago->getCurso();
+        $mesOriginal = $pago->getMes();
+        $anoOriginal = $pago->getAno();
+        $montoOriginal = (float) $pago->getMonto();
 
         $alumnoId = $request->query->get('id');
         $cursoId = $request->query->get('curso');
@@ -1786,12 +1791,8 @@ class AlumnosPagosController extends AbstractController
             $curso = $cursoRepository->find($cursoId);
             $pago->setCurso($curso);
         }
-        // Obtener los cursos históricos del alumno
-        $cursosHistoricos = $alumno->getCursosHistoricos();
-        $cursos = [];
-        foreach ($cursosHistoricos as $cursoHistorico) {
-            $cursos[] = $cursoHistorico->getCurso();
-        }
+        // En edición permitir seleccionar cualquier curso del instituto (corrección de carga)
+        $cursos = $cursoRepository->findBy(['instituto' => $instituto]);
 
         // Obtener los vencimientos del instituto
         $vencimientos = $instituto->getVencimientos();
@@ -1801,7 +1802,10 @@ class AlumnosPagosController extends AbstractController
         $form = $this->createForm(AlumnosPagosType::class, $pago, [
             'alumnos' => $alumnos,
             'cursos' => array_values($cursos),
-            'vencimientos' => $vencimientos
+            'vencimientos' => $vencimientos,
+            'modo_edicion' => false,
+            'bloquear_monto_en_edicion' => false,
+            'mes_multiple' => false
         ]);
 
         $form->handleRequest($request);
@@ -1818,6 +1822,37 @@ class AlumnosPagosController extends AbstractController
                 }
 
                 try {
+                    $mesForm = $request->request->all('alumnos_pagos')['mes'] ?? null;
+                    if (is_array($mesForm) && !empty($mesForm)) {
+                        $pago->setMes((int) $mesForm[0]);
+                    } elseif ($mesForm !== null && $mesForm !== '') {
+                        $pago->setMes((int) $mesForm);
+                    }
+
+                    if ($pago->getMes() === null || $pago->getAno() === null) {
+                        $this->addFlash('danger', 'Debe seleccionar un mes y un año válidos.');
+                        return $this->redirectToRoute('app_alumnos_pagos_edit', ['id' => $pago->getId()]);
+                    }
+
+                    $montoActualizado = (float) $pago->getMonto();
+                    $montoModificado = abs($montoActualizado - $montoOriginal) > 0.00001;
+                    $claveModificada = $montoModificado
+                        || $pago->getAlumno() !== $alumnoOriginal
+                        || $pago->getCurso() !== $cursoOriginal
+                        || (int) $pago->getMes() !== (int) $mesOriginal
+                        || (int) $pago->getAno() !== (int) $anoOriginal;
+                    $deudasIdsAReaplicar = [];
+
+                    if ($claveModificada) {
+                        // Revertir aplicaciones actuales del pago y reaplicar con el nuevo monto.
+                        foreach ($pago->getAplicaciones()->toArray() as $aplicacion) {
+                            $deudasIdsAReaplicar[] = $aplicacion->getDeuda()->getId();
+                            $pago->removeAplicacion($aplicacion);
+                            $this->entityManager->remove($aplicacion);
+                        }
+                        $pago->setMontoRestante($montoActualizado);
+                    }
+
                     // Verificar si ya existe un pago para este alumno, curso, mes y año
                     $pagoExistente = $this->entityManager->getRepository(AlumnosPagos::class)->findOneBy([
                         'alumno' => $pago->getAlumno(),
@@ -1835,19 +1870,40 @@ class AlumnosPagosController extends AbstractController
                     //$this->historialCursosService->actualizarPago($pago);
                     $this->entityManager->persist($pago);
                     $this->entityManager->flush();
+
+                    if ($claveModificada) {
+                        $deudaEspecifica = $this->entityManager->getRepository(\App\Entity\DeudaAlumno::class)
+                            ->findOneBy([
+                                'alumno' => $pago->getAlumno(),
+                                'curso' => $pago->getCurso(),
+                                'mes' => $pago->getMes(),
+                                'ano' => $pago->getAno()
+                            ]);
+
+                        if ($deudaEspecifica) {
+                            $deudasIdsAReaplicar = [$deudaEspecifica->getId()];
+                        }
+
+                        if (!empty($deudasIdsAReaplicar)) {
+                            $this->pagoService->aplicarPagoRestante(
+                                $pago,
+                                array_values(array_unique($deudasIdsAReaplicar))
+                            );
+                        }
+                    }
                     
                     // Consumir tokens después de guardar exitosamente
                     $this->tokenService->consumeTokens(
                         $instituto,
                         'pago.edit',
                         $this->getUser(),
-                        'Editar pago: ' . $alumno->getNombreApellido() . ' - ' . $pago->getCurso()->getNombre() . ' (' . $pago->getMes() . '/' . $pago->getAno() . ')',
+                        'Editar pago: ' . $pago->getAlumno()->getNombreApellido() . ' - ' . $pago->getCurso()->getNombre() . ' (' . $pago->getMes() . '/' . $pago->getAno() . ')',
                         'AlumnosPagos',
                         $pago->getId()
                     );
                     
                     $this->addFlash('success', 'Pago actualizado correctamente.');
-                    return $this->redirectToRoute('app_alumnos_pagos_index', ['alumno' => $alumno->getId()]);
+                    return $this->redirectToRoute('app_alumnos_pagos_index', ['alumno' => $pago->getAlumno()->getId()]);
                 } catch (\Exception $e) {
                     $this->addFlash('danger', 'Ocurrió un error al actualizar el pago.');
                 }

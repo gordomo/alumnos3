@@ -4,25 +4,193 @@
 
 {% block panelTitle %}Editar Pago{% endblock %}
 
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        :root {
+            --pag-edit-primary: #5c6f6c;
+            --pag-edit-secondary: #849d9a;
+            --pag-edit-surface: #ffffff;
+            --pag-edit-text: #1f2a2d;
+            --pag-edit-muted: #647079;
+            --pag-edit-border: #e5eceb;
+            --pag-edit-shadow: 0 10px 28px rgba(19, 44, 43, 0.1);
+        }
+
+        .pagos-edit-page {
+            padding: 1.1rem 0.75rem;
+        }
+
+        .pagos-edit-row {
+            justify-content: center;
+        }
+
+        .pagos-edit-card {
+            border: 1px solid var(--pag-edit-border);
+            border-radius: 14px;
+            box-shadow: var(--pag-edit-shadow);
+            overflow: hidden;
+            background: var(--pag-edit-surface);
+        }
+
+        .pagos-edit-card .card-header {
+            background: linear-gradient(180deg, #fcfdfd 0%, #f7faf9 100%);
+            border-bottom: 1px solid var(--pag-edit-border);
+            padding: 0.9rem 1rem;
+        }
+
+        .pagos-edit-card .card-title {
+            color: var(--pag-edit-text);
+            font-size: 1.08rem;
+            font-weight: 700;
+        }
+
+        .pagos-edit-card .card-body {
+            padding: 1rem;
+        }
+
+        .pagos-edit-form .form-label {
+            color: var(--pag-edit-muted);
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.35px;
+            margin-bottom: 0.35rem;
+        }
+
+        .pagos-edit-form .form-control,
+        .pagos-edit-form .form-select,
+        .pagos-edit-form .btn {
+            height: 40px;
+            border-radius: 10px;
+            line-height: 1.25;
+            padding: 0.5rem 0.75rem;
+        }
+
+        .pagos-edit-form .form-control,
+        .pagos-edit-form .form-select {
+            border-color: #d9e4e2;
+            box-shadow: none;
+        }
+
+        .pagos-edit-form .form-control:focus,
+        .pagos-edit-form .form-select:focus {
+            border-color: var(--pag-edit-secondary);
+            box-shadow: 0 0 0 0.2rem rgba(132, 157, 154, 0.16);
+        }
+
+        .pagos-edit-form textarea.form-control {
+            min-height: 110px;
+            height: auto;
+            border-radius: 10px;
+            line-height: 1.35;
+            padding-top: 0.6rem;
+            width: 100%;
+            display: block;
+            margin-left: 0 !important;
+        }
+
+        .pagos-edit-form .pagos-edit-observacion .form-label {
+            display: block;
+            width: 100%;
+        }
+
+        .pagos-edit-form .form-control::placeholder,
+        .pagos-edit-form textarea.form-control::placeholder {
+            color: #8a98a0;
+            opacity: 1;
+        }
+
+        .pagos-edit-form .form-select {
+            background-position: right 0.75rem center;
+        }
+
+        .pagos-edit-actions {
+            border-top: 1px solid #eef3f2;
+            padding-top: 0.9rem;
+            margin-top: 0.2rem;
+        }
+
+        .pagos-edit-actions .btn {
+            min-width: 108px;
+            font-weight: 700;
+        }
+
+        .pagos-edit-actions .btn-primary {
+            border: none;
+            background: linear-gradient(135deg, var(--pag-edit-primary), var(--pag-edit-secondary));
+        }
+
+        @media (max-width: 768px) {
+            .pagos-edit-page {
+                padding: 0.85rem 0.2rem;
+            }
+        }
+    </style>
+{% endblock %}
+
 {% block body %}
-    <div class="container-fluid mt-4">
-        <div class="row">
-            <div class="col-md-8 offset-md-2">
-                <div class="card">
+    <div class="container-fluid mt-3 pagos-edit-page">
+        <div class="row pagos-edit-row">
+            <div class="col-12 col-lg-10 col-xl-8">
+                <div class="card pagos-edit-card">
                     <div class="card-header">
-                        <h4 class="card-title mb-0">{{ alumno.nombreApellido }}</h4>
+                        <h4 class="card-title mb-0">Editar Pago - {{ alumno.nombreApellido }}</h4>
                     </div>
                     <div class="card-body">
-                        {% for message in app.flashes('success') %}
-                            <div class="alert alert-success">
-                                {{ message }}
+                        {{ form_start(form, {'attr': {'class': 'row g-3 pagos-edit-form'}}) }}
+                            <div class="col-md-6">
+                                <label for="{{ form.alumno.vars.id }}" class="form-label fw-semibold">Alumno</label>
+                                {{ form_widget(form.alumno, {'attr': {'class': 'form-select'}}) }}
+                                {{ form_errors(form.alumno) }}
                             </div>
-                        {% endfor %}
+                            <div class="col-md-6">
+                                <label for="{{ form.curso.vars.id }}" class="form-label fw-semibold">Curso</label>
+                                {{ form_widget(form.curso, {'attr': {'class': 'form-select'}}) }}
+                                {{ form_errors(form.curso) }}
+                            </div>
+                            <div class="col-md-4">
+                                <label for="{{ form.fecha.vars.id }}" class="form-label fw-semibold">Fecha</label>
+                                {{ form_widget(form.fecha, {'attr': {'class': 'form-control'}}) }}
+                                {{ form_errors(form.fecha) }}
+                            </div>
+                            <div class="col-md-4">
+                                <label for="{{ form.mes.vars.id }}" class="form-label fw-semibold">Mes</label>
+                                {{ form_widget(form.mes, {'attr': {'class': 'form-select', 'size': 1}}) }}
+                                {{ form_errors(form.mes) }}
+                            </div>
+                            <div class="col-md-4">
+                                <label for="{{ form.ano.vars.id }}" class="form-label fw-semibold">Año</label>
+                                {{ form_widget(form.ano, {'attr': {'class': 'form-select'}}) }}
+                                {{ form_errors(form.ano) }}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.monto.vars.id }}" class="form-label fw-semibold">Monto</label>
+                                {{ form_widget(form.monto, {'attr': {'class': 'form-control'}}) }}
+                                {{ form_errors(form.monto) }}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.metodoPago.vars.id }}" class="form-label fw-semibold">Método de Pago</label>
+                                {{ form_widget(form.metodoPago, {'attr': {'class': 'form-select'}}) }}
+                                {{ form_errors(form.metodoPago) }}
+                            </div>
+                            <div class="col-12 pagos-edit-observacion">
+                                <label for="{{ form.observacion.vars.id }}" class="form-label fw-semibold">Observación</label>
+                            </div>
+                            <div class="col-12">
+                                {{ form_widget(form.observacion, {'attr': {'class': 'form-control', 'rows': 3}}) }}
+                                {{ form_errors(form.observacion) }}
+                            </div>
 
-                        {{ include('alumnos_pagos/_form.html.twig', {
-                            'button_label': 'Guardar',
-                            'alumno': alumno
-                        }) }}
+                            <div class="col-12 d-flex gap-2 pagos-edit-actions">
+                                <a href="{{ path('app_alumnos_pagos_index', {'alumno': alumno.id}) }}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-arrow-left"></i> Volver
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-save"></i> Guardar
+                                </button>
+                            </div>
+                        {{ form_end(form) }}
                     </div>
                 </div>
             </div>
