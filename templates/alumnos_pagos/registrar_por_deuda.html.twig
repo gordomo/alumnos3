@@ -107,7 +107,7 @@
                                         <div class="mb-4">
                                             <label for="monto" class="form-label fw-bold">
                                                 Monto a Pagar
-                                                <small class="text-muted">(Máximo: ${{ montoPendiente|number_format(2, ',', '.') }})</small>
+                                                <small class="text-muted">(Deuda actual: ${{ montoPendiente|number_format(2, ',', '.') }})</small>
                                             </label>
                                             <div class="input-group input-group-lg">
                                                 <span class="input-group-text bg-primary text-white">$</span>
@@ -118,7 +118,6 @@
                                                     class="form-control" 
                                                     step="0.01" 
                                                     min="0.01" 
-                                                    max="{{ montoPendiente }}"
                                                     required 
                                                     value="{{ montoPendiente }}"
                                                     data-max="{{ montoPendiente }}"
@@ -173,41 +172,23 @@
 document.addEventListener('DOMContentLoaded', function() {
     const montoInput = document.getElementById('monto');
     const montoRestanteInfo = document.getElementById('montoRestanteInfo');
-    const maxMonto = parseFloat(montoInput.dataset.max);
     const form = document.getElementById('formPago');
     
     function actualizarInfoRestante() {
         const montoIngresado = parseFloat(montoInput.value) || 0;
-        const restante = maxMonto - montoIngresado;
-        
-        if (montoIngresado > maxMonto) {
-            montoRestanteInfo.textContent = '⚠️ El monto no puede ser mayor al pendiente.';
-            montoRestanteInfo.className = 'text-danger fw-bold';
-            montoInput.classList.add('is-invalid');
-        } else if (montoIngresado <= 0) {
+
+        if (montoIngresado <= 0) {
             montoRestanteInfo.textContent = '⚠️ El monto debe ser mayor a $0.00.';
             montoRestanteInfo.className = 'text-danger fw-bold';
             montoInput.classList.add('is-invalid');
-        } else if (restante > 0) {
-            montoRestanteInfo.textContent = `💰 Saldo restante después del pago: $${restante.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-            montoRestanteInfo.className = 'text-info';
-            montoInput.classList.remove('is-invalid');
         } else {
-            montoRestanteInfo.textContent = '✅ La deuda quedará completamente pagada.';
+            montoRestanteInfo.textContent = '✅ La deuda quedará cancelada con este pago.';
             montoRestanteInfo.className = 'text-success fw-bold';
             montoInput.classList.remove('is-invalid');
         }
     }
     
     montoInput.addEventListener('input', actualizarInfoRestante);
-    montoInput.addEventListener('change', function() {
-        const valor = parseFloat(this.value);
-        if (valor > maxMonto) {
-            this.value = maxMonto.toFixed(2);
-            actualizarInfoRestante();
-        }
-    });
-    
     form.addEventListener('submit', function(e) {
         const montoIngresado = parseFloat(montoInput.value) || 0;
         
@@ -217,14 +198,7 @@ document.addEventListener('DOMContentLoaded', function() {
             montoInput.focus();
             return false;
         }
-        
-        if (montoIngresado > maxMonto) {
-            e.preventDefault();
-            alert(`El monto no puede ser mayor al pendiente ($${maxMonto.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2})})`);
-            montoInput.focus();
-            return false;
-        }
-        
+
         if (!document.getElementById('metodoPago').value) {
             e.preventDefault();
             alert('Por favor seleccione un método de pago');
