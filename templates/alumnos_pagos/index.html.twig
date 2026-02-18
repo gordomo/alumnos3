@@ -705,7 +705,7 @@
                                                 </td>
                                                 <td class="text-center">
                                                     {% if montoPendiente > 0 %}
-                                                        <a href="{{ path('app_alumnos_pagos_por_deuda', {'id': deuda.id}) }}" class="btn btn-sm btn-success" title="Registrar pago para esta deuda">
+                                                        <a href="{{ path('app_alumnos_pagos_new', {'id': deuda.alumno.id}) }}" class="btn btn-sm btn-success" title="Registrar pago">
                                                             <i class="bi bi-cash-coin"></i> Pagar
                                                         </a>
                                                     {% else %}
