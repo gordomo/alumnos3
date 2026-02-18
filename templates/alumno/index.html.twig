@@ -27,6 +27,22 @@
             box-shadow: var(--alu-shadow);
             padding: 1rem;
             margin-bottom: 1rem;
+            margin-left: 0;
+            margin-right: 0;
+            --bs-gutter-x: 0;
+        }
+
+        .alumno-toolbar > [class*='col-'] {
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
+        }
+
+        .alumno-toolbar > [class*='col-']:first-child {
+            padding-left: 0;
+        }
+
+        .alumno-toolbar > [class*='col-']:last-child {
+            padding-right: 0;
         }
 
         .alumno-search .form-control,
@@ -75,7 +91,7 @@
             border-radius: 10px;
             border-color: #d9e4e2;
             min-width: 180px;
-            height: 38px;
+            height: 40px;
             font-size: 0.88rem;
         }
 
@@ -266,7 +282,7 @@
 
 {% block body %}
 <div class="container-fluid mt-3 alumno-page">
-    <div class="row alumno-toolbar">
+    <div class="row alumno-toolbar ui-filter-card">
         <div class="col-md-5">
             <form method="post" action="{{ path('app_alumno_index', {'activo': activo }) }}">
                 <div class="input-group alumno-search">

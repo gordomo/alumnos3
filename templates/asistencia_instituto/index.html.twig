@@ -44,6 +44,8 @@
             box-shadow: var(--asi-shadow);
             padding: 1rem;
             margin-bottom: 1rem;
+            margin-left: 0;
+            margin-right: 0;
         }
 
         .asistencia-toolbar .form-label {
@@ -147,7 +149,7 @@
         <p class="asistencia-subtitle">Instituto: {{ app.user.instituto.nombre }}. Selecciona fecha y curso para registrar o revisar asistencias.</p>
     </div>
 
-    <div class="row mb-4 asistencia-toolbar">
+    <div class="row mb-4 asistencia-toolbar ui-filter-card">
         <div class="col-12">
             <form method="get" action="{{ path('app_instituto_asistencias_index') }}" class="row g-3" id="form-filtro-asistencias">
                 <div class="col-md-6">

@@ -28,6 +28,8 @@
             box-shadow: var(--curso-shadow);
             padding: 1rem;
             margin-bottom: 1rem;
+            margin-left: 0;
+            margin-right: 0;
         }
 
         .curso-search-form .form-control,
@@ -266,9 +268,9 @@
 {% set currentTab = app.request.query.get('tab') ?: (app.request.query.get('page_disabled') ? 'disabled' : 'active') %}
 <div class="container-fluid mt-3 curso-page">
     {# Barra de búsqueda y filtros #}
-    <div class="row mb-3 curso-toolbar">
+    <div class="row mb-3 curso-toolbar ui-filter-card">
         <div class="col-md-6">
-            <form method="get" action="{{ path('app_curso_index') }}" class="d-flex gap-2 curso-search-form">
+            <form method="get" action="{{ path('app_curso_index') }}" class="d-flex gap-2 curso-search-form ui-filter-search">
                 <div class="input-group">
                     <input name="busqueda" type="text" class="form-control" placeholder="Buscar por nombre" value="{{ busqueda is defined ? busqueda : '' }}" aria-label="Buscar curso">
                     <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i></button>

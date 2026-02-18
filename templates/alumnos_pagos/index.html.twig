@@ -66,8 +66,8 @@
         .pagos-filter-card .form-control,
         .pagos-filter-card .form-select,
         .pagos-filter-card .btn {
-            height: 36px;
-            border-radius: 9px;
+            height: 40px;
+            border-radius: 10px;
         }
 
         .pagos-filter-card .form-control,
@@ -83,9 +83,9 @@
         }
 
         .pagos-filter-card .form-label {
-            font-size: 0.75rem !important;
+            font-size: 0.8rem !important;
             text-transform: uppercase;
-            letter-spacing: 0.25px;
+            letter-spacing: 0.35px;
             font-weight: 700;
             color: var(--pag-muted) !important;
         }
@@ -246,16 +246,16 @@
             {# Filtros para Pagos #}
             <div class="row mb-3">
                 <div class="col-12">
-                    <form method="get" class="card pagos-filter-card">
+                    <form method="get" class="card pagos-filter-card ui-filter-card">
                         <div class="card-body py-2">
                             <div class="row g-2 align-items-end flex-nowrap">
                                 <div class="col">
                                     <label class="form-label small text-muted mb-1">Buscar</label>
-                                    <input type="text" name="busqueda" class="form-control form-control-sm" placeholder="Por nombre..." value="{{ busqueda }}">
+                                    <input type="text" name="busqueda" class="form-control" placeholder="Por nombre..." value="{{ busqueda }}">
                                 </div>
                                 <div class="col">
                                     <label class="form-label small text-muted mb-1">Alumno</label>
-                                    <select name="alumnoId" class="form-select form-select-sm" onchange="this.form.submit()">
+                                    <select name="alumnoId" class="form-select" onchange="this.form.submit()">
                                         <option value="">Todos los alumnos</option>
                                         {% for alu in alumnos %}
                                             <option value="{{ alu.id }}" {% if alumnoSelected == alu.id or (alumnoId is defined and alumnoId == alu.id) %}selected{% endif %}>
@@ -266,7 +266,7 @@
                                 </div>
                                 <div class="col">
                                     <label class="form-label small text-muted mb-1">Curso</label>
-                                    <select name="curso" class="form-select form-select-sm" onchange="this.form.submit()">
+                                    <select name="curso" class="form-select" onchange="this.form.submit()">
                                         <option value="">Todos los cursos</option>
                                         {% for curso in cursos %}
                                             <option value="{{ curso.id }}" {% if cursoSelected == curso.id %}selected{% endif %}>{{ curso.nombre }}</option>
@@ -275,7 +275,7 @@
                                 </div>
                                 <div class="col">
                                     <label class="form-label small text-muted mb-1">Método</label>
-                                    <select name="metodoPago" class="form-select form-select-sm" onchange="this.form.submit()">
+                                    <select name="metodoPago" class="form-select" onchange="this.form.submit()">
                                         <option value="">Todos</option>
                                         {% for metodo in metodosPago %}
                                             <option value="{{ metodo }}" {% if metodoSelected == metodo %}selected{% endif %}>{{ metodo }}</option>
@@ -284,7 +284,7 @@
                                 </div>
                                 <div class="col">
                                     <label class="form-label small text-muted mb-1">Rango</label>
-                                    <select name="rango" class="form-select form-select-sm" onchange="this.form.submit()">
+                                    <select name="rango" class="form-select" onchange="this.form.submit()">
                                         <option value="">Personalizado</option>
                                         <option value="semana" {% if rango == 'semana' %}selected{% endif %}>Semana</option>
                                         <option value="mes" {% if rango == 'mes' %}selected{% endif %}>Mes</option>
@@ -293,12 +293,12 @@
                                 </div>
                                 <div class="col">
                                     <label class="form-label small text-muted mb-1">Fecha Desde</label>
-                                    <input type="date" name="fechaDesde" class="form-control form-control-sm" value="{{ fechaDesde }}" onchange="this.form.submit()">
+                                    <input type="date" name="fechaDesde" class="form-control" value="{{ fechaDesde }}" onchange="this.form.submit()">
                                 </div>
                                 {% if fechaDesde or fechaHasta or busqueda or cursoSelected or metodoSelected or alumnoSelected or rango or (alumnoId is defined and alumnoId) %}
                                 <div class="col-auto">
                                     <label class="form-label small text-muted mb-1 d-block">&nbsp;</label>
-                                    <a href="{{ path('app_alumnos_pagos_index', {'tab': 'pagos'}) }}" class="btn btn-sm btn-outline-secondary" title="Limpiar filtros">
+                                    <a href="{{ path('app_alumnos_pagos_index', {'tab': 'pagos'}) }}" class="btn btn-outline-secondary" title="Limpiar filtros">
                                         <i class="bi bi-x-circle"></i> Limpiar
                                     </a>
                                 </div>
@@ -445,16 +445,16 @@
             {# Filtros para Deudas - mismos que Pagos + Estado #}
             <div class="row mb-3">
                 <div class="col-12">
-                    <form method="get" class="card pagos-filter-card">
+                    <form method="get" class="card pagos-filter-card ui-filter-card">
                         <div class="card-body py-2">
                             <div class="row g-2 align-items-end flex-nowrap">
                                 <div class="col">
                                     <label class="form-label small text-muted mb-1">Buscar</label>
-                                    <input type="text" name="busqueda" class="form-control form-control-sm" placeholder="Por nombre..." value="{{ busqueda }}">
+                                    <input type="text" name="busqueda" class="form-control" placeholder="Por nombre..." value="{{ busqueda }}">
                                 </div>
                                 <div class="col">
                                     <label class="form-label small text-muted mb-1">Alumno</label>
-                                    <select name="alumnoId" class="form-select form-select-sm" onchange="this.form.submit()">
+                                    <select name="alumnoId" class="form-select" onchange="this.form.submit()">
                                         <option value="">Todos los alumnos</option>
                                         {% for alu in alumnos %}
                                             <option value="{{ alu.id }}" {% if alumnoSelected == alu.id or (alumnoId is defined and alumnoId == alu.id) %}selected{% endif %}>
@@ -465,7 +465,7 @@
                                 </div>
                                 <div class="col">
                                     <label class="form-label small text-muted mb-1">Curso</label>
-                                    <select name="curso" class="form-select form-select-sm" onchange="this.form.submit()">
+                                    <select name="curso" class="form-select" onchange="this.form.submit()">
                                         <option value="">Todos los cursos</option>
                                         {% for curso in cursos %}
                                             <option value="{{ curso.id }}" {% if cursoSelected == curso.id %}selected{% endif %}>{{ curso.nombre }}</option>
@@ -474,7 +474,7 @@
                                 </div>
                                 <div class="col">
                                     <label class="form-label small text-muted mb-1">Estado</label>
-                                    <select name="estadoDeuda" class="form-select form-select-sm" onchange="this.form.submit()">
+                                    <select name="estadoDeuda" class="form-select" onchange="this.form.submit()">
                                         <option value="">Todas</option>
                                         <option value="pendientes" {% if estadoDeuda == 'pendientes' %}selected{% endif %}>Solo Pendientes</option>
                                         <option value="parciales" {% if estadoDeuda == 'parciales' %}selected{% endif %}>Parcialmente Pagadas</option>
@@ -482,7 +482,7 @@
                                 </div>
                                 <div class="col">
                                     <label class="form-label small text-muted mb-1">Rango</label>
-                                    <select name="rango" class="form-select form-select-sm" onchange="this.form.submit()">
+                                    <select name="rango" class="form-select" onchange="this.form.submit()">
                                         <option value="">Personalizado</option>
                                         <option value="semana" {% if rango == 'semana' %}selected{% endif %}>Semana</option>
                                         <option value="mes" {% if rango == 'mes' %}selected{% endif %}>Mes</option>
@@ -491,12 +491,12 @@
                                 </div>
                                 <div class="col">
                                     <label class="form-label small text-muted mb-1">Período Desde</label>
-                                    <input type="date" name="fechaDesde" class="form-control form-control-sm" value="{{ fechaDesde }}" onchange="this.form.submit()">
+                                    <input type="date" name="fechaDesde" class="form-control" value="{{ fechaDesde }}" onchange="this.form.submit()">
                                 </div>
                                 {% if busqueda or cursoSelected or alumnoSelected or estadoDeuda or fechaDesde or rango or (alumnoId is defined and alumnoId) %}
                                 <div class="col-auto">
                                     <label class="form-label small text-muted mb-1 d-block">&nbsp;</label>
-                                    <a href="{{ path('app_alumnos_pagos_index', {'tab': 'deudas'}) }}" class="btn btn-sm btn-outline-secondary" title="Limpiar filtros">
+                                    <a href="{{ path('app_alumnos_pagos_index', {'tab': 'deudas'}) }}" class="btn btn-outline-secondary" title="Limpiar filtros">
                                         <i class="bi bi-x-circle"></i> Limpiar
                                     </a>
                                 </div>

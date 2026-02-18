@@ -38,6 +38,8 @@
             box-shadow: var(--ainf-shadow);
             padding: 1rem;
             margin-bottom: 1rem;
+            margin-left: 0;
+            margin-right: 0;
         }
 
         .asistencia-informe-toolbar .form-label {
@@ -158,7 +160,7 @@
 
 {% block body %}
 <div class="container-fluid mt-3 asistencia-informe-page">
-    <div class="row mb-4 asistencia-informe-toolbar">
+    <div class="row mb-4 asistencia-informe-toolbar ui-filter-card">
         <div class="col-12">
             <form method="get" action="{{ path('app_instituto_asistencias_informe') }}" class="row g-3">
                 <div class="col-md-3">

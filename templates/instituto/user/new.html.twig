@@ -2,21 +2,69 @@
 
 {% block title %}Nuevo Usuario{% endblock %}
 
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .user-new-page {
+            padding: 1.2rem 0.75rem;
+            width: 100%;
+        }
+
+        .user-new-center {
+            width: 100%;
+            max-width: none;
+            margin: 0;
+        }
+
+        .user-new-card {
+            border: 1px solid #e5eceb;
+            border-radius: 14px;
+            box-shadow: 0 10px 28px rgba(19, 44, 43, 0.1);
+            overflow: hidden;
+            width: 100%;
+        }
+
+        @media (max-width: 768px) {
+            .user-new-page {
+                padding: 0.9rem 0.2rem;
+            }
+        }
+    </style>
+{% endblock %}
+
 {% block panelTitle %}
     Nuevo Usuario
 {% endblock %}
 
 {% block body %}
-<div class="container-fluid mt-4">
-    <div class="row">
-        <div class="col-12">
-            <div class="card shadow-sm">
+<div class="container-fluid mt-3 user-new-page">
+    <div class="user-new-center">
+        <div class="row">
+            <div class="col-12">
+                <div class="card shadow-sm user-new-card">
                 <div class="card-body">
                     {{ include('instituto/user/_form.html.twig', {'button_label': 'Guardar'}) }}
                 </div>
             </div>
         </div>
     </div>
+    </div>
 </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const page = document.querySelector('.user-new-page');
+            const parentContainer = page ? page.closest('.container') : null;
+            if (parentContainer) {
+                parentContainer.classList.add('user-new-parent-container');
+                parentContainer.style.maxWidth = '100%';
+                parentContainer.style.paddingLeft = '0';
+                parentContainer.style.paddingRight = '0';
+            }
+        });
+    </script>
 {% endblock %}
 
