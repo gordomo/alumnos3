@@ -312,6 +312,15 @@ class AlumnosPagosController extends AbstractController
             ->andWhere('a.activo = :activo')
             ->setParameter('instituto', $instituto)
             ->setParameter('activo', true);
+
+        // Mostrar solo deudas del mes actual o anteriores (ocultar deudas futuras)
+        $fechaReferencia = new \DateTime();
+        $mesActualDeuda = (int) $fechaReferencia->format('n');
+        $anoActualDeuda = (int) $fechaReferencia->format('Y');
+        $qbDeudas
+            ->andWhere('(d.ano < :anoActualDeuda OR (d.ano = :anoActualDeuda AND d.mes <= :mesActualDeuda))')
+            ->setParameter('anoActualDeuda', $anoActualDeuda)
+            ->setParameter('mesActualDeuda', $mesActualDeuda);
         
         // Aplicar filtros de búsqueda
         if ($busqueda) {

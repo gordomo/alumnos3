@@ -12,6 +12,7 @@ use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -124,6 +125,13 @@ class AlumnoType extends AbstractType
                 'required' => false,
                 'label' => 'Cursos',
                 'attr' => ['class' => 'form-control chosen-select']
+            ])
+            ->add('comenzarDeudaProximoMes', CheckboxType::class, [
+                'label' => 'Comenzar deuda a partir del próximo mes',
+                'mapped' => false,
+                'required' => false,
+                'label_attr' => ['class' => 'form-check-label fw-semibold text-dark'],
+                'attr' => ['class' => 'form-check-input']
             ]);
     }
 

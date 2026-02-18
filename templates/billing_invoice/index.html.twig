@@ -2,22 +2,216 @@
 
 {% block title %}Mis Facturas{% endblock %}
 
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        :root {
+            --bill-primary: #5c6f6c;
+            --bill-secondary: #849d9a;
+            --bill-surface: #ffffff;
+            --bill-text: #1f2a2d;
+            --bill-muted: #647079;
+            --bill-border: #e5eceb;
+            --bill-shadow: 0 10px 28px rgba(19, 44, 43, 0.1);
+        }
+
+        .facturas-page {
+            padding: 1.2rem 0.75rem 1rem;
+        }
+
+        .facturas-kpi-card,
+        .facturas-panel,
+        .facturas-info-card,
+        .facturas-mini-card {
+            border: 1px solid var(--bill-border);
+            border-radius: 14px;
+            box-shadow: var(--bill-shadow);
+            overflow: hidden;
+            background: var(--bill-surface);
+        }
+
+        .facturas-kpi-card .card-body,
+        .facturas-mini-card .card-body {
+            padding: 1.2rem 1rem;
+        }
+
+        .facturas-kpi-card .card-title,
+        .facturas-mini-card h5 {
+            color: #4d5d63 !important;
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin-bottom: 0.6rem !important;
+        }
+
+        .facturas-kpi-number {
+            margin: 0;
+            font-size: clamp(1.8rem, 2.1vw, 2.3rem);
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            line-height: 1.1;
+        }
+
+        .facturas-kpi-number--primary {
+            color: #2c77b5;
+        }
+
+        .facturas-kpi-number--success {
+            color: #218c58;
+        }
+
+        .facturas-info-header,
+        .facturas-panel-header {
+            border-bottom: 1px solid var(--bill-border);
+            padding: 0.85rem 1rem;
+        }
+
+        .facturas-info-header {
+            background: linear-gradient(135deg, var(--bill-primary), var(--bill-secondary));
+            color: #fff;
+        }
+
+        .facturas-info-header .card-title,
+        .facturas-panel-header .card-title {
+            margin-bottom: 0;
+            font-size: 1.02rem;
+            font-weight: 700;
+        }
+
+        .facturas-panel-header--danger {
+            background: linear-gradient(135deg, #d35a5a, #c24646);
+            color: #fff;
+        }
+
+        .facturas-panel-header--info {
+            background: linear-gradient(135deg, #3c8fa4, #2e7789);
+            color: #fff;
+        }
+
+        .facturas-info-body {
+            background: #f7fbfa;
+            padding: 1rem;
+        }
+
+        .facturas-note-box,
+        .facturas-empty-box {
+            background: #fff;
+            border: 1px solid #dbe8e5;
+            border-left: 4px solid var(--bill-secondary);
+            border-radius: 12px;
+            padding: 1rem 1.1rem;
+            color: #44545a;
+        }
+
+        .facturas-note-box h5 {
+            color: #3f6764;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .facturas-note-box ul {
+            margin-bottom: 0;
+            padding-left: 1.05rem;
+        }
+
+        .facturas-note-box li {
+            margin-bottom: 0.2rem;
+        }
+
+        .facturas-note-box li:last-child {
+            margin-bottom: 0;
+        }
+
+        .facturas-panel .card-body {
+            padding: 1rem;
+        }
+
+        .facturas-table {
+            margin-bottom: 0;
+        }
+
+        .facturas-table thead th {
+            background: #f5f9f8;
+            color: #4a5a60;
+            font-weight: 700;
+            font-size: 0.82rem;
+            letter-spacing: 0.2px;
+            border-bottom: 1px solid #dce7e4;
+            white-space: nowrap;
+            padding: 0.7rem 0.6rem;
+        }
+
+        .facturas-table td {
+            color: #27343a;
+            font-size: 0.9rem;
+            border-top-color: #ecf2f1;
+            vertical-align: middle;
+            padding: 0.62rem 0.6rem;
+        }
+
+        .facturas-table tbody tr:hover {
+            background: #fbfdfd;
+        }
+
+        .facturas-status-badge {
+            border-radius: 999px;
+            padding: 0.3rem 0.6rem;
+            font-weight: 700;
+        }
+
+        .facturas-view-btn {
+            border-radius: 8px;
+            font-weight: 600;
+            padding: 0.28rem 0.55rem;
+        }
+
+        .facturas-total-alert {
+            border: 1px solid #ead8b6;
+            background: #fff9ec;
+            color: #6c5420;
+            border-radius: 10px;
+            margin-top: 0.8rem;
+            margin-bottom: 0;
+        }
+
+        .facturas-history-wrap {
+            border: 1px solid #dbe8e5;
+            border-radius: 12px;
+            background: #ffffff;
+            padding: 0.25rem;
+        }
+
+        .facturas-mini-number {
+            margin: 0;
+            font-size: 1.9rem;
+            font-weight: 800;
+            line-height: 1.1;
+            color: #33484e;
+        }
+
+        @media (max-width: 768px) {
+            .facturas-page {
+                padding: 0.9rem 0.2rem 0.9rem;
+            }
+        }
+    </style>
+{% endblock %}
+
 {% block panelTitle %}
     Mis Facturas
 {% endblock %}
 
 {% block body %}
-<div class="container-fluid mt-4">
+<div class="container-fluid mt-3 facturas-page">
     <!-- Información principal de facturación -->
     <div class="row mb-4">
         <div class="col-md-6">
-            <div class="card shadow-sm border-0 h-100">
+            <div class="card h-100 facturas-kpi-card">
                 <div class="card-body text-center">
                     <h5 class="card-title text-muted mb-3">
                         <i class="bi bi-people-fill text-primary me-2"></i>
                         Alumnos Activos
                     </h5>
-                    <h2 class="display-4 mb-0" style="color: #007bff;">
+                    <h2 class="facturas-kpi-number facturas-kpi-number--primary">
                         {{ activeStudents }}
                     </h2>
                     <p class="text-muted mt-2 mb-0">alumnos registrados actualmente</p>
@@ -26,13 +220,13 @@
             </div>
         </div>
         <div class="col-md-6">
-            <div class="card shadow-sm border-0 h-100">
+            <div class="card h-100 facturas-kpi-card">
                 <div class="card-body text-center">
                     <h5 class="card-title text-muted mb-3">
                         <i class="bi bi-calculator-fill text-success me-2"></i>
                         Costo Próximo Mes
                     </h5>
-                    <h2 class="display-4 mb-0" style="color: #28a745;">
+                    <h2 class="facturas-kpi-number facturas-kpi-number--success">
                         ${{ estimatedNextMonth|number_format(2, ',', '.') }}
                     </h2>
                     <p class="text-muted mt-2 mb-0">facturación mensual estimada</p>
@@ -45,22 +239,22 @@
     </div>
 
     <!-- Información del sistema -->
-    <div class="card mb-4 border-0 shadow-sm">
-        <div class="card-header text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <div class="card mb-4 facturas-info-card">
+        <div class="card-header facturas-info-header">
             <h4 class="card-title mb-0">
                 <i class="bi bi-info-circle-fill me-2"></i>
                 Sistema de Facturación por Alumnos
             </h4>
         </div>
-        <div class="card-body" style="background-color: #f8f9ff;">
-            <div class="border-0 shadow-sm" style="background-color: #ffffff; border-left: 4px solid #667eea !important; padding: 1.5rem;">
+        <div class="card-body facturas-info-body">
+            <div class="facturas-note-box">
                 <div class="d-flex align-items-start">
                     <div class="flex-shrink-0 me-3">
-                        <i class="bi bi-lightbulb-fill" style="font-size: 2.5rem; color: #667eea;"></i>
+                        <i class="bi bi-lightbulb-fill" style="font-size: 2.5rem; color: #6a8f8a;"></i>
                     </div>
                     <div class="flex-grow-1">
-                        <h5 class="mb-2" style="color: #667eea;">¿Cómo funciona la facturación?</h5>
-                        <ul class="mb-0" style="color: #495057;">
+                        <h5 class="mb-2">¿Cómo funciona la facturación?</h5>
+                        <ul>
                             <li><strong>Sin límites de uso:</strong> Todas las operaciones del sistema son gratuitas e ilimitadas</li>
                             <li><strong>Facturación mensual:</strong> Se cobra mensualmente basado en la cantidad de alumnos activos</li>
                             <li><strong>Precio fijo:</strong> ${{ billingService.getPricePerStudentMonthly()|number_format(2, ',', '.') }} por alumno por mes</li>
@@ -77,8 +271,8 @@
     {% if pendingInvoices|length > 0 %}
     <div class="row mb-4">
         <div class="col-12">
-            <div class="card shadow-sm">
-                <div class="card-header bg-danger text-white">
+            <div class="card facturas-panel">
+                <div class="card-header facturas-panel-header facturas-panel-header--danger">
                     <h4 class="card-title mb-0">
                         <i class="bi bi-exclamation-triangle me-2"></i>
                         Facturas Pendientes de Pago
@@ -86,7 +280,7 @@
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-hover">
+                        <table class="table table-hover facturas-table">
                             <thead>
                                 <tr>
                                     <th>Período</th>
@@ -104,20 +298,20 @@
                                         <strong>{{ invoice.getFormattedPeriod() }}</strong>
                                     </td>
                                     <td class="text-center">
-                                        <span class="badge bg-primary">{{ invoice.activeStudentsCount }}</span>
+                                        <span class="badge bg-primary facturas-status-badge">{{ invoice.activeStudentsCount }}</span>
                                     </td>
                                     <td class="text-end">
                                         <strong class="text-danger">${{ invoice.totalAmount|number_format(2, ',', '.') }}</strong>
                                     </td>
                                     <td class="text-center">
-                                        <span class="badge bg-warning">Pendiente</span>
+                                        <span class="badge bg-warning text-dark facturas-status-badge">Pendiente</span>
                                     </td>
                                     <td class="text-center">
                                         <small class="text-muted">{{ invoice.createdAt|date('d/m/Y H:i') }}</small>
                                     </td>
                                     <td class="text-center">
                                         <a href="{{ path('billing_invoice_show', {'id': invoice.id}) }}" 
-                                           class="btn btn-sm btn-outline-info" 
+                                           class="btn btn-sm btn-outline-info facturas-view-btn" 
                                            title="Ver detalles">
                                             <i class="bi bi-eye"></i> Ver
                                         </a>
@@ -127,7 +321,7 @@
                             </tbody>
                         </table>
                     </div>
-                    <div class="alert alert-warning mt-3">
+                    <div class="alert facturas-total-alert">
                         <i class="bi bi-info-circle me-2"></i>
                         <strong>Total pendiente:</strong> ${{ billingStats.totalPending|number_format(2, ',', '.') }}
                     </div>
@@ -138,8 +332,8 @@
     {% endif %}
 
     <!-- Historial de Facturación -->
-    <div class="card mb-4">
-        <div class="card-header bg-info text-white">
+    <div class="card mb-4 facturas-panel">
+        <div class="card-header facturas-panel-header facturas-panel-header--info">
             <h4 class="card-title mb-0">
                 <i class="bi bi-receipt me-2"></i>
                 Historial de Facturación
@@ -147,9 +341,9 @@
         </div>
         <div class="card-body">
             {% if billingHistory|length > 0 %}
-                <div class="alert alert-info border-0 shadow-sm mb-0">
+                <div class="facturas-history-wrap">
                     <div class="table-responsive">
-                        <table class="table table-hover mb-0">
+                        <table class="table table-hover mb-0 facturas-table">
                             <thead>
                                 <tr>
                                     <th>Período</th>
@@ -167,7 +361,7 @@
                                         <strong>{{ invoice.getFormattedPeriod() }}</strong>
                                     </td>
                                     <td class="text-center">
-                                        <span class="badge bg-secondary">{{ invoice.activeStudentsCount }}</span>
+                                        <span class="badge bg-secondary facturas-status-badge">{{ invoice.activeStudentsCount }}</span>
                                     </td>
                                     <td class="text-end">
                                         <strong class="{% if invoice.isPaid %}text-success{% else %}text-danger{% endif %}">
@@ -176,17 +370,17 @@
                                     </td>
                                     <td class="text-center">
                                         {% if invoice.isPaid %}
-                                            <span class="badge bg-success">Pagada</span>
+                                            <span class="badge bg-success facturas-status-badge">Pagada</span>
                                         {% elseif invoice.isPendingApproval %}
-                                            <span class="badge bg-info">Pendiente de Aprobación</span>
+                                            <span class="badge bg-info facturas-status-badge">Pendiente de Aprobación</span>
                                         {% elseif invoice.isPending %}
-                                            <span class="badge bg-warning">Pendiente</span>
+                                            <span class="badge bg-warning text-dark facturas-status-badge">Pendiente</span>
                                         {% elseif invoice.isRejected %}
-                                            <span class="badge bg-danger">Rechazada</span>
+                                            <span class="badge bg-danger facturas-status-badge">Rechazada</span>
                                         {% elseif invoice.isCancelled %}
-                                            <span class="badge bg-secondary">Cancelada</span>
+                                            <span class="badge bg-secondary facturas-status-badge">Cancelada</span>
                                         {% else %}
-                                            <span class="badge bg-secondary">{{ invoice.status|capitalize }}</span>
+                                            <span class="badge bg-secondary facturas-status-badge">{{ invoice.status|capitalize }}</span>
                                         {% endif %}
                                     </td>
                                     <td class="text-center">
@@ -194,7 +388,7 @@
                                     </td>
                                     <td class="text-center">
                                         <a href="{{ path('billing_invoice_show', {'id': invoice.id}) }}" 
-                                           class="btn btn-sm btn-outline-primary" 
+                                           class="btn btn-sm btn-outline-primary facturas-view-btn" 
                                            title="Ver detalles">
                                             <i class="bi bi-eye"></i> Ver
                                         </a>
@@ -206,9 +400,9 @@
                     </div>
                 </div>
             {% else %}
-                <div class="border-0 shadow-sm mb-0" style="background-color: #ffffff; border-left: 4px solid #667eea !important; padding: 1.5rem;">
-                    <div class="text-center" style="color: #495057;">
-                        <i class="bi bi-info-circle" style="color: #667eea;"></i> No hay facturas registradas aún.
+                <div class="facturas-empty-box">
+                    <div class="text-center">
+                        <i class="bi bi-info-circle"></i> No hay facturas registradas aún.
                     </div>
                 </div>
             {% endif %}
@@ -218,26 +412,26 @@
     <!-- Estadísticas -->
     <div class="row mt-4">
         <div class="col-md-4">
-            <div class="card shadow-sm">
+            <div class="card facturas-mini-card">
                 <div class="card-body text-center">
                     <h5 class="text-muted mb-2">Total de Facturas</h5>
-                    <h2 class="mb-0">{{ billingStats.totalInvoices }}</h2>
+                    <h2 class="facturas-mini-number">{{ billingStats.totalInvoices }}</h2>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card shadow-sm">
+            <div class="card facturas-mini-card">
                 <div class="card-body text-center">
                     <h5 class="text-muted mb-2">Total Pagado</h5>
-                    <h2 class="mb-0 text-success">${{ billingStats.totalPaid|number_format(2, ',', '.') }}</h2>
+                    <h2 class="facturas-mini-number text-success">${{ billingStats.totalPaid|number_format(2, ',', '.') }}</h2>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card shadow-sm">
+            <div class="card facturas-mini-card">
                 <div class="card-body text-center">
                     <h5 class="text-muted mb-2">Promedio Alumnos</h5>
-                    <h2 class="mb-0">{{ billingStats.avgStudents|number_format(0) }}</h2>
+                    <h2 class="facturas-mini-number">{{ billingStats.avgStudents|number_format(0) }}</h2>
                 </div>
             </div>
         </div>

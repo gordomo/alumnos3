@@ -305,6 +305,21 @@
                 </div>
             </div>
         </div>
+
+        <div class="row mb-1">
+            <div class="col-md-12">
+                <div class="form-check mt-2">
+                    {{ form_widget(form.comenzarDeudaProximoMes, {'attr': {'class': 'form-check-input'}}) }}
+                    <label class="form-check-label fw-semibold text-dark" for="{{ form.comenzarDeudaProximoMes.vars.id }}">
+                        Comenzar deuda a partir del próximo mes
+                    </label>
+                </div>
+                <small class="text-muted d-block mt-1">
+                    Si no se marca, la deuda comienza en el mes corriente. Si se marca, comienza el próximo mes.
+                </small>
+                {{ form_errors(form.comenzarDeudaProximoMes) }}
+            </div>
+        </div>
     </div>
 </div>
 

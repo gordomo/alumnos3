@@ -35,13 +35,21 @@ class DeudaService
      */
     public function generarDeudasParaHistorico(
         AlumnoCursoHistorico $historico, 
+        bool $comenzarDeudaProximoMes = false,
         bool $force = false
     ): array {
         $alumno = $historico->getAlumno();
         $curso = $historico->getCurso();
         
-        // Utilizar las fechas del curso, no del histórico
-        $fechaInicio = $curso->getFechaInicio() ?: new \DateTime();
+        // Utilizar fecha de inicio efectiva: max(inicio del curso, alta del alumno)
+        $fechaInicioCurso = $curso->getFechaInicio() ?: new \DateTime();
+        $fechaAlta = $historico->getFechaAlta() ?: new \DateTime();
+        $fechaInicio = $fechaInicioCurso > $fechaAlta ? clone $fechaInicioCurso : clone $fechaAlta;
+        $fechaInicio->modify('first day of this month');
+        
+        if ($comenzarDeudaProximoMes) {
+            $fechaInicio->modify('first day of next month');
+        }
         
         // IMPORTANTE: Solo generar deudas hasta el mes actual, no meses futuros
         $fechaActual = new \DateTime();
@@ -49,6 +57,13 @@ class DeudaService
         
         // Generar solo hasta el mes actual o hasta que termine el curso, lo que ocurra primero
         $fechaFin = $fechaActual < $fechaFinCurso ? $fechaActual : $fechaFinCurso;
+
+        if ($fechaInicio > $fechaFin) {
+            return [
+                'creadas' => 0,
+                'actualizadas' => 0
+            ];
+        }
         
         return $this->generarDeudasParaPeriodo(
             $alumno,

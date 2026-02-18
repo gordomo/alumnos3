@@ -151,6 +151,7 @@ class AlumnoController extends AbstractController
             if ($form->isValid()) {
 
                 try {
+                    $comenzarDeudaProximoMes = (bool) $form->get('comenzarDeudaProximoMes')->getData();
                     $email = $alumno->getEmail();
                     
                     // Verificar si el email ya existe en usuarios
@@ -189,16 +190,21 @@ class AlumnoController extends AbstractController
                     // Crear historial para cada curso seleccionado y generar deudas
                     foreach ($alumno->getCurso() as $curso) {
                         // Utilizamos el método mejorado, que ya maneja la generación de deudas básicas
-                        $historico = $this->historialCursosService->crearHistorialConDeudasHastaFinDeAno($alumno, $curso);
+                        $historico = $this->historialCursosService->crearHistorialConDeudasHastaFinDeAno(
+                            $alumno,
+                            $curso,
+                            $comenzarDeudaProximoMes
+                        );
                         
                         // Asegurarnos de generar las deudas hasta fin de año
                         $fechaActual = new \DateTime();
                         $finDeAno = new \DateTime($fechaActual->format('Y') . '-12-31');
+                        $fechaInicioDeuda = $this->resolverFechaInicioDeuda($curso, $comenzarDeudaProximoMes);
                         $deudaService->generarDeudasParaPeriodo(
                             $alumno,
                             $curso,
                             $historico,
-                            $fechaActual,
+                            $fechaInicioDeuda,
                             $finDeAno,
                             false // No sobrescribir deudas existentes
                         );
@@ -354,6 +360,7 @@ class AlumnoController extends AbstractController
             if ($form->isValid()) {
 
                 try {
+                    $comenzarDeudaProximoMes = (bool) $form->get('comenzarDeudaProximoMes')->getData();
                     // Sincronizar email con el usuario asociado
                     if ($alumno->getUser()) {
                         $alumno->getUser()->setEmail($alumno->getEmail());
@@ -415,10 +422,15 @@ class AlumnoController extends AbstractController
                         if (!in_array($curso, $cursosActuales)) {
                             $alumno->addCurso($curso);
                             // Crear nuevo historial y generar deudas
-                            $historico = $this->historialCursosService->crearHistorialConDeudasHastaFinDeAno($alumno, $curso);
+                            $historico = $this->historialCursosService->crearHistorialConDeudasHastaFinDeAno(
+                                $alumno,
+                                $curso,
+                                $comenzarDeudaProximoMes
+                            );
                             // Generar deudas hasta fin de año con DeudaService
                             $fechaActual = new \DateTime();
                             $finDeAno = new \DateTime($fechaActual->format('Y') . '-12-31');
+                            $fechaInicioDeuda = $this->resolverFechaInicioDeuda($curso, $comenzarDeudaProximoMes);
                             
                             // Si el curso tiene fecha de finalización, usarla como límite
                             if (method_exists($curso, 'getFechaFin') && $curso->getFechaFin() !== null) {
@@ -432,7 +444,7 @@ class AlumnoController extends AbstractController
                                 $alumno,
                                 $curso,
                                 $historico,
-                                $curso->getFechaInicio() ?: $fechaActual, // Usar fecha de inicio del curso o actual si no tiene
+                                $fechaInicioDeuda,
                                 $finDeAno,
                                 false
                             );
@@ -633,6 +645,10 @@ class AlumnoController extends AbstractController
     {
         $instituto = $this->getUser()->getInstituto();
         $cursoIds = $request->request->get('cursos', []);
+        $comenzarDeudaProximoMes = filter_var(
+            $request->request->get('comenzar_deuda_proximo_mes', false),
+            FILTER_VALIDATE_BOOLEAN
+        );
         
         // Obtener los cursos seleccionados
         $cursosSeleccionados = $cursoRepository->findBy(['id' => $cursoIds, 'instituto' => $instituto]);
@@ -667,11 +683,16 @@ class AlumnoController extends AbstractController
             if (!$cursosActuales->contains($curso)) {
                 $alumno->addCurso($curso);
                 // Crear nuevo historial y generar deudas
-                $historico = $historialCursosService->crearHistorialConDeudasHastaFinDeAno($alumno, $curso);
+                $historico = $historialCursosService->crearHistorialConDeudasHastaFinDeAno(
+                    $alumno,
+                    $curso,
+                    $comenzarDeudaProximoMes
+                );
                 
                 // Determinar la fecha límite para generar deudas
                 $fechaActual = new \DateTime();
                 $finDeAno = new \DateTime($fechaActual->format('Y') . '-12-31');
+                $fechaInicioDeuda = $this->resolverFechaInicioDeuda($curso, $comenzarDeudaProximoMes);
                 
                 // Si el curso tiene fecha de finalización, usar la más cercana
                 if (method_exists($curso, 'getFechaFin') && $curso->getFechaFin() !== null) {
@@ -686,7 +707,7 @@ class AlumnoController extends AbstractController
                     $alumno,
                     $curso,
                     $historico,
-                    $curso->getFechaInicio() ?: $fechaActual, // Usar fecha de inicio del curso o actual si no tiene
+                    $fechaInicioDeuda,
                     $finDeAno,
                     false
                 );
@@ -856,6 +877,30 @@ class AlumnoController extends AbstractController
         return $this->redirectToRoute('app_alumno_deudas', ['id' => $alumno->getId()]);
     }
     
+    /**
+     * Obtiene el nombre del mes según su número
+     */
+    private function resolverFechaInicioDeuda(\App\Entity\Curso $curso, bool $comenzarDeudaProximoMes): \DateTime
+    {
+        $inicio = new \DateTime();
+        $inicio->modify('first day of this month');
+
+        if ($comenzarDeudaProximoMes) {
+            $inicio->modify('first day of next month');
+        }
+
+        $fechaInicioCurso = $curso->getFechaInicio();
+        if ($fechaInicioCurso) {
+            $fechaInicioCursoMes = clone $fechaInicioCurso;
+            $fechaInicioCursoMes->modify('first day of this month');
+            if ($fechaInicioCursoMes > $inicio) {
+                $inicio = $fechaInicioCursoMes;
+            }
+        }
+
+        return $inicio;
+    }
+
     /**
      * Obtiene el nombre del mes según su número
      */
