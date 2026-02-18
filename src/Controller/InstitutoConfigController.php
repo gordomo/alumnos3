@@ -79,7 +79,7 @@ class InstitutoConfigController extends AbstractController
             $tel = $request->request->get('tel');
             if (strlen($tel) > 25) {
                     $this->addFlash('danger', 'El número de teléfono no puede tener más de 25 caracteres.');
-                    return $this->redirectToRoute('instituto_config_edit', ['_fragment' => 'edit-general']);
+                    return $this->redirectToRoute('instituto_config_index');
             }
             $instituto->setTel($tel);
             
@@ -100,7 +100,7 @@ class InstitutoConfigController extends AbstractController
                         );
                     } catch (FileException $e) {
                         $this->addFlash('danger', 'No se pudo subir el logo.');
-                            return $this->redirectToRoute('instituto_config_edit', ['_fragment' => 'edit-general']);
+                            return $this->redirectToRoute('instituto_config_index');
                     }
                     
                     // Eliminar el logo anterior si existe
@@ -121,16 +121,16 @@ class InstitutoConfigController extends AbstractController
                     if (count($errors) === 0) {
                     $entityManager->flush();
                         $this->addFlash('success', 'La información general se ha actualizado correctamente.');
-                        return $this->redirectToRoute('instituto_config_edit', ['_fragment' => 'edit-general']);
+                        return $this->redirectToRoute('instituto_config_index');
                 } else {
                     foreach ($errors as $error) {
                         $this->addFlash('danger', $error->getMessage());
                     }
-                    return $this->redirectToRoute('instituto_config_edit', ['_fragment' => 'edit-general']);
+                    return $this->redirectToRoute('instituto_config_index');
                     }
                 } catch (\Exception $e) {
                     $this->addFlash('danger', 'Ocurrió un error al guardar los cambios: ' . $e->getMessage());
-                    return $this->redirectToRoute('instituto_config_edit', ['_fragment' => 'edit-general']);
+                    return $this->redirectToRoute('instituto_config_index');
                 }
                 
             } elseif ($section === 'descuentos') {
@@ -178,16 +178,16 @@ class InstitutoConfigController extends AbstractController
                         $entityManager->persist($configuracion);
                         $entityManager->flush();
                         $this->addFlash('success', 'La configuración de notificaciones se ha actualizado correctamente.');
-                        return $this->redirectToRoute('instituto_config_edit', ['_fragment' => 'edit-notificaciones']);
+                        return $this->redirectToRoute('instituto_config_index');
                     } else {
                         foreach ($errorsConfig as $error) {
                             $this->addFlash('danger', $error->getMessage());
                         }
-                        return $this->redirectToRoute('instituto_config_edit', ['_fragment' => 'edit-notificaciones']);
+                        return $this->redirectToRoute('instituto_config_index');
                     }
                 } catch (\Exception $e) {
                     $this->addFlash('danger', 'Ocurrió un error al guardar los cambios: ' . $e->getMessage());
-                    return $this->redirectToRoute('instituto_config_edit', ['_fragment' => 'edit-notificaciones']);
+                    return $this->redirectToRoute('instituto_config_index');
                 }
             }
         }
