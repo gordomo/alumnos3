@@ -165,9 +165,8 @@ class PagoService
         $aplicacion->setMontoAplicado($montoAplicar);
         $aplicacion->setFechaAplicacion(new \DateTime());
 
-        // Política: sin pagos parciales en deudas seleccionadas.
-        // Si se paga menos que lo pendiente, ajustamos el total de la deuda al monto efectivamente pagado
-        // para que quede cancelada.
+        // Política: si se paga menos que lo pendiente, ajustamos el total de la deuda al monto efectivamente pagado
+        // para que quede cancelada (no permitimos dejar deudas parcialmente pagadas).
         if ($cerrarDeudaSiMontoMenor && $montoAplicar < $montoPendiente) {
             $montoPagadoAcumulado = $deuda->getMontoPagado() + $montoAplicar;
             $deuda->setMonto($montoPagadoAcumulado);

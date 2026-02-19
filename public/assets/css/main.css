@@ -33,7 +33,7 @@
     background-color: #fff;
 }
 .inactivo {
-    background-color: #ffdbdb;
+    background-color: #fff3e6a6;
 }
 .excel {
     display: none;
@@ -111,9 +111,10 @@ th     { background:#eee; }
 }
 
 .toast-custom {
+    z-index: 9999;
     position: absolute;
     right: 0;
-    bottom: 10px;
+    top: 0%;
     transition: opacity 1s ease-out;
 }
 .toast-custom.fade-out {

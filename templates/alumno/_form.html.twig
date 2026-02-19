@@ -103,6 +103,15 @@
                     {{ form_errors(form.celular) }}
                 </div>
             </div>
+            <div class="col-md-4">
+                <div class="mb-3">
+                    <label for="{{ form.activo.vars.id }}" class="form-label fw-semibold text-dark">
+                        Activo <span class="text-danger">*</span>
+                    </label>
+                    {{ form_widget(form.activo, {'attr': {'class': 'form-control'}}) }}
+                    {{ form_errors(form.activo) }}
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -188,15 +197,6 @@
             </div>
             <div class="col-md-4">
                 <div class="mb-3">
-                    <label for="{{ form.activo.vars.id }}" class="form-label fw-semibold text-dark">
-                        Activo <span class="text-danger">*</span>
-                    </label>
-                    {{ form_widget(form.activo, {'attr': {'class': 'form-control'}}) }}
-                    {{ form_errors(form.activo) }}
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="mb-3">
                     <label for="{{ form.extras.vars.id }}" class="form-label fw-semibold text-dark">
                         Extras
                     </label>
@@ -204,10 +204,7 @@
                     {{ form_errors(form.extras) }}
                 </div>
             </div>
-        </div>
-
-        <div class="row mb-3">
-            <div class="col-md-4">
+             <div class="col-md-4">
                 <div class="mb-3">
                     <label for="{{ form.como_conociste.vars.id }}" class="form-label fw-semibold text-dark">
                         ¿Cómo nos Conociste?
@@ -229,7 +226,7 @@
     </div>
     <div class="card-body">
         <div class="row mb-3">
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="mb-3">
                     <label for="{{ form.g_sanguineo.vars.id }}" class="form-label fw-semibold text-dark">
                         Grupo Sanguíneo
@@ -238,7 +235,7 @@
                     {{ form_errors(form.g_sanguineo) }}
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="mb-3">
                     <label for="{{ form.enfermedad.vars.id }}" class="form-label fw-semibold text-dark">
                         Enfermedad
@@ -247,7 +244,7 @@
                     {{ form_errors(form.enfermedad) }}
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="mb-3">
                     <label for="{{ form.alergico.vars.id }}" class="form-label fw-semibold text-dark">
                         Alérgico
@@ -256,10 +253,7 @@
                     {{ form_errors(form.alergico) }}
                 </div>
             </div>
-        </div>
-
-        <div class="row mb-3">
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="mb-3">
                     <label for="{{ form.medicacion.vars.id }}" class="form-label fw-semibold text-dark">
                         Medicación

@@ -379,18 +379,6 @@ class AlumnoController extends AbstractController
                                 $infoDeudasPendientes['totalDeudas'],
                                 $infoDeudasPendientes['montoPendiente']
                             ));
-                            
-                            // Si hay muchas deudas, mostrar detalle por curso
-                            if (count($infoDeudasPendientes['deudasPorCurso']) > 0) {
-                                foreach ($infoDeudasPendientes['deudasPorCurso'] as $deudaCurso) {
-                                    $this->addFlash('info', sprintf(
-                                        'Curso %s: %d cuotas pendientes por $%.2f',
-                                        $deudaCurso['nombre'],
-                                        $deudaCurso['cantidad'],
-                                        $deudaCurso['monto']
-                                    ));
-                                }
-                            }
                         }
                     }
                     

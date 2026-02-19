@@ -67,44 +67,14 @@ class AlumnosPagosController extends AbstractController
         $metodoSelected = $request->get('metodoPago', '');
         $fechaDesde = $request->get('fechaDesde', '');
         $fechaHasta = $request->get('fechaHasta', '');
-        $rango = $request->get('rango', '');
         $sort = $request->get('sort', 'fecha');
         $order = $request->get('order', 'desc');
 
-        // Calcular rango de fechas según el filtro "rango" (semana, mes, año)
-        if ($rango && in_array($rango, ['semana', 'mes', 'ano'], true)) {
-            $fechaRefInput = $fechaDesde ?: (new \DateTime())->format('Y-m-d');
-            try {
-                $fechaRef = new \DateTime($fechaRefInput);
-                if ($rango === 'semana') {
-                    // Semana: lunes a domingo de la semana que contiene la fecha seleccionada
-                    $diaSemana = (int) $fechaRef->format('N'); // 1=lunes, 7=domingo
-                    $fechaDesdeObj = clone $fechaRef;
-                    $fechaDesdeObj->modify('-' . ($diaSemana - 1) . ' days')->setTime(0, 0, 0);
-                    $fechaHastaObj = clone $fechaDesdeObj;
-                    $fechaHastaObj->modify('+6 days')->setTime(23, 59, 59);
-                    $fechaDesde = $fechaDesdeObj->format('Y-m-d');
-                    $fechaHasta = $fechaHastaObj->format('Y-m-d');
-                } elseif ($rango === 'mes') {
-                    // Mes completo tomando como referencia la fecha seleccionada
-                    $fechaDesdeObj = clone $fechaRef;
-                    $fechaDesdeObj->modify('first day of this month')->setTime(0, 0, 0);
-                    $fechaHastaObj = clone $fechaRef;
-                    $fechaHastaObj->modify('last day of this month')->setTime(23, 59, 59);
-                    $fechaDesde = $fechaDesdeObj->format('Y-m-d');
-                    $fechaHasta = $fechaHastaObj->format('Y-m-d');
-                } elseif ($rango === 'ano') {
-                    // Año completo tomando como referencia la fecha seleccionada
-                    $fechaDesdeObj = clone $fechaRef;
-                    $fechaDesdeObj->modify('first day of january')->setTime(0, 0, 0);
-                    $fechaHastaObj = clone $fechaRef;
-                    $fechaHastaObj->modify('last day of december')->setTime(23, 59, 59);
-                    $fechaDesde = $fechaDesdeObj->format('Y-m-d');
-                    $fechaHasta = $fechaHastaObj->format('Y-m-d');
-                }
-            } catch (\Exception $e) {
-                // Si hay error al parsear, mantener fechas originales
-            }
+        // Por defecto: año completo si no hay fechas en la petición
+        if (empty($fechaDesde) && empty($fechaHasta)) {
+            $fechaActual = new \DateTime();
+            $fechaDesde = $fechaActual->format('Y') . '-01-01';
+            $fechaHasta = $fechaActual->format('Y') . '-12-31';
         }
         
         // Obtener el ID del alumno del formulario (prioridad) o de la URL
@@ -339,21 +309,23 @@ class AlumnosPagosController extends AbstractController
                      ->setParameter('cursoDeuda', $cursoSelected);
         }
 
-        // Filtro por período (mes/año) cuando rango y fecha están configurados
-        if ($rango && in_array($rango, ['semana', 'mes', 'ano'], true) && $fechaDesde) {
+        // Filtro por período: deudas cuyo mes/año caen dentro del rango Desde-Hasta
+        if ($fechaDesde && $fechaHasta) {
             try {
-                $fechaRef = new \DateTime($fechaDesde);
-                if ($rango === 'mes' || $rango === 'semana') {
-                    $mesDebt = (int) $fechaRef->format('n');
-                    $anoDebt = (int) $fechaRef->format('Y');
-                    $qbDeudas->andWhere('d.mes = :mesDebt AND d.ano = :anoDebt')
-                             ->setParameter('mesDebt', $mesDebt)
-                             ->setParameter('anoDebt', $anoDebt);
-                } elseif ($rango === 'ano') {
-                    $anoDebt = (int) $fechaRef->format('Y');
-                    $qbDeudas->andWhere('d.ano = :anoDebt')
-                             ->setParameter('anoDebt', $anoDebt);
-                }
+                $fechaDesdeObj = new \DateTime($fechaDesde);
+                $fechaHastaObj = new \DateTime($fechaHasta);
+                $mesDesde = (int) $fechaDesdeObj->format('n');
+                $anoDesde = (int) $fechaDesdeObj->format('Y');
+                $mesHasta = (int) $fechaHastaObj->format('n');
+                $anoHasta = (int) $fechaHastaObj->format('Y');
+                $qbDeudas->andWhere(
+                    '((d.ano > :anoDesde) OR (d.ano = :anoDesde AND d.mes >= :mesDesde)) AND ' .
+                    '((d.ano < :anoHasta) OR (d.ano = :anoHasta AND d.mes <= :mesHasta))'
+                )
+                ->setParameter('anoDesde', $anoDesde)
+                ->setParameter('mesDesde', $mesDesde)
+                ->setParameter('anoHasta', $anoHasta)
+                ->setParameter('mesHasta', $mesHasta);
             } catch (\Exception $e) {
                 // Si hay error al parsear, no aplicar filtro
             }
@@ -376,9 +348,6 @@ class AlumnosPagosController extends AbstractController
             if ($estadoDeuda === 'pendientes') {
                 // Solo deudas completamente pendientes (sin pagos aplicados)
                 return $montoPagado == 0 && $montoPendiente > 0.01;
-            } elseif ($estadoDeuda === 'parciales') {
-                // Solo deudas parcialmente pagadas
-                return $montoPagado > 0 && $montoPendiente > 0.01;
             } else {
                 // Todas las deudas con monto pendiente (por defecto)
                 return $montoPendiente > 0.01;
@@ -422,7 +391,6 @@ class AlumnosPagosController extends AbstractController
             'metodoSelected' => $metodoSelected,
             'fechaDesde' => $fechaDesde,
             'fechaHasta' => $fechaHasta,
-            'rango' => $rango,
             'busqueda' => $busqueda,
             'sort' => $sort,
             'order' => $order,
@@ -1225,31 +1193,8 @@ class AlumnosPagosController extends AbstractController
                             $resultado = $this->pagoService->registrarPago($nuevoPago, $deudasIds, true);
                             $pagosCreados++;
                             
-                            // Verificar si hay monto restante que no sea debido a descuentos aplicados
-                            if ($resultado['montoRestante'] > 0.01) {
-                                // Si existe la deuda, verificar si quedó completamente pagada
-                                if ($deuda) {
-                                    // Refrescar la deuda para obtener el estado actualizado
-                                    $this->entityManager->refresh($deuda);
-                                    
-                                    // Si la deuda quedó completamente pagada (o casi pagada, con tolerancia),
-                                    // el monto restante es solo el descuento aplicado, no un pago parcial real
-                                    $montoPendienteDeuda = $deuda->getMontoPendiente();
-                                    
-                                    // Si la deuda está pagada o el monto pendiente es muy pequeño (menor al descuento esperado),
-                                    // no mostrar advertencia porque es solo el descuento
-                                    if ($montoPendienteDeuda <= 0.01) {
-                                        // La deuda está completamente pagada, el monto restante es solo el descuento
-                                        // No mostrar advertencia
-                                    } else {
-                                        // Hay un pago parcial real (la deuda no quedó completamente pagada)
-                                        $errores[] = "Pago parcial para {$mesInfo['mes']}/{$mesInfo['ano']}: queda saldo de $" . number_format($resultado['montoRestante'], 2, ',', '.');
-                                    }
-                                } else {
-                                    // Si no hay deuda (pago adelantado), el monto restante es saldo disponible para futuros pagos
-                                    // No mostrar advertencia en este caso
-                                }
-                            }
+                            // Con la política actual: si se paga un monto menor al debido, la deuda se cancela igual
+                            // (PagoService ajusta el total de la deuda al monto pagado). No hay pagos parciales.
                         } catch (\Exception $e) {
                             $errores[] = "Error al registrar pago para {$mesInfo['mes']}/{$mesInfo['ano']}: " . $e->getMessage();
                         }
@@ -1343,7 +1288,7 @@ class AlumnosPagosController extends AbstractController
                         ]);
                     }
 
-                    // Registrar el pago usando PagoService (maneja pagos parciales y adelantados)
+                    // Registrar el pago usando PagoService (monto menor al debido cancela la deuda igual; soporta adelantados)
                     // Buscar deuda específica para este mes/año/curso
                     $deudaEspecifica = $this->entityManager->getRepository(\App\Entity\DeudaAlumno::class)
                         ->findOneBy([

@@ -15,8 +15,8 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
+use App\Security\LoginFormAuthAuthenticator;
 use Symfony\Component\Security\Http\Authentication\UserAuthenticatorInterface;
-use Symfony\Component\Security\Http\Authenticator\FormLoginAuthenticator;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
@@ -31,6 +31,7 @@ class SecurityController extends AbstractController
     private $slugger;
     private $billingService;
     private $userAuthenticator;
+    private $loginAuthenticator;
 
     public function __construct(
         UrlGeneratorInterface $urlGenerator,
@@ -38,7 +39,8 @@ class SecurityController extends AbstractController
         UserPasswordHasherInterface $passwordHasher,
         SluggerInterface $slugger,
         BillingService $billingService,
-        UserAuthenticatorInterface $userAuthenticator
+        UserAuthenticatorInterface $userAuthenticator,
+        LoginFormAuthAuthenticator $loginAuthenticator
     ) {
         $this->urlGenerator = $urlGenerator;
         $this->entityManager = $entityManager;
@@ -46,6 +48,7 @@ class SecurityController extends AbstractController
         $this->slugger = $slugger;
         $this->billingService = $billingService;
         $this->userAuthenticator = $userAuthenticator;
+        $this->loginAuthenticator = $loginAuthenticator;
     }
 
     /**
@@ -213,7 +216,7 @@ class SecurityController extends AbstractController
                 $this->addFlash('success', '¡Cuenta creada exitosamente! Ya puedes gestionar tu instituto.');
                 
                 // Autenticar al usuario automáticamente
-                return $this->userAuthenticator->authenticateUser($user, null, $request);
+                return $this->userAuthenticator->authenticateUser($user, $this->loginAuthenticator, $request);
             } catch (\Exception $e) {
                 $this->addFlash('error', 'Ocurrió un error al crear la cuenta. Por favor, intenta nuevamente.');
                 return $this->redirectToRoute('app_login');

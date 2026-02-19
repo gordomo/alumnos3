@@ -95,9 +95,9 @@
                                     <i class="bi bi-exclamation-circle" style="color: #ff9800;"></i> Meses para Pagar
                                 </h5>
                                 <p class="text-muted mb-3">
-                                    Seleccione los meses que desea pagar (puede seleccionar múltiples). 
-                                    <strong>Pago parcial:</strong> Ingrese un monto menor al total. 
-                                    <strong>Pago adelantado:</strong> Seleccione meses futuros (hasta 12 meses adelante).
+                                    Seleccione los meses que desea pagar (puede seleccionar múltiples).  
+                                    <strong>Pago adelantado:</strong> Seleccione meses futuros (hasta 12 meses adelante). 
+                                    Si ingresa un monto menor al total, la deuda se cancela igual.
                                 </p>
                                 {% set cursos = {} %}
                                 {% for mes in mesesAdeudados %}
@@ -152,17 +152,10 @@
                                                                                 {{ mes.nombre }}
                                                                                 {% if esAdelantado %}
                                                                                     <span class="badge bg-info ms-1" style="font-size: 0.7rem;">Adelantado</span>
-                                                                                {% elseif mes.montoPagado is defined and mes.montoPagado > 0 %}
-                                                                                    <span class="badge bg-warning text-dark ms-1" style="font-size: 0.7rem;">Parcial</span>
                                                                                 {% endif %}
                                                                             </strong>
                                                                             <small class="text-muted">
-                                                                                {% if mes.montoPagado is defined and mes.montoPagado > 0 %}
-                                                                                    Pendiente: ${{ montoMostrar | number_format(2, ',', '.') }}
-                                                                                    <br><small>Pagado: ${{ mes.montoPagado | number_format(2, ',', '.') }}</small>
-                                                                                {% else %}
-                                                                                    ${{ montoMostrar | number_format(2, ',', '.') }}
-                                                                                {% endif %}
+                                                                                ${{ montoMostrar | number_format(2, ',', '.') }}
                                                                             </small>
                                                                         </div>
                                                                         <div class="mes-check-icon" style="width: 24px; height: 24px; border: 2px solid #dee2e6; border-radius: 4px; display: flex; align-items: center; justify-content: center; background-color: white; transition: all 0.2s ease;">
@@ -368,7 +361,7 @@
                                 </small>
                             {% endif %}
                             <small class="text-muted d-block mt-1" style="font-size: 0.8rem;">
-                                Puede modificar. Pago parcial: ingrese menos. Adelantado: seleccione meses futuros.
+                                Puede modificar. Si ingresa menos, la deuda se cancela igual. Adelantado: seleccione meses futuros.
                             </small>
                         </div>
                     </div>
@@ -391,26 +384,6 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Redirigir al seleccionar alumno (actualiza URL con ?id=X para cargar deudas del alumno)
-            const alumnoSelect = document.getElementById('alumnos_pagos_alumno');
-            if (alumnoSelect) {
-                alumnoSelect.addEventListener('change', function() {
-                    const currentUrl = new URL(window.location.href);
-                    currentUrl.searchParams.set('id', this.value);
-                    // Mantener descuentos promocionales seleccionados en la URL
-                    const paramsToDelete = [];
-                    currentUrl.searchParams.forEach(function(value, key) {
-                        if (key.startsWith('descuentos_promocionales')) paramsToDelete.push(key);
-                    });
-                    paramsToDelete.forEach(function(key) { currentUrl.searchParams.delete(key); });
-                    const checkboxes = document.querySelectorAll('.descuento-promocional-checkbox:checked');
-                    checkboxes.forEach(function(cb) {
-                        currentUrl.searchParams.append('descuentos_promocionales[]', cb.value);
-                    });
-                    window.location.href = currentUrl.toString();
-                });
-            }
-
             const modoPagoMultiple = document.getElementById('modo-pago-multiple');
             const mesesCheckboxes = document.querySelectorAll('.mes-adeudado-checkbox');
             const mesesContainers = document.querySelectorAll('.mes-adeudado-checkbox-container');
@@ -1201,6 +1174,34 @@
                     }
                 });
             }
+        });
+    </script>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        $(document).ready(function() {
+            // Redirigir al seleccionar alumno (actualiza URL con ?id=X para cargar deudas del alumno)
+            // Usar jQuery .on() para compatibilidad con Chosen.js - addEventListener no captura bien el change de Chosen
+            $('#alumnos_pagos_alumno').on('change', function() {
+                var alumnoId = $(this).val();
+                if (alumnoId) {
+                    var currentUrl = new URL(window.location.href);
+                    currentUrl.searchParams.set('id', alumnoId);
+                    // Mantener descuentos promocionales seleccionados en la URL
+                    var paramsToDelete = [];
+                    currentUrl.searchParams.forEach(function(value, key) {
+                        if (key.startsWith('descuentos_promocionales')) paramsToDelete.push(key);
+                    });
+                    paramsToDelete.forEach(function(key) { currentUrl.searchParams.delete(key); });
+                    var checkboxes = document.querySelectorAll('.descuento-promocional-checkbox:checked');
+                    checkboxes.forEach(function(cb) {
+                        currentUrl.searchParams.append('descuentos_promocionales[]', cb.value);
+                    });
+                    window.location.href = currentUrl.toString();
+                }
+            });
         });
     </script>
 {% endblock %}

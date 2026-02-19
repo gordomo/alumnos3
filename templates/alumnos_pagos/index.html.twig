@@ -283,19 +283,14 @@
                                     </select>
                                 </div>
                                 <div class="col">
-                                    <label class="form-label small text-muted mb-1">Rango</label>
-                                    <select name="rango" class="form-select" onchange="this.form.submit()">
-                                        <option value="">Personalizado</option>
-                                        <option value="semana" {% if rango == 'semana' %}selected{% endif %}>Semana</option>
-                                        <option value="mes" {% if rango == 'mes' %}selected{% endif %}>Mes</option>
-                                        <option value="ano" {% if rango == 'ano' %}selected{% endif %}>Año</option>
-                                    </select>
-                                </div>
-                                <div class="col">
-                                    <label class="form-label small text-muted mb-1">Fecha Desde</label>
+                                    <label class="form-label small text-muted mb-1">Desde</label>
                                     <input type="date" name="fechaDesde" class="form-control" value="{{ fechaDesde }}" onchange="this.form.submit()">
                                 </div>
-                                {% if fechaDesde or fechaHasta or busqueda or cursoSelected or metodoSelected or alumnoSelected or rango or (alumnoId is defined and alumnoId) %}
+                                <div class="col">
+                                    <label class="form-label small text-muted mb-1">Hasta</label>
+                                    <input type="date" name="fechaHasta" class="form-control" value="{{ fechaHasta }}" onchange="this.form.submit()">
+                                </div>
+                                {% if fechaDesde or fechaHasta or busqueda or cursoSelected or metodoSelected or alumnoSelected or (alumnoId is defined and alumnoId) %}
                                 <div class="col-auto">
                                     <label class="form-label small text-muted mb-1 d-block">&nbsp;</label>
                                     <a href="{{ path('app_alumnos_pagos_index', {'tab': 'pagos'}) }}" class="btn btn-outline-secondary" title="Limpiar filtros">
@@ -347,8 +342,8 @@
                                                     'alumnoId': alumnoSelected,
                                                     'curso': cursoSelected,
                                                     'metodoPago': metodoSelected,
-                                                    'rango': rango,
-                                                    'fechaDesde': fechaDesde
+                                                    'fechaDesde': fechaDesde,
+                                                    'fechaHasta': fechaHasta
                                                 }) }}" class="text-decoration-none text-dark">
                             Fecha
                             <i class="bi bi-arrow-{{ sort == 'fecha' ? (order == 'asc' ? 'up' : 'down') : 'up-down' }}"></i>
@@ -363,8 +358,8 @@
                             'alumnoId': alumnoSelected,
                             'curso': cursoSelected,
                             'metodoPago': metodoSelected,
-                            'rango': rango,
-                            'fechaDesde': fechaDesde
+                            'fechaDesde': fechaDesde,
+                            'fechaHasta': fechaHasta
                         }) }}" class="text-decoration-none text-dark">
                             Alumno
                             <i class="bi bi-arrow-{{ sort == 'alumno' ? (order == 'asc' ? 'up' : 'down') : 'up-down' }}"></i>
@@ -379,8 +374,8 @@
                             'alumnoId': alumnoSelected,
                             'curso': cursoSelected,
                             'metodoPago': metodoSelected,
-                            'rango': rango,
-                            'fechaDesde': fechaDesde
+                            'fechaDesde': fechaDesde,
+                            'fechaHasta': fechaHasta
                         }) }}" class="text-decoration-none text-dark">
                             Curso
                             <i class="bi bi-arrow-{{ sort == 'curso' ? (order == 'asc' ? 'up' : 'down') : 'up-down' }}"></i>
@@ -395,8 +390,8 @@
                                                     'alumnoId': alumnoSelected,
                                                     'curso': cursoSelected,
                                                     'metodoPago': metodoSelected,
-                                                    'rango': rango,
-                                                    'fechaDesde': fechaDesde
+                                                    'fechaDesde': fechaDesde,
+                                                    'fechaHasta': fechaHasta
                                                 }) }}" class="text-decoration-none text-dark">
                             Monto
                             <i class="bi bi-arrow-{{ sort == 'monto' ? (order == 'asc' ? 'up' : 'down') : 'up-down' }}"></i>
@@ -411,10 +406,10 @@
                             'alumnoId': alumnoSelected,
                             'curso': cursoSelected,
                             'metodoPago': metodoSelected,
-                            'rango': rango,
-                            'fechaDesde': fechaDesde
+                            'fechaDesde': fechaDesde,
+                            'fechaHasta': fechaHasta
                         }) }}" class="text-decoration-none text-dark">
-                                                    Método
+                            Método
                             <i class="bi bi-arrow-{{ sort == 'metodoPago' ? (order == 'asc' ? 'up' : 'down') : 'up-down' }}"></i>
                         </a>
                     </th>
@@ -427,8 +422,8 @@
                             'alumnoId': alumnoSelected,
                             'curso': cursoSelected,
                             'metodoPago': metodoSelected,
-                            'rango': rango,
-                            'fechaDesde': fechaDesde
+                            'fechaDesde': fechaDesde,
+                            'fechaHasta': fechaHasta
                         }) }}" class="text-decoration-none text-dark">
                             Mes
                             <i class="bi bi-arrow-{{ sort == 'mes' ? (order == 'asc' ? 'up' : 'down') : 'up-down' }}"></i>
@@ -443,8 +438,8 @@
                                                     'alumnoId': alumnoSelected,
                                                     'curso': cursoSelected,
                                                     'metodoPago': metodoSelected,
-                                                    'rango': rango,
-                                                    'fechaDesde': fechaDesde
+                                                    'fechaDesde': fechaDesde,
+                                                    'fechaHasta': fechaHasta
                                                 }) }}" class="text-decoration-none text-dark">
                             Año
                             <i class="bi bi-arrow-{{ sort == 'ano' ? (order == 'asc' ? 'up' : 'down') : 'up-down' }}"></i>
@@ -519,11 +514,11 @@
                         {% if app.request.query.get('busqueda') %}
                             {% set pagosRouteParams = pagosRouteParams|merge({'busqueda': app.request.query.get('busqueda')}) %}
                         {% endif %}
-                        {% if app.request.query.get('rango') %}
-                            {% set pagosRouteParams = pagosRouteParams|merge({'rango': app.request.query.get('rango')}) %}
-                        {% endif %}
                         {% if app.request.query.get('fechaDesde') %}
                             {% set pagosRouteParams = pagosRouteParams|merge({'fechaDesde': app.request.query.get('fechaDesde')}) %}
+                        {% endif %}
+                        {% if app.request.query.get('fechaHasta') %}
+                            {% set pagosRouteParams = pagosRouteParams|merge({'fechaHasta': app.request.query.get('fechaHasta')}) %}
                         {% endif %}
                         {% if app.request.query.get('sort') %}
                             {% set pagosRouteParams = pagosRouteParams|merge({'sort': app.request.query.get('sort')}) %}
@@ -571,27 +566,14 @@
                                     </select>
                                 </div>
                                 <div class="col">
-                                    <label class="form-label small text-muted mb-1">Estado</label>
-                                    <select name="estadoDeuda" class="form-select" onchange="this.form.submit()">
-                                        <option value="">Todas</option>
-                                        <option value="pendientes" {% if estadoDeuda == 'pendientes' %}selected{% endif %}>Solo Pendientes</option>
-                                        <option value="parciales" {% if estadoDeuda == 'parciales' %}selected{% endif %}>Parcialmente Pagadas</option>
-                                    </select>
-                                </div>
-                                <div class="col">
-                                    <label class="form-label small text-muted mb-1">Rango</label>
-                                    <select name="rango" class="form-select" onchange="this.form.submit()">
-                                        <option value="">Personalizado</option>
-                                        <option value="semana" {% if rango == 'semana' %}selected{% endif %}>Semana</option>
-                                        <option value="mes" {% if rango == 'mes' %}selected{% endif %}>Mes</option>
-                                        <option value="ano" {% if rango == 'ano' %}selected{% endif %}>Año</option>
-                                    </select>
-                                </div>
-                                <div class="col">
-                                    <label class="form-label small text-muted mb-1">Período Desde</label>
+                                    <label class="form-label small text-muted mb-1">Desde</label>
                                     <input type="date" name="fechaDesde" class="form-control" value="{{ fechaDesde }}" onchange="this.form.submit()">
                                 </div>
-                                {% if busqueda or cursoSelected or alumnoSelected or estadoDeuda or fechaDesde or rango or (alumnoId is defined and alumnoId) %}
+                                <div class="col">
+                                    <label class="form-label small text-muted mb-1">Hasta</label>
+                                    <input type="date" name="fechaHasta" class="form-control" value="{{ fechaHasta }}" onchange="this.form.submit()">
+                                </div>
+                                {% if busqueda or cursoSelected or alumnoSelected or estadoDeuda or fechaDesde or fechaHasta or (alumnoId is defined and alumnoId) %}
                                 <div class="col-auto">
                                     <label class="form-label small text-muted mb-1 d-block">&nbsp;</label>
                                     <a href="{{ path('app_alumnos_pagos_index', {'tab': 'deudas'}) }}" class="btn btn-outline-secondary" title="Limpiar filtros">
@@ -644,9 +626,6 @@
                                             <th>Curso</th>
                                             <th>Período</th>
                                             <th class="text-end">Monto Total</th>
-                                            <th class="text-end">Pagado</th>
-                                            <th class="text-end">Pendiente</th>
-                                            <th class="text-center">Estado</th>
                                             <th class="text-center">Acción</th>
                                         </tr>
                                     </thead>
@@ -661,7 +640,6 @@
                                                 {% set montoTotal = deuda.montoTotal %}
                                                 {% set montoPagado = deuda.montoPagado %}
                                                 {% set montoPendiente = deuda.montoPendiente %}
-                                                {% set porcentajePagado = montoTotal > 0 ? (montoPagado / montoTotal * 100) : 0 %}
                                             <tr>
                                                 <td>
                                                     <strong>{{ deuda.alumno.apellido }}, {{ deuda.alumno.nombre }}</strong>
@@ -679,28 +657,6 @@
                                                             Base: ${{ deuda.monto|number_format(2, ',', '.') }} + 
                                                             Int: ${{ deuda.interes|number_format(2, ',', '.') }}
                                                         </small>
-                                                    {% endif %}
-                                                </td>
-                                                <td class="text-end">
-                                                    {% if montoPagado > 0 %}
-                                                        <span class="text-success">${{ montoPagado|number_format(2, ',', '.') }}</span>
-                                                    {% else %}
-                                                        <span class="text-muted">$0,00</span>
-                                                    {% endif %}
-                                                </td>
-                                                <td class="text-end">
-                                                    <strong class="text-warning">${{ montoPendiente|number_format(2, ',', '.') }}</strong>
-                                                </td>
-                                                <td class="text-center">
-                                                    {% if montoPendiente <= 0.01 %}
-                                                        <span class="badge bg-success">Pagada</span>
-                                                    {% elseif porcentajePagado > 0 %}
-                                                        <span class="badge bg-info">Parcial</span>
-                                                        <div class="progress mt-1" style="height: 4px; width: 60px; margin: 0 auto;">
-                                                            <div class="progress-bar bg-success" role="progressbar" style="width: {{ porcentajePagado }}%"></div>
-                                                        </div>
-                                                    {% else %}
-                                                        <span class="badge bg-warning text-dark">Pendiente</span>
                                                     {% endif %}
                                                 </td>
                                                 <td class="text-center">
@@ -744,11 +700,11 @@
                                 {% if app.request.query.get('busqueda') %}
                                     {% set routeParams = routeParams|merge({'busqueda': app.request.query.get('busqueda')}) %}
                                 {% endif %}
-                                {% if app.request.query.get('rango') %}
-                                    {% set routeParams = routeParams|merge({'rango': app.request.query.get('rango')}) %}
-                                {% endif %}
                                 {% if app.request.query.get('fechaDesde') %}
                                     {% set routeParams = routeParams|merge({'fechaDesde': app.request.query.get('fechaDesde')}) %}
+                                {% endif %}
+                                {% if app.request.query.get('fechaHasta') %}
+                                    {% set routeParams = routeParams|merge({'fechaHasta': app.request.query.get('fechaHasta')}) %}
                                 {% endif %}
                                 {{ knp_pagination_render(deudasPendientes, null, {}, {'pageParameterName': 'pageDeudas', 'routeParams': routeParams}) }}
                             </div>

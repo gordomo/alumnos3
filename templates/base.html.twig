@@ -103,19 +103,18 @@
         </div>
     {% endfor %}
     {% for message in app.flashes('warning') %}
-        <div class="alert alert-warning toast-custom" style="z-index: 9999; position: fixed; top: 20px; right: 20px; min-width: 400px; max-width: 600px;">
+        <div class="alert alert-warning toast-custom">
             <strong>⚠️ Advertencia:</strong> {{ message }}
         </div>
     {% endfor %}
     {% for message in app.flashes('info') %}
-        <div class="alert alert-info toast-custom" style="z-index: 9999; position: fixed; top: 20px; right: 20px; min-width: 400px; max-width: 600px;">
+        <div class="alert alert-info toast-custom">
             <strong>ℹ️ Información:</strong> {{ message }}
         </div>
     {% endfor %}
     {% for message in app.flashes('banner') %}
-        <div class="alert alert-info banner-custom alert-dismissible" style="z-index: 9999; position: fixed; top: 20px; right: 20px; min-width: 400px; max-width: 600px;">
+        <div class="alert alert-info toast-custom">
             <strong>ℹ️ Información:</strong> {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     {% endfor %}
     {{ include('components/loading.html.twig') }}
