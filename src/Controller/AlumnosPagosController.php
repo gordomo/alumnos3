@@ -379,6 +379,16 @@ class AlumnosPagosController extends AbstractController
             ->getQuery()
             ->getResult();
 
+        // Totales de los montos mostrados en la tabla (página actual)
+        $totalMontoPagos = 0;
+        foreach ($pagination as $pago) {
+            $totalMontoPagos += (float) $pago->getMonto();
+        }
+        $totalMontoDeudas = 0;
+        foreach ($deudasPendientes as $deuda) {
+            $totalMontoDeudas += $deuda->getMontoTotal();
+        }
+
         return $this->render('alumnos_pagos/index.html.twig', [
             'pagos' => $pagination,
             'alumno' => $alumno,
@@ -404,7 +414,9 @@ class AlumnosPagosController extends AbstractController
                 'ano' => ['total' => $totalAno, 'cantidad' => $cantidadAno],
             ],
             'deudasPendientes' => $deudasPendientes,
-            'estadoDeuda' => $estadoDeuda
+            'estadoDeuda' => $estadoDeuda,
+            'totalMontoPagos' => $totalMontoPagos,
+            'totalMontoDeudas' => $totalMontoDeudas
         ]);
     }
 
