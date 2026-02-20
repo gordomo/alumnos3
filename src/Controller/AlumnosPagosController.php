@@ -418,8 +418,9 @@ class AlumnosPagosController extends AbstractController
 
     /**
      * Calcula el monto sugerido para un pago
+     * @param string|null $metodoPago Si se pasa, el descuento por efectivo solo se aplica cuando es 'efectivo'
      */
-    private function calcularMonto(Alumno $alumno, Curso $curso, $vencimientos, array $mesesAdeudados, array $descuentosPromocionalesSeleccionados = []): array
+    private function calcularMonto(Alumno $alumno, Curso $curso, $vencimientos, array $mesesAdeudados, array $descuentosPromocionalesSeleccionados = [], ?string $metodoPago = null): array
     {
         // Obtener fecha actual
         $fechaActual = new \DateTime();
@@ -502,8 +503,9 @@ class AlumnosPagosController extends AbstractController
         
         // Calcular porcentajes de descuento (sin aplicar aún)
         if ($puedeRecibirDescuentos && $configuracion) {
-            // Aplicar descuento por pago en efectivo si corresponde
-            if ($configuracion->getDescuentoEfectivo() && $configuracion->getDescuentoEfectivo() > 0) {
+            // Aplicar descuento por pago en efectivo solo si el método de pago es efectivo (o no se especificó, p. ej. render inicial)
+            $aplicarDescuentoEfectivo = ($metodoPago === null || $metodoPago === 'efectivo');
+            if ($aplicarDescuentoEfectivo && $configuracion->getDescuentoEfectivo() && $configuracion->getDescuentoEfectivo() > 0) {
                 $porcentajeDescuentoEfectivo = (float)$configuracion->getDescuentoEfectivo();
                 $porcentajeDescuentoTotal += $porcentajeDescuentoEfectivo;
                 $descuentosAplicados[] = "Descuento del " . $porcentajeDescuentoEfectivo . "% por pago en efectivo";
@@ -1560,9 +1562,31 @@ class AlumnosPagosController extends AbstractController
             $configuracion = $alumno->getInstituto()->getConfiguracion();
             $ordenCalculo = $configuracion ? $configuracion->getOrdenCalculoInteresesDescuentos() : 'interes_primero';
             
-            // Calcular porcentajes de descuento promocional
+            // Calcular porcentajes de descuento: efectivo, hermanos (según config) + promocionales seleccionados
             $porcentajeDescuentoTotal = 0;
             $descuentosAplicados = [];
+            $puedeRecibirDescuentos = true;
+            if ($configuracion && $configuracion->getDeshabilitarDescuentosEnDeuda() && $alumno->tieneDeudasVencidas()) {
+                $puedeRecibirDescuentos = false;
+                $descuentosAplicados[] = "No se aplican descuentos porque el alumno tiene deudas vencidas";
+            }
+            $metodoPago = $request->request->get('metodo_pago');
+            $aplicarDescuentoEfectivo = ($metodoPago === null || $metodoPago === 'efectivo');
+            if ($puedeRecibirDescuentos && $configuracion) {
+                if ($aplicarDescuentoEfectivo && $configuracion->getDescuentoEfectivo() && $configuracion->getDescuentoEfectivo() > 0) {
+                    $porcentajeEfectivo = (float)$configuracion->getDescuentoEfectivo();
+                    $porcentajeDescuentoTotal += $porcentajeEfectivo;
+                    $descuentosAplicados[] = "Descuento del " . $porcentajeEfectivo . "% por pago en efectivo";
+                }
+                if ($configuracion->getDescuentoHermanos() && $configuracion->getDescuentoHermanos() > 0) {
+                    $hermanos = $alumno->getHermanos();
+                    if (!empty($hermanos)) {
+                        $porcentajeHermanos = (float)$configuracion->getDescuentoHermanos();
+                        $porcentajeDescuentoTotal += $porcentajeHermanos;
+                        $descuentosAplicados[] = "Descuento del " . $porcentajeHermanos . "% por tener " . count($hermanos) . " hermano(s) en el instituto";
+                    }
+                }
+            }
             foreach ($descuentosPromocionalesSeleccionados as $descuentoPromocional) {
                 $porcentajeDescuentoPromocional = (float)$descuentoPromocional->getPorcentaje();
                 $porcentajeDescuentoTotal += $porcentajeDescuentoPromocional;
@@ -1666,9 +1690,10 @@ class AlumnosPagosController extends AbstractController
             return new JsonResponse(['error' => 'El alumno y curso no pertenecen al mismo instituto'], 400);
         }
         
-        // Calcular el monto
+        // Calcular el monto (pasamos metodo_pago para aplicar descuento efectivo solo si corresponde)
         $mesesAdeudadosCurso = $this->historialCursosService->verificarMesesAdeudadosPorCurso($alumno, $curso);
-        $calculoMonto = $this->calcularMonto($alumno, $curso, $vencimientos, $mesesAdeudadosCurso, $descuentosPromocionalesSeleccionados);
+        $metodoPago = $request->request->get('metodo_pago');
+        $calculoMonto = $this->calcularMonto($alumno, $curso, $vencimientos, $mesesAdeudadosCurso, $descuentosPromocionalesSeleccionados, $metodoPago);
         
         return new JsonResponse([
             'monto' => $calculoMonto['monto'],

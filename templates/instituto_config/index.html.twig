@@ -333,8 +333,8 @@
                                             <tr>
                                                 <th>Habilitar descuentos en deuda:</th>
                                                 <td>
-                                                    {% if configuracion.deshabilitarDescuentosEnDeuda %}
-                                                        <span class="badge bg-success">Sí</span> 
+                                                    {% if not configuracion.deshabilitarDescuentosEnDeuda %}
+                                                        <span class="badge bg-success">Sí</span>
                                                         <small class="text-muted">(Los alumnos con deudas reciben descuentos)</small>
                                                     {% else %}
                                                         <span class="badge bg-warning">No</span>

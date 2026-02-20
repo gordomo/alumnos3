@@ -238,6 +238,23 @@
                     </div>
                 {% endif %}
 
+                {# MÉTODO DE PAGO - arriba para que el descuento por efectivo se refleje en el precio #}
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-header" style="background-color: #e7f1ff; border-bottom: 2px solid #0d6efd;">
+                        <h4 class="mb-0 text-dark">
+                            <i class="bi bi-credit-card-2-front" style="color: #0d6efd;"></i> Método de Pago
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-0">
+                            <label for="{{ form.metodoPago.vars.id }}" class="form-label fw-semibold text-dark mb-1">Método de Pago <span class="text-danger">*</span></label>
+                            {{ form_widget(form.metodoPago, {'attr': {'class': 'form-select form-select-lg metodo-pago-select'}}) }}
+                            {{ form_errors(form.metodoPago) }}
+                            <small class="text-muted d-block mt-1">Si elige Efectivo, puede aplicarse un descuento según la configuración del instituto.</small>
+                        </div>
+                    </div>
+                </div>
+
                 {# MÓDULO 2: CÁLCULO DEL PAGO #}
                 <div class="card mb-4 shadow-sm">
                     <div class="card-header" style="background-color: #e7f1ff; border-bottom: 2px solid #0d6efd;">
@@ -326,24 +343,22 @@
                             </div>
                         {% endif %}
 
-                        {# Descuentos aplicados #}
-                        {% if descuentosAplicados is defined and descuentosAplicados|length > 0 %}
-                            <div class="mb-3" style="border-left: 4px solid #198754; background-color: #d1e7dd; padding: 1rem; border-radius: 4px;">
-                                <h6 class="mb-2 text-dark">
-                                    <i class="bi bi-check-circle" style="color: #198754;"></i> Descuentos Aplicados
-                                </h6>
-                                <ul class="mb-2 text-muted">
-                                    {% for descuento in descuentosAplicados %}
-                                        <li>{{ descuento }}</li>
-                                    {% endfor %}
-                                </ul>
+                        {# Descuentos aplicados - contenedor con id para actualizar/ocultar desde JS según método de pago #}
+                        <div id="descuentos-aplicados-container" class="mb-3" style="border-left: 4px solid #198754; background-color: #d1e7dd; padding: 1rem; border-radius: 4px; {% if not (descuentosAplicados is defined and descuentosAplicados|length > 0 and porcentajeDescuentoTotal is defined and porcentajeDescuentoTotal > 0) %}display: none;{% endif %}">
+                            <h6 class="mb-2 text-dark">
+                                <i class="bi bi-check-circle" style="color: #198754;"></i> Descuentos Aplicados
+                            </h6>
+                            <ul class="mb-2 text-muted" id="descuentos-aplicados-lista">
+                                {% for descuento in descuentosAplicados|default([]) %}
+                                    <li>{{ descuento }}</li>
+                                {% endfor %}
+                            </ul>
+                            <p class="mb-0" id="descuentos-aplicados-total">
                                 {% if porcentajeDescuentoTotal is defined and porcentajeDescuentoTotal > 0 %}
-                                    <p class="mb-0">
-                                        <strong class="text-dark">Total descuentos: {{ porcentajeDescuentoTotal }}%</strong>
-                                    </p>
+                                    <strong class="text-dark">Total descuentos: {{ porcentajeDescuentoTotal }}%</strong>
                                 {% endif %}
-                            </div>
-                        {% endif %}
+                            </p>
+                        </div>
 
                         {# PRECIO A COBRAR - campo editable único (reemplaza Monto redundante) #}
                         <div class="border-0" id="precio-final-container" style="background: linear-gradient(135deg, #d1e7dd 0%, #ffffff 100%); border-left: 4px solid #198754 !important; padding: 2rem; border-radius: 4px;">
@@ -747,6 +762,10 @@
                 descuentosIds.forEach(id => {
                     formData.append('descuentos_promocionales[]', id);
                 });
+                const metodoPagoSelect = document.querySelector('.metodo-pago-select') || document.querySelector('select[name="alumnos_pagos[metodoPago]"]');
+                if (metodoPagoSelect && metodoPagoSelect.value) {
+                    formData.append('metodo_pago', metodoPagoSelect.value);
+                }
                 
                 // Llamar al endpoint AJAX
                 ultimoCalculoPromise = fetch('{{ path("app_alumnos_pagos_calcular_monto") }}', {
@@ -829,6 +848,21 @@
                                     const porcentajeElement = interesContainer.querySelector('strong');
                                     if (motivoElement) motivoElement.textContent = data.motivoInteres;
                                     if (porcentajeElement) porcentajeElement.textContent = 'Interés aplicado: ' + data.porcentajeInteres + '%';
+                                }
+                            }
+                            // Actualizar bloque Descuentos Aplicados: ocultar si no hay descuentos (p. ej. método no es efectivo)
+                            const descuentosContainer = document.getElementById('descuentos-aplicados-container');
+                            const descuentosLista = document.getElementById('descuentos-aplicados-lista');
+                            const descuentosTotal = document.getElementById('descuentos-aplicados-total');
+                            if (descuentosContainer && descuentosLista && descuentosTotal) {
+                                const lista = (data.descuentosAplicados && data.descuentosAplicados.length > 0) ? data.descuentosAplicados : [];
+                                const totalPct = (data.porcentajeDescuentoTotal !== undefined && data.porcentajeDescuentoTotal > 0) ? data.porcentajeDescuentoTotal : 0;
+                                if (lista.length > 0 && totalPct > 0) {
+                                    descuentosLista.innerHTML = lista.map(function(d) { return '<li>' + d + '</li>'; }).join('');
+                                    descuentosTotal.innerHTML = '<strong class="text-dark">Total descuentos: ' + totalPct + '%</strong>';
+                                    descuentosContainer.style.display = 'block';
+                                } else {
+                                    descuentosContainer.style.display = 'none';
                                 }
                             }
                         });
@@ -1012,6 +1046,14 @@
             if (selectMesMultiple && !modoMultipleActivo) {
                 selectMesMultiple.addEventListener('change', function() {
                     sincronizarCheckboxesConSelect();
+                });
+            }
+            
+            // Al cambiar el método de pago, recalcular el precio (afecta descuento por efectivo)
+            const metodoPagoSelectEl = document.querySelector('.metodo-pago-select') || document.querySelector('select[name="alumnos_pagos[metodoPago]"]');
+            if (metodoPagoSelectEl) {
+                metodoPagoSelectEl.addEventListener('change', function() {
+                    actualizarResumenMeses();
                 });
             }
             

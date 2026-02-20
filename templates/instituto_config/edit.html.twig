@@ -370,7 +370,7 @@
                                            class="form-check-input" 
                                            id="deshabilitarDescuentosEnDeuda" 
                                            name="deshabilitarDescuentosEnDeuda"
-                                           {% if configuracion.deshabilitarDescuentosEnDeuda %}checked{% endif %}>
+                                           {% if not configuracion.deshabilitarDescuentosEnDeuda %}checked{% endif %}>
                                     <label class="form-check-label" for="deshabilitarDescuentosEnDeuda">
                                                         <strong>Habilitar descuentos para alumnos con deudas</strong>
                                     </label>

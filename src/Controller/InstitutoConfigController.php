@@ -137,12 +137,13 @@ class InstitutoConfigController extends AbstractController
                 // Configuración de descuentos
                 $descuentoEfectivo = $request->request->get('descuentoEfectivo');
                 $descuentoHermanos = $request->request->get('descuentoHermanos');
-                $deshabilitarDescuentosEnDeuda = $request->request->has('deshabilitarDescuentosEnDeuda');
+                // Checkbox "Habilitar descuentos para alumnos con deudas": marcado = habilitar (guardamos false en deshabilitar)
+                $habilitarDescuentosEnDeuda = $request->request->has('deshabilitarDescuentosEnDeuda');
                 $ordenCalculoInteresesDescuentos = $request->request->get('ordenCalculoInteresesDescuentos', 'interes_primero');
                 
                 $configuracion->setDescuentoEfectivo($descuentoEfectivo !== '' ? (float)$descuentoEfectivo : null);
                 $configuracion->setDescuentoHermanos($descuentoHermanos !== '' ? (float)$descuentoHermanos : null);
-                $configuracion->setDeshabilitarDescuentosEnDeuda($deshabilitarDescuentosEnDeuda);
+                $configuracion->setDeshabilitarDescuentosEnDeuda(!$habilitarDescuentosEnDeuda);
                 $configuracion->setOrdenCalculoInteresesDescuentos($ordenCalculoInteresesDescuentos);
 
                 try {

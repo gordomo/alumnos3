@@ -34,12 +34,7 @@
         </div>
     </div>
 
-    {# Método de Pago - Monto/Precio a Cobrar está en la sección Cálculo del Pago #}
-    <div class="mb-3">
-        <label for="{{ form.metodoPago.vars.id }}" class="form-label fw-semibold text-dark mb-1">Método de Pago <span class="text-danger">*</span></label>
-        {{ form_widget(form.metodoPago, {'attr': {'class': 'form-select'}}) }}
-        {{ form_errors(form.metodoPago) }}
-    </div>
+    {# Método de Pago se muestra arriba en new.html.twig (antes de Cálculo del Pago) #}
 
     {# Observaciones #}
     <div class="mb-3">
@@ -148,6 +143,10 @@
             descuentosIds.forEach(id => {
                 formData.append('descuentos_promocionales[]', id);
             });
+            const metodoPagoSelect = document.querySelector('.metodo-pago-select') || document.querySelector('select[name="alumnos_pagos[metodoPago]"]');
+            if (metodoPagoSelect && metodoPagoSelect.value) {
+                formData.append('metodo_pago', metodoPagoSelect.value);
+            }
             
             // Llamar al endpoint AJAX
             fetch('{{ path("app_alumnos_pagos_calcular_monto") }}', {
