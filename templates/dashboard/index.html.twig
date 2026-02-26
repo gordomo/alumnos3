@@ -376,7 +376,7 @@
                                     <td>{{ deudor.alumno.apellido }}, {{ deudor.alumno.nombre }}</td>
                                     <td>
                                         {% if deudor.ultimoPago %}
-                                            {{ deudor.ultimoPago.fecha|date('d/m/Y') }}
+                                            {{ deudor.ultimoPago.fecha|date(app_date_format|default('d/m/Y')) }}
                                         {% else %}
                                             Sin pagos
                                         {% endif %}
@@ -422,10 +422,10 @@
                                     </td>
                                     <td>
                                         <div class="actions-group">
-                                            <a href="{{ path('app_alumno_show', {'id': deudor.alumno.id}) }}" title="Ver" data-toggle="tooltip" data-placement="left" class="btn btn-sm btn-outline-primary">
+                                            <a href="{{ path('app_alumno_show', {'id': deudor.alumno.id}) }}" title="Ver" data-toggle="tooltip" data-placement="left" class="btn btn-sm btn-outline-primary btn-action-icon">
                                                 <i class="bi bi-eye"></i>
                                             </a>
-                                            <a href="{{ path('app_alumnos_pagos_new', {'id': deudor.alumno.id}) }}" title="Registrar Pago" data-toggle="tooltip" data-placement="top" class="btn btn-sm btn-outline-success">
+                                            <a href="{{ path('app_alumnos_pagos_new', {'id': deudor.alumno.id}) }}" title="Registrar Pago" data-toggle="tooltip" data-placement="top" class="btn btn-sm btn-outline-success btn-action-icon">
                                                 <i class="bi bi-cash"></i>
                                             </a>
                                         </div>

@@ -8,17 +8,21 @@ use App\Entity\AlumnosPagos;
 use App\Entity\Curso;
 use App\Entity\DeudaAlumno;
 use App\Entity\Instituto;
+use App\Service\InstitutoTimezoneService;
 use Doctrine\ORM\EntityManagerInterface;
 
 class DeudaService
 {
     private EntityManagerInterface $entityManager;
     private ?\App\Service\PagoService $pagoService = null;
-    
+    private InstitutoTimezoneService $institutoTimezoneService;
+
     public function __construct(
-        EntityManagerInterface $entityManager
+        EntityManagerInterface $entityManager,
+        InstitutoTimezoneService $institutoTimezoneService
     ) {
         $this->entityManager = $entityManager;
+        $this->institutoTimezoneService = $institutoTimezoneService;
     }
     
     /**
@@ -40,20 +44,22 @@ class DeudaService
     ): array {
         $alumno = $historico->getAlumno();
         $curso = $historico->getCurso();
-        
-        // Utilizar fecha de inicio efectiva: max(inicio del curso, alta del alumno)
-        $fechaInicioCurso = $curso->getFechaInicio() ?: new \DateTime();
-        $fechaAlta = $historico->getFechaAlta() ?: new \DateTime();
+        $instituto = $curso->getInstituto();
+        $nowInstituto = $this->institutoTimezoneService->getNowForInstituto($instituto);
+
+        // Utilizar fecha de inicio efectiva: max(inicio del curso, alta del alumno) (fallbacks en zona del instituto)
+        $fechaInicioCurso = $curso->getFechaInicio() ?: \DateTime::createFromImmutable($nowInstituto);
+        $fechaAlta = $historico->getFechaAlta() ?: \DateTime::createFromImmutable($nowInstituto);
         $fechaInicio = $fechaInicioCurso > $fechaAlta ? clone $fechaInicioCurso : clone $fechaAlta;
         $fechaInicio->modify('first day of this month');
         
         if ($comenzarDeudaProximoMes) {
             $fechaInicio->modify('first day of next month');
         }
-        
-        // IMPORTANTE: Solo generar deudas hasta el mes actual, no meses futuros
-        $fechaActual = new \DateTime();
-        $fechaFinCurso = $curso->getFechaFin() ?: new \DateTime(date('Y-12-31'));
+
+        // IMPORTANTE: Solo generar deudas hasta el mes actual, no meses futuros (en zona horaria del instituto)
+        $fechaActual = $nowInstituto;
+        $fechaFinCurso = $curso->getFechaFin() ?: $nowInstituto->setDate((int) $nowInstituto->format('Y'), 12, 31);
         
         // Generar solo hasta el mes actual o hasta que termine el curso, lo que ocurra primero
         $fechaFin = $fechaActual < $fechaFinCurso ? $fechaActual : $fechaFinCurso;
@@ -64,13 +70,14 @@ class DeudaService
                 'actualizadas' => 0
             ];
         }
-        
+
+        $fechaFinDt = \DateTime::createFromImmutable($fechaFin);
         return $this->generarDeudasParaPeriodo(
             $alumno,
             $curso,
             $historico,
             $fechaInicio,
-            $fechaFin,
+            $fechaFinDt,
             $force
         );
     }

@@ -17,6 +17,7 @@ use App\Entity\AlumnoCursoHistorico;
 use App\Service\DeudaService;
 use App\Service\TokenService;
 use App\Service\HorarioConflictService;
+use App\Service\InstitutoTimezoneService;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Knp\Component\Pager\PaginatorInterface;
 use Doctrine\ORM\QueryBuilder;
@@ -30,12 +31,14 @@ class CursoController extends AbstractController
     private $logger;
     private $tokenService;
     private HorarioConflictService $horarioConflictService;
+    private InstitutoTimezoneService $institutoTimezoneService;
 
-    public function __construct(LoggerInterface $logger, TokenService $tokenService, HorarioConflictService $horarioConflictService)
+    public function __construct(LoggerInterface $logger, TokenService $tokenService, HorarioConflictService $horarioConflictService, InstitutoTimezoneService $institutoTimezoneService)
     {
         $this->logger = $logger;
         $this->tokenService = $tokenService;
         $this->horarioConflictService = $horarioConflictService;
+        $this->institutoTimezoneService = $institutoTimezoneService;
     }
 
     /**
@@ -133,9 +136,11 @@ class CursoController extends AbstractController
         $instituto = $this->getUser()->getInstituto();
         $curso = new Curso();
         $curso->setInstituto($instituto);
+        $dateFormat = $this->institutoTimezoneService->getDateFormatForInstituto($instituto);
         $form = $this->createForm(CursoType::class, $curso, [
             'allow_extra_fields' => true,
-            'instituto' => $instituto
+            'instituto' => $instituto,
+            'date_format' => $dateFormat
         ]);
         $form->handleRequest($request);
 
@@ -147,6 +152,7 @@ class CursoController extends AbstractController
                     return $this->renderForm('curso/new.html.twig', [
                         'curso' => $curso,
                         'form' => $form,
+                        'date_format' => $dateFormat,
                     ]);
                 }
 
@@ -203,6 +209,7 @@ class CursoController extends AbstractController
                         'curso' => $curso,
                         'form' => $form,
                         'mostrar_confirmacion_conflictos' => true,
+                        'date_format' => $dateFormat,
                     ]);
                 }
                 
@@ -248,6 +255,7 @@ class CursoController extends AbstractController
             'curso' => $curso,
             'form' => $form,
             'mostrar_confirmacion_conflictos' => $mostrarConfirmacionConflictos,
+            'date_format' => $dateFormat,
         ]);
     }
 
@@ -375,8 +383,10 @@ class CursoController extends AbstractController
             $profesoresOriginales[] = $profesor->getId();
         }
         
+        $dateFormat = $this->institutoTimezoneService->getDateFormatForInstituto($instituto);
         $form = $this->createForm(CursoType::class, $curso, [
-            'instituto' => $instituto
+            'instituto' => $instituto,
+            'date_format' => $dateFormat
         ]);
 
         // Establecer los valores iniciales para los campos de horario
@@ -408,6 +418,7 @@ class CursoController extends AbstractController
                 return $this->renderForm('curso/edit.html.twig', [
                     'curso' => $curso,
                     'form' => $form,
+                    'date_format' => $dateFormat,
                 ]);
             }
             
@@ -454,6 +465,7 @@ class CursoController extends AbstractController
                                 'curso' => $curso,
                                 'form' => $form,
                                 'mostrar_confirmacion' => true,
+                                'date_format' => $dateFormat,
                             ]);
                         } else {
                             // El usuario confirmó la acción, actualizar las asistencias
@@ -558,6 +570,7 @@ class CursoController extends AbstractController
                         'curso' => $curso,
                         'form' => $form,
                         'mostrar_confirmacion_conflictos' => true,
+                        'date_format' => $dateFormat,
                     ]);
                 }
                 
@@ -620,6 +633,7 @@ class CursoController extends AbstractController
             'curso' => $curso,
             'form' => $form,
             'mostrar_confirmacion_conflictos' => $mostrarConfirmacionConflictos,
+            'date_format' => $dateFormat,
         ]);
     }
 

@@ -40,10 +40,10 @@
                                 {% endif %}
                             </td>
                             <td>
-                                <a href="{{ path('admin_user_show', {'id': user.id}) }}" class="btn btn-sm btn-outline-info" title="Ver">
+                                <a href="{{ path('admin_user_show', {'id': user.id}) }}" class="btn btn-sm btn-outline-info btn-action-icon" title="Ver">
                                     <i class="bi bi-eye"></i>
                                 </a>
-                                <a href="{{ path('admin_user_edit', {'id': user.id}) }}" class="btn btn-sm btn-outline-secondary" title="Editar">
+                                <a href="{{ path('admin_user_edit', {'id': user.id}) }}" class="btn btn-sm btn-outline-secondary btn-action-icon" title="Editar">
                                     <i class="bi bi-pencil"></i>
                                 </a>
                                 {{ include('admin/user/_delete_form.html.twig', {'user': user}) }}

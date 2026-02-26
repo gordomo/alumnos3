@@ -15,6 +15,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use App\Service\InstitutoTimezoneService;
 
 /**
  * @Route("/asistencias/alumnos")
@@ -22,6 +23,10 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_PROFESOR')]
 class AsistenciaAlumnosController extends AbstractController
 {
+    public function __construct(
+        private InstitutoTimezoneService $institutoTimezoneService
+    ) {
+    }
     /**
      * @Route("/", name="app_asistencia_alumnos_index", methods={"GET", "POST"})
      */
@@ -39,9 +44,18 @@ class AsistenciaAlumnosController extends AbstractController
         }
         
         $instituto = $user->getInstituto();
-        
-        // Obtener fecha del formulario o usar la fecha actual
-        $fecha = $request->get('fecha', date('Y-m-d'));
+        $dateFormat = $this->institutoTimezoneService->getDateFormatForInstituto($instituto);
+        $nowInstituto = $this->institutoTimezoneService->getNowForInstituto($instituto);
+        $fechaHoyStr = $nowInstituto->format($dateFormat);
+
+        // Obtener fecha del formulario (puede venir en formato del instituto o Y-m-d) o usar hoy
+        $fechaRequest = $request->get('fecha', $fechaHoyStr);
+        $fechaObj = $this->institutoTimezoneService->parseDateString($fechaRequest);
+        if (!$fechaObj) {
+            $fechaObj = $nowInstituto;
+        }
+        $fecha = $fechaObj->format($dateFormat);
+        $fechaYmd = $fechaObj->format('Y-m-d');
         $cursoId = $request->get('curso');
         
         // Obtener el profesor asociado al usuario
@@ -67,7 +81,7 @@ class AsistenciaAlumnosController extends AbstractController
             if ($request->isMethod('POST')) {
                 $asistencias = $request->request->all('asistencias');
                 $observaciones = $request->request->all('observaciones');
-                $fechaAsistencia = new \DateTime($fecha);
+                $fechaAsistencia = $fechaObj;
 
                 // Eliminar asistencias existentes para este curso y fecha
                 $asistenciasExistentes = $asistenciaRepository->findBy([
@@ -109,7 +123,7 @@ class AsistenciaAlumnosController extends AbstractController
                 ]);
             }
             
-            $asistencias = $asistenciaRepository->findByCursoAndDate($curso, new \DateTime($fecha));
+            $asistencias = $asistenciaRepository->findByCursoAndDate($curso, $fechaObj);
             
             // Obtener todos los alumnos del curso
             $alumnos = $curso->getAlumnos();
@@ -120,7 +134,7 @@ class AsistenciaAlumnosController extends AbstractController
                 $asistencia = $asistenciaRepository->findOneBy([
                     'alumno' => $alumno,
                     'curso' => $curso,
-                    'fecha' => new \DateTime($fecha)
+                    'fecha' => $fechaObj
                 ]);
                 
                 $asistenciasPorAlumno[] = [
@@ -131,20 +145,24 @@ class AsistenciaAlumnosController extends AbstractController
             }
             
             // Validar si la fecha está configurada para el curso
-            $fechaValida = $this->validarFechaCurso($curso, $fecha);
+            $fechaValida = $this->validarFechaCurso($curso, $fechaYmd);
             
             return $this->render('asistencia_alumnos/index.html.twig', [
                 'asistenciasPorAlumno' => $asistenciasPorAlumno,
                 'fecha' => $fecha,
+                'fechaHoy' => $fechaHoyStr,
+                'date_format' => $dateFormat,
                 'cursos' => $cursos,
                 'cursoSeleccionado' => $curso,
                 'fechaValida' => $fechaValida
             ]);
         }
-        
+
         // Si no se seleccionó un curso, mostrar la lista de cursos
         return $this->render('asistencia_alumnos/index.html.twig', [
             'fecha' => $fecha,
+            'fechaHoy' => $fechaHoyStr,
+            'date_format' => $dateFormat,
             'cursos' => $cursos,
             'cursoSeleccionado' => null
         ]);
@@ -244,8 +262,8 @@ class AsistenciaAlumnosController extends AbstractController
                 'valida' => false,
                 'mensaje' => sprintf(
                     'La fecha seleccionada está fuera del rango del curso (del %s al %s).',
-                    $curso->getFechaInicio()->format('d/m/Y'),
-                    $curso->getFechaFin()->format('d/m/Y')
+                    $curso->getFechaInicio()->format($this->institutoTimezoneService->getDateFormatForInstituto($curso->getInstituto())),
+                    $curso->getFechaFin()->format($this->institutoTimezoneService->getDateFormatForInstituto($curso->getInstituto()))
                 )
             ];
         }

@@ -1,4 +1,5 @@
 {{ form_start(form, {'attr': {'class': 'form-horizontal'}}) }}
+<input type="hidden" name="timezone" id="instituto_timezone" value="">
 <div class="form-group">
     <div class="row g-3 mb-3">
         {% for field in [
@@ -25,4 +26,13 @@
         </div>
     </div>
 </div>
+<script>
+(function() {
+    try {
+        var tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        var el = document.getElementById('instituto_timezone');
+        if (el && tz) el.value = tz;
+    } catch (e) {}
+})();
+</script>
 {{ form_end(form) }}

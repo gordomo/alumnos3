@@ -38,10 +38,10 @@
                         <dd class="col-sm-8">{{ config.description ?? '<span class="text-muted">Sin descripción</span>'|raw }}</dd>
 
                         <dt class="col-sm-4">Fecha de Creación:</dt>
-                        <dd class="col-sm-8">{{ config.createdAt|date('d/m/Y H:i:s') }}</dd>
+                        <dd class="col-sm-8">{{ config.createdAt|date((app_date_format|default('d/m/Y')) ~ ' H:i:s') }}</dd>
 
                         <dt class="col-sm-4">Última Actualización:</dt>
-                        <dd class="col-sm-8">{{ config.updatedAt|date('d/m/Y H:i:s') }}</dd>
+                        <dd class="col-sm-8">{{ config.updatedAt|date((app_date_format|default('d/m/Y')) ~ ' H:i:s') }}</dd>
                     </dl>
 
                     <div class="alert alert-info mt-4">

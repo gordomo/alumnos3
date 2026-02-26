@@ -87,7 +87,23 @@ class InstitutoConfiguracion
      * @ORM\Column(type="text", nullable=true)
      */
     private $textoPersonalizadoEmail;
-    
+
+    /**
+     * Zona horaria del instituto para fechas y "hoy" (ej: America/Argentina/Buenos_Aires).
+     * Si es null, se usa APP_TIMEZONE o la del servidor.
+     *
+     * @ORM\Column(type="string", length=50, nullable=true)
+     */
+    private $timezone;
+
+    /**
+     * Formato de fecha para mostrar en la app (ej: d/m/Y, m/d/Y, Y-m-d).
+     * Si es null, se usa d/m/Y.
+     *
+     * @ORM\Column(type="string", length=20, nullable=true)
+     */
+    private $dateFormat;
+
     public function __construct()
     {
         $this->vencimientos = new ArrayCollection();
@@ -253,6 +269,28 @@ class InstitutoConfiguracion
     public function setTextoPersonalizadoEmail(?string $textoPersonalizadoEmail): self
     {
         $this->textoPersonalizadoEmail = $textoPersonalizadoEmail;
+        return $this;
+    }
+
+    public function getTimezone(): ?string
+    {
+        return $this->timezone;
+    }
+
+    public function setTimezone(?string $timezone): self
+    {
+        $this->timezone = $timezone;
+        return $this;
+    }
+
+    public function getDateFormat(): ?string
+    {
+        return $this->dateFormat;
+    }
+
+    public function setDateFormat(?string $dateFormat): self
+    {
+        $this->dateFormat = $dateFormat;
         return $this;
     }
 } 

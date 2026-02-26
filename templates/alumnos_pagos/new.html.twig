@@ -212,7 +212,7 @@
                                                     <strong>Precio base:</strong> <span class="text-dark">${{ cursoObj.precio | number_format(2, ',', '.')}}</span>
                                                 </p>
                                                 <p class="mb-0 text-muted small">
-                                                    <strong>Período:</strong> {{ cursoObj.fechaInicio | date('d/m/Y') }} - {{ cursoObj.fechaFin | date('d/m/Y') }}
+                                                    <strong>Período:</strong> {{ cursoObj.fechaInicio | date(app_date_format|default('d/m/Y')) }} - {{ cursoObj.fechaFin | date(app_date_format|default('d/m/Y')) }}
                                                 </p>
                                             </div>
                                         </div>
@@ -232,7 +232,7 @@
                             <p class="mb-1"><strong class="text-dark">{{ curso.nombre }}</strong></p>
                             <p class="mb-0 text-muted">
                                 Precio base: <strong class="text-dark">${{ curso.precio | number_format(2, ',', '.')}}</strong> | 
-                                Período: {{ curso.fechaInicio | date('d/m/Y') }} - {{ curso.fechaFin | date('d/m/Y') }}
+                                Período: {{ curso.fechaInicio | date(app_date_format|default('d/m/Y')) }} - {{ curso.fechaFin | date(app_date_format|default('d/m/Y')) }}
                             </p>
                         </div>
                     </div>

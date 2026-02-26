@@ -1,6 +1,6 @@
 <!-- Sidebar -->
-<div class="d-flex" id="wrapper">
-    <div class="bg-light border-right" id="sidebar-wrapper">
+<div class="d-flex" id="wrapper" style="border-right: 1px solid #000;">
+    <div class="border-right" id="sidebar-wrapper" >
         {% if is_granted('ROLE_USER') or is_granted('ROLE_ADMIN') or is_granted('ROLE_ADMIN_INSTITUTO') or is_granted('ROLE_PROFESOR') or is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_ALUMNO') %}
             <div class="sidebar-heading ps-4">
                 {% if app.user.instituto %}

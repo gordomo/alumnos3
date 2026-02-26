@@ -165,7 +165,7 @@
             <form method="get" action="{{ path('app_instituto_asistencias_informe') }}" class="row g-3">
                 <div class="col-md-3">
                     <label for="fecha" class="form-label">Fecha</label>
-                    <input type="date" class="form-control" id="fecha" name="fecha" value="{{ fecha }}" max="{{ "now"|date("Y-m-d") }}">
+                    <input type="text" class="form-control" id="fecha" name="fecha" value="{{ fecha }}" autocomplete="off">
                 </div>
                 <div class="col-md-3">
                     <label for="curso" class="form-label">Curso</label>
@@ -201,9 +201,9 @@
                         <h5 class="card-title mb-0">
                             Informe de Asistencias - {{ curso.nombre }}
                             {% if tipoInforme == 'dia' %}
-                                - {{ fecha|date('d/m/Y') }}
+                                - {{ fecha|date(app_date_format|default('d/m/Y')) }}
                             {% elseif tipoInforme == 'semana' %}
-                                - Semana del {{ fechaInicio|date('d/m/Y') }} al {{ fechaFin|date('d/m/Y') }}
+                                - Semana del {{ fechaInicio|date(app_date_format|default('d/m/Y')) }} al {{ fechaFin|date(app_date_format|default('d/m/Y')) }}
                             {% elseif tipoInforme == 'mes' %}
                                 - {{ fechaInicio|date('F Y')|capitalize }}
                             {% endif %}
@@ -360,6 +360,23 @@
 
 {% block javascripts %}
     {{ parent() }}
+    {% set df = date_format|default(app_date_format|default('d/m/Y')) %}
+    {% set moment_format = df == 'd/m/Y' ? 'DD/MM/YYYY' : (df == 'm/d/Y' ? 'MM/DD/YYYY' : (df == 'Y-m-d' ? 'YYYY-MM-DD' : (df == 'd-m-Y' ? 'DD-MM-YYYY' : 'DD/MM/YYYY'))) %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var inputFecha = document.getElementById('fecha');
+            if (inputFecha && typeof $ !== 'undefined' && $.fn.daterangepicker) {
+                var fmt = "{{ moment_format }}";
+                var startDate = moment(inputFecha.value, fmt);
+                if (!startDate.isValid()) { startDate = moment(); }
+                $(inputFecha).daterangepicker({
+                    singleDatePicker: true,
+                    startDate: startDate,
+                    locale: { format: fmt }
+                });
+            }
+        });
+    </script>
     {% if curso and tipoInforme != 'dia' and informeAsistencias.alumnos|length > 0 %}
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <script>

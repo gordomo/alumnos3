@@ -12,6 +12,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
+use App\Service\InstitutoTimezoneService;
 
 /**
  * @Route("/instituto/asistencias")
@@ -19,7 +20,8 @@ use Psr\Log\LoggerInterface;
 class AsistenciaInstitutoController extends AbstractController
 {
     public function __construct(
-        private LoggerInterface $logger
+        private LoggerInterface $logger,
+        private InstitutoTimezoneService $institutoTimezoneService
     ) {
     }
 
@@ -34,9 +36,18 @@ class AsistenciaInstitutoController extends AbstractController
     ): Response
     {
         $instituto = $this->getUser()->getInstituto();
-        
-        // Obtener fecha del formulario o usar la fecha actual
-        $fecha = $request->get('fecha', date('Y-m-d'));
+        $dateFormat = $this->institutoTimezoneService->getDateFormatForInstituto($instituto);
+        $nowInstituto = $this->institutoTimezoneService->getNowForInstituto($instituto);
+        $fechaHoyStr = $nowInstituto->format($dateFormat);
+
+        // Obtener fecha del formulario (puede venir en formato del instituto o Y-m-d) o usar hoy
+        $fechaRequest = $request->get('fecha', $fechaHoyStr);
+        $fechaObj = $this->institutoTimezoneService->parseDateString($fechaRequest);
+        if (!$fechaObj) {
+            $fechaObj = $nowInstituto;
+        }
+        $fecha = $fechaObj->format($dateFormat);
+        $fechaYmd = $fechaObj->format('Y-m-d');
         $cursoId = $request->get('curso');
         // Obtener modo de GET o POST (el formulario puede enviarlo en POST)
         $modo = $request->get('modo') ?? $request->request->get('modo', 'edicion'); // 'edicion' o 'lectura'
@@ -83,7 +94,7 @@ class AsistenciaInstitutoController extends AbstractController
                     'alumnos_procesados' => $alumnosProcesados
                 ]);
                 
-                $fechaAsistencia = new \DateTime($fecha);
+                $fechaAsistencia = $fechaObj;
 
                 // Obtener todos los alumnos del curso
                 $alumnos = $curso->getAlumnos();
@@ -202,7 +213,7 @@ class AsistenciaInstitutoController extends AbstractController
             
             // Crear un array con todos los alumnos y su estado de asistencia
             $asistenciasPorAlumno = [];
-            $fechaBusqueda = new \DateTime($fecha);
+            $fechaBusqueda = $fechaObj;
             foreach ($alumnos as $alumno) {
                 $asistencia = $asistenciaRepository->findOneBy([
                     'alumno' => $alumno,
@@ -228,21 +239,25 @@ class AsistenciaInstitutoController extends AbstractController
             }
             
             // Validar si la fecha está configurada para el curso
-            $fechaValida = $this->validarFechaCurso($curso, $fecha);
+            $fechaValida = $this->validarFechaCurso($curso, $fechaYmd);
             
             return $this->render('asistencia_instituto/index.html.twig', [
                 'asistenciasPorAlumno' => $asistenciasPorAlumno,
                 'fecha' => $fecha,
+                'fechaHoy' => $fechaHoyStr,
+                'date_format' => $dateFormat,
                 'cursos' => $cursos,
                 'cursoSeleccionado' => $curso,
                 'modo' => $modo,
                 'fechaValida' => $fechaValida
             ]);
         }
-        
+
         // Si no se seleccionó un curso, mostrar la lista de cursos
         return $this->render('asistencia_instituto/index.html.twig', [
             'fecha' => $fecha,
+            'fechaHoy' => $fechaHoyStr,
+            'date_format' => $dateFormat,
             'cursos' => $cursos,
             'cursoSeleccionado' => null,
             'modo' => $modo
@@ -259,12 +274,19 @@ class AsistenciaInstitutoController extends AbstractController
     ): Response
     {
         $instituto = $this->getUser()->getInstituto();
-        
-        // Obtener parámetros de búsqueda
+        $dateFormat = $this->institutoTimezoneService->getDateFormatForInstituto($instituto);
+        $fechaHoyStr = $this->institutoTimezoneService->getNowForInstituto($instituto)->format($dateFormat);
+
+        // Obtener parámetros de búsqueda (fecha puede venir en formato del instituto)
         $cursoId = $request->get('curso');
         $tipoInforme = $request->get('tipo', 'dia'); // dia, semana, mes
-        $fecha = $request->get('fecha', date('Y-m-d'));
-        
+        $fechaRequest = $request->get('fecha', $fechaHoyStr);
+        $fechaObj = $this->institutoTimezoneService->parseDateString($fechaRequest);
+        if (!$fechaObj) {
+            $fechaObj = $this->institutoTimezoneService->getNowForInstituto($instituto);
+        }
+        $fecha = $fechaObj->format($dateFormat);
+
         // Obtener todos los cursos del instituto
         $cursos = $cursoRepository->findBy(['instituto' => $instituto]);
         
@@ -283,7 +305,6 @@ class AsistenciaInstitutoController extends AbstractController
             }
             
             // Calcular fechas según tipo de informe
-            $fechaObj = new \DateTime($fecha);
             
             switch ($tipoInforme) {
                 case 'semana':
@@ -391,6 +412,8 @@ class AsistenciaInstitutoController extends AbstractController
             'curso' => $curso,
             'tipoInforme' => $tipoInforme,
             'fecha' => $fecha,
+            'fechaHoy' => $fechaHoyStr,
+            'date_format' => $dateFormat,
             'fechaInicio' => $fechaInicio ? $fechaInicio->format('Y-m-d') : null,
             'fechaFin' => $fechaFin ? $fechaFin->format('Y-m-d') : null,
             'informeAsistencias' => $informeAsistencias
@@ -407,10 +430,20 @@ class AsistenciaInstitutoController extends AbstractController
         string $formato = 'pdf'
     ): Response
     {
-        // Obtener los mismos parámetros que en el informe
+        $instituto = $this->getUser()->getInstituto();
+        $fechaHoyStr = $this->institutoTimezoneService->getNowForInstituto($instituto)->format(
+            $this->institutoTimezoneService->getDateFormatForInstituto($instituto)
+        );
+
+        // Obtener los mismos parámetros que en el informe (fecha puede venir en formato del instituto)
         $cursoId = $request->get('curso');
         $tipoInforme = $request->get('tipo', 'dia');
-        $fecha = $request->get('fecha', date('Y-m-d'));
+        $fechaRequest = $request->get('fecha', $fechaHoyStr);
+        $fechaObj = $this->institutoTimezoneService->parseDateString($fechaRequest);
+        if (!$fechaObj) {
+            $fechaObj = $this->institutoTimezoneService->getNowForInstituto($instituto);
+        }
+        $fecha = $fechaObj->format('Y-m-d');
         
         // Validar formato
         if (!in_array($formato, ['pdf', 'excel', 'csv'])) {
@@ -453,8 +486,8 @@ class AsistenciaInstitutoController extends AbstractController
                 'valida' => false,
                 'mensaje' => sprintf(
                     'La fecha seleccionada está fuera del rango del curso (del %s al %s).',
-                    $curso->getFechaInicio()->format('d/m/Y'),
-                    $curso->getFechaFin()->format('d/m/Y')
+                    $curso->getFechaInicio()->format($this->institutoTimezoneService->getDateFormatForInstituto($curso->getInstituto())),
+                    $curso->getFechaFin()->format($this->institutoTimezoneService->getDateFormatForInstituto($curso->getInstituto()))
                 )
             ];
         }

@@ -12,7 +12,7 @@ use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInt
 
 class SessionTimeoutSubscriber implements EventSubscriberInterface
 {
-    private const TIMEOUT_SECONDS = 600; // 10 minutos
+    private const TIMEOUT_SECONDS = 2700; // 45 minutos
     private const LAST_ACTIVITY_KEY = '_last_activity';
 
     public function __construct(
@@ -77,7 +77,7 @@ class SessionTimeoutSubscriber implements EventSubscriberInterface
         // Calcular el tiempo transcurrido desde la última actividad
         $timeElapsed = $currentTime - $lastActivity;
 
-        // Si han pasado más de 10 minutos sin actividad, cerrar sesión
+        // Si han pasado más de 45 minutos sin actividad, cerrar sesión
         if ($timeElapsed > self::TIMEOUT_SECONDS) {
             // Invalidar la sesión
             $this->session->invalidate();

@@ -275,7 +275,7 @@
     </div>
     <div class="card-body">
         <div class="row mb-3">
-            <div class="col-md-12">
+            <div class="col-md-6">
                 <div class="mb-3">
                     <label for="{{ form.hermanos.vars.id }}" class="form-label fw-semibold text-dark">
                         Hermanos
@@ -285,10 +285,7 @@
                     {{ form_errors(form.hermanos) }}
                 </div>
             </div>
-        </div>
-
-        <div class="row mb-3">
-            <div class="col-md-12">
+            <div class="col-md-6">
                 <div class="mb-3">
                     <label for="{{ form.curso.vars.id }}" class="form-label fw-semibold text-dark">
                         Cursos
@@ -318,11 +315,18 @@
 </div>
 
 {# Botones de Acción #}
-<div class="d-flex gap-2 mt-3 pt-2 border-top">
-    {{ include('components/back_button.html.twig', {'default_path': path('app_alumno_index')}) }}
-    <button type="submit" class="btn btn-success">
-        <i class="bi bi-save"></i> {{ button_label|default('Guardar') }}
-    </button>
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3 pt-2 border-top">
+    <div class="d-flex gap-2">
+        {{ include('components/back_button.html.twig', {'default_path': path('app_alumno_index')}) }}
+        <button type="submit" class="btn btn-success">
+            <i class="bi bi-save"></i> {{ button_label|default('Guardar') }}
+        </button>
+    </div>
+    {% if alumno is defined and alumno.id is defined and alumno.id %}
+        <div>
+            {{ include('alumno/_delete_form.html.twig') }}
+        </div>
+    {% endif %}
 </div>
 
 {{ form_end(form) }}

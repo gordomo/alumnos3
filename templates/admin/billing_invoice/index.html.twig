@@ -123,7 +123,7 @@
                                             <span class="badge bg-secondary">Cancelada</span>
                                         {% endif %}
                                     </td>
-                                    <td>{{ invoice.createdAt|date('d/m/Y H:i') }}</td>
+                                    <td>{{ invoice.createdAt|date((app_date_format|default('d/m/Y')) ~ ' H:i') }}</td>
                                     <td>
                                         <a href="{{ path('admin_billing_invoice_show', {'id': invoice.id}) }}" class="btn btn-sm btn-primary">
                                             <i class="bi bi-eye"></i> Ver

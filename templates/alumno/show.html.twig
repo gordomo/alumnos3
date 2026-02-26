@@ -31,7 +31,7 @@
                             </tr>
                             <tr>
                                 <th>Fecha de Nacimiento</th>
-                                <td>{{ alumno.fNac ? alumno.fNac|date('d/m/Y') : '' }}</td>
+                                <td>{{ alumno.fNac ? alumno.fNac|date(app_date_format|default('d/m/Y')) : '' }}</td>
                             </tr>
                             <tr>
                                 <th>Lugar de Nacimiento</th>

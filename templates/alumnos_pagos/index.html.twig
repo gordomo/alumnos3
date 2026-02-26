@@ -462,7 +462,7 @@
             } %}
             {% for pago in pagos %}
                 <tr>
-                    <td>{{ pago.fecha|date('d/m/Y') }}</td>
+                    <td>{{ pago.fecha|date(app_date_format|default('d/m/Y')) }}</td>
                     <td>{{ pago.alumno.apellido }}, {{ pago.alumno.nombre }}</td>
                     <td>{{ pago.curso.nombre }}</td>
                                             <td><strong>${{ pago.monto|number_format(2, ',', '.') }}</strong></td>
@@ -471,10 +471,10 @@
                     <td>{{ pago.ano }}</td>
                                             <td>
                                                 <div class="acciones-pago-group" role="group">
-                                                    <a href="{{ path('app_alumnos_pagos_show', {'id': pago.id}) }}" target="_blank" class="btn btn-sm btn-outline-primary" title="Imprimir" data-toggle="tooltip">
+                                                    <a href="{{ path('app_alumnos_pagos_show', {'id': pago.id}) }}" target="_blank" class="btn btn-sm btn-outline-primary btn-action-icon" title="Imprimir" data-toggle="tooltip">
                             <i class="bi bi-printer"></i>
                         </a>
-                                                    <a href="{{ path('app_alumnos_pagos_edit', {'id': pago.id}) }}" class="btn btn-sm btn-outline-secondary" title="Editar" data-toggle="tooltip">
+                                                    <a href="{{ path('app_alumnos_pagos_edit', {'id': pago.id}) }}" class="btn btn-sm btn-outline-secondary btn-action-icon" title="Editar" data-toggle="tooltip">
                                 <i class="bi bi-pencil"></i>
                         </a>
                         {{ include('alumnos_pagos/_delete_form.html.twig', {

@@ -42,7 +42,8 @@ class InstitutoConfigController extends AbstractController
         $vencimientos = $vencimientoRepository->findByInstitutoOrdered($instituto);
         $configuracion = $configuracionRepository->findOrCreateByInstituto($instituto);
         $descuentosPromocionales = $descuentoPromocionalRepository->findByConfiguracion($configuracion);
-        
+        usort($descuentosPromocionales, fn($a, $b) => (float) $a->getPorcentaje() <=> (float) $b->getPorcentaje());
+
         return $this->render('instituto_config/index.html.twig', [
             'instituto' => $instituto,
             'vencimientos' => $vencimientos,
@@ -67,7 +68,8 @@ class InstitutoConfigController extends AbstractController
         $configuracion = $configuracionRepository->findOrCreateByInstituto($instituto);
         $vencimientos = $vencimientoRepository->findByInstitutoOrdered($instituto);
         $descuentosPromocionales = $descuentoPromocionalRepository->findByConfiguracion($configuracion);
-        
+        usort($descuentosPromocionales, fn($a, $b) => (float) $a->getPorcentaje() <=> (float) $b->getPorcentaje());
+
         if ($request->isMethod('POST')) {
             $section = $request->request->get('section', 'general');
             
@@ -84,6 +86,14 @@ class InstitutoConfigController extends AbstractController
             $instituto->setTel($tel);
             
             $instituto->setDir($request->request->get('dir'));
+
+            // Zona horaria del instituto (fechas, asistencias, "hoy")
+            $timezone = $request->request->get('timezone');
+            $configuracion->setTimezone($timezone !== '' ? $timezone : null);
+
+            // Formato de fecha para mostrar en la app
+            $dateFormat = $request->request->get('date_format');
+            $configuracion->setDateFormat($dateFormat !== '' ? $dateFormat : null);
 
             // Manejo del logo
             if ($request->files->has('logo')) {

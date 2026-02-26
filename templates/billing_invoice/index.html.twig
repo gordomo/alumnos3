@@ -307,7 +307,7 @@
                                         <span class="badge bg-warning text-dark facturas-status-badge">Pendiente</span>
                                     </td>
                                     <td class="text-center">
-                                        <small class="text-muted">{{ invoice.createdAt|date('d/m/Y H:i') }}</small>
+                                        <small class="text-muted">{{ invoice.createdAt|date((app_date_format|default('d/m/Y')) ~ ' H:i') }}</small>
                                     </td>
                                     <td class="text-center">
                                         <a href="{{ path('billing_invoice_show', {'id': invoice.id}) }}" 
@@ -384,7 +384,7 @@
                                         {% endif %}
                                     </td>
                                     <td class="text-center">
-                                        <small class="text-muted">{{ invoice.createdAt|date('d/m/Y H:i') }}</small>
+                                        <small class="text-muted">{{ invoice.createdAt|date((app_date_format|default('d/m/Y')) ~ ' H:i') }}</small>
                                     </td>
                                     <td class="text-center">
                                         <a href="{{ path('billing_invoice_show', {'id': invoice.id}) }}" 

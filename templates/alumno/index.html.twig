@@ -378,24 +378,24 @@
                 </td>
                 <td>
                     <div class="actions-group">
-                        <a href="{{ path('app_alumno_show', {'id': alumno.id}) }}" class="btn btn-sm btn-outline-primary" title="Ver" data-toggle="tooltip" data-placement="left">
+                        <a href="{{ path('app_alumno_show', {'id': alumno.id}) }}" class="btn btn-sm btn-outline-primary btn-action-icon" title="Ver" data-toggle="tooltip" data-placement="left">
                             <i class="bi bi-eye"></i>
                         </a>
-                        <a href="{{ path('app_alumno_edit', {'id': alumno.id}) }}" class="btn btn-sm btn-outline-secondary" title="Editar" data-toggle="tooltip" data-placement="top">
+                        <a href="{{ path('app_alumno_edit', {'id': alumno.id}) }}" class="btn btn-sm btn-outline-secondary btn-action-icon" title="Editar" data-toggle="tooltip" data-placement="top">
                             <i class="bi bi-pencil"></i>
                         </a>
-                        <button type="button" class="btn btn-sm btn-outline-info" title="Gestionar Cursos" data-toggle="tooltip" data-placement="top" data-bs-toggle="modal" data-bs-target="#cursosModal{{ alumno.id }}">
+                        <button type="button" class="btn btn-sm btn-outline-info btn-action-icon" title="Gestionar Cursos" data-toggle="tooltip" data-placement="top" data-bs-toggle="modal" data-bs-target="#cursosModal{{ alumno.id }}">
                             <i class="bi bi-book"></i>
                         </button>
                         {% if (alumno.activo) %}
-                            <a href="{{ path('app_alumnos_pagos_new', {'id': alumno.id}) }}" class="btn btn-sm btn-success" title="Registrar Pago" data-toggle="tooltip" data-placement="top">
+                            <a href="{{ path('app_alumnos_pagos_new', {'id': alumno.id}) }}" class="btn btn-sm btn-success btn-action-icon" title="Registrar Pago" data-toggle="tooltip" data-placement="top">
                                 <i class="bi bi-cash"></i>
                             </a>
                         {% endif %}
-                        <a href="{{ path('app_alumnos_pagos_index', {'alumno': alumno.id}) }}" class="btn btn-sm btn-outline-success" title="Ver Pagos" data-toggle="tooltip" data-placement="top">
+                        <a href="{{ path('app_alumnos_pagos_index', {'alumno': alumno.id}) }}" class="btn btn-sm btn-outline-success btn-action-icon" title="Ver Pagos" data-toggle="tooltip" data-placement="top">
                             <i class="bi bi-eye"></i>
                         </a>
-                        <a href="{{ path('app_alumno_deudas', {'id': alumno.id}) }}" class="btn btn-sm btn-outline-warning" title="Gestionar Deudas" data-toggle="tooltip" data-placement="top">
+                        <a href="{{ path('app_alumno_deudas', {'id': alumno.id}) }}" class="btn btn-sm btn-outline-warning btn-action-icon" title="Gestionar Deudas" data-toggle="tooltip" data-placement="top">
                             <i class="bi bi-cash-coin"></i>
                         </a>
                         {% if alumno.tieneDeudasVencidas() and alumno.activo %}

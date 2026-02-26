@@ -16,6 +16,7 @@ use App\Service\HistorialCursosService;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Repository\AsistenciaAlumnosRepository;
 use App\Service\DeudaService;
+use App\Service\InstitutoTimezoneService;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use App\Entity\User;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
@@ -246,14 +247,15 @@ class AlumnoController extends AbstractController
     /**
      * @Route("/asistencias", name="app_instituto_asistencias_index", methods={"GET"})
      */
-    public function asistencias(Request $request, AsistenciaAlumnosRepository $asistenciaRepository, CursoRepository $cursoRepository): Response
+    public function asistencias(Request $request, AsistenciaAlumnosRepository $asistenciaRepository, CursoRepository $cursoRepository, InstitutoTimezoneService $institutoTimezoneService): Response
     {
         $instituto = $this->getUser()->getInstituto();
-        
-        // Obtener fecha del formulario o usar la fecha actual
-        $fecha = $request->get('fecha', date('Y-m-d'));
+        $fechaHoy = $institutoTimezoneService->getTodayForInstituto($instituto);
+
+        // Obtener fecha del formulario o usar la fecha actual (zona horaria del instituto)
+        $fecha = $request->get('fecha', $fechaHoy);
         $cursoId = $request->get('curso');
-        
+
         // Obtener todos los cursos del instituto
         $cursos = $cursoRepository->findByInstitutoSoloActivos($instituto);
         
@@ -290,14 +292,16 @@ class AlumnoController extends AbstractController
             return $this->render('asistencia_instituto/index.html.twig', [
                 'asistenciasPorAlumno' => $asistenciasPorAlumno,
                 'fecha' => $fecha,
+                'fechaHoy' => $fechaHoy,
                 'cursos' => $cursos,
                 'cursoSeleccionado' => $curso
             ]);
         }
-        
+
         // Si no se seleccionó un curso, mostrar la lista de cursos
         return $this->render('asistencia_instituto/index.html.twig', [
             'fecha' => $fecha,
+            'fechaHoy' => $fechaHoy,
             'cursos' => $cursos,
             'cursoSeleccionado' => null
         ]);
@@ -629,9 +633,10 @@ class AlumnoController extends AbstractController
     /**
      * @Route("/{id}/update-cursos", name="app_alumno_update_cursos", methods={"POST"})
      */
-    public function updateCursos(Request $request, Alumno $alumno, CursoRepository $cursoRepository, HistorialCursosService $historialCursosService, DeudaService $deudaService): JsonResponse
+    public function updateCursos(Request $request, Alumno $alumno, CursoRepository $cursoRepository, HistorialCursosService $historialCursosService, DeudaService $deudaService, InstitutoTimezoneService $institutoTimezoneService): JsonResponse
     {
         $instituto = $this->getUser()->getInstituto();
+        $dateFormat = $institutoTimezoneService->getDateFormatForInstituto($instituto);
         $cursoIds = $request->request->get('cursos', []);
         $comenzarDeudaProximoMes = filter_var(
             $request->request->get('comenzar_deuda_proximo_mes', false),
@@ -707,9 +712,9 @@ class AlumnoController extends AbstractController
                 );
                 
                 if (method_exists($curso, 'getFechaFin') && $curso->getFechaFin() !== null) {
-                    $detallesMensaje .= sprintf(' hasta %s (fecha fin del curso)', $curso->getFechaFin()->format('d/m/Y'));
+                    $detallesMensaje .= sprintf(' hasta %s (fecha fin del curso)', $curso->getFechaFin()->format($dateFormat));
                 } else {
-                    $detallesMensaje .= sprintf(' hasta %s (fin del año)', $finDeAno->format('d/m/Y'));
+                    $detallesMensaje .= sprintf(' hasta %s (fin del año)', $finDeAno->format($dateFormat));
                 }
                 
                 $mensajes[] = $detallesMensaje;

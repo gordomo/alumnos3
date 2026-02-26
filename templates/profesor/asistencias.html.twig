@@ -51,7 +51,7 @@
             border-radius: 10px;
             border: 1px solid #d9e4e2;
             padding: 0 0.85rem;
-            min-width: 180px;
+            min-width: 260px;
             color: #3d4f55;
             font-weight: 600;
         }
@@ -178,11 +178,11 @@
     <div class="container-fluid mt-3 asistencias-page">
         <div class="asistencias-toolbar">
             <div>
-                <div class="asistencias-toolbar-label">Semana del</div>
-                <input type="text" id="filtroFechas" name="daterange" value="{{ firstday }}"/>
+                <div class="asistencias-toolbar-label">Período</div>
+                <input type="text" id="filtroFechas" name="daterange" value="{{ desde }} - {{ hasta }}"/>
             </div>
             <div class="asistencias-meta">
-                {{ cursos|length }} cursos en la grilla semanal
+                {{ cursos|length }} cursos · {{ rango|length }} días
             </div>
         </div>
 
@@ -192,8 +192,8 @@
                     <thead>
                         <tr>
                             <th>Cursos</th>
-                            {% for fechas in rango %}
-                                <th>{{ fechas }}</th>
+                            {% for item in rango %}
+                                <th>{{ item.fecha }}</th>
                             {% endfor %}
                         </tr>
                     </thead>
@@ -201,23 +201,10 @@
                     {% for curso in cursos %}
                 <tr>
                     <td>{{ curso.nombre }}</td>
-                    {% for key, fecha in rango %}
-                        {% set dayIndex = key %}
-                        {% if (key == 0) %}
-                            {% set key = 'Lunes' %}
-                        {% elseif (key == 1) %}
-                            {% set key = 'Martes' %}
-                        {% elseif (key == 2) %}
-                            {% set key = 'Miercoles' %}
-                        {% elseif (key == 3) %}
-                            {% set key = 'Jueves' %}
-                        {% elseif (key == 4) %}
-                            {% set key = 'Viernes' %}
-                        {% elseif (key == 5) %}
-                            {% set key = 'Sábado' %}
-                        {% elseif (key == 6) %}
-                            {% set key = 'Domingo' %}
-                        {% endif %}
+                    {% for item in rango %}
+                        {% set fecha = item.fecha %}
+                        {% set key = item.dia %}
+                        {% set dayIndex = loop.index0 %}
                         <td>
                             {% if key in curso.dias %}
                                 {% for profe in curso.profesores %}
@@ -239,19 +226,19 @@
                                         <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton{{ curso.id }}_{{ dayIndex }}_{{ profe.id }}">
                                             <li><h6 class="dropdown-header">Reemplazó:</h6></li>
                                             <li >
-                                                <a href="{{ path('falta_profe', {'id': profe.id, 'remplazo': 0, 'fecha': fecha, 'curso': curso.id}) }}" class="dropdown-item">sin reemplazo</a>
+                                                <a href="{{ path('falta_profe', {'id': profe.id, 'remplazo': 0, 'fecha': fecha, 'curso': curso.id, 'desde': desde, 'hasta': hasta}) }}" class="dropdown-item">sin reemplazo</a>
                                             </li>
                                             {% for profeInner in todosLosProfes %}
                                                 {% if profeInner.id != profe.id %}
                                                     <li >
-                                                        <a href="{{ path('falta_profe', {'id': profe.id, 'remplazo': profeInner.id, 'fecha': fecha, 'curso': curso.id}) }}" class="dropdown-item">{{ profeInner.apellido }}, {{ profeInner.nombre }}</a>
+                                                        <a href="{{ path('falta_profe', {'id': profe.id, 'remplazo': profeInner.id, 'fecha': fecha, 'curso': curso.id, 'desde': desde, 'hasta': hasta}) }}" class="dropdown-item">{{ profeInner.apellido }}, {{ profeInner.nombre }}</a>
                                                     </li>
                                                 {% endif %}
                                             {% endfor %}
                                             {% if btnClass == 'btn-danger' %}
                                                 <li><hr class="dropdown-divider"></li>
                                                 <li >
-                                                    <a href="{{ path('falta_profe', {'id': profe.id, 'remplazo': -1, 'fecha': fecha, 'curso': curso.id}) }}" class="dropdown-item">Limpiar falta</a>
+                                                    <a href="{{ path('falta_profe', {'id': profe.id, 'remplazo': -1, 'fecha': fecha, 'curso': curso.id, 'desde': desde, 'hasta': hasta}) }}" class="dropdown-item">Limpiar falta</a>
                                                 </li>
                                             {% endif %}
                                         </ul>
@@ -273,16 +260,23 @@
 
 {% block javascripts %}
     {{ parent() }}
+    {# Usar el mismo formato que el controlador (firstday/rango) para que picker y tabla coincidan #}
+    {% set df = date_format|default(app_date_format|default('d/m/Y')) %}
+    {% set moment_format = df == 'd/m/Y' ? 'DD/MM/YYYY' : (df == 'm/d/Y' ? 'MM/DD/YYYY' : (df == 'Y-m-d' ? 'YYYY-MM-DD' : (df == 'd-m-Y' ? 'DD-MM-YYYY' : 'DD/MM/YYYY'))) %}
     <script>
         $(function() {
+            var fmt = "{{ moment_format }}";
+            var startDate = moment("{{ desde|e('js') }}", fmt);
+            var endDate = moment("{{ hasta|e('js') }}", fmt);
+            if (!startDate.isValid()) { startDate = moment().startOf('month'); }
+            if (!endDate.isValid()) { endDate = moment().endOf('month'); }
             $('input[name="daterange"]').daterangepicker({
                 opens: 'left',
-                singleDatePicker: true,
-                locale: {
-                    format: 'YYYY/MM/DD'
-                }
-            }, function(start, end, label) {
-                location.href = "{{ path('asistencias') }}?desde=" + start.format('YYYY/MM/DD');
+                startDate: startDate,
+                endDate: endDate,
+                locale: { format: fmt }
+            }, function(start, end) {
+                location.href = "{{ path('asistencias') }}?desde=" + encodeURIComponent(start.format(fmt)) + "&hasta=" + encodeURIComponent(end.format(fmt));
             });
         });
     </script>

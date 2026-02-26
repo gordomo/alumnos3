@@ -26,7 +26,7 @@
     </div>
     <div class="card-body">
         <div class="row mb-3">
-            <div class="col-md-12">
+            <div class="col-md-4">
                 <div class="mb-3">
                     <label for="{{ form.nombre.vars.id }}" class="form-label fw-semibold text-dark">
                         Nombre <span class="text-danger">*</span>
@@ -35,10 +35,7 @@
                     {{ form_errors(form.nombre) }}
                 </div>
             </div>
-        </div>
-
-        <div class="row mb-3">
-            <div class="col-md-12">
+            <div class="col-md-4">
                 <div class="mb-3">
                     <label for="{{ form.apellido.vars.id }}" class="form-label fw-semibold text-dark">
                         Apellido <span class="text-danger">*</span>
@@ -47,10 +44,7 @@
                     {{ form_errors(form.apellido) }}
                 </div>
             </div>
-        </div>
-
-        <div class="row mb-3">
-            <div class="col-md-12">
+            <div class="col-md-4">
                 <div class="mb-3">
                     <label for="{{ form.dni.vars.id }}" class="form-label fw-semibold text-dark">
                         DNI <span class="text-danger">*</span>
@@ -62,7 +56,7 @@
         </div>
 
         <div class="row mb-3">
-            <div class="col-md-12">
+            <div class="col-md-6">
                 <div class="mb-3">
                     <label for="{{ form.email.vars.id }}" class="form-label fw-semibold text-dark">
                         Email <span class="text-danger">*</span>
@@ -71,10 +65,7 @@
                     {{ form_errors(form.email) }}
                 </div>
             </div>
-        </div>
-
-        <div class="row mb-3">
-            <div class="col-md-12">
+            <div class="col-md-6">
                 <div class="mb-3">
                     <label for="{{ form.tel.vars.id }}" class="form-label fw-semibold text-dark">
                         Teléfono
@@ -96,7 +87,7 @@
     </div>
     <div class="card-body">
         <div class="row mb-3">
-            <div class="col-md-12">
+            <div class="col-md-6">
                 <div class="mb-3">
                     <label for="{{ form.precioHora.vars.id }}" class="form-label fw-semibold text-dark">
                         Precio/Hora
@@ -105,10 +96,7 @@
                     {{ form_errors(form.precioHora) }}
                 </div>
             </div>
-        </div>
-
-        <div class="row mb-3">
-            <div class="col-md-12">
+            <div class="col-md-6">
                 <div class="mb-3">
                     <label for="{{ form.viatico.vars.id }}" class="form-label fw-semibold text-dark">
                         Viático
@@ -158,11 +146,18 @@
 {% endif %}
 
 {# Botones de Acción #}
-<div class="d-flex gap-2 mt-3 pt-2 border-top">
-    {{ include('components/back_button.html.twig', {'default_path': path('app_profesor_index')}) }}
-    <button type="submit" class="btn btn-success">
-        <i class="bi bi-save"></i> {{ button_label|default('Guardar') }}
-    </button>
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3 pt-2">
+    <div class="d-flex gap-2">
+        {{ include('components/back_button.html.twig', {'default_path': path('app_profesor_index')}) }}
+        <button type="submit" class="btn btn-success">
+            <i class="bi bi-save"></i> {{ button_label|default('Guardar') }}
+        </button>
+    </div>
+    {% if profesor is defined and profesor.id is defined and profesor.id %}
+        <div>
+            {{ include('profesor/_delete_form.html.twig') }}
+        </div>
+    {% endif %}
 </div>
 
 {{ form_end(form) }}

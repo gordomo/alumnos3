@@ -23,6 +23,7 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use App\Entity\User;
 use App\Service\TokenService;
 use App\Service\HorarioConflictService;
+use App\Service\InstitutoTimezoneService;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
@@ -33,11 +34,13 @@ class ProfesorController extends AbstractController
 {
     private TokenService $tokenService;
     private HorarioConflictService $horarioConflictService;
+    private InstitutoTimezoneService $institutoTimezoneService;
 
-    public function __construct(TokenService $tokenService, HorarioConflictService $horarioConflictService)
+    public function __construct(TokenService $tokenService, HorarioConflictService $horarioConflictService, InstitutoTimezoneService $institutoTimezoneService)
     {
         $this->tokenService = $tokenService;
         $this->horarioConflictService = $horarioConflictService;
+        $this->institutoTimezoneService = $institutoTimezoneService;
     }
 
     /**
@@ -111,34 +114,64 @@ class ProfesorController extends AbstractController
      */
     public function asistencias(Request $request, CursoRepository $cursoRepository, ProfesorRepository $profesorRepository, AsistenciaProfesoresRepository $asistenciaProfesoresRepository): Response
     {
-        $desde = $request->get('desde', date("Y/m/d"));
-
-        $day = date('N', strtotime($desde));
-        $firstday = date('Y/m/d', strtotime('-'.($day-1).' days', strtotime($desde)));
-        $lastday = date('Y/m/d', strtotime('+'.(7-$day).' days', strtotime($desde)));
-        
         $instituto = $this->getUser()->getInstituto();
+        $dateFormat = $this->institutoTimezoneService->getDateFormatForInstituto($instituto);
+        $nowInstituto = $this->institutoTimezoneService->getNowForInstituto($instituto);
+        $primerDiaMes = (clone $nowInstituto)->modify('first day of this month')->setTime(0, 0, 0);
+        $ultimoDiaMes = (clone $nowInstituto)->modify('last day of this month')->setTime(23, 59, 59);
 
-        $cursos = $cursoRepository->findBy(['disabled' => false, 'instituto' => $instituto]);
+        $desdeStr = $request->get('desde', $primerDiaMes->format($dateFormat));
+        $hastaStr = $request->get('hasta', $ultimoDiaMes->format($dateFormat));
 
-        $profesores = $profesorRepository->findByApellido($instituto, null)->getResult();
-
-        $asistencias = $asistenciaProfesoresRepository->findAll($instituto);
-        
-        $asistenciasArray = [];
-
-        foreach ($asistencias as $asistencia) {
-            $asistenciasArray[$asistencia->getCurso()][$asistencia->getFecha()->format('Y/m/d')][$asistencia->getProfesor()->getId()] = array('presente' => $asistencia->getPresente(), 'reemplazante' => ($asistencia->getProfesorRemplazante()) ? $profesorRepository->find($asistencia->getProfesorRemplazante())->getApellido() . ', ' . $profesorRepository->find($asistencia->getProfesorRemplazante())->getNombre() : 'sin reemplazo');
+        $desdeDt = $this->institutoTimezoneService->parseDateString($desdeStr);
+        $hastaDt = $this->institutoTimezoneService->parseDateString($hastaStr);
+        if (!$desdeDt) {
+            $desdeDt = clone $primerDiaMes;
+        }
+        if (!$hastaDt) {
+            $hastaDt = clone $ultimoDiaMes;
+        }
+        $desdeDt->setTime(0, 0, 0);
+        $hastaDt->setTime(23, 59, 59);
+        if ($hastaDt < $desdeDt) {
+            $hastaDt = clone $desdeDt;
+            $hastaDt->setTime(23, 59, 59);
         }
 
-        return $this->render('profesor/asistencias.html.twig',[
+        $cursos = $cursoRepository->findBy(['disabled' => false, 'instituto' => $instituto]);
+        $profesores = $profesorRepository->findByApellido($instituto, null)->getResult();
+
+        $asistencias = $asistenciaProfesoresRepository->findByInstituto($desdeDt, $hastaDt, $instituto);
+        $asistenciasArray = [];
+        foreach ($asistencias as $asistencia) {
+            $cursoId = $asistencia->getCurso()->getId();
+            $asistenciasArray[$cursoId][$asistencia->getFecha()->format($dateFormat)][$asistencia->getProfesor()->getId()] = [
+                'presente' => $asistencia->getPresente(),
+                'reemplazante' => ($asistencia->getProfesorRemplazante()) ? $profesorRepository->find($asistencia->getProfesorRemplazante())->getApellido() . ', ' . $profesorRepository->find($asistencia->getProfesorRemplazante())->getNombre() : 'sin reemplazo',
+            ];
+        }
+
+        $rango = [];
+        $current = clone $desdeDt;
+        $current->setTime(0, 0, 0);
+        $hastaSoloFecha = (clone $hastaDt)->setTime(0, 0, 0);
+        while ($current <= $hastaSoloFecha) {
+            $rango[] = [
+                'fecha' => $current->format($dateFormat),
+                'dia' => Helpers\Fechas::getDiaDeLaSemana((int) $current->format('w')),
+            ];
+            $current->modify('+1 day');
+        }
+
+        return $this->render('profesor/asistencias.html.twig', [
             'cursos' => $cursos,
-            'firstday' => $firstday,
+            'desde' => $desdeDt->format($dateFormat),
+            'hasta' => $hastaDt->format($dateFormat),
+            'date_format' => $dateFormat,
             'todosLosProfes' => $profesores,
-            'rango' => $this->createDateRangeArray($firstday, $lastday),
+            'rango' => $rango,
             'asistencias' => $asistenciasArray,
         ]);
-
     }
 
     /**
@@ -146,18 +179,19 @@ class ProfesorController extends AbstractController
      */
     public function informes(Request $request, CursoRepository $cursoRepository, ProfesorRepository $profesorRepository, AsistenciaProfesoresRepository $asistenciaProfesoresRepository): Response
     {
-        $ds = new \DateTime('first day of this month');
-        $ls = new \DateTime('last day of this month');
-
-        $desde = $request->get('desde', $ds->format("Y/m/d"));
-        $hasta = $request->get('hasta', $ls->format("Y/m/d"));
-
         $instituto = $this->getUser()->getInstituto();
+        $dateFormat = $this->institutoTimezoneService->getDateFormatForInstituto($instituto);
+        $nowInstituto = $this->institutoTimezoneService->getNowForInstituto($instituto);
+        $ds = $nowInstituto->modify('first day of this month');
+        $ls = $nowInstituto->modify('last day of this month');
+
+        $desde = $request->get('desde', $ds->format($dateFormat));
+        $hasta = $request->get('hasta', $ls->format($dateFormat));
 
         $cursos = $cursoRepository->findBy(['instituto' => $instituto, 'disabled' => false]);
         $profesores = $profesorRepository->findBy(['instituto' => $instituto]);
 
-        $rango = $this->createDateRangeArray($desde, $hasta);
+        $rango = $this->createDateRangeArray($desde, $hasta, $dateFormat);
 
         $asisArray = [];
         $reemplazantes = [];
@@ -172,9 +206,12 @@ class ProfesorController extends AbstractController
             ];
         }
 
-        foreach ($rango as $fecha) {
-            $date = new \DateTime($fecha);
-            $day_of_week = Helpers\Fechas::getDiaDeLaSemana(intval($date->format('w')));
+        foreach ($rango as $fechaStr) {
+            $date = $this->parseDateString($fechaStr);
+            if (!$date) {
+                continue;
+            }
+            $day_of_week = Helpers\Fechas::getDiaDeLaSemana((int) $date->format('w'));
 
             $cursosDelDia = $cursoRepository->findByDiaEinstituto($day_of_week, $instituto);
 
@@ -184,11 +221,11 @@ class ProfesorController extends AbstractController
 
             foreach ($cursosDelDia as $cursoHoy) {
                 $profeCurso = $cursoHoy->getProfesores();
-                $faltas = $asistenciaProfesoresRepository->findByFechaEinstituto(new \DateTime($fecha), $instituto);
+                $faltas = $asistenciaProfesoresRepository->findByFechaEinstituto($date, $instituto);
                 /* if($faltas) dd($faltas); */
                 foreach ($profeCurso as $profe) {
                     $profeId = $profe->getId();
-                    $asisArray[$profeId][$fecha][] = ['falta' => false, 'horas' => $cursoHoy->getDuracion(), 'curso' => $cursoHoy->getNombre()];
+                    $asisArray[$profeId][$fechaStr][] = ['falta' => false, 'horas' => $cursoHoy->getDuracion(), 'curso' => $cursoHoy->getNombre()];
                     $asisArray[$profeId]['precioHora'] = $profe->getPrecioHora();
                     
                     // Asegurar que el profesor esté en el array de información
@@ -215,7 +252,7 @@ class ProfesorController extends AbstractController
                 $faltaArr[] = ["falta" => true, "remplazante" => $nombreReemplazante, "curso" => $nombreCurso, 'horas' => $curso->getDuracion()];
 
                 if ($reemplazante) {
-                    $reemplazantes[$reemplazanteId][$fecha][]['reemplazo'] = ["reemplazoA" =>"Reemplazó a " . $profeFalta->getApellido() . ", " . $profeFalta->getNombre() . " en "  . $cursoRepository->find($falta->getCurso())->getNombre(), 'horas' => $curso->getDuracion()];
+                    $reemplazantes[$reemplazanteId][$fechaStr][]['reemplazo'] = ["reemplazoA" =>"Reemplazó a " . $profeFalta->getApellido() . ", " . $profeFalta->getNombre() . " en "  . $cursoRepository->find($falta->getCurso())->getNombre(), 'horas' => $curso->getDuracion()];
                     $reemplazantes[$reemplazanteId]['precioHora'] = $reemplazante->getPrecioHora();
                     
                     // Asegurar que el reemplazante esté en el array de información
@@ -228,11 +265,11 @@ class ProfesorController extends AbstractController
                     }
                 }
 
-                if (isset($asisArray[$profeFaltaId][$fecha])) {
-                    foreach ( $asisArray[$profeFaltaId][$fecha] as $clave => $asistencias ) {
+                if (isset($asisArray[$profeFaltaId][$fechaStr])) {
+                    foreach ( $asisArray[$profeFaltaId][$fechaStr] as $clave => $asistencias ) {
                         foreach ( $faltaArr as $faltaIndividual ) {
                             if ($asistencias['curso'] == $faltaIndividual['curso']) {
-                                $asisArray[$profeFaltaId][$fecha][$clave] = $faltaIndividual;
+                                $asisArray[$profeFaltaId][$fechaStr][$clave] = $faltaIndividual;
                             }
                         }
                     }
@@ -287,7 +324,8 @@ class ProfesorController extends AbstractController
             'profesoresInfo' => $profesoresInfo,
             'desde' => $desde,
             'hasta' => $hasta,
-            'rango' => $this->createDateRangeArray($desde, $hasta),
+            'date_format' => $dateFormat,
+            'rango' => $this->createDateRangeArray($desde, $hasta, $dateFormat),
             'reemplazantes' => $reemplazantes
         ]);
 
@@ -691,10 +729,14 @@ class ProfesorController extends AbstractController
 
         $profeRemplazante = $profesorRepository->find($remplazo);
 
-        $fecha = $request->get('fecha');
+        $fechaStr = $request->get('fecha');
         $curso = $request->get('curso');
+        $fechaDt = $this->parseDateString($fechaStr ?? '');
+        if (!$fechaDt) {
+            return $this->redirectToRoute('asistencias', [], Response::HTTP_SEE_OTHER);
+        }
 
-        $asistenciasGuarda = $asistenciaProfesoresRepository->findBy(['profesor' => $profesor, 'fecha' => new \DateTime($fecha), 'curso' => $curso]);
+        $asistenciasGuarda = $asistenciaProfesoresRepository->findBy(['profesor' => $profesor, 'fecha' => $fechaDt, 'curso' => $curso]);
 
         if ( $remplazo === "-1" ) {
             $asistenciaProfesoresRepository->remove($asistenciasGuarda[0]);
@@ -704,7 +746,7 @@ class ProfesorController extends AbstractController
                 $asistenciaProfesoresRepository->add($asistenciasGuarda[0]);
             } else {
                 $asistenciaNueva = new AsistenciaProfesores();
-                $asistenciaNueva->setFecha(new \DateTime($fecha));
+                $asistenciaNueva->setFecha($fechaDt);
                 $asistenciaNueva->setProfesor($profesor);
                 $asistenciaNueva->setPresente(false);
                 $asistenciaNueva->setCurso($curso);
@@ -714,7 +756,14 @@ class ProfesorController extends AbstractController
             }
         }
 
-        return $this->redirectToRoute('asistencias', ['desde' => $fecha], Response::HTTP_SEE_OTHER);
+        $params = [];
+        if ($request->query->has('desde')) {
+            $params['desde'] = $request->query->get('desde');
+        }
+        if ($request->query->has('hasta')) {
+            $params['hasta'] = $request->query->get('hasta');
+        }
+        return $this->redirectToRoute('asistencias', $params, Response::HTTP_SEE_OTHER);
     }
 
     /**
@@ -748,26 +797,36 @@ class ProfesorController extends AbstractController
         return $this->redirectToRoute('app_profesor_index', [], Response::HTTP_SEE_OTHER);
     }
 
-    function createDateRangeArray($strDateFrom,$strDateTo)
+    /**
+     * Crea un array inclusivo de fechas entre $strDateFrom y $strDateTo.
+     * Acepta fechas en d/m/Y o Y-m-d. Devuelve fechas formateadas con $outputFormat.
+     */
+    private function createDateRangeArray(string $strDateFrom, string $strDateTo, string $outputFormat = 'd/m/Y'): array
     {
-        // takes two dates formatted as YYYY-MM-DD and creates an
-        // inclusive array of the dates between the from and to dates.
-
-        // could test validity of dates here but I'm already doing
-        // that in the main script
-
+        $dateFrom = $this->parseDateString($strDateFrom);
+        $dateTo = $this->parseDateString($strDateTo);
+        if (!$dateFrom || !$dateTo || $dateTo < $dateFrom) {
+            return [];
+        }
         $aryRange = [];
-
-        $iDateFrom = mktime(1, 0, 0, substr($strDateFrom, 5, 2), substr($strDateFrom, 8, 2), substr($strDateFrom, 0, 4));
-        $iDateTo = mktime(1, 0, 0, substr($strDateTo, 5, 2), substr($strDateTo, 8, 2), substr($strDateTo, 0, 4));
-
-        if ($iDateTo >= $iDateFrom) {
-            array_push($aryRange, date('Y/m/d', $iDateFrom)); // first entry
-            while ($iDateFrom < $iDateTo) {
-                $iDateFrom += 86400; // add 24 hours
-                array_push($aryRange, date('Y/m/d', $iDateFrom));
-            }
+        $current = clone $dateFrom;
+        while ($current <= $dateTo) {
+            $aryRange[] = $current->format($outputFormat);
+            $current->modify('+1 day');
         }
         return $aryRange;
+    }
+
+    /**
+     * Parsea una fecha en formato d/m/Y o Y-m-d.
+     */
+    private function parseDateString(string $str): ?\DateTime
+    {
+        $d = \DateTime::createFromFormat('d/m/Y', $str);
+        if ($d !== false) {
+            return $d;
+        }
+        $d = \DateTime::createFromFormat('Y-m-d', $str);
+        return $d !== false ? $d : null;
     }
 }

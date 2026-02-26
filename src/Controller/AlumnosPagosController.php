@@ -24,6 +24,7 @@ use App\Service\DeudaService;
 use App\Service\NotificationService;
 use App\Service\TokenService;
 use App\Service\PagoService;
+use App\Service\InstitutoTimezoneService;
 /**
  * @Route("/alumnos/pagos")
  */
@@ -35,14 +36,16 @@ class AlumnosPagosController extends AbstractController
     private $notificationService;
     private $tokenService;
     private $pagoService;
+    private InstitutoTimezoneService $institutoTimezoneService;
 
     public function __construct(
-        EntityManagerInterface $entityManager, 
+        EntityManagerInterface $entityManager,
         HistorialCursosService $historialCursosService,
         DeudaService $deudaService,
         NotificationService $notificationService,
         TokenService $tokenService,
-        PagoService $pagoService
+        PagoService $pagoService,
+        InstitutoTimezoneService $institutoTimezoneService
     ) {
         $this->entityManager = $entityManager;
         $this->historialCursosService = $historialCursosService;
@@ -50,6 +53,7 @@ class AlumnosPagosController extends AbstractController
         $this->notificationService = $notificationService;
         $this->tokenService = $tokenService;
         $this->pagoService = $pagoService;
+        $this->institutoTimezoneService = $institutoTimezoneService;
     }
 
     /**
@@ -70,11 +74,13 @@ class AlumnosPagosController extends AbstractController
         $sort = $request->get('sort', 'fecha');
         $order = $request->get('order', 'desc');
 
-        // Por defecto: año completo si no hay fechas en la petición
+        // Por defecto: año completo si no hay fechas en la petición (en zona horaria del instituto)
         if (empty($fechaDesde) && empty($fechaHasta)) {
-            $fechaActual = new \DateTime();
-            $fechaDesde = $fechaActual->format('Y') . '-01-01';
-            $fechaHasta = $fechaActual->format('Y') . '-12-31';
+            $instituto = $this->getUser()->getInstituto();
+            $nowInstituto = $this->institutoTimezoneService->getNowForInstituto($instituto);
+            $anio = $nowInstituto->format('Y');
+            $fechaDesde = $anio . '-01-01';
+            $fechaHasta = $anio . '-12-31';
         }
         
         // Obtener el ID del alumno del formulario (prioridad) o de la URL
@@ -606,9 +612,10 @@ class AlumnosPagosController extends AbstractController
             // Sin id en URL: no preseleccionar alumno; el usuario debe seleccionar manualmente
             $alumno = null;
         }
+        $instituto = $this->getUser()->getInstituto();
         $alumnosPago = new AlumnosPagos();
         $alumnosPago->setAlumno($alumno);
-        $alumnosPago->setFecha(new \DateTime());
+        $alumnosPago->setFecha($this->institutoTimezoneService->getNowForInstituto($instituto));
         $alumnosPago->setMetodoPago('Efectivo');
 
         $mesesAdeudados = [];
@@ -853,12 +860,14 @@ class AlumnosPagosController extends AbstractController
         }
 
         // Crear el formulario
-        $alumnos = $alumnoRepository->findBy(['instituto' => $this->getUser()->getInstituto()]);
-        
+        $alumnos = $alumnoRepository->findBy(['instituto' => $instituto]);
+        $currentYear = $this->institutoTimezoneService->getNowForInstituto($instituto)->format('Y');
+
         $form = $this->createForm(AlumnosPagosType::class, $alumnosPago, [
             'alumnos' => $alumnos,
             'cursos' => array_values($cursos),
-            'vencimientos' => $vencimientos
+            'vencimientos' => $vencimientos,
+            'current_year' => $currentYear,
         ]);
 
         $form->handleRequest($request);
@@ -880,7 +889,7 @@ class AlumnosPagosController extends AbstractController
                 $modoPagoMultiple = true;
                 // Convertir meses del formulario a formato meses_adeudados
                 $mesesAdeudadosSeleccionados = [];
-                $anoSeleccionado = $request->request->get('alumnos_pagos')['ano'] ?? date('Y');
+                $anoSeleccionado = $request->request->get('alumnos_pagos')['ano'] ?? $this->institutoTimezoneService->getNowForInstituto($instituto)->format('Y');
                 $cursoSeleccionadoId = $request->request->get('alumnos_pagos')['curso'] ?? null;
                 
                 // Si no hay curso en el formulario, intentar obtenerlo del primer mes adeudado
@@ -1757,23 +1766,8 @@ class AlumnosPagosController extends AbstractController
         }
 
         $alumno = $pago->getAlumno();
-        $alumnoOriginal = $pago->getAlumno();
-        $cursoOriginal = $pago->getCurso();
-        $mesOriginal = $pago->getMes();
-        $anoOriginal = $pago->getAno();
         $montoOriginal = (float) $pago->getMonto();
 
-        $alumnoId = $request->query->get('id');
-        $cursoId = $request->query->get('curso');
-        if($alumnoId){
-            $alumno = $alumnoRepository->find($alumnoId);
-            $pago->setAlumno($alumno);
-        }
-        if($cursoId){
-            $curso = $cursoRepository->find($cursoId);
-            $pago->setCurso($curso);
-        }
-        // En edición permitir seleccionar cualquier curso del instituto (corrección de carga)
         $cursos = $cursoRepository->findBy(['instituto' => $instituto]);
 
         // Obtener los vencimientos del instituto
@@ -1781,14 +1775,18 @@ class AlumnosPagosController extends AbstractController
 
         // Crear el formulario
         $alumnos = $instituto->getAlumnos();
+        $currentYear = $this->institutoTimezoneService->getNowForInstituto($instituto)->format('Y');
         $form = $this->createForm(AlumnosPagosType::class, $pago, [
             'alumnos' => $alumnos,
             'cursos' => array_values($cursos),
             'vencimientos' => $vencimientos,
-            'modo_edicion' => false,
+            'modo_edicion' => true,
             'bloquear_monto_en_edicion' => false,
-            'mes_multiple' => false
+            'mes_multiple' => false,
+            'current_year' => $currentYear,
         ]);
+        // mes tiene mapped => false; cargar valor de la entidad para mostrarlo (solo lectura)
+        $form->get('mes')->setData($pago->getMes());
 
         $form->handleRequest($request);
 
@@ -1804,29 +1802,13 @@ class AlumnosPagosController extends AbstractController
                 }
 
                 try {
-                    $mesForm = $request->request->all('alumnos_pagos')['mes'] ?? null;
-                    if (is_array($mesForm) && !empty($mesForm)) {
-                        $pago->setMes((int) $mesForm[0]);
-                    } elseif ($mesForm !== null && $mesForm !== '') {
-                        $pago->setMes((int) $mesForm);
-                    }
-
-                    if ($pago->getMes() === null || $pago->getAno() === null) {
-                        $this->addFlash('danger', 'Debe seleccionar un mes y un año válidos.');
-                        return $this->redirectToRoute('app_alumnos_pagos_edit', ['id' => $pago->getId()]);
-                    }
-
+                    // En edición solo se actualizan monto, observación y método de pago.
+                    // Alumno, curso, mes y año no se modifican (si se equivocó, debe borrar y crear de nuevo).
                     $montoActualizado = (float) $pago->getMonto();
                     $montoModificado = abs($montoActualizado - $montoOriginal) > 0.00001;
-                    $claveModificada = $montoModificado
-                        || $pago->getAlumno() !== $alumnoOriginal
-                        || $pago->getCurso() !== $cursoOriginal
-                        || (int) $pago->getMes() !== (int) $mesOriginal
-                        || (int) $pago->getAno() !== (int) $anoOriginal;
                     $deudasIdsAReaplicar = [];
 
-                    if ($claveModificada) {
-                        // Revertir aplicaciones actuales del pago y reaplicar con el nuevo monto.
+                    if ($montoModificado) {
                         foreach ($pago->getAplicaciones()->toArray() as $aplicacion) {
                             $deudasIdsAReaplicar[] = $aplicacion->getDeuda()->getId();
                             $pago->removeAplicacion($aplicacion);
@@ -1835,45 +1817,16 @@ class AlumnosPagosController extends AbstractController
                         $pago->setMontoRestante($montoActualizado);
                     }
 
-                    // Verificar si ya existe un pago para este alumno, curso, mes y año
-                    $pagoExistente = $this->entityManager->getRepository(AlumnosPagos::class)->findOneBy([
-                        'alumno' => $pago->getAlumno(),
-                        'curso' => $pago->getCurso(),
-                        'mes' => $pago->getMes(),
-                        'ano' => $pago->getAno()
-                    ]);
-
-                    if ($pagoExistente && $pagoExistente->getId() !== $pago->getId()) {
-                        $this->addFlash('danger', 'Ya existe un pago registrado para este alumno en este curso para el mes y año seleccionados.');
-                        return $this->redirectToRoute('app_alumnos_pagos_edit', ['id' => $pago->getId()]);
-                    }
-
-                    // Actualizar el pago en el historial
-                    //$this->historialCursosService->actualizarPago($pago);
                     $this->entityManager->persist($pago);
                     $this->entityManager->flush();
 
-                    if ($claveModificada) {
-                        $deudaEspecifica = $this->entityManager->getRepository(\App\Entity\DeudaAlumno::class)
-                            ->findOneBy([
-                                'alumno' => $pago->getAlumno(),
-                                'curso' => $pago->getCurso(),
-                                'mes' => $pago->getMes(),
-                                'ano' => $pago->getAno()
-                            ]);
-
-                        if ($deudaEspecifica) {
-                            $deudasIdsAReaplicar = [$deudaEspecifica->getId()];
-                        }
-
-                        if (!empty($deudasIdsAReaplicar)) {
-                            $this->pagoService->aplicarPagoRestante(
-                                $pago,
-                                array_values(array_unique($deudasIdsAReaplicar))
-                            );
-                        }
+                    if ($montoModificado && !empty($deudasIdsAReaplicar)) {
+                        $this->pagoService->aplicarPagoRestante(
+                            $pago,
+                            array_values(array_unique($deudasIdsAReaplicar))
+                        );
                     }
-                    
+
                     // Consumir tokens después de guardar exitosamente
                     $this->tokenService->consumeTokens(
                         $instituto,

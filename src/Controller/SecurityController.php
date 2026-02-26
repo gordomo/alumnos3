@@ -203,10 +203,13 @@ class SecurityController extends AbstractController
                 $user->setRoles(['ROLE_ADMIN_INSTITUTO']);
                 $user->setInstituto($instituto);
 
-                // Crear configuración del instituto
+                // Crear configuración del instituto (timezone del navegador del usuario que se registra)
                 $configuracion = new InstitutoConfiguracion();
                 $configuracion->setInstituto($instituto);
-                
+                $timezone = $request->request->get('timezone');
+                $configuracion->setTimezone($timezone !== '' && $timezone !== null ? $timezone : null);
+                $configuracion->setDateFormat('d/m/Y'); // formato por defecto al crear instituto
+
                 // Persistir
                 $this->entityManager->persist($instituto);
                 $this->entityManager->persist($user);

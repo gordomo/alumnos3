@@ -179,7 +179,7 @@
         <div class="informes-toolbar">
             <div>
                 <div class="informes-toolbar-label">Rango de Fechas</div>
-                <input type="text" id="filtroFechas" name="daterange" value="{{ desde }}"/>
+                <input type="text" id="filtroFechas" name="daterange" value="{{ desde }} - {{ hasta }}"/>
             </div>
             <div class="informes-meta">
                 {{ asistencias|length }} profesores en el informe
@@ -281,17 +281,26 @@
 
 {% block javascripts %}
     {{ parent() }}
+    {% set df = date_format|default(app_date_format|default('d/m/Y')) %}
+    {% set moment_format = df == 'd/m/Y' ? 'DD/MM/YYYY' : (df == 'm/d/Y' ? 'MM/DD/YYYY' : (df == 'Y-m-d' ? 'YYYY-MM-DD' : (df == 'd-m-Y' ? 'DD-MM-YYYY' : 'DD/MM/YYYY'))) %}
     <script>
         $(function() {
+            var desdeStr = "{{ desde|e('js') }}";
+            var hastaStr = "{{ hasta|e('js') }}";
+            var fmt = "{{ moment_format }}";
+            var startDate = moment(desdeStr, fmt);
+            var endDate = moment(hastaStr, fmt);
+            if (!startDate.isValid()) { startDate = moment().startOf('month'); }
+            if (!endDate.isValid()) { endDate = moment().endOf('month'); }
             $('input[name="daterange"]').daterangepicker({
                 opens: 'left',
-                startDate: '{{ desde }}',
-                endDate: '{{ hasta }}',
+                startDate: startDate,
+                endDate: endDate,
                 locale: {
-                    format: 'YYYY/MM/DD'
+                    format: fmt
                 }
             }, function(start, end, label) {
-                location.href = "{{ path('informes') }}?desde=" + start.format('YYYY/MM/DD') + "&hasta=" + end.format('YYYY/MM/DD');
+                location.href = "{{ path('informes') }}?desde=" + start.format(fmt) + "&hasta=" + end.format(fmt);
             });
         });
     </script>

@@ -44,15 +44,15 @@
                                                 </strong>
                                             </td>
                                             <td>{{ config.description ?? '-' }}</td>
-                                            <td>{{ config.updatedAt|date('d/m/Y H:i') }}</td>
+                                            <td>{{ config.updatedAt|date((app_date_format|default('d/m/Y')) ~ ' H:i') }}</td>
                                             <td>
                                                 <a href="{{ path('admin_billing_config_show', {'id': config.id}) }}" 
-                                                   class="btn btn-sm btn-outline-info" 
+                                                   class="btn btn-sm btn-outline-info btn-action-icon" 
                                                    title="Ver detalles">
                                                     <i class="bi bi-eye"></i>
                                                 </a>
                                                 <a href="{{ path('admin_billing_config_edit', {'id': config.id}) }}" 
-                                                   class="btn btn-sm btn-outline-primary" 
+                                                   class="btn btn-sm btn-outline-primary btn-action-icon" 
                                                    title="Editar">
                                                     <i class="bi bi-pencil"></i>
                                                 </a>

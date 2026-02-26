@@ -237,6 +237,38 @@
                                                               rows="3"
                                                               placeholder="Calle, número, ciudad, provincia">{{ instituto.dir }}</textarea>
                                                 </div>
+                                                <div class="mb-3">
+                                                    <label for="timezone" class="form-label">
+                                                        <i class="bi bi-clock"></i> Zona horaria
+                                                    </label>
+                                                    <select class="form-control form-select" id="timezone" name="timezone">
+                                                        <option value="">Zona por defecto del servidor</option>
+                                                        <option value="America/Argentina/Buenos_Aires" {% if configuracion.timezone == 'America/Argentina/Buenos_Aires' %}selected{% endif %}>America/Argentina/Buenos_Aires</option>
+                                                        <option value="America/Mexico_City" {% if configuracion.timezone == 'America/Mexico_City' %}selected{% endif %}>America/Mexico_City</option>
+                                                        <option value="America/Lima" {% if configuracion.timezone == 'America/Lima' %}selected{% endif %}>America/Lima</option>
+                                                        <option value="America/Bogota" {% if configuracion.timezone == 'America/Bogota' %}selected{% endif %}>America/Bogota</option>
+                                                        <option value="America/Santiago" {% if configuracion.timezone == 'America/Santiago' %}selected{% endif %}>America/Santiago</option>
+                                                        <option value="America/Caracas" {% if configuracion.timezone == 'America/Caracas' %}selected{% endif %}>America/Caracas</option>
+                                                        <option value="America/Guayaquil" {% if configuracion.timezone == 'America/Guayaquil' %}selected{% endif %}>America/Guayaquil</option>
+                                                        <option value="Europe/Madrid" {% if configuracion.timezone == 'Europe/Madrid' %}selected{% endif %}>Europe/Madrid</option>
+                                                        <option value="Europe/London" {% if configuracion.timezone == 'Europe/London' %}selected{% endif %}>Europe/London</option>
+                                                        <option value="UTC" {% if configuracion.timezone == 'UTC' %}selected{% endif %}>UTC</option>
+                                                    </select>
+                                                    <small class="form-text text-muted">Define qué día es “hoy” para asistencias y fechas. Si se deja vacío se usa la zona por defecto del servidor.</small>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="date_format" class="form-label">
+                                                        <i class="bi bi-calendar3"></i> Formato de fecha
+                                                    </label>
+                                                    <select class="form-control form-select" id="date_format" name="date_format">
+                                                        <option value="">d/m/Y (día/mes/año) — por defecto</option>
+                                                        <option value="d/m/Y" {% if configuracion.dateFormat == 'd/m/Y' %}selected{% endif %}>d/m/Y (ej: 25/02/2025)</option>
+                                                        <option value="m/d/Y" {% if configuracion.dateFormat == 'm/d/Y' %}selected{% endif %}>m/d/Y (ej: 02/25/2025)</option>
+                                                        <option value="Y-m-d" {% if configuracion.dateFormat == 'Y-m-d' %}selected{% endif %}>Y-m-d (ej: 2025-02-25)</option>
+                                                        <option value="d-m-Y" {% if configuracion.dateFormat == 'd-m-Y' %}selected{% endif %}>d-m-Y (ej: 25-02-2025)</option>
+                                                    </select>
+                                                    <small class="form-text text-muted">Formato en que se muestran las fechas en toda la aplicación (asistencias, informes, filtros, selector de semana). Solo se ofrecen formatos compatibles con los selectores de fecha. Si se deja vacío se usa d/m/Y.</small>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -283,15 +315,15 @@
                                                 {% for vencimiento in vencimientos %}
                                                     <tr>
                                                         <td><strong>Día {{ vencimiento.diaVencimiento }}</strong></td>
-                                                        <td><span class="badge bg-warning text-dark">{{ vencimiento.porcentajeInteres }}%</span></td>
+                                                        <td><span class="badge bg-success text-white">{{ vencimiento.porcentajeInteres }}%</span></td>
                                                         <td>
                                                             <div class="btn-group btn-group-sm" role="group">
-                                                                <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalEditarVencimiento{{ vencimiento.id }}" title="Editar">
+                                                                <button type="button" class="btn btn-sm btn-outline-secondary btn-action-icon me-2" data-bs-toggle="modal" data-bs-target="#modalEditarVencimiento{{ vencimiento.id }}" title="Editar">
                                                                     <i class="bi bi-pencil"></i>
                                                                 </button>
                                                                 <form method="post" action="{{ path('instituto_config_vencimiento_delete', {'id': vencimiento.id}) }}" onsubmit="return confirm('¿Está seguro que desea eliminar este vencimiento?');" style="display: inline-block;">
                                                                     <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ vencimiento.id) }}">
-                                                                    <button class="btn btn-outline-danger" title="Eliminar">
+                                                                    <button class="btn btn-danger btn-sm btn-action-icon" title="Eliminar">
                                                                         <i class="bi bi-trash"></i>
                                                                     </button>
                                                                 </form>
@@ -448,12 +480,12 @@
                                                             </td>
                                                             <td>
                                                                 <div class="btn-group btn-group-sm" role="group">
-                                                                    <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalEditarDescuento{{ descuento.id }}" title="Editar">
+                                                                    <button type="button" class="btn btn-sm btn-outline-secondary btn-action-icon me-2" data-bs-toggle="modal" data-bs-target="#modalEditarDescuento{{ descuento.id }}" title="Editar">
                                                                         <i class="bi bi-pencil"></i>
                                                                     </button>
                                                                     <form method="post" action="{{ path('instituto_config_descuento_promocional_delete', {'id': descuento.id}) }}" onsubmit="return confirm('¿Está seguro que desea eliminar este descuento promocional?');" style="display: inline-block;">
                                                                         <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ descuento.id) }}">
-                                                                        <button class="btn btn-outline-danger" title="Eliminar">
+                                                                        <button class="btn btn-danger btn-sm btn-action-icon" title="Eliminar">
                                                                             <i class="bi bi-trash"></i>
                                                                         </button>
                                                                     </form>
@@ -474,7 +506,7 @@
                         </div>
                         
                                 <div class="text-center">
-                                    <button type="submit" class="btn btn-info btn-lg">
+                                    <button type="submit" class="btn btn-primary btn-lg">
                                         <i class="bi bi-save"></i> Guardar Configuración de Descuentos
                             </button>
                                     <a href="{{ path('instituto_config_index') }}" class="btn btn-secondary btn-lg">
@@ -554,7 +586,7 @@
                                 </div>
                                 
                                 <div class="text-center">
-                                    <button type="submit" class="btn btn-secondary btn-lg">
+                                    <button type="submit" class="btn btn-primary btn-lg">
                                         <i class="bi bi-save"></i> Guardar Configuración de Notificaciones
                                     </button>
                                     <a href="{{ path('instituto_config_index') }}" class="btn btn-secondary btn-lg">

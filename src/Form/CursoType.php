@@ -23,6 +23,9 @@ class CursoType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $instituto = $options['instituto'];
+        $dateFormat = $options['date_format'] ?? 'd/m/Y';
+        $symfonyFormat = $this->phpToSymfonyDateFormat($dateFormat);
+
         $builder
             ->add('nombre', TextType::class, [
                 'required' => true,
@@ -38,9 +41,11 @@ class CursoType extends AbstractType
             ])
             ->add('fechaInicio', DateType::class, [
                 'required' => true,
-                'attr' => ['class' => 'form-control'],
+                'attr' => ['class' => 'form-control', 'placeholder' => $dateFormat],
                 'label_attr' => ['class' => 'form-label required'],
                 'widget' => 'single_text',
+                'format' => $symfonyFormat,
+                'html5' => false,
                 'label' => 'Fecha de Inicio',
                 'constraints' => [
                     new Callback([$this, 'validateFechas'])
@@ -48,9 +53,11 @@ class CursoType extends AbstractType
             ])
             ->add('fechaFin', DateType::class, [
                 'required' => true,
-                'attr' => ['class' => 'form-control'],
+                'attr' => ['class' => 'form-control', 'placeholder' => $dateFormat],
                 'label_attr' => ['class' => 'form-label required'],
                 'widget' => 'single_text',
+                'format' => $symfonyFormat,
+                'html5' => false,
                 'label' => 'Fecha de Fin',
                 'constraints' => [
                     new Callback([$this, 'validateFechas'])
@@ -167,7 +174,22 @@ class CursoType extends AbstractType
         $resolver->setDefaults([
             'data_class' => Curso::class,
             'instituto' => null,
+            'date_format' => 'd/m/Y',
         ]);
+    }
+
+    /**
+     * Convierte formato PHP (d/m/Y, etc.) al formato que usa Symfony DateType (IntlDateFormatter).
+     */
+    private function phpToSymfonyDateFormat(string $phpFormat): string
+    {
+        return match ($phpFormat) {
+            'd/m/Y' => 'dd/MM/yyyy',
+            'm/d/Y' => 'MM/dd/yyyy',
+            'Y-m-d' => 'yyyy-MM-dd',
+            'd-m-Y' => 'dd-MM-yyyy',
+            default => 'dd/MM/yyyy',
+        };
     }
 
     private function getTimeChoices(): array

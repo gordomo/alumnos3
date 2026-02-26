@@ -123,7 +123,7 @@
                                 <tbody>
                                     {% for asistencia in asistenciasRecientes %}
                                         <tr>
-                                            <td>{{ asistencia.fecha|date('d/m/Y') }}</td>
+                                            <td>{{ asistencia.fecha|date(app_date_format|default('d/m/Y')) }}</td>
                                             <td>{{ asistencia.curso.nombre }}</td>
                                             <td>
                                                 {% if asistencia.presente %}
@@ -166,7 +166,7 @@
                                 <tbody>
                                     {% for pago in pagosRecientes %}
                                         <tr>
-                                            <td>{{ pago.fecha|date('d/m/Y') }}</td>
+                                            <td>{{ pago.fecha|date(app_date_format|default('d/m/Y')) }}</td>
                                             <td>{{ pago.curso.nombre }}</td>
                                             <td>${{ pago.monto|number_format(2, ',', '.') }}</td>
                                         </tr>

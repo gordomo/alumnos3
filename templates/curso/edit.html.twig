@@ -26,9 +26,10 @@
     <div class="row">
         <div class="col-12">
                 {{ include('curso/_form.html.twig', {
-                    'button_label': 'Guardar', 
-                    'mostrar_confirmacion': mostrar_confirmacion|default(false),
-                    'mostrar_confirmacion_conflictos': mostrar_confirmacion_conflictos|default(false)
+                    button_label: 'Guardar',
+                    mostrar_confirmacion: mostrar_confirmacion|default(false),
+                    mostrar_confirmacion_conflictos: mostrar_confirmacion_conflictos|default(false),
+                    date_format: date_format|default('d/m/Y')
                 }) }}
             </div>
         </div>

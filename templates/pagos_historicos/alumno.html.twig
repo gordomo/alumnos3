@@ -31,7 +31,7 @@
                             {% for historico in historicos %}
                                 <tr>
                                     <td>{{ historico.curso.nombre }}</td>
-                                    <td>{{ historico.fechaInicio|date('d/m/Y') }} - {{ historico.fechaFin|date('d/m/Y') }}</td>
+                                    <td>{{ historico.fechaInicio|date(app_date_format|default('d/m/Y')) }} - {{ historico.fechaFin|date(app_date_format|default('d/m/Y')) }}</td>
                                     <td>${{ historico.precio|number_format(2, ',', '.') }}</td>
                                     <td>
                                         {% for mes in historico.mesesPagados %}

@@ -110,7 +110,7 @@
             <div class="recibo-info">
                 <div class="info-row">
                     <span class="info-label">Fecha de Pago:</span>
-                    <span class="info-value">{{ pago.fecha|date('d/m/Y') }}</span>
+                    <span class="info-value">{{ pago.fecha|date(app_date_format|default('d/m/Y')) }}</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Curso:</span>

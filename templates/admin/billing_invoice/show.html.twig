@@ -43,21 +43,21 @@
                         <div class="col-md-6">
                             <h6 class="text-muted">Información de Facturación</h6>
                             <p><strong>Período:</strong> {{ invoice.getFormattedPeriod() }}</p>
-                            <p><strong>Fecha de Creación:</strong> {{ invoice.createdAt|date('d/m/Y H:i:s') }}</p>
+                            <p><strong>Fecha de Creación:</strong> {{ invoice.createdAt|date((app_date_format|default('d/m/Y')) ~ ' H:i:s') }}</p>
                             {% if invoice.paymentRequestedAt %}
-                                <p><strong>Fecha de Solicitud:</strong> {{ invoice.paymentRequestedAt|date('d/m/Y H:i:s') }}</p>
+                                <p><strong>Fecha de Solicitud:</strong> {{ invoice.paymentRequestedAt|date((app_date_format|default('d/m/Y')) ~ ' H:i:s') }}</p>
                             {% endif %}
                             {% if invoice.paidAt %}
-                                <p><strong>Fecha de Pago:</strong> {{ invoice.paidAt|date('d/m/Y H:i:s') }}</p>
+                                <p><strong>Fecha de Pago:</strong> {{ invoice.paidAt|date((app_date_format|default('d/m/Y')) ~ ' H:i:s') }}</p>
                             {% endif %}
                             {% if invoice.approvedAt %}
-                                <p><strong>Fecha de Aprobación:</strong> {{ invoice.approvedAt|date('d/m/Y H:i:s') }}</p>
+                                <p><strong>Fecha de Aprobación:</strong> {{ invoice.approvedAt|date((app_date_format|default('d/m/Y')) ~ ' H:i:s') }}</p>
                                 {% if invoice.approvedBy %}
                                     <p><strong>Aprobado por:</strong> {{ invoice.approvedBy.email }}</p>
                                 {% endif %}
                             {% endif %}
                             {% if invoice.rejectedAt %}
-                                <p><strong>Fecha de Rechazo:</strong> {{ invoice.rejectedAt|date('d/m/Y H:i:s') }}</p>
+                                <p><strong>Fecha de Rechazo:</strong> {{ invoice.rejectedAt|date((app_date_format|default('d/m/Y')) ~ ' H:i:s') }}</p>
                             {% endif %}
                         </div>
                     </div>

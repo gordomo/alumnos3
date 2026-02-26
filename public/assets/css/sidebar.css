@@ -1,9 +1,9 @@
 /* Sidebar unified with internal theme */
 :root {
     --sidebar-width: 15rem;
-    --sidebar-surface: #f8fbfa;
+    --sidebar-surface: #eef3f2;
     --sidebar-heading: #eef3f2;
-    --sidebar-border: #dce7e4;
+    --sidebar-border: #eef3f2;
     --sidebar-text: #425257;
     --sidebar-muted: #6f7f84;
     --sidebar-primary: #5c6f6c;

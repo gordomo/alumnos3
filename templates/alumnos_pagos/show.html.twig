@@ -19,8 +19,8 @@
     <div id="project">
         <div><span>Alumno:</span> {{ alumnos_pago.alumno.nombreApellido }}</div>
         <div><span>email:</span> <a href="mailto:john@example.com">{{ alumnos_pago.alumno.email }}</a></div>
-        <div><span>Fecha:</span> {{ 'now' | date('d/m/Y') }}</div>
-        <div><span>Pago:</span> {{ alumnos_pago.fecha | date('d/m/Y') }}</div>
+        <div><span>Fecha:</span> {{ 'now' | date(app_date_format|default('d/m/Y')) }}</div>
+        <div><span>Pago:</span> {{ alumnos_pago.fecha | date(app_date_format|default('d/m/Y')) }}</div>
     </div>
 </header>
 <main>

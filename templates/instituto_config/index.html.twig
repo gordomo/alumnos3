@@ -252,6 +252,26 @@
                                                             {% endif %}
                                                         </td>
                                             </tr>
+                                            <tr>
+                                                <th>Zona horaria:</th>
+                                                        <td>
+                                                            {% if configuracion.timezone %}
+                                                                {{ configuracion.timezone }}
+                                                            {% else %}
+                                                                <span class="text-muted">Zona horaria no configurada</span>
+                                                            {% endif %}
+                                                        </td>
+                                            </tr>  
+                                            <tr>
+                                                <th>Formato de fecha:</th>
+                                                        <td>
+                                                            {% if configuracion.dateFormat %}
+                                                                {{ configuracion.dateFormat }}
+                                                            {% else %}
+                                                                <span class="text-muted">Formato de fecha no configurado</span>
+                                                            {% endif %}
+                                                        </td>
+                                            </tr>   
                                         </table>
                                     </div>
                                 </div>
@@ -281,7 +301,7 @@
                                                     {% for vencimiento in vencimientos %}
                                                         <tr>
                                                             <td><strong>Día {{ vencimiento.diaVencimiento }}</strong></td>
-                                                            <td><span class="badge bg-warning text-dark">{{ vencimiento.porcentajeInteres }}%</span></td>
+                                                            <td><span class="badge bg-success text-white">{{ vencimiento.porcentajeInteres }}%</span></td>
                                                         </tr>
                                                     {% else %}
                                                         <tr>

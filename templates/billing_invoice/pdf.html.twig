@@ -246,12 +246,12 @@
         <div class="invoice-footer">
             <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
                 <div>
-                    <p><strong>Fecha de Emisión:</strong> {{ invoice.createdAt|date('d/m/Y') }}</p>
+                    <p><strong>Fecha de Emisión:</strong> {{ invoice.createdAt|date(app_date_format|default('d/m/Y')) }}</p>
                     <p><strong>Período Facturado:</strong> {{ invoice.getFormattedPeriod() }}</p>
                 </div>
                 <div style="text-align: right;">
                     {% if invoice.paidAt %}
-                        <p><strong>Fecha de Pago:</strong> {{ invoice.paidAt|date('d/m/Y') }}</p>
+                        <p><strong>Fecha de Pago:</strong> {{ invoice.paidAt|date(app_date_format|default('d/m/Y')) }}</p>
                     {% endif %}
                     <p><strong>Estado:</strong> 
                         {% if invoice.isPaid %}
@@ -268,7 +268,7 @@
             <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-top: 20px;">
                 <p style="margin: 0; font-size: 0.9rem;">
                     <strong>Nota:</strong> Esta factura fue generada con un precio de <strong>${{ invoice.pricePerStudent|number_format(2, ',', '.') }} por alumno/mes</strong>, 
-                    vigente al momento de su creación ({{ invoice.createdAt|date('d/m/Y H:i') }}). 
+                    vigente al momento de su creación ({{ invoice.createdAt|date((app_date_format|default('d/m/Y')) ~ ' H:i') }}). 
                     El precio mostrado es fijo y no cambiará aunque se modifique el precio actual del sistema.
                 </p>
             </div>

@@ -66,6 +66,7 @@ class AlumnosPagosType extends AbstractType
                 'label' => 'Fecha',
                 'label_attr' => ['class' => 'form-label'],
                 'required' => true,
+                'disabled' => $modoEdicion,
                 'attr' => ['class' => 'form-control'],
                 'constraints' => [
                     new NotBlank(['message' => 'La fecha es obligatoria'])
@@ -96,7 +97,7 @@ class AlumnosPagosType extends AbstractType
                 'attr' => ['class' => 'form-control mes-select-multiple', 'size' => '5'],
             ])
             ->add('ano', ChoiceType::class, [
-                'choices' => $this->getYearChoices(),
+                'choices' => $this->getYearChoices($options),
                 'label' => 'Año',
                 'label_attr' => ['class' => 'form-label'],
                 'required' => true,
@@ -170,13 +171,14 @@ class AlumnosPagosType extends AbstractType
             'vencimientos' => [],
             'modo_edicion' => false,
             'bloquear_monto_en_edicion' => true,
-            'mes_multiple' => true
+            'mes_multiple' => true,
+            'current_year' => null,
         ]);
     }
 
-    private function getYearChoices(): array
+    private function getYearChoices(array $options): array
     {
-        $currentYear = (int) date('Y');
+        $currentYear = ($options['current_year'] ?? null) !== null ? (int) $options['current_year'] : (int) date('Y');
         $choices = [];
         
         for ($i = 0; $i < 5; $i++) {

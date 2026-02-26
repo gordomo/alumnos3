@@ -63,11 +63,11 @@
         <tbody>
             <tr>
                                 <th style="width: 200px;">Fecha de Inicio</th>
-                                <td>{{ curso.fechaInicio|date('d/m/Y') }}</td>
+                                <td>{{ curso.fechaInicio|date(app_date_format|default('d/m/Y')) }}</td>
                             </tr>
                             <tr>
                                 <th>Fecha de Fin</th>
-                                <td>{{ curso.fechaFin|date('d/m/Y') }}</td>
+                                <td>{{ curso.fechaFin|date(app_date_format|default('d/m/Y')) }}</td>
                             </tr>
                             <tr>
                                 <th>Estado</th>
@@ -144,7 +144,7 @@
                                         {% endif %}
                                     </td>
                                     <td>
-                                        <a href="{{ path('app_alumno_show', {'id': alumno.id}) }}" class="btn btn-sm btn-outline-primary" title="Ver detalle" data-toggle="tooltip" data-placement="left">
+                                        <a href="{{ path('app_alumno_show', {'id': alumno.id}) }}" class="btn btn-sm btn-outline-primary btn-action-icon" title="Ver detalle" data-toggle="tooltip" data-placement="left">
                                             <i class="bi bi-eye"></i>
                                         </a>
                                     </td>

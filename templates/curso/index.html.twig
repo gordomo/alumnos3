@@ -84,7 +84,12 @@
             border: 1px solid var(--curso-border);
             border-radius: 14px;
             box-shadow: var(--curso-shadow);
-            overflow: hidden;
+            overflow: visible;
+        }
+
+        /* Permitir que el dropdown de acciones no quede recortado por la tabla */
+        .curso-panel .table-responsive {
+            overflow: visible;
         }
 
         .curso-panel .table {
@@ -370,11 +375,11 @@
                                     <span class="time-badge">{{ horas }}:{{ '%02d'|format(minutos) }}hs</span>
                                 {% endif %} 
                             </td>
-                            <td>{{ curso.fechaInicio|date('d/m/Y') }}</td>
-                            <td>{{ curso.fechaFin|date('d/m/Y') }}</td>
+                            <td>{{ curso.fechaInicio|date(app_date_format|default('d/m/Y')) }}</td>
+                            <td>{{ curso.fechaFin|date(app_date_format|default('d/m/Y')) }}</td>
                             <td class="text-center position-relative">
                                 <div class="dropdown dropstart">
-                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle-clean" type="button" id="dropdownMenuButton{{ curso.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle-clean btn-action-icon" type="button" id="dropdownMenuButton{{ curso.id }}" data-bs-toggle="dropdown" aria-expanded="false">
                                         <i class="bi bi-three-dots-vertical"></i>
                                     </button>
                                     <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton{{ curso.id }}">
@@ -461,11 +466,11 @@
                                 {% set minutos = ((curso.duracion - horas) * 60)|round(0, 'floor') %}
                                 <span class="time-badge">{{ horas }}:{{ '%02d'|format(minutos) }}hs</span>
                             </td>
-                            <td>{{ curso.fechaInicio|date('d/m/Y') }}</td>
-                            <td>{{ curso.fechaFin|date('d/m/Y') }}</td>
+                            <td>{{ curso.fechaInicio|date(app_date_format|default('d/m/Y')) }}</td>
+                            <td>{{ curso.fechaFin|date(app_date_format|default('d/m/Y')) }}</td>
                             <td class="text-center position-relative">
                                 <div class="dropdown dropstart">
-                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle-clean" type="button" id="dropdownMenuButtonDisabled{{ curso.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle-clean btn-action-icon" type="button" id="dropdownMenuButtonDisabled{{ curso.id }}" data-bs-toggle="dropdown" aria-expanded="false">
                                         <i class="bi bi-three-dots-vertical"></i>
                                     </button>
                                     <ul class="dropdown-menu" aria-labelledby="dropdownMenuButtonDisabled{{ curso.id }}">

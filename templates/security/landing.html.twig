@@ -1319,6 +1319,8 @@
                     </small>
                 </div>
 
+                <input type="hidden" name="timezone" id="register_timezone" value="">
+
                 <input type="hidden" name="_csrf_token" value="{{ csrf_token('register') }}">
 
                 <button class="btn btn-primary" type="submit">
@@ -1373,6 +1375,15 @@
             }, 10);
         }
     }
+
+    // Zona horaria del navegador para el instituto que se registra
+    document.addEventListener('DOMContentLoaded', function() {
+        try {
+            const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            const input = document.getElementById('register_timezone');
+            if (input && tz) input.value = tz;
+        } catch (e) {}
+    });
 
     // Si hay un mensaje de éxito, mostrar el tab de login
     document.addEventListener('DOMContentLoaded', function() {

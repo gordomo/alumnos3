@@ -67,7 +67,7 @@
                     <label for="{{ form.horarioInicio.vars.id }}" class="form-label fw-semibold text-dark">
                         Horario de Inicio <span class="text-danger">*</span>
                     </label>
-                    {{ form_widget(form.horarioInicio, {'attr': {'class': 'form-control'}}) }}
+                    {{ form_widget(form.horarioInicio, {'attr': {'class': 'form-control', 'data-horario-combo': 'inicio'}}) }}
                     {{ form_errors(form.horarioInicio) }}
                 </div>
             </div>
@@ -76,13 +76,82 @@
                     <label for="{{ form.horarioFin.vars.id }}" class="form-label fw-semibold text-dark">
                         Horario de Fin <span class="text-danger">*</span>
                     </label>
-                    {{ form_widget(form.horarioFin, {'attr': {'class': 'form-control'}}) }}
+                    {{ form_widget(form.horarioFin, {'attr': {'class': 'form-control', 'data-horario-combo': 'fin'}}) }}
                     {{ form_errors(form.horarioFin) }}
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+{% set df = date_format|default('d/m/Y') %}
+{% set moment_format = df == 'd/m/Y' ? 'DD/MM/YYYY' : (df == 'm/d/Y' ? 'MM/DD/YYYY' : (df == 'Y-m-d' ? 'YYYY-MM-DD' : (df == 'd-m-Y' ? 'DD-MM-YYYY' : 'DD/MM/YYYY'))) %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof $ !== 'undefined' && $.fn.daterangepicker) {
+        var fmt = "{{ moment_format }}";
+        var idInicio = "{{ form.fechaInicio.vars.id }}";
+        var idFin = "{{ form.fechaFin.vars.id }}";
+        var inputInicio = document.getElementById(idInicio);
+        var inputFin = document.getElementById(idFin);
+        if (inputInicio) {
+            var startInicio = moment(inputInicio.value, fmt);
+            if (!startInicio.isValid()) { startInicio = moment(); }
+            $(inputInicio).daterangepicker({
+                singleDatePicker: true,
+                startDate: startInicio,
+                locale: { format: fmt }
+            }, function(start) {
+                inputInicio.value = start.format(fmt);
+            });
+        }
+        if (inputFin) {
+            var startFin = moment(inputFin.value, fmt);
+            if (!startFin.isValid()) { startFin = moment(); }
+            $(inputFin).daterangepicker({
+                singleDatePicker: true,
+                startDate: startFin,
+                locale: { format: fmt }
+            }, function(start) {
+                inputFin.value = start.format(fmt);
+            });
+        }
+    }
+});
+</script>
+<script>
+(function() {
+    // Mismas franjas que en CursoType (cada 15 min, 00:00 a 23:45)
+    var timeSlots = [];
+    for (var h = 0; h < 24; h++) {
+        for (var m = 0; m < 60; m += 15) {
+            timeSlots.push(('0' + h).slice(-2) + ':' + ('0' + m).slice(-2));
+        }
+    }
+    var selectInicio = document.querySelector('[data-horario-combo="inicio"]');
+    var selectFin = document.querySelector('[data-horario-combo="fin"]');
+    if (!selectInicio || !selectFin) return;
+    function actualizarOpcionesHoraFin() {
+        var inicio = selectInicio.value;
+        if (!inicio) {
+            // Si no hay inicio, mostrar todas las opciones en fin
+            selectFin.innerHTML = timeSlots.map(function(t) { return '<option value="' + t + '">' + t + '</option>'; }).join('');
+            return;
+        }
+        var inicioIdx = timeSlots.indexOf(inicio);
+        var opcionesFin = timeSlots.slice(inicioIdx + 1); // solo después del slot de inicio (siguiente = +15 min)
+        var finActual = selectFin.value;
+        selectFin.innerHTML = opcionesFin.map(function(t) { return '<option value="' + t + '">' + t + '</option>'; }).join('');
+        if (opcionesFin.indexOf(finActual) !== -1) {
+            selectFin.value = finActual;
+        } else {
+            selectFin.value = opcionesFin[0] || '';
+        }
+    }
+    selectInicio.addEventListener('change', actualizarOpcionesHoraFin);
+    actualizarOpcionesHoraFin(); // aplicar al cargar (p. ej. en edición)
+})();
+</script>
 
 {# Días y Profesores #}
 <div class="card mb-4 shadow-sm">

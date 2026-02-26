@@ -138,6 +138,7 @@
                         <h4 class="card-title mb-0">Editar Pago - {{ alumno.nombreApellido }}</h4>
                     </div>
                     <div class="card-body">
+                        <p class="text-muted small mb-3">Solo puede editar el monto, el método de pago y la observación. Si se equivocó en alumno, curso o período (mes/año), elimine este pago y cree uno nuevo.</p>
                         {{ form_start(form, {'attr': {'class': 'row g-3 pagos-edit-form'}}) }}
                             <div class="col-md-6">
                                 <label for="{{ form.alumno.vars.id }}" class="form-label fw-semibold">Alumno</label>

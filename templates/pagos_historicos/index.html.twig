@@ -29,7 +29,7 @@
                                 {% for curso in datos.cursos %}
                                     <tr>
                                         <td>{{ curso.curso.nombre }}</td>
-                                        <td>{{ curso.fecha_inicio|date('d/m/Y') }} - {{ curso.fecha_fin|date('d/m/Y') }}</td>
+                                        <td>{{ curso.fecha_inicio|date(app_date_format|default('d/m/Y')) }} - {{ curso.fecha_fin|date(app_date_format|default('d/m/Y')) }}</td>
                                         <td>${{ curso.precio|number_format(2, ',', '.') }}</td>
                                         <td>
                                             {% for mes in curso.meses_pagados %}
