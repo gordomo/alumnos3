@@ -144,7 +144,8 @@ class ProfesorController extends AbstractController
         $asistencias = $asistenciaProfesoresRepository->findByInstituto($desdeDt, $hastaDt, $instituto);
         $asistenciasArray = [];
         foreach ($asistencias as $asistencia) {
-            $cursoId = $asistencia->getCurso()->getId();
+            $cursoId = $asistencia->getCurso();
+            $cursoId = \is_int($cursoId) ? $cursoId : $cursoId->getId();
             $asistenciasArray[$cursoId][$asistencia->getFecha()->format($dateFormat)][$asistencia->getProfesor()->getId()] = [
                 'presente' => $asistencia->getPresente(),
                 'reemplazante' => ($asistencia->getProfesorRemplazante()) ? $profesorRepository->find($asistencia->getProfesorRemplazante())->getApellido() . ', ' . $profesorRepository->find($asistencia->getProfesorRemplazante())->getNombre() : 'sin reemplazo',
