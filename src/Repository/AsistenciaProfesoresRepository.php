@@ -78,11 +78,12 @@ class AsistenciaProfesoresRepository extends ServiceEntityRepository
     public function findByInstituto($from, $to, $instituto)
     {
         return $this->createQueryBuilder('a')
+            ->join('a.profesor', 'p')
             ->andWhere('a.fecha >= :from')
             ->setParameter('from', $from)
             ->andWhere('a.fecha <= :to')
             ->setParameter('to', $to)
-            ->andWhere('a.profesor.instituto = :instituto')
+            ->andWhere('p.instituto = :instituto')
             ->setParameter('instituto', $instituto)
             ->orderBy('a.id', 'ASC')
             ->getQuery()
