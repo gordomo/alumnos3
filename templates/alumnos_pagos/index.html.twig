@@ -743,7 +743,7 @@
 </div>
 
 <div class="pagos-floating-actions">
-    <a href="{{ path('app_alumnos_pagos_new', alumnoId ? {'alumnoId': alumnoId} : {}) }}" class="pagos-floating-btn pagos-floating-btn--new">
+    <a href="{{ path('app_alumnos_pagos_new', {'id': alumno.id}) }}" class="pagos-floating-btn pagos-floating-btn--new">
         <i class="bi bi-plus-circle"></i> Nuevo Pago
     </a>
     {% if alumnoId %}

@@ -123,8 +123,8 @@ class ProfesorController extends AbstractController
         $desdeStr = $request->get('desde', $primerDiaMes->format($dateFormat));
         $hastaStr = $request->get('hasta', $ultimoDiaMes->format($dateFormat));
 
-        $desdeDt = $this->institutoTimezoneService->parseDateString($desdeStr);
-        $hastaDt = $this->institutoTimezoneService->parseDateString($hastaStr);
+        $desdeDt = $this->institutoTimezoneService->parseDateString($desdeStr, $dateFormat);
+        $hastaDt = $this->institutoTimezoneService->parseDateString($hastaStr, $dateFormat);
         if (!$desdeDt) {
             $desdeDt = clone $primerDiaMes;
         }
@@ -136,6 +136,13 @@ class ProfesorController extends AbstractController
         if ($hastaDt < $desdeDt) {
             $hastaDt = clone $desdeDt;
             $hastaDt->setTime(23, 59, 59);
+        }
+
+        // Limitar rango a 92 días (~3 meses) para evitar tablas gigantes por parámetros incorrectos
+        $maxDias = 92;
+        $diff = $desdeDt->diff($hastaDt, true)->days;
+        if ($diff > $maxDias) {
+            $hastaDt = (clone $desdeDt)->modify('+' . $maxDias . ' days')->setTime(23, 59, 59);
         }
 
         $cursos = $cursoRepository->findBy(['disabled' => false, 'instituto' => $instituto]);
@@ -192,7 +199,7 @@ class ProfesorController extends AbstractController
         $cursos = $cursoRepository->findBy(['instituto' => $instituto, 'disabled' => false]);
         $profesores = $profesorRepository->findBy(['instituto' => $instituto]);
 
-        $rango = $this->createDateRangeArray($desde, $hasta, $dateFormat);
+        $rango = $this->createDateRangeArray($desde, $hasta, $dateFormat, $dateFormat);
 
         $asisArray = [];
         $reemplazantes = [];
@@ -208,10 +215,13 @@ class ProfesorController extends AbstractController
         }
 
         foreach ($rango as $fechaStr) {
-            $date = $this->parseDateString($fechaStr);
+            $date = $this->institutoTimezoneService->parseDateString($fechaStr, $dateFormat);
             if (!$date) {
                 continue;
             }
+            $dateOnly = new \DateTime($date->format('Y-m-d'));
+            $dateOnly->setTime(0, 0, 0);
+
             $day_of_week = Helpers\Fechas::getDiaDeLaSemana((int) $date->format('w'));
 
             $cursosDelDia = $cursoRepository->findByDiaEinstituto($day_of_week, $instituto);
@@ -222,7 +232,7 @@ class ProfesorController extends AbstractController
 
             foreach ($cursosDelDia as $cursoHoy) {
                 $profeCurso = $cursoHoy->getProfesores();
-                $faltas = $asistenciaProfesoresRepository->findByFechaEinstituto($date, $instituto);
+                $faltas = $asistenciaProfesoresRepository->findByFechaEinstituto($dateOnly, $instituto);
                 /* if($faltas) dd($faltas); */
                 foreach ($profeCurso as $profe) {
                     $profeId = $profe->getId();
@@ -249,11 +259,14 @@ class ProfesorController extends AbstractController
                 $reemplazanteId = $reemplazante ? $reemplazante->getId() : null;
                 $nombreReemplazante = $reemplazante ? ($reemplazante->getApellido() . ', ' . $reemplazante->getNombre()) : 'Sin Reemplazo';
                 $curso = $cursoRepository->find($falta->getCurso());
-                $nombreCurso = (!empty($curso)) ? $curso->getNombre() : 'El curso fue eliminado';
+                if (!$curso) {
+                    continue;
+                }
+                $nombreCurso = $curso->getNombre();
                 $faltaArr[] = ["falta" => true, "remplazante" => $nombreReemplazante, "curso" => $nombreCurso, 'horas' => $curso->getDuracion()];
 
                 if ($reemplazante) {
-                    $reemplazantes[$reemplazanteId][$fechaStr][]['reemplazo'] = ["reemplazoA" =>"Reemplazó a " . $profeFalta->getApellido() . ", " . $profeFalta->getNombre() . " en "  . $cursoRepository->find($falta->getCurso())->getNombre(), 'horas' => $curso->getDuracion()];
+                    $reemplazantes[$reemplazanteId][$fechaStr][]['reemplazo'] = ["reemplazoA" =>"Reemplazó a " . $profeFalta->getApellido() . ", " . $profeFalta->getNombre() . " en " . $curso->getNombre(), 'horas' => $curso->getDuracion()];
                     $reemplazantes[$reemplazanteId]['precioHora'] = $reemplazante->getPrecioHora();
                     
                     // Asegurar que el reemplazante esté en el array de información
@@ -326,7 +339,7 @@ class ProfesorController extends AbstractController
             'desde' => $desde,
             'hasta' => $hasta,
             'date_format' => $dateFormat,
-            'rango' => $this->createDateRangeArray($desde, $hasta, $dateFormat),
+            'rango' => $rango,
             'reemplazantes' => $reemplazantes
         ]);
 
@@ -727,12 +740,14 @@ class ProfesorController extends AbstractController
      */
     public function faltaprofe(Request $request, Profesor $profesor, ProfesorRepository $profesorRepository, $remplazo, AsistenciaProfesoresRepository $asistenciaProfesoresRepository): Response
     {
+        $instituto = $profesor->getInstituto();
+        $dateFormat = $this->institutoTimezoneService->getDateFormatForInstituto($instituto);
 
         $profeRemplazante = $profesorRepository->find($remplazo);
 
         $fechaStr = $request->get('fecha');
         $curso = $request->get('curso');
-        $fechaDt = $this->parseDateString($fechaStr ?? '');
+        $fechaDt = $this->institutoTimezoneService->parseDateString($fechaStr ?? '', $dateFormat);
         if (!$fechaDt) {
             return $this->redirectToRoute('asistencias', [], Response::HTTP_SEE_OTHER);
         }
@@ -800,12 +815,17 @@ class ProfesorController extends AbstractController
 
     /**
      * Crea un array inclusivo de fechas entre $strDateFrom y $strDateTo.
-     * Acepta fechas en d/m/Y o Y-m-d. Devuelve fechas formateadas con $outputFormat.
+     * Si $parseFormat está definido (ej. formato del instituto), se usa para interpretar las fechas.
      */
-    private function createDateRangeArray(string $strDateFrom, string $strDateTo, string $outputFormat = 'd/m/Y'): array
+    private function createDateRangeArray(string $strDateFrom, string $strDateTo, string $outputFormat = 'd/m/Y', ?string $parseFormat = null): array
     {
-        $dateFrom = $this->parseDateString($strDateFrom);
-        $dateTo = $this->parseDateString($strDateTo);
+        if ($parseFormat !== null) {
+            $dateFrom = $this->institutoTimezoneService->parseDateString($strDateFrom, $parseFormat);
+            $dateTo = $this->institutoTimezoneService->parseDateString($strDateTo, $parseFormat);
+        } else {
+            $dateFrom = $this->parseDateString($strDateFrom);
+            $dateTo = $this->parseDateString($strDateTo);
+        }
         if (!$dateFrom || !$dateTo || $dateTo < $dateFrom) {
             return [];
         }

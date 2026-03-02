@@ -42,7 +42,7 @@ class AsistenciaInstitutoController extends AbstractController
 
         // Obtener fecha del formulario (puede venir en formato del instituto o Y-m-d) o usar hoy
         $fechaRequest = $request->get('fecha', $fechaHoyStr);
-        $fechaObj = $this->institutoTimezoneService->parseDateString($fechaRequest);
+        $fechaObj = $this->institutoTimezoneService->parseDateString($fechaRequest, $dateFormat);
         if (!$fechaObj) {
             $fechaObj = $nowInstituto;
         }
@@ -281,7 +281,7 @@ class AsistenciaInstitutoController extends AbstractController
         $cursoId = $request->get('curso');
         $tipoInforme = $request->get('tipo', 'dia'); // dia, semana, mes
         $fechaRequest = $request->get('fecha', $fechaHoyStr);
-        $fechaObj = $this->institutoTimezoneService->parseDateString($fechaRequest);
+        $fechaObj = $this->institutoTimezoneService->parseDateString($fechaRequest, $dateFormat);
         if (!$fechaObj) {
             $fechaObj = $this->institutoTimezoneService->getNowForInstituto($instituto);
         }
@@ -431,15 +431,14 @@ class AsistenciaInstitutoController extends AbstractController
     ): Response
     {
         $instituto = $this->getUser()->getInstituto();
-        $fechaHoyStr = $this->institutoTimezoneService->getNowForInstituto($instituto)->format(
-            $this->institutoTimezoneService->getDateFormatForInstituto($instituto)
-        );
+        $dateFormat = $this->institutoTimezoneService->getDateFormatForInstituto($instituto);
+        $fechaHoyStr = $this->institutoTimezoneService->getNowForInstituto($instituto)->format($dateFormat);
 
         // Obtener los mismos parámetros que en el informe (fecha puede venir en formato del instituto)
         $cursoId = $request->get('curso');
         $tipoInforme = $request->get('tipo', 'dia');
         $fechaRequest = $request->get('fecha', $fechaHoyStr);
-        $fechaObj = $this->institutoTimezoneService->parseDateString($fechaRequest);
+        $fechaObj = $this->institutoTimezoneService->parseDateString($fechaRequest, $dateFormat);
         if (!$fechaObj) {
             $fechaObj = $this->institutoTimezoneService->getNowForInstituto($instituto);
         }

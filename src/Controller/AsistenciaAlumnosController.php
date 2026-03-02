@@ -50,7 +50,7 @@ class AsistenciaAlumnosController extends AbstractController
 
         // Obtener fecha del formulario (puede venir en formato del instituto o Y-m-d) o usar hoy
         $fechaRequest = $request->get('fecha', $fechaHoyStr);
-        $fechaObj = $this->institutoTimezoneService->parseDateString($fechaRequest);
+        $fechaObj = $this->institutoTimezoneService->parseDateString($fechaRequest, $dateFormat);
         if (!$fechaObj) {
             $fechaObj = $nowInstituto;
         }

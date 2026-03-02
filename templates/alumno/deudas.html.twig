@@ -160,9 +160,7 @@
                     {% endif %}
                 </div>
                 <div class="card-footer">
-                    <a href="{{ path('app_alumno_show', {'id': alumno.id}) }}" class="btn btn-secondary">
-                        <i class="bi bi-arrow-left"></i> Volver al alumno
-                    </a>
+                    {{ include('components/back_button.html.twig', {'default_path': path('app_alumno_show', {'id': alumno.id})}) }}
                 </div>
             </div>
         </div>

@@ -67,27 +67,25 @@ class InstitutoTimezoneService
     }
 
     /**
-     * Parsea una fecha en formato d/m/Y o Y-m-d.
-     * Usar para fechas enviadas por el usuario (formularios, query string).
+     * Parsea una fecha enviada por el usuario (query string, formularios).
+     * Si se pasa $preferredFormat (ej. del instituto: d/m/Y, m/d/Y), se intenta ese formato primero.
+     * Así se evita interpretar 04/05 como 4-may (d/m) cuando el usuario envió 5-abr (m/d).
      */
-    public function parseDateString(string $str): ?\DateTime
+    public function parseDateString(string $str, ?string $preferredFormat = null): ?\DateTime
     {
         if ($str === '') {
             return null;
         }
-        $d = \DateTime::createFromFormat('d/m/Y', $str);
-        if ($d !== false) {
-            return $d;
+        $formats = ['d/m/Y', 'm/d/Y', 'Y-m-d', 'd-m-Y'];
+        if ($preferredFormat !== null && $preferredFormat !== '') {
+            $formats = array_unique(array_merge([$preferredFormat], $formats));
         }
-        $d = \DateTime::createFromFormat('Y-m-d', $str);
-        if ($d !== false) {
-            return $d;
+        foreach ($formats as $format) {
+            $d = \DateTime::createFromFormat($format, $str);
+            if ($d !== false) {
+                return $d;
+            }
         }
-        $d = \DateTime::createFromFormat('m/d/Y', $str);
-        if ($d !== false) {
-            return $d;
-        }
-        $d = \DateTime::createFromFormat('d-m-Y', $str);
-        return $d !== false ? $d : null;
+        return null;
     }
 }
