@@ -46,6 +46,8 @@ class AsistenciaInstitutoController extends AbstractController
         if (!$fechaObj) {
             $fechaObj = $nowInstituto;
         }
+        $fechaSoloDia = new \DateTime($fechaObj->format('Y-m-d'));
+        $fechaSoloDia->setTime(0, 0, 0);
         $fecha = $fechaObj->format($dateFormat);
         $fechaYmd = $fechaObj->format('Y-m-d');
         $cursoId = $request->get('curso');
@@ -94,7 +96,7 @@ class AsistenciaInstitutoController extends AbstractController
                     'alumnos_procesados' => $alumnosProcesados
                 ]);
                 
-                $fechaAsistencia = $fechaObj;
+                $fechaAsistencia = $fechaSoloDia;
 
                 // Obtener todos los alumnos del curso
                 $alumnos = $curso->getAlumnos();
@@ -211,14 +213,13 @@ class AsistenciaInstitutoController extends AbstractController
             // Obtener todos los alumnos del curso
             $alumnos = $curso->getAlumnos();
             
-            // Crear un array con todos los alumnos y su estado de asistencia
+            // Crear un array con todos los alumnos y su estado de asistencia (fecha normalizada para la consulta)
             $asistenciasPorAlumno = [];
-            $fechaBusqueda = $fechaObj;
             foreach ($alumnos as $alumno) {
                 $asistencia = $asistenciaRepository->findOneBy([
                     'alumno' => $alumno,
                     'curso' => $curso,
-                    'fecha' => $fechaBusqueda
+                    'fecha' => $fechaSoloDia
                 ]);
                 
                 $presente = $asistencia ? $asistencia->getPresente() : null;
@@ -304,32 +305,28 @@ class AsistenciaInstitutoController extends AbstractController
                 throw $this->createAccessDeniedException('No tiene acceso a este curso.');
             }
             
-            // Calcular fechas según tipo de informe
-            
+            // Calcular fechas según tipo de informe (normalizadas a 00:00:00 para consultas)
             switch ($tipoInforme) {
                 case 'semana':
-                    // Obtener el primer día de la semana (lunes)
                     $diaSemana = $fechaObj->format('N');
                     $diasAtras = $diaSemana - 1;
-                    $fechaInicio = clone $fechaObj;
-                    $fechaInicio->modify("-$diasAtras days");
-                    
-                    // Obtener el último día de la semana (domingo)
+                    $fechaInicio = new \DateTime($fechaObj->format('Y-m-d'));
+                    $fechaInicio->modify("-$diasAtras days")->setTime(0, 0, 0);
                     $fechaFin = clone $fechaInicio;
-                    $fechaFin->modify('+6 days');
+                    $fechaFin->modify('+6 days')->setTime(23, 59, 59);
                     break;
                     
                 case 'mes':
-                    // Primer día del mes
                     $fechaInicio = new \DateTime($fechaObj->format('Y-m-01'));
-                    
-                    // Último día del mes
+                    $fechaInicio->setTime(0, 0, 0);
                     $fechaFin = new \DateTime($fechaObj->format('Y-m-t'));
+                    $fechaFin->setTime(23, 59, 59);
                     break;
                     
                 default: // 'dia'
-                    $fechaInicio = clone $fechaObj;
-                    $fechaFin = clone $fechaObj;
+                    $fechaInicio = new \DateTime($fechaObj->format('Y-m-d'));
+                    $fechaInicio->setTime(0, 0, 0);
+                    $fechaFin = clone $fechaInicio;
             }
             
             // Obtener asistencias para el rango de fechas
@@ -344,12 +341,13 @@ class AsistenciaInstitutoController extends AbstractController
             
             // Preparar estructura para mostrar el informe según el tipo
             if ($tipoInforme === 'dia') {
-                // Para informe diario, similar a la vista normal
+                $fechaConsulta = new \DateTime($fechaObj->format('Y-m-d'));
+                $fechaConsulta->setTime(0, 0, 0);
                 foreach ($alumnos as $alumno) {
                     $asistencia = $asistenciaRepository->findOneBy([
                         'alumno' => $alumno,
                         'curso' => $curso,
-                        'fecha' => $fechaObj
+                        'fecha' => $fechaConsulta
                     ]);
                     
                     $informeAsistencias[] = [
