@@ -533,6 +533,15 @@ class ProfesorController extends AbstractController
         ]);
         $form->handleRequest($request);
 
+        if ($form->isSubmitted() && !$form->isValid()) {
+            foreach ($form->getErrors(true) as $error) {
+                $cause = $error->getCause();
+                $origin = $error->getOrigin();
+                $fieldName = $origin ? $origin->getName() : 'form';
+                $this->addFlash('danger', 'Error en "' . $fieldName . '": ' . $error->getMessage());
+            }
+        }
+
         if ($form->isSubmitted() && $form->isValid()) {
             // Verificar tokens antes de editar
             if (!$this->tokenService->hasEnoughTokens($instituto, 'profesor.edit')) {
@@ -568,51 +577,53 @@ class ProfesorController extends AbstractController
                 }
             }
             
-            // Verificar si se cambiaron los cursos
+            // Verificar si se cambiaron los cursos (solo importa si se quitó o agregó alguno, no el orden)
             $cursosNuevosIds = [];
             foreach ($profesor->getCursos() as $curso) {
                 $cursosNuevosIds[] = $curso->getId();
             }
-            
-            // Verificar si hay cambios en los cursos
-            $cursosCambiados = count(array_diff($cursosOriginalesIds, $cursosNuevosIds)) > 0 || 
-                              count(array_diff($cursosNuevosIds, $cursosOriginalesIds)) > 0;
-            
-            // Verificar si hay cursos que ya comenzaron y tienen asistencias
+            $cursosCambiados = count(array_diff($cursosOriginalesIds, $cursosNuevosIds)) > 0
+                || count(array_diff($cursosNuevosIds, $cursosOriginalesIds)) > 0;
+
+            // Advertencia solo si: (1) se quita al profesor de algún curso, (2) ese curso ya empezó
+            // según la fecha del instituto, y (3) ese curso tiene asistencias de este profesor.
             $cursosComenzados = false;
             $asistenciasExistentes = false;
-            
+            $hoyInstituto = $this->institutoTimezoneService->getNowForInstituto($instituto);
+            $hoyStr = $hoyInstituto->format('Y-m-d');
+
             if ($cursosCambiados) {
-                // Verificar cursos eliminados que ya han comenzado
                 $cursosEliminados = array_diff($cursosOriginalesIds, $cursosNuevosIds);
-                if (count($cursosEliminados) > 0) {
-                    foreach ($cursosEliminados as $cursoId) {
-                        $curso = $cursoRepository->find($cursoId);
-                        if ($curso && $curso->getFechaInicio() <= new \DateTime()) {
-                            $cursosComenzados = true;
-                            
-                            // Verificar si hay asistencias registradas para este profesor en este curso
-                            $asistenciaProfesoresRepository = $entityManager->getRepository('App\Entity\AsistenciaProfesores');
-                            $asistencias = $asistenciaProfesoresRepository->findBy([
-                                'curso' => $curso,
-                                'profesor' => $profesor
-                            ]);
-                            
-                            if (count($asistencias) > 0) {
-                                $asistenciasExistentes = true;
-                                break;
-                            }
-                        }
+                foreach ($cursosEliminados as $cursoId) {
+                    $curso = $cursoRepository->find($cursoId);
+                    if (!$curso) {
+                        continue;
+                    }
+                    $inicioCurso = $curso->getFechaInicio();
+                    $inicioCursoStr = $inicioCurso instanceof \DateTimeInterface ? $inicioCurso->format('Y-m-d') : null;
+                    if ($inicioCursoStr === null) {
+                        continue;
+                    }
+                    // "Ya comenzó" = fecha inicio del curso <= hoy (en zona horaria del instituto)
+                    if ($inicioCursoStr > $hoyStr) {
+                        continue;
+                    }
+                    $cursosComenzados = true;
+                    $asistenciaProfesoresRepository = $entityManager->getRepository('App\Entity\AsistenciaProfesores');
+                    $asistencias = $asistenciaProfesoresRepository->findBy([
+                        'curso' => $curso->getId(),
+                        'profesor' => $profesor
+                    ]);
+                    if (count($asistencias) > 0) {
+                        $asistenciasExistentes = true;
+                        break;
                     }
                 }
             }
-            
+
             if ($cursosCambiados && $cursosComenzados && $asistenciasExistentes) {
-                // Si hay asistencias y no se confirmó la acción, mostrar advertencia
                 if (!$request->request->get('confirmar_cambio_cursos')) {
-                    $this->addFlash('warning', 'Algunos cursos ya han comenzado y tienen registros de asistencia para este profesor. 
-                    Si cambia los cursos asignados, se modificarán los registros de asistencia.
-                    Si desea continuar, confirme la acción.');
+                    $this->addFlash('warning', 'Está quitando a este profesor de al menos un curso que ya comenzó y tiene asistencias cargadas. Los registros de asistencia se conservan, pero el profesor dejará de figurar asignado a ese curso. Si desea continuar, marque la confirmación.');
                     
                     return $this->renderForm('profesor/edit.html.twig', [
                         'profesor' => $profesor,

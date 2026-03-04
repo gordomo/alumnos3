@@ -26,32 +26,30 @@
                                 <td>${{ curso.precio | number_format(2, ',', '.') }}</td>
                             </tr>
                             <tr>
-                                <th>Días</th>
+                                <th>Horarios por día</th>
                                 <td>
-                                    {% for dia in curso.dias %}
-                                        {{ dia }}{% if not loop.last %}, {% endif %}
-                                    {% endfor %}
-                                </td>
-                            </tr>
-                            <tr>
-                                <th>Horario</th>
-                                <td>
-                                    {% if curso.horarioInicio|date('H:i') == curso.horarioFin|date('H:i') %}
-                                        <span class="text-danger">No tiene horario</span>
+                                    {% if curso.horarios|length > 0 %}
+                                        <ul class="mb-0 list-unstyled">
+                                            {% for h in curso.horarios %}
+                                                <li>{{ h.dia }}: {{ h.horarioInicio|date('H:i') }} - {{ h.horarioFin|date('H:i') }} hs</li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% elseif curso.horarioInicio and curso.horarioFin and curso.horarioInicio|date('H:i') != curso.horarioFin|date('H:i') %}
+                                        {{ curso.dias|join(', ') }}: {{ curso.horarioInicio|date('H:i') }} - {{ curso.horarioFin|date('H:i') }} hs
                                     {% else %}
-                                        {{ curso.horarioInicio|date('H:i') }}hs - {{ curso.horarioFin|date('H:i') }}hs
+                                        <span class="text-danger">No tiene horario</span>
                                     {% endif %}
                                 </td>
                             </tr>
                             <tr>
-                                <th>Duración</th>
+                                <th>Duración total</th>
                                 <td>
-                                    {% if curso.horarioInicio|date('H:i') == curso.horarioFin|date('H:i') %}
-                                        <span class="text-danger">No tiene horario</span>
-                                    {% else %}
+                                    {% if curso.duracion and curso.duracion > 0 %}
                                         {% set horas = (curso.duracion)|round(0, 'floor') %}
                                         {% set minutos = ((curso.duracion - horas) * 60)|round(0, 'floor') %}
-                                        {{ horas }}:{{ '%02d'|format(minutos) }}hs
+                                        {{ horas }}:{{ '%02d'|format(minutos) }} hs
+                                    {% else %}
+                                        <span class="text-muted">-</span>
                                     {% endif %}
                                 </td>
                             </tr>

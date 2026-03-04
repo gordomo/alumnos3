@@ -11,8 +11,9 @@ framework:
         cookie_secure: auto
         cookie_samesite: lax
         storage_factory_id: session.storage.factory.native
-        cookie_lifetime: 2700  # 45 minutos en segundos
-        gc_maxlifetime: 2700    # 45 minutos en segundos - tiempo máximo de vida de la sesión
+        # cookie_lifetime: 0 = cookie de sesión (expira al cerrar el navegador); la sesión en servidor expira por inactividad (gc_maxlifetime)
+        cookie_lifetime: 0
+        gc_maxlifetime: 2700     # 45 min de inactividad sin requests → se elimina la sesión en servidor
 
     #esi: true
     #fragments: true

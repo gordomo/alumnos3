@@ -81,7 +81,15 @@ class Curso
      */
     private $alumnosPagos;
 
-     /**
+    /**
+     * Horarios por día (ej: Martes 18-19, Jueves 18:30-19:30). Si tiene elementos, se usan estos;
+     * si no, se usan los campos legacy dias, horarioInicio, horarioFin.
+     * @ORM\OneToMany(targetEntity=CursoHorario::class, mappedBy="curso", cascade={"persist", "remove"}, orphanRemoval=true)
+     * @ORM\OrderBy({"dia"="ASC", "horarioInicio"="ASC"})
+     */
+    private $horarios;
+
+    /**
      * @ORM\Column(type="text")
      */
     private $precio;
@@ -91,6 +99,7 @@ class Curso
         $this->profesores = new ArrayCollection();
         $this->alumnos = new ArrayCollection();
         $this->alumnosPagos = new ArrayCollection();
+        $this->horarios = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -135,8 +144,21 @@ class Curso
         return $this;
     }
 
+    /**
+     * Días en los que se dicta el curso. Si tiene horarios definidos, devuelve los días de esos horarios; si no, el array legacy.
+     */
     public function getDias(): ?array
     {
+        if ($this->horarios->count() > 0) {
+            $dias = [];
+            foreach ($this->horarios as $h) {
+                if ($h->getDia() !== null && !in_array($h->getDia(), $dias, true)) {
+                    $dias[] = $h->getDia();
+                }
+            }
+            sort($dias);
+            return $dias;
+        }
         return $this->dias;
     }
 
@@ -148,11 +170,55 @@ class Curso
     }
 
     /**
-     * @return mixed
+     * Duración en horas (decimal). Si tiene horarios, devuelve la duración del primero; si no, el valor legacy.
      */
     public function getDuracion()
     {
+        if ($this->horarios->count() > 0) {
+            $first = $this->horarios->first();
+            return $first instanceof CursoHorario ? $first->getDuracion() : $this->duracion;
+        }
         return $this->duracion;
+    }
+
+    /**
+     * Duración del curso para un día dado (por si tiene distintos horarios por día).
+     */
+    public function getDuracionParaDia(string $dia): ?float
+    {
+        foreach ($this->horarios as $h) {
+            if ($h->getDia() === $dia) {
+                return $h->getDuracion();
+            }
+        }
+        return $this->getDuracion();
+    }
+
+    /**
+     * @return Collection<int, CursoHorario>
+     */
+    public function getHorarios(): Collection
+    {
+        return $this->horarios;
+    }
+
+    public function addHorario(CursoHorario $horario): self
+    {
+        if (!$this->horarios->contains($horario)) {
+            $this->horarios[] = $horario;
+            $horario->setCurso($this);
+        }
+        return $this;
+    }
+
+    public function removeHorario(CursoHorario $horario): self
+    {
+        if ($this->horarios->removeElement($horario)) {
+            if ($horario->getCurso() === $this) {
+                $horario->setCurso(null);
+            }
+        }
+        return $this;
     }
 
     /**
@@ -250,10 +316,14 @@ class Curso
     }
 
     /**
-     * @return mixed
+     * Horario de inicio. Si tiene horarios definidos, devuelve el del primero; si no, el valor legacy.
      */
     public function getHorarioInicio()
     {
+        if ($this->horarios->count() > 0) {
+            $first = $this->horarios->first();
+            return $first instanceof CursoHorario ? $first->getHorarioInicio() : $this->horarioInicio;
+        }
         return $this->horarioInicio;
     }
 
@@ -267,10 +337,14 @@ class Curso
     }
 
     /**
-     * @return mixed
+     * Horario de fin. Si tiene horarios definidos, devuelve el del primero; si no, el valor legacy.
      */
     public function getHorarioFin()
     {
+        if ($this->horarios->count() > 0) {
+            $first = $this->horarios->first();
+            return $first instanceof CursoHorario ? $first->getHorarioFin() : $this->horarioFin;
+        }
         return $this->horarioFin;
     }
 
@@ -281,6 +355,35 @@ class Curso
     {
         $this->horarioFin = $horarioFin;
         $this->calcularDuracion();
+    }
+
+    /**
+     * Sincroniza los campos legacy (dias, horarioInicio, horarioFin, duracion) desde la colección horarios.
+     * Útil para compatibilidad con código que sigue usando getDias()/getHorarioInicio() y para persistir en columnas existentes.
+     */
+    public function syncLegacyFromHorarios(): void
+    {
+        if ($this->horarios->count() === 0) {
+            return;
+        }
+        $dias = [];
+        $primero = null;
+        $duracionTotal = 0.0;
+        foreach ($this->horarios as $h) {
+            if ($h->getDia() !== null && $h->getDia() !== '') {
+                $dias[] = $h->getDia();
+            }
+            if ($primero === null) {
+                $primero = $h;
+            }
+            $duracionTotal += $h->getDuracion() ?? 0;
+        }
+        $this->dias = array_unique($dias);
+        if ($primero) {
+            $this->horarioInicio = $primero->getHorarioInicio();
+            $this->horarioFin = $primero->getHorarioFin();
+        }
+        $this->duracion = $duracionTotal ?: ($primero ? $primero->getDuracion() : 0);
     }
 
     /**

@@ -332,7 +332,6 @@
                                     <i class="bi bi-arrow-{{ sort == 'precio' ? (order == 'asc' ? 'up' : 'down') : 'up-down' }}"></i>
                                 </a>
                             </th>
-                            <th class="w-auto">Días</th>
                             <th class="w-auto">Horario</th>
                             <th class="w-auto">Duración</th>
                             <th class="w-auto">Fecha Inicio</th>
@@ -355,25 +354,24 @@
                             </td>
                             <td><strong class="text-success">${{ curso.precio | number_format(2, ',', '.') }}</strong></td>
                             <td>
-                                {% for key in curso.dias %}
-                                    <span class="dia-badge">{{ key }}</span>
-                                {% endfor %}
-                            </td>
-                            <td>
-                                {% if curso.horarioInicio|date('H:i') == curso.horarioFin|date('H:i') %}
-                                    <span class="text-danger small"><i class="bi bi-exclamation-triangle"></i> Sin horario</span>
-                                {% else %}
+                                {% if curso.horarios|length > 0 %}
+                                    {% for h in curso.horarios %}
+                                        <span class="time-badge d-block mb-1">{{ h.dia }} {{ h.horarioInicio|date('H:i') }}-{{ h.horarioFin|date('H:i') }}</span>
+                                    {% endfor %}
+                                {% elseif curso.horarioInicio and curso.horarioFin and curso.horarioInicio|date('H:i') != curso.horarioFin|date('H:i') %}
                                     <span class="time-badge">{{ curso.horarioInicio|date('H:i') }}hs - {{ curso.horarioFin|date('H:i') }}hs</span>
-                                {% endif %} 
+                                {% else %}
+                                    <span class="text-danger small"><i class="bi bi-exclamation-triangle"></i> Sin horario</span>
+                                {% endif %}
                             </td>
                             <td>
-                                {% if curso.horarioInicio|date('H:i') == curso.horarioFin|date('H:i') %}
-                                    <span class="text-danger small">-</span>
-                                {% else %}
+                                {% if curso.duracion and curso.duracion > 0 %}
                                     {% set horas = (curso.duracion)|round(0, 'floor') %}
                                     {% set minutos = ((curso.duracion - horas) * 60)|round(0, 'floor') %}
                                     <span class="time-badge">{{ horas }}:{{ '%02d'|format(minutos) }}hs</span>
-                                {% endif %} 
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
                             </td>
                             <td>{{ curso.fechaInicio|date(app_date_format|default('d/m/Y')) }}</td>
                             <td>{{ curso.fechaFin|date(app_date_format|default('d/m/Y')) }}</td>
@@ -431,7 +429,6 @@
                             <th class="w-auto">Nombre</th>
                             <th class="w-auto">Profesor</th>
                             <th class="w-auto">Precio</th>
-                            <th class="w-auto">Días</th>
                             <th class="w-auto">Horario</th>
                             <th class="w-auto">Duración</th>
                             <th class="w-auto">Fecha Inicio</th>
@@ -454,17 +451,22 @@
                             </td>
                             <td><strong class="text-success">${{ curso.precio | number_format(2, ',', '.') }}</strong></td>
                             <td>
-                                {% for key in curso.dias %}
-                                    <span class="dia-badge">{{ key }}</span>
-                                {% endfor %}
+                                {% if curso.horarios|length > 0 %}
+                                    {% for h in curso.horarios %}
+                                        <span class="time-badge d-block mb-1">{{ h.dia }} {{ h.horarioInicio|date('H:i') }}-{{ h.horarioFin|date('H:i') }}</span>
+                                    {% endfor %}
+                                {% else %}
+                                    <span class="time-badge">{{ curso.horarioInicio|date('H:i') }}hs - {{ curso.horarioFin|date('H:i') }}hs</span>
+                                {% endif %}
                             </td>
                             <td>
-                                <span class="time-badge">{{ curso.horarioInicio|date('H:i') }}hs - {{ curso.horarioFin|date('H:i') }}hs</span>
-                            </td>
-                            <td>
-                                {% set horas = (curso.duracion)|round(0, 'floor') %}
-                                {% set minutos = ((curso.duracion - horas) * 60)|round(0, 'floor') %}
-                                <span class="time-badge">{{ horas }}:{{ '%02d'|format(minutos) }}hs</span>
+                                {% if curso.duracion and curso.duracion > 0 %}
+                                    {% set horas = (curso.duracion)|round(0, 'floor') %}
+                                    {% set minutos = ((curso.duracion - horas) * 60)|round(0, 'floor') %}
+                                    <span class="time-badge">{{ horas }}:{{ '%02d'|format(minutos) }}hs</span>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
                             </td>
                             <td>{{ curso.fechaInicio|date(app_date_format|default('d/m/Y')) }}</td>
                             <td>{{ curso.fechaFin|date(app_date_format|default('d/m/Y')) }}</td>

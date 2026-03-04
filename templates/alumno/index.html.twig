@@ -384,10 +384,11 @@
                         <a href="{{ path('app_alumno_edit', {'id': alumno.id}) }}" class="btn btn-sm btn-outline-secondary btn-action-icon" title="Editar" data-toggle="tooltip" data-placement="top">
                             <i class="bi bi-pencil"></i>
                         </a>
-                        <button type="button" class="btn btn-sm btn-outline-info btn-action-icon" title="Gestionar Cursos" data-toggle="tooltip" data-placement="top" data-bs-toggle="modal" data-bs-target="#cursosModal{{ alumno.id }}">
-                            <i class="bi bi-book"></i>
-                        </button>
                         {% if (alumno.activo) %}
+                            <button type="button" class="btn btn-sm btn-outline-info btn-action-icon" title="Gestionar Cursos" data-toggle="tooltip" data-placement="top" data-bs-toggle="modal" data-bs-target="#cursosModal{{ alumno.id }}">
+                                <i class="bi bi-book"></i>
+                            </button>
+                        
                             <a href="{{ path('app_alumnos_pagos_new', {'id': alumno.id}) }}" class="btn btn-sm btn-success btn-action-icon" title="Registrar Pago" data-toggle="tooltip" data-placement="top">
                                 <i class="bi bi-cash"></i>
                             </a>

@@ -24,8 +24,45 @@ class HorarioConflictService
     }
 
     /**
-     * Detecta conflictos de horarios entre un curso y los cursos existentes de un profesor
-     * 
+     * Obtiene los slots (dia, inicio, fin) de un curso, ya sea desde la colección horarios o desde campos legacy.
+     *
+     * @return list<array{dia: string, inicio: \DateTimeInterface, fin: \DateTimeInterface}>
+     */
+    private function getSlots(Curso $curso): array
+    {
+        $slots = [];
+        if ($curso->getHorarios()->count() > 0) {
+            foreach ($curso->getHorarios() as $h) {
+                if (!$h->getDia() || !$h->getHorarioInicio() || !$h->getHorarioFin()) {
+                    continue;
+                }
+                $inicio = $h->getHorarioInicio() instanceof \DateTimeInterface ? $h->getHorarioInicio() : new \DateTime($h->getHorarioInicio()->format('H:i'));
+                $fin = $h->getHorarioFin() instanceof \DateTimeInterface ? $h->getHorarioFin() : new \DateTime($h->getHorarioFin()->format('H:i'));
+                $slots[] = ['dia' => $h->getDia(), 'inicio' => $inicio, 'fin' => $fin];
+            }
+            return $slots;
+        }
+        $dias = $curso->getDias();
+        if (!is_array($dias) || empty($dias) || !$curso->getHorarioInicio() || !$curso->getHorarioFin()) {
+            return [];
+        }
+        $inicio = $curso->getHorarioInicio() instanceof \DateTimeInterface ? $curso->getHorarioInicio() : new \DateTime($curso->getHorarioInicio()->format('H:i'));
+        $fin = $curso->getHorarioFin() instanceof \DateTimeInterface ? $curso->getHorarioFin() : new \DateTime($curso->getHorarioFin()->format('H:i'));
+        foreach ($dias as $dia) {
+            $slots[] = ['dia' => $dia, 'inicio' => $inicio, 'fin' => $fin];
+        }
+        return $slots;
+    }
+
+    private function minutosDesdeMedianoche(\DateTimeInterface $t): int
+    {
+        return (int) $t->format('H') * 60 + (int) $t->format('i');
+    }
+
+    /**
+     * Detecta conflictos de horarios entre un curso y los cursos existentes de un profesor.
+     * Soporta cursos con múltiples horarios por día (colección horarios).
+     *
      * @param Curso $curso El curso a verificar
      * @param Profesor $profesor El profesor a verificar
      * @param int|null $excludeCursoId ID del curso a excluir de la verificación (útil en edición)
@@ -34,94 +71,44 @@ class HorarioConflictService
     public function detectarConflictos(Curso $curso, Profesor $profesor, ?int $excludeCursoId = null): array
     {
         $conflictos = [];
-        
-        // Validar que el curso tenga los datos necesarios
-        if (!$curso->getHorarioInicio() || !$curso->getHorarioFin() || empty($curso->getDias())) {
-            return $conflictos; // Sin conflictos si el curso no tiene horario completo
+        $slotsNuevo = $this->getSlots($curso);
+        if (empty($slotsNuevo)) {
+            return $conflictos;
         }
-        
-        $diasCurso = $curso->getDias();
-        $horarioInicioCurso = $curso->getHorarioInicio();
-        $horarioFinCurso = $curso->getHorarioFin();
-        
-        // Convertir horarios a objetos DateTime para comparación
-        if (!$horarioInicioCurso instanceof \DateTimeInterface) {
-            $horarioInicioCurso = new \DateTime($horarioInicioCurso);
-        }
-        if (!$horarioFinCurso instanceof \DateTimeInterface) {
-            $horarioFinCurso = new \DateTime($horarioFinCurso);
-        }
-        
-        // Obtener todos los cursos del profesor desde la BD (para asegurar que tenemos todos los cursos existentes)
-        // Esto es importante porque cuando se crea un curso nuevo, la relación bidireccional puede no estar completa
+
         $cursosProfesor = $this->cursoRepository->findByProfesor($profesor);
-        
-        // Si el curso actual tiene ID y está en la lista, también debemos excluirlo
-        // porque findByProfesor puede incluirlo si ya está guardado en BD
+
         foreach ($cursosProfesor as $cursoExistente) {
-            // Excluir el curso actual si se está editando
             if ($excludeCursoId !== null && $cursoExistente->getId() === $excludeCursoId) {
                 continue;
             }
-            
-            // También excluir si es el mismo objeto (aunque no debería pasar con findByProfesor)
             if ($cursoExistente->getId() === $curso->getId()) {
                 continue;
             }
-            
-            // Validar que el curso existente tenga los datos necesarios
-            if (!$cursoExistente->getHorarioInicio() || !$cursoExistente->getHorarioFin() || empty($cursoExistente->getDias())) {
-                continue;
-            }
-            
-            // Verificar si hay días en común
-            $diasCursoExistente = $cursoExistente->getDias();
-            
-            // Asegurarse de que ambos son arrays
-            if (!is_array($diasCurso)) {
-                $diasCurso = [];
-            }
-            if (!is_array($diasCursoExistente)) {
-                $diasCursoExistente = [];
-            }
-            
-            $diasComunes = array_intersect($diasCurso, $diasCursoExistente);
-            
-            if (empty($diasComunes)) {
-                continue; // No hay días en común, no hay conflicto
-            }
-            
-            // Convertir horarios del curso existente a DateTime
-            $horarioInicioExistente = $cursoExistente->getHorarioInicio();
-            $horarioFinExistente = $cursoExistente->getHorarioFin();
-            
-            if (!$horarioInicioExistente instanceof \DateTimeInterface) {
-                $horarioInicioExistente = new \DateTime($horarioInicioExistente);
-            }
-            if (!$horarioFinExistente instanceof \DateTimeInterface) {
-                $horarioFinExistente = new \DateTime($horarioFinExistente);
-            }
-            
-            // Verificar si los horarios se solapan
-            // Dos horarios se solapan si: inicio1 < fin2 && fin1 > inicio2
-            // Convertir a minutos desde medianoche para comparación precisa
-            $inicio1Minutos = (int)$horarioInicioCurso->format('H') * 60 + (int)$horarioInicioCurso->format('i');
-            $fin1Minutos = (int)$horarioFinCurso->format('H') * 60 + (int)$horarioFinCurso->format('i');
-            $inicio2Minutos = (int)$horarioInicioExistente->format('H') * 60 + (int)$horarioInicioExistente->format('i');
-            $fin2Minutos = (int)$horarioFinExistente->format('H') * 60 + (int)$horarioFinExistente->format('i');
-            
-            // Comparar minutos: dos horarios se solapan si inicio1 < fin2 && fin1 > inicio2
-            if ($inicio1Minutos < $fin2Minutos && $fin1Minutos > $inicio2Minutos) {
-                // Hay conflicto de horarios
-                $conflictos[] = [
-                    'curso' => $cursoExistente,
-                    'dias' => $diasComunes,
-                    'horarioExistente' => $horarioInicioExistente->format('H:i') . ' - ' . $horarioFinExistente->format('H:i'),
-                    'horarioNuevo' => $horarioInicioCurso->format('H:i') . ' - ' . $horarioFinCurso->format('H:i'),
-                ];
+
+            $slotsExistente = $this->getSlots($cursoExistente);
+            foreach ($slotsNuevo as $slotNuevo) {
+                foreach ($slotsExistente as $slotExistente) {
+                    if ($slotNuevo['dia'] !== $slotExistente['dia']) {
+                        continue;
+                    }
+                    $inicio1 = $this->minutosDesdeMedianoche($slotNuevo['inicio']);
+                    $fin1 = $this->minutosDesdeMedianoche($slotNuevo['fin']);
+                    $inicio2 = $this->minutosDesdeMedianoche($slotExistente['inicio']);
+                    $fin2 = $this->minutosDesdeMedianoche($slotExistente['fin']);
+                    if ($inicio1 < $fin2 && $fin1 > $inicio2) {
+                        $conflictos[] = [
+                            'curso' => $cursoExistente,
+                            'dias' => [$slotNuevo['dia']],
+                            'horarioExistente' => $slotExistente['inicio']->format('H:i') . ' - ' . $slotExistente['fin']->format('H:i'),
+                            'horarioNuevo' => $slotNuevo['inicio']->format('H:i') . ' - ' . $slotNuevo['fin']->format('H:i'),
+                        ];
+                        break 2; // un conflicto por curso existente es suficiente
+                    }
+                }
             }
         }
-        
+
         return $conflictos;
     }
     

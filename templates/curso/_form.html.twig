@@ -32,52 +32,27 @@
     </div>
 </div>
 
-{# Fechas y Horarios #}
+{# Fechas #}
 <div class="card mb-4 shadow-sm">
     <div class="card-header" style="background-color: #e7f1ff; border-bottom: 2px solid #0d6efd;">
         <h4 class="mb-0 text-dark">
-            <i class="bi bi-calendar-event" style="color: #0d6efd;"></i> Fechas y Horarios
+            <i class="bi bi-calendar-event" style="color: #0d6efd;"></i> Fechas del curso
         </h4>
     </div>
     <div class="card-body">
         <div class="row mb-3">
             <div class="col-md-6">
                 <div class="mb-3">
-                    <label for="{{ form.fechaInicio.vars.id }}" class="form-label fw-semibold text-dark">
-                        Fecha de Inicio <span class="text-danger">*</span>
-                    </label>
+                    <label for="{{ form.fechaInicio.vars.id }}" class="form-label fw-semibold text-dark">Fecha de Inicio <span class="text-danger">*</span></label>
                     {{ form_widget(form.fechaInicio, {'attr': {'class': 'form-control'}}) }}
                     {{ form_errors(form.fechaInicio) }}
                 </div>
             </div>
             <div class="col-md-6">
                 <div class="mb-3">
-                    <label for="{{ form.fechaFin.vars.id }}" class="form-label fw-semibold text-dark">
-                        Fecha de Fin <span class="text-danger">*</span>
-                    </label>
+                    <label for="{{ form.fechaFin.vars.id }}" class="form-label fw-semibold text-dark">Fecha de Fin <span class="text-danger">*</span></label>
                     {{ form_widget(form.fechaFin, {'attr': {'class': 'form-control'}}) }}
                     {{ form_errors(form.fechaFin) }}
-                </div>
-            </div>
-        </div>
-
-        <div class="row mb-3">
-            <div class="col-md-6">
-                <div class="mb-3">
-                    <label for="{{ form.horarioInicio.vars.id }}" class="form-label fw-semibold text-dark">
-                        Horario de Inicio <span class="text-danger">*</span>
-                    </label>
-                    {{ form_widget(form.horarioInicio, {'attr': {'class': 'form-control', 'data-horario-combo': 'inicio'}}) }}
-                    {{ form_errors(form.horarioInicio) }}
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="mb-3">
-                    <label for="{{ form.horarioFin.vars.id }}" class="form-label fw-semibold text-dark">
-                        Horario de Fin <span class="text-danger">*</span>
-                    </label>
-                    {{ form_widget(form.horarioFin, {'attr': {'class': 'form-control', 'data-horario-combo': 'fin'}}) }}
-                    {{ form_errors(form.horarioFin) }}
                 </div>
             </div>
         </div>
@@ -97,91 +72,183 @@ document.addEventListener('DOMContentLoaded', function() {
         if (inputInicio) {
             var startInicio = moment(inputInicio.value, fmt);
             if (!startInicio.isValid()) { startInicio = moment(); }
-            $(inputInicio).daterangepicker({
-                singleDatePicker: true,
-                startDate: startInicio,
-                locale: { format: fmt }
-            }, function(start) {
-                inputInicio.value = start.format(fmt);
-            });
+            $(inputInicio).daterangepicker({ singleDatePicker: true, startDate: startInicio, locale: { format: fmt } }, function(start) { inputInicio.value = start.format(fmt); });
         }
         if (inputFin) {
             var startFin = moment(inputFin.value, fmt);
             if (!startFin.isValid()) { startFin = moment(); }
-            $(inputFin).daterangepicker({
-                singleDatePicker: true,
-                startDate: startFin,
-                locale: { format: fmt }
-            }, function(start) {
-                inputFin.value = start.format(fmt);
-            });
+            $(inputFin).daterangepicker({ singleDatePicker: true, startDate: startFin, locale: { format: fmt } }, function(start) { inputFin.value = start.format(fmt); });
         }
     }
 });
 </script>
+
+{# Horarios por día (ej: Martes 18-19, Jueves 18:30-19:30) #}
+<div class="card mb-4 shadow-sm">
+    <div class="card-header" style="background-color: #e7f1ff; border-bottom: 2px solid #0d6efd;">
+        <h4 class="mb-0 text-dark">
+            <i class="bi bi-clock-history" style="color: #0d6efd;"></i> Horarios por día
+        </h4>
+    </div>
+    <div class="card-body">
+        <p class="text-muted small mb-3">Agregue cada bloque de horario: día de la semana + hora inicio + hora fin. Por ejemplo: Martes 18:00-19:00 y Jueves 18:30-19:30.</p>
+        {{ form_errors(form.horarios) }}
+        {% set proto = form.horarios.vars.prototype %}
+        {% set prototypeRow %}
+            <div class="row g-2 align-items-end mb-2 horario-row">
+                <div class="col-md-3">{{ form_row(proto.dia) }}</div>
+                <div class="col-md-2">{{ form_row(proto.horarioInicio) }}</div>
+                <div class="col-md-2">
+                    {{ form_label(proto.horarioFin) }}
+                    <div class="d-flex align-items-end gap-2 horario-fin-cell">
+                        {{ form_widget(proto.horarioFin) }}
+                        <button style="margin-bottom: 1rem;" type="button" class="btn btn-outline-danger btn-sm remove-horario flex-shrink-0" title="Quitar horario"><i class="bi bi-dash-circle"></i></button>
+                    </div>
+                    {{ form_errors(proto.horarioFin) }}
+                </div>
+            </div>
+        {% endset %}
+        <div id="curso-horarios-list" data-prototype="{{ prototypeRow|e('html_attr') }}" data-index="{{ form.horarios|length }}">
+            {% for horario in form.horarios %}
+                <div class="row g-2 align-items-end mb-2 horario-row">
+                    <div class="col-md-3">{{ form_row(horario.dia) }}</div>
+                    <div class="col-md-2">{{ form_row(horario.horarioInicio) }}</div>
+                    <div class="col-md-2">
+                        {{ form_label(horario.horarioFin) }}
+                        <div class="d-flex align-items-end gap-2 horario-fin-cell">
+                            {{ form_widget(horario.horarioFin) }}
+                            <button style="margin-bottom: 1rem;" type="button" class="btn btn-outline-danger btn-sm remove-horario flex-shrink-0" title="Quitar horario"><i class="bi bi-dash-circle"></i></button>
+                        </div>
+                        {{ form_errors(horario.horarioFin) }}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="add-horario">
+            <i class="bi bi-plus-circle"></i> Agregar otro horario
+        </button>
+    </div>
+</div>
+
 <script>
-(function() {
-    // Mismas franjas que en CursoType (cada 15 min, 00:00 a 23:45)
+document.addEventListener('DOMContentLoaded', function() {
+    var list = document.getElementById('curso-horarios-list');
+    if (!list) return;
+    var prototype = list.getAttribute('data-prototype');
+    var addBtn = document.getElementById('add-horario');
+    var index = parseInt(list.getAttribute('data-index') || '0', 10);
+
+    // Franjas cada 15 min (00:00 a 23:45), igual que en el backend
     var timeSlots = [];
     for (var h = 0; h < 24; h++) {
         for (var m = 0; m < 60; m += 15) {
             timeSlots.push(('0' + h).slice(-2) + ':' + ('0' + m).slice(-2));
         }
     }
-    var selectInicio = document.querySelector('[data-horario-combo="inicio"]');
-    var selectFin = document.querySelector('[data-horario-combo="fin"]');
-    if (!selectInicio || !selectFin) return;
-    function actualizarOpcionesHoraFin() {
-        var inicio = selectInicio.value;
-        if (!inicio) {
-            // Si no hay inicio, mostrar todas las opciones en fin
-            selectFin.innerHTML = timeSlots.map(function(t) { return '<option value="' + t + '">' + t + '</option>'; }).join('');
+
+    var diasOrden = ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado', 'Domingo'];
+
+    function getDiaSelect(row) {
+        var selects = row.querySelectorAll('select.form-select, select.form-control');
+        return selects.length >= 1 ? selects[0] : null;
+    }
+
+    function getInicioFinSelects(row) {
+        var selects = row.querySelectorAll('select.form-select, select.form-control');
+        if (selects.length >= 3) {
+            return { inicio: selects[1], fin: selects[2] };
+        }
+        return null;
+    }
+
+    function getSiguienteDia() {
+        var rows = list.querySelectorAll('.horario-row');
+        var maxIdx = -1;
+        for (var i = 0; i < rows.length; i++) {
+            var diaSelect = getDiaSelect(rows[i]);
+            if (diaSelect && diaSelect.value) {
+                var idx = diasOrden.indexOf(diaSelect.value);
+                if (idx !== -1 && idx > maxIdx) maxIdx = idx;
+            }
+        }
+        return diasOrden[(maxIdx + 1) % 7];
+    }
+
+    function actualizarFinDesdeInicio(row) {
+        var sel = getInicioFinSelects(row);
+        if (!sel) return;
+        var inicioVal = sel.inicio.value;
+        if (!inicioVal) {
+            sel.fin.innerHTML = timeSlots.map(function(t) { return '<option value="' + t + '">' + t + '</option>'; }).join('');
             return;
         }
-        var inicioIdx = timeSlots.indexOf(inicio);
-        var opcionesFin = timeSlots.slice(inicioIdx + 1); // solo después del slot de inicio (siguiente = +15 min)
-        var finActual = selectFin.value;
-        selectFin.innerHTML = opcionesFin.map(function(t) { return '<option value="' + t + '">' + t + '</option>'; }).join('');
+        var idx = timeSlots.indexOf(inicioVal);
+        var opcionesFin = timeSlots.slice(idx + 1);
+        var finActual = sel.fin.value;
+        sel.fin.innerHTML = opcionesFin.map(function(t) { return '<option value="' + t + '">' + t + '</option>'; }).join('');
         if (opcionesFin.indexOf(finActual) !== -1) {
-            selectFin.value = finActual;
+            sel.fin.value = finActual;
         } else {
-            selectFin.value = opcionesFin[0] || '';
+            sel.fin.value = opcionesFin[0] || '';
         }
     }
-    selectInicio.addEventListener('change', actualizarOpcionesHoraFin);
-    actualizarOpcionesHoraFin(); // aplicar al cargar (p. ej. en edición)
-})();
+
+    function bindInicioFinRow(row) {
+        var sel = getInicioFinSelects(row);
+        if (!sel) return;
+        sel.inicio.addEventListener('change', function() { actualizarFinDesdeInicio(row); });
+        actualizarFinDesdeInicio(row);
+    }
+
+    function addHorarioRow() {
+        var siguienteDia = getSiguienteDia();
+        var newRow = document.createElement('div');
+        newRow.className = 'row g-2 align-items-end mb-2 horario-row';
+        newRow.innerHTML = prototype.replace(/__name__/g, index);
+        list.appendChild(newRow);
+        var diaSelect = getDiaSelect(newRow);
+        if (diaSelect) diaSelect.value = siguienteDia;
+        var sel = getInicioFinSelects(newRow);
+        if (sel) {
+            sel.inicio.value = '08:00';
+            sel.fin.value = '09:00';
+            actualizarFinDesdeInicio(newRow);
+            sel.inicio.addEventListener('change', function() { actualizarFinDesdeInicio(newRow); });
+        }
+        list.setAttribute('data-index', index + 1);
+        index++;
+    }
+
+    list.querySelectorAll('.horario-row').forEach(bindInicioFinRow);
+
+    if (addBtn) {
+        addBtn.addEventListener('click', addHorarioRow);
+    }
+
+    list.addEventListener('click', function(e) {
+        if (e.target.closest('.remove-horario')) {
+            var row = e.target.closest('.horario-row');
+            if (list.querySelectorAll('.horario-row').length > 1) {
+                row.remove();
+            }
+        }
+    });
+});
 </script>
 
-{# Días y Profesores #}
+{# Profesores #}
 <div class="card mb-4 shadow-sm">
     <div class="card-header" style="background-color: #d1e7dd; border-bottom: 2px solid #198754;">
         <h4 class="mb-0 text-dark">
-            <i class="bi bi-calendar-week" style="color: #198754;"></i> Días y Profesores
+            <i class="bi bi-person-workspace" style="color: #198754;"></i> Profesores
         </h4>
     </div>
     <div class="card-body">
-        <div class="row mb-3">
-            <div class="col-md-6">
-                <div class="mb-3">
-                    <label for="{{ form.dias.vars.id }}" class="form-label fw-semibold text-dark">
-                        Días
-                    </label>
-                    <small class="text-muted d-block mb-2">Puede seleccionar múltiples días. Use Ctrl+Click (o Cmd+Click en Mac) para seleccionar varios.</small>
-                    {{ form_widget(form.dias, {'attr': {'class': 'form-control chosen-select'}}) }}
-                    {{ form_errors(form.dias) }}
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="mb-3">
-                    <label for="{{ form.profesores.vars.id }}" class="form-label fw-semibold text-dark">
-                        Profesores
-                    </label>
-                    <small class="text-muted d-block mb-2">Puede seleccionar múltiples profesores. Use Ctrl+Click (o Cmd+Click en Mac) para seleccionar varios.</small>
-                    {{ form_widget(form.profesores, {'attr': {'class': 'form-control chosen-select'}}) }}
-                    {{ form_errors(form.profesores) }}
-                </div>
-            </div>
+        <div class="mb-3">
+            <label for="{{ form.profesores.vars.id }}" class="form-label fw-semibold text-dark">Profesores</label>
+            <small class="text-muted d-block mb-2">Puede seleccionar múltiples profesores. Use Ctrl+Click (o Cmd+Click en Mac) para seleccionar varios.</small>
+            {{ form_widget(form.profesores, {'attr': {'class': 'form-control chosen-select'}}) }}
+            {{ form_errors(form.profesores) }}
         </div>
     </div>
 </div>
@@ -213,18 +280,50 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 
 <style>
+    /* Fin + botón en la misma celda: el select crece, el botón queda alineado */
+    .horario-fin-cell {
+        /* align-items-end ya está en el HTML, no necesita override */
+    }
+    
+    .horario-fin-cell .form-control,
+    .horario-fin-cell .form-select {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+    
+    /* Asegurar que el select tenga la misma altura que los otros campos */
+    .horario-fin-cell .form-select,
+    .horario-fin-cell .form-control {
+        height: calc(1.5em + 0.75rem + 2px);
+        min-height: 38px;
+        box-sizing: border-box;
+    }
+    
+    /* Asegurar que el botón tenga la misma altura y alineación que los inputs */
+    .horario-fin-cell .remove-horario {
+        height: calc(1.5em + 0.75rem + 2px); /* Altura exacta de los inputs de Bootstrap */
+        min-height: 38px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.375rem 0.75rem;
+        margin: 0;
+        flex-shrink: 0;
+        line-height: 1.5;
+        box-sizing: border-box;
+        align-self: flex-end; /* Asegurar alineación al fondo */
+    }
+
     /* Estilos para mejorar la visualización de los campos chosen-select */
     .chosen-select {
         width: 100% !important;
     }
     
-    /* Estilos para el campo de días */
-    #{{ form.dias.vars.id }}_chosen,
+    /* Estilos para profesores chosen */
     #{{ form.profesores.vars.id }}_chosen {
         width: 100% !important;
     }
     
-    #{{ form.dias.vars.id }}_chosen .chosen-choices,
     #{{ form.profesores.vars.id }}_chosen .chosen-choices {
         height: 200px !important;
         min-height: 200px !important;
@@ -240,7 +339,6 @@ document.addEventListener('DOMContentLoaded', function() {
         width: 100% !important;
     }
     
-    #{{ form.dias.vars.id }}_chosen .chosen-choices li.search-choice,
     #{{ form.profesores.vars.id }}_chosen .chosen-choices li.search-choice {
         margin: 4px 4px 4px 0 !important;
         padding: 6px 25px 6px 10px !important;
@@ -262,7 +360,6 @@ document.addEventListener('DOMContentLoaded', function() {
         max-height: 70px !important;
     }
     
-    #{{ form.dias.vars.id }}_chosen .chosen-choices li.search-choice span,
     #{{ form.profesores.vars.id }}_chosen .chosen-choices li.search-choice span {
         color: #fff !important;
         display: inline-block !important;
@@ -275,7 +372,6 @@ document.addEventListener('DOMContentLoaded', function() {
         line-height: 1.4;
     }
     
-    #{{ form.dias.vars.id }}_chosen .chosen-choices li.search-choice .search-choice-close,
     #{{ form.profesores.vars.id }}_chosen .chosen-choices li.search-choice .search-choice-close {
         position: absolute !important;
         top: 50% !important;
@@ -293,13 +389,11 @@ document.addEventListener('DOMContentLoaded', function() {
         cursor: pointer !important;
     }
     
-    #{{ form.dias.vars.id }}_chosen .chosen-choices li.search-choice .search-choice-close:hover,
     #{{ form.profesores.vars.id }}_chosen .chosen-choices li.search-choice .search-choice-close:hover {
         background-color: rgba(255, 255, 255, 0.4) !important;
         color: #fff !important;
     }
     
-    #{{ form.dias.vars.id }}_chosen .chosen-choices li.search-choice .search-choice-close:before,
     #{{ form.profesores.vars.id }}_chosen .chosen-choices li.search-choice .search-choice-close:before {
         content: "×" !important;
         font-size: 18px !important;
@@ -307,13 +401,11 @@ document.addEventListener('DOMContentLoaded', function() {
         color: #fff !important;
     }
     
-    #{{ form.dias.vars.id }}_chosen .chosen-choices li.search-field,
     #{{ form.profesores.vars.id }}_chosen .chosen-choices li.search-field {
         flex: 1 1 auto !important;
         min-width: 200px !important;
     }
     
-    #{{ form.dias.vars.id }}_chosen .chosen-choices li.search-field input[type="text"],
     #{{ form.profesores.vars.id }}_chosen .chosen-choices li.search-field input[type="text"] {
         color: #212529 !important;
         height: auto !important;

@@ -7,11 +7,11 @@ use App\Entity\Profesor;
 use Doctrine\ORM\EntityRepository;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
-use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
-use Symfony\Component\Form\Extension\Core\Type\TimeType;
 use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\Form\FormError;
 use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -63,44 +63,14 @@ class CursoType extends AbstractType
                     new Callback([$this, 'validateFechas'])
                 ]
             ])
-            ->add('horarioInicio', ChoiceType::class, [
-                'required' => true,
-                'mapped' => false,
-                'attr' => ['class' => 'form-control'],
-                'label_attr' => ['class' => 'form-label required'],
-                'choices' => $this->getTimeChoices(),
-                'label' => 'Horario de Inicio',
-                'constraints' => [
-                    new Callback([$this, 'validateHorarios'])
-                ]
-            ])
-            ->add('horarioFin', ChoiceType::class, [
-                'required' => true,
-                'mapped' => false,
-                'attr' => ['class' => 'form-control'],
-                'label_attr' => ['class' => 'form-label required'],
-                'choices' => $this->getTimeChoices(),
-                'label' => 'Horario de Fin',
-                'constraints' => [
-                    new Callback([$this, 'validateHorarios'])
-                ]
-            ])
-            ->add('dias', ChoiceType::class, [
-                'required' => false,
-                'attr' => ['class' => 'form-control chosen-select'],
+            ->add('horarios', CollectionType::class, [
+                'entry_type' => CursoHorarioType::class,
+                'entry_options' => ['time_choices' => $this->getTimeChoices()],
+                'allow_add' => true,
+                'allow_delete' => true,
+                'by_reference' => false,
+                'label' => 'Horarios por día',
                 'label_attr' => ['class' => 'form-label'],
-                'choices' => [
-                    'Lunes' => 'Lunes',
-                    'Martes' => 'Martes',
-                    'Miercoles' => 'Miercoles',
-                    'Jueves' => 'Jueves',
-                    'Viernes' => 'Viernes',
-                    'Sabado' => 'Sabado',
-                    'Domingo' => 'Domingo'
-                ],
-                'multiple' => true,
-                'expanded' => false,
-                'label' => 'Días'
             ])
             ->add('profesores', EntityType::class, [
                 'class' => Profesor::class,
@@ -121,24 +91,33 @@ class CursoType extends AbstractType
                 'label' => 'Profesores'
             ]);
 
-        // Agregar validación adicional para asegurar que los horarios se validen junto con las fechas
         $builder->addEventListener(FormEvents::POST_SUBMIT, function (FormEvent $event) {
             $form = $event->getForm();
-            $data = $event->getData();
-
-            if ($form->isSubmitted() && $form->isValid()) {
-                $fechaInicio = $form->get('fechaInicio')->getData();
-                $fechaFin = $form->get('fechaFin')->getData();
-                $horaInicio = $form->get('horarioInicio')->getData();
-                $horaFin = $form->get('horarioFin')->getData();
-
-                if ($fechaInicio && $fechaFin && $fechaFin < $fechaInicio) {
-                    $form->get('fechaFin')->addError(new FormError('La fecha de fin debe ser posterior a la fecha de inicio'));
+            if (!$form->isSubmitted()) {
+                return;
+            }
+            $fechaInicio = $form->get('fechaInicio')->getData();
+            $fechaFin = $form->get('fechaFin')->getData();
+            if ($fechaInicio && $fechaFin && $fechaFin < $fechaInicio) {
+                $form->get('fechaFin')->addError(new FormError('La fecha de fin debe ser posterior a la fecha de inicio'));
+            }
+            $horarios = $form->get('horarios')->getData();
+            $tieneAlMenosUnoCompleto = false;
+            if ($horarios) {
+                foreach ($horarios as $h) {
+                    if ($h && $h->getDia() && $h->getHorarioInicio() && $h->getHorarioFin()) {
+                        $tieneAlMenosUnoCompleto = true;
+                        $inicio = $h->getHorarioInicio() instanceof \DateTimeInterface ? $h->getHorarioInicio() : new \DateTime($h->getHorarioInicio());
+                        $fin = $h->getHorarioFin() instanceof \DateTimeInterface ? $h->getHorarioFin() : new \DateTime($h->getHorarioFin());
+                        if ($fin <= $inicio) {
+                            $form->get('horarios')->addError(new FormError('En cada fila, el horario de fin debe ser posterior al de inicio.'));
+                            break;
+                        }
+                    }
                 }
-
-                if ($horaInicio && $horaFin && $horaFin <= $horaInicio) {
-                    $form->get('horarioFin')->addError(new FormError('El horario de fin debe ser posterior al horario de inicio'));
-                }
+            }
+            if (!$tieneAlMenosUnoCompleto) {
+                $form->get('horarios')->addError(new FormError('Agregue al menos un horario completo (día + inicio + fin).'));
             }
         });
     }
@@ -152,19 +131,6 @@ class CursoType extends AbstractType
         if ($fechaInicio && $fechaFin && $fechaFin < $fechaInicio) {
             $context->buildViolation('La fecha de fin debe ser posterior a la fecha de inicio')
                 ->atPath('fechaFin')
-                ->addViolation();
-        }
-    }
-
-    public function validateHorarios($object, ExecutionContextInterface $context)
-    {
-        $form = $context->getRoot();
-        $horaInicio = $form->get('horarioInicio')->getData();
-        $horaFin = $form->get('horarioFin')->getData();
-
-        if ($horaInicio && $horaFin && $horaFin <= $horaInicio) {
-            $context->buildViolation('El horario de fin debe ser posterior al horario de inicio')
-                ->atPath('horarioFin')
                 ->addViolation();
         }
     }

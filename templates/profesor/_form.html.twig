@@ -1,6 +1,7 @@
 {# templates/profesor/_form.html.twig #}
 <div style="max-width: 100%; width: 100%;">
 {{ form_start(form, {'attr': {'class': 'form-horizontal'}}) }}
+{{ form_widget(form._token) }}
 
 {# Información sobre creación de usuario #}
 <div class="alert alert-info border-info shadow-sm mb-4" role="alert">
@@ -134,8 +135,8 @@
 
 {% if mostrar_confirmacion is defined and mostrar_confirmacion %}
     <div class="alert alert-warning mt-3">
-        <p><strong>Atención:</strong> Algunos cursos ya han comenzado y tienen registros de asistencia para este profesor.</p>
-        <p>Si cambia los cursos asignados, podría afectar los registros de asistencia existentes.</p>
+        <p><strong>Atención:</strong> Está quitando a este profesor de al menos un curso que ya comenzó y tiene asistencias cargadas.</p>
+        <p class="mb-0">Los registros de asistencia se conservan; el profesor dejará de figurar asignado a ese curso. Si desea continuar, marque la confirmación abajo.</p>
         <div class="form-check mt-3">
             <input type="checkbox" class="form-check-input" id="confirmar_cambio_cursos" name="confirmar_cambio_cursos" value="1" required>
             <label class="form-check-label" for="confirmar_cambio_cursos">
@@ -275,84 +276,91 @@
 </style>
 
 <script>
-$(document).ready(function() {
-    const cursosSelectId = '{{ form.cursos.vars.id }}';
-    const cursosSelect = $('#' + cursosSelectId);
-    
-    if (cursosSelect.length && $.fn.chosen) {
-        // Función para asegurar que los textos se muestren correctamente
-        function actualizarTextosCursos() {
-            const chosenContainer = $('#' + cursosSelectId + '_chosen');
-            if (chosenContainer.length) {
-                // Obtener todas las opciones seleccionadas del select original
-                const selectedOptions = cursosSelect.find('option:selected');
-                
-                // Obtener todos los tags de cursos seleccionados en Chosen
-                const choiceElements = chosenContainer.find('.chosen-choices li.search-choice');
-                
-                choiceElements.each(function(index) {
-                    const choiceElement = $(this);
-                    const span = choiceElement.find('span');
-                    const choiceValue = choiceElement.attr('data-option-array-index');
-                    
-                    // Asegurar que el span sea visible y tenga el color correcto
-                    span.css({
-                        'color': '#fff !important',
-                        'display': 'inline-block !important',
-                        'visibility': 'visible !important',
-                        'opacity': '1 !important',
-                        'white-space': 'normal !important',
-                        'word-wrap': 'break-word !important',
-                        'overflow': 'visible !important',
-                        'text-overflow': 'clip !important',
-                        'max-width': 'none !important',
-                        'width': 'auto !important'
-                    });
-                    
-                    // Obtener el texto de la opción correspondiente
-                    let optionText = '';
-                    if (choiceValue !== undefined && cursosSelect[0].options[choiceValue]) {
-                        optionText = cursosSelect[0].options[choiceValue].text;
-                    } else if (selectedOptions.length > index) {
-                        optionText = selectedOptions.eq(index).text();
-                    }
-                    
-                    // Si tenemos texto y el span está vacío o tiene texto diferente, actualizarlo
-                    if (optionText && (span.text().trim() !== optionText.trim() || !span.text().trim())) {
-                        span.text(optionText);
-                    }
-                    
-                    // Asegurar que el elemento padre también tenga los estilos correctos
-                    choiceElement.css({
-                        'max-width': 'none !important',
-                        'width': 'auto !important',
-                        'overflow': 'visible !important'
-                    });
-                });
-            }
-        }
-        
-        // Esperar a que Chosen se inicialice completamente
-        cursosSelect.on('chosen:ready', function() {
-            actualizarTextosCursos();
-            setTimeout(actualizarTextosCursos, 200);
-            setTimeout(actualizarTextosCursos, 500);
-        });
-        
-        // Escuchar cambios en el select para actualizar los textos
-        cursosSelect.on('change', function() {
-            setTimeout(actualizarTextosCursos, 100);
-        });
-        
-        // Si Chosen ya está inicializado, ejecutar directamente
-        if (cursosSelect.data('chosen')) {
-            setTimeout(actualizarTextosCursos, 100);
-            setTimeout(actualizarTextosCursos, 300);
-        }
-        
-        // También ejecutar después de que la página esté completamente cargada
-        setTimeout(actualizarTextosCursos, 1000);
+(function runWhenJQuery() {
+    if (typeof window.$ === 'undefined') {
+        setTimeout(runWhenJQuery, 50);
+        return;
     }
-});
+    var $ = window.$;
+    $(document).ready(function() {
+        const cursosSelectId = '{{ form.cursos.vars.id }}';
+        const cursosSelect = $('#' + cursosSelectId);
+        
+        if (cursosSelect.length && $.fn.chosen) {
+            // Función para asegurar que los textos se muestren correctamente
+            function actualizarTextosCursos() {
+                const chosenContainer = $('#' + cursosSelectId + '_chosen');
+                if (chosenContainer.length) {
+                    // Obtener todas las opciones seleccionadas del select original
+                    const selectedOptions = cursosSelect.find('option:selected');
+                    
+                    // Obtener todos los tags de cursos seleccionados en Chosen
+                    const choiceElements = chosenContainer.find('.chosen-choices li.search-choice');
+                    
+                    choiceElements.each(function(index) {
+                        const choiceElement = $(this);
+                        const span = choiceElement.find('span');
+                        const choiceValue = choiceElement.attr('data-option-array-index');
+                        
+                        // Asegurar que el span sea visible y tenga el color correcto
+                        span.css({
+                            'color': '#fff !important',
+                            'display': 'inline-block !important',
+                            'visibility': 'visible !important',
+                            'opacity': '1 !important',
+                            'white-space': 'normal !important',
+                            'word-wrap': 'break-word !important',
+                            'overflow': 'visible !important',
+                            'text-overflow': 'clip !important',
+                            'max-width': 'none !important',
+                            'width': 'auto !important'
+                        });
+                        
+                        // Obtener el texto de la opción correspondiente
+                        let optionText = '';
+                        if (choiceValue !== undefined && cursosSelect[0].options[choiceValue]) {
+                            optionText = cursosSelect[0].options[choiceValue].text;
+                        } else if (selectedOptions.length > index) {
+                            optionText = selectedOptions.eq(index).text();
+                        }
+                        
+                        // Si tenemos texto y el span está vacío o tiene texto diferente, actualizarlo
+                        if (optionText && (span.text().trim() !== optionText.trim() || !span.text().trim())) {
+                            span.text(optionText);
+                        }
+                        
+                        // Asegurar que el elemento padre también tenga los estilos correctos
+                        choiceElement.css({
+                            'max-width': 'none !important',
+                            'width': 'auto !important',
+                            'overflow': 'visible !important'
+                        });
+                    });
+                }
+            }
+            
+            // Esperar a que Chosen se inicialice completamente
+            cursosSelect.on('chosen:ready', function() {
+                actualizarTextosCursos();
+                setTimeout(actualizarTextosCursos, 200);
+                setTimeout(actualizarTextosCursos, 500);
+            });
+            
+            // Escuchar cambios en el select para actualizar los textos
+            cursosSelect.on('change', function() {
+                setTimeout(actualizarTextosCursos, 100);
+            });
+            
+            // Si Chosen ya está inicializado, ejecutar directamente
+            if (cursosSelect.data('chosen')) {
+                setTimeout(actualizarTextosCursos, 100);
+                setTimeout(actualizarTextosCursos, 300);
+            }
+            
+            // También ejecutar después de que la página esté completamente cargada
+            setTimeout(actualizarTextosCursos, 1000);
+        }
+    });
+})();
 </script>
 </div>

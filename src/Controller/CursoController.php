@@ -77,6 +77,8 @@ class CursoController extends AbstractController
             ['pageParameterName' => 'page_disabled']
         );
 
+        $dateFormat = $this->institutoTimezoneService->getDateFormatForInstituto($instituto);
+
         return $this->render('curso/index.html.twig', [
             'cursos' => $cursos,
             'order' => $order,
@@ -85,6 +87,7 @@ class CursoController extends AbstractController
             'cursosDeshabilitados' => $cursosDeshabilitados,
             'totalCursosDeshabilitados' => $cursosDeshabilitados->getTotalItemCount(),
             'busqueda' => $busqueda,
+            'app_date_format' => $dateFormat,
         ]);
     }
 
@@ -100,6 +103,7 @@ class CursoController extends AbstractController
         ?string $busqueda = null
     ): QueryBuilder {
         $qb = $cursoRepository->createQueryBuilder('c')
+            ->leftJoin('c.horarios', 'h')->addSelect('h')
             ->where('c.instituto = :instituto')
             ->setParameter('instituto', $instituto);
 
@@ -122,7 +126,13 @@ class CursoController extends AbstractController
                ->setParameter('disabled', false);
         }
 
-        $qb->orderBy($sort === 'precio' ? 'c.precio + 0' : 'c.'.$sort, $order);
+        // Incluir la columna de orden en el SELECT para compatibilidad con DISTINCT (paginador + MySQL)
+        if ($sort === 'precio') {
+            $qb->addSelect('c.precio + 0 AS HIDDEN orden_precio')
+               ->orderBy('orden_precio', $order);
+        } else {
+            $qb->orderBy('c.'.$sort, $order);
+        }
 
         return $qb;
     }
@@ -136,6 +146,11 @@ class CursoController extends AbstractController
         $instituto = $this->getUser()->getInstituto();
         $curso = new Curso();
         $curso->setInstituto($instituto);
+        // Una fila de horario por defecto 08:00-09:00
+        $horarioDefault = new \App\Entity\CursoHorario();
+        $horarioDefault->setHorarioInicio(new \DateTime('08:00'));
+        $horarioDefault->setHorarioFin(new \DateTime('09:00'));
+        $curso->addHorario($horarioDefault);
         $dateFormat = $this->institutoTimezoneService->getDateFormatForInstituto($instituto);
         $form = $this->createForm(CursoType::class, $curso, [
             'allow_extra_fields' => true,
@@ -156,10 +171,9 @@ class CursoController extends AbstractController
                     ]);
                 }
 
-                $curso->setHorarioInicio(new \DateTime($form->get('horarioInicio')->getData()));
-                $curso->setHorarioFin(new \DateTime($form->get('horarioFin')->getData()));
-                $curso->setDuracion($this->calcularDuracion($curso->getHorarioInicio(), $curso->getHorarioFin()));
-                
+                $this->removerHorariosVacios($curso);
+                $curso->syncLegacyFromHorarios();
+
                 // Verificar conflictos de horarios para cada profesor asignado
                 $todosConflictos = [];
                 $conflictosVistos = []; // Para evitar duplicados
@@ -389,10 +403,15 @@ class CursoController extends AbstractController
             'date_format' => $dateFormat
         ]);
 
-        // Establecer los valores iniciales para los campos de horario
-        if ($curso->getHorarioInicio() && $curso->getHorarioFin()) {
-            $form->get('horarioInicio')->setData($curso->getHorarioInicio()->format('H:i'));
-            $form->get('horarioFin')->setData($curso->getHorarioFin()->format('H:i'));
+        // Si el curso no tiene horarios en la colección pero sí datos legacy (migración antigua), rellenar horarios para el formulario
+        if ($curso->getHorarios()->count() === 0 && !empty($curso->getDias()) && $curso->getHorarioInicio() && $curso->getHorarioFin()) {
+            foreach ($curso->getDias() as $dia) {
+                $horario = new \App\Entity\CursoHorario();
+                $horario->setDia($dia);
+                $horario->setHorarioInicio($curso->getHorarioInicio() instanceof \DateTimeInterface ? clone $curso->getHorarioInicio() : new \DateTime($curso->getHorarioInicio()->format('H:i')));
+                $horario->setHorarioFin($curso->getHorarioFin() instanceof \DateTimeInterface ? clone $curso->getHorarioFin() : new \DateTime($curso->getHorarioFin()->format('H:i')));
+                $curso->addHorario($horario);
+            }
         }
 
         // Si viene el parámetro para limpiar conflictos, limpiar la sesión
@@ -515,10 +534,9 @@ class CursoController extends AbstractController
                     }
                 }
                 
-                $curso->setHorarioInicio(new \DateTime($form->get('horarioInicio')->getData()));
-                $curso->setHorarioFin(new \DateTime($form->get('horarioFin')->getData()));
-                $curso->setDuracion($this->calcularDuracion($curso->getHorarioInicio(), $curso->getHorarioFin()));
-                
+                $this->removerHorariosVacios($curso);
+                $curso->syncLegacyFromHorarios();
+
                 // Verificar conflictos de horarios para cada profesor asignado
                 // IMPORTANTE: Esto se ejecuta DESPUÉS de que el formulario ya actualizó $curso->getProfesores()
                 $todosConflictos = [];
@@ -824,6 +842,22 @@ class CursoController extends AbstractController
         ];
         
         return $dias[$dia];
+    }
+
+    /**
+     * Quita de la colección del curso los horarios sin día o sin inicio/fin (filas vacías del formulario).
+     */
+    private function removerHorariosVacios(Curso $curso): void
+    {
+        $toRemove = [];
+        foreach ($curso->getHorarios() as $h) {
+            if (!$h->getDia() || !$h->getHorarioInicio() || !$h->getHorarioFin()) {
+                $toRemove[] = $h;
+            }
+        }
+        foreach ($toRemove as $h) {
+            $curso->removeHorario($h);
+        }
     }
 
     /**
