@@ -160,7 +160,10 @@
                     {% endif %}
                 </div>
                 <div class="card-footer">
-                    {{ include('components/back_button.html.twig', {'default_path': path('app_alumno_show', {'id': alumno.id})}) }}
+                    {{ include('components/back_button.html.twig', {
+                        'default_path': path('app_alumno_index'),
+                        'force_reload': true
+                    }) }}
                 </div>
             </div>
         </div>

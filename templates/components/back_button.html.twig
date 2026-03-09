@@ -1,8 +1,42 @@
 {# Template para el botón volver.
-   Usa history.back() cuando hay historial para evitar loops (ej. Ficha ↔ Deudas).
-   Si no hay historial (pestaña nueva, acceso directo), va a default_path.
-   default_path: ruta por defecto (ej. listado de alumnos). #}
+   SISTEMA ROBUSTO: Usa parámetro return_url o referer para evitar loops.
+   
+   Parámetros:
+   - default_path: ruta por defecto si no hay return_url ni referer válido
+   - force_reload: si es true, añade parámetro timestamp para forzar recarga
+   
+   Uso:
+   {% include 'components/back_button.html.twig' with {
+       'default_path': path('app_alumno_index'),
+       'force_reload': true
+   } %}
+#}
 {% set back_path = default_path|default(path('dashboard_index')) %}
-<a href="{{ back_path }}" class="btn btn-secondary back-button-js" data-fallback-href="{{ back_path }}">
+
+{# Prioridad 1: Usar return_url del query string si existe #}
+{% if app.request.query.get('return_url') %}
+    {% set back_path = app.request.query.get('return_url') %}
+{% else %}
+    {# Prioridad 2: Usar referer solo si NO es la misma página actual #}
+    {% set referer = app.request.headers.get('referer') %}
+    {% set current_path = app.request.uri %}
+    
+    {# Limpiar parámetros _t del referer y current_path para comparar #}
+    {% set referer_clean = referer|split('?')[0] %}
+    {% set current_clean = current_path|split('?')[0] %}
+    
+    {% if referer and referer_clean != current_clean %}
+        {% set back_path = referer %}
+    {% endif %}
+{% endif %}
+
+{# Forzar recarga añadiendo timestamp si force_reload es true #}
+{% if force_reload|default(false) %}
+    {% set separator = '?' in back_path ? '&' : '?' %}
+    {% set back_path = back_path ~ separator ~ '_t=' ~ 'now'|date('U') %}
+{% endif %}
+
+<a href="{{ back_path }}" class="btn btn-secondary">
     <i class="bi bi-arrow-left"></i> Volver
-</a> 
+</a>
+ 

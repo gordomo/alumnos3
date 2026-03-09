@@ -148,11 +148,14 @@
         </div>
         <div class="card-body">
             <div class="d-flex gap-2">
-                {{ include('components/back_button.html.twig', {'default_path': path('app_alumno_index')}) }}
+                {{ include('components/back_button.html.twig', {
+                    'default_path': path('app_alumno_index'),
+                    'force_reload': true
+                }) }}
                 <a href="{{ path('app_alumno_edit', {'id': alumno.id}) }}" class="btn btn-primary">
                     <i class="bi bi-pencil"></i> Editar
                 </a>
-                <a href="{{ path('app_alumno_deudas', {'id': alumno.id}) }}" class="btn btn-warning">
+                <a href="{{ path('app_alumno_deudas', {'id': alumno.id, 'return_url': app.request.uri}) }}" class="btn btn-warning">
                     <i class="bi bi-cash-coin"></i> Gestionar Deudas
                 </a>
                 <a href="{{ path('app_alumnos_pagos_new', {'id': alumno.id}) }}" class="btn btn-success">
