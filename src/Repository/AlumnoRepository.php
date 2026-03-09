@@ -177,6 +177,22 @@ class AlumnoRepository extends ServiceEntityRepository
             ->getSingleScalarResult();
     }
 
+    /**
+     * Busca un alumno por ID cargando eager sus deudas y aplicaciones de pago
+     * Esto evita problemas de lazy loading al calcular montos pendientes
+     */
+    public function findWithDeudasAndAplicaciones(int $id): ?Alumno
+    {
+        return $this->createQueryBuilder('a')
+            ->leftJoin('a.deudas', 'd')
+            ->leftJoin('d.aplicaciones', 'ap')
+            ->addSelect('d', 'ap')
+            ->where('a.id = :id')
+            ->setParameter('id', $id)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
     // /**
     //  * @return Alumno[] Returns an array of Alumno objects
     //  */

@@ -120,10 +120,9 @@ class AlumnosPagosController extends AbstractController
 
         if ($alumnoId) {
             //$pagos = $alumnosPagosRepository->findByAlumno($alumnoId);
-            $alumno = $alumnoRepository->find($alumnoId);
+            // Cargar alumno con sus deudas y aplicaciones (eager loading) para evitar lazy loading
+            $alumno = $alumnoRepository->findWithDeudasAndAplicaciones($alumnoId);
             $nombreAlumno = $alumno->getNombre() . ' ' . $alumno->getApellido();
-            // Refrescar la entidad del alumno para asegurar que la relación de deudas esté actualizada
-            $this->entityManager->refresh($alumno);
             // Usar el nuevo método getDeudasParaPago() en lugar de verificarMesesAdeudados()
             $deudasParaPago = $alumno->getDeudasParaPago();
             $mesesAdeudados = [];
@@ -607,7 +606,8 @@ class AlumnosPagosController extends AbstractController
     {
         $alumnoId = $request->query->get('id');
         if ($alumnoId) {
-            $alumno = $alumnoRepository->find($alumnoId);
+            // Cargar alumno con sus deudas y aplicaciones (eager loading) para evitar lazy loading
+            $alumno = $alumnoRepository->findWithDeudasAndAplicaciones($alumnoId);
         } else {
             // Sin id en URL: no preseleccionar alumno; el usuario debe seleccionar manualmente
             $alumno = null;
@@ -622,11 +622,8 @@ class AlumnosPagosController extends AbstractController
         $ordenCalculo = 'interes_primero';
 
         if ($alumno) {
-        // Refrescar la entidad del alumno para asegurar que la relación de deudas esté actualizada
-        $this->entityManager->refresh($alumno);
-
-        // Obtener los meses adeudados para el componente
-        $deudasParaPago = $alumno->getDeudasParaPago();
+            // Obtener los meses adeudados para el componente (ya cargados con eager loading)
+            $deudasParaPago = $alumno->getDeudasParaPago();
         $mesesAdeudados = [];
         $nombresMeses = [
             1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril',
@@ -1404,7 +1401,8 @@ class AlumnosPagosController extends AbstractController
                 return new JsonResponse(['error' => 'Falta el ID del alumno'], 400);
             }
             
-            $alumno = $alumnoRepository->find($alumnoId);
+            // Cargar alumno con sus deudas y aplicaciones (eager loading) para evitar lazy loading
+            $alumno = $alumnoRepository->findWithDeudasAndAplicaciones($alumnoId);
             if (!$alumno) {
                 return new JsonResponse(['error' => 'Alumno no encontrado'], 404);
             }

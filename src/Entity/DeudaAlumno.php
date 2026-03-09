@@ -48,7 +48,7 @@ class DeudaAlumno
     private $ano;
 
     /**
-     * @ORM\OneToMany(targetEntity=PagoAplicacion::class, mappedBy="deuda", cascade={"persist", "remove"})
+     * @ORM\OneToMany(targetEntity=PagoAplicacion::class, mappedBy="deuda", cascade={"persist", "remove"}, fetch="EAGER")
      */
     private $aplicaciones;
 
