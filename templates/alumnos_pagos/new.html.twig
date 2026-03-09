@@ -122,17 +122,18 @@
                                                     <div class="row">
                                                         {% for mes in meses %}
                                                             {% set esAdelantado = mes.esAdelantado is defined ? mes.esAdelantado : false %}
-                                                            {% set montoMostrar = mes.montoPendiente is defined ? mes.montoPendiente : mes.monto %}
+                                                            {% set estaPagado = mes.estaPagado is defined ? mes.estaPagado : false %}
                                                             {% set fechaActual = date() %}
                                                             {% set mesActual = fechaActual|date('n')|number_format %}
                                                             {% set anoActual = fechaActual|date('Y')|number_format %}
                                                             {% set esMesFuturo = (mes.ano > anoActual) or (mes.ano == anoActual and mes.mes > mesActual) %}
                                                             <div class="col-md-3 mb-2">
                                                                 <div class="mes-adeudado-checkbox-container position-relative" 
-                                                                     style="background-color: {% if esAdelantado %}#e7f3ff{% else %}#f8f9fa{% endif %}; border: 2px solid {% if esAdelantado %}#0d6efd{% else %}#dee2e6{% endif %}; border-radius: 8px; padding: 1rem; cursor: pointer; transition: all 0.2s ease; user-select: none;"
+                                                                     style="background-color: {% if estaPagado %}#d4edda{% elseif esAdelantado %}#e7f3ff{% else %}#f8f9fa{% endif %}; border: 2px solid {% if estaPagado %}#28a745{% elseif esAdelantado %}#0d6efd{% else %}#dee2e6{% endif %}; border-radius: 8px; padding: 1rem; cursor: {% if estaPagado %}default{% else %}pointer{% endif %}; transition: all 0.2s ease; user-select: none; opacity: {% if estaPagado %}0.7{% else %}1{% endif %};"
                                                                      data-mes-checkbox-id="mes_{{ mes.mes }}_{{ mes.ano }}_{{ mes.curso_obj.id }}"
                                                                      data-es-adelantado="{{ esAdelantado ? 'true' : 'false' }}"
-                                                                     data-es-mes-futuro="{{ esMesFuturo ? 'true' : 'false' }}">
+                                                                     data-es-mes-futuro="{{ esMesFuturo ? 'true' : 'false' }}"
+                                                                     data-esta-pagado="{{ estaPagado ? 'true' : 'false' }}">
                                                                     <input type="checkbox" 
                                                                            class="mes-adeudado-checkbox position-absolute" 
                                                                            style="opacity: 0; position: absolute; pointer-events: none;"
@@ -145,21 +146,24 @@
                                                                            data-curso-nombre="{{ mes.curso }}"
                                                                            data-monto-base="{{ mes.monto }}"
                                                                            data-es-adelantado="{{ esAdelantado ? 'true' : 'false' }}"
+                                                                           {% if estaPagado %}disabled{% endif %}
                                                                            form="alumnos_pagos">
                                                                     <div class="d-flex align-items-center justify-content-between">
                                                                         <div>
                                                                             <strong class="d-block text-dark">
                                                                                 {{ mes.nombre }}
-                                                                                {% if esAdelantado %}
+                                                                                {% if estaPagado %}
+                                                                                    <span class="badge bg-success ms-1" style="font-size: 0.7rem;">PAGADA</span>
+                                                                                {% elseif esAdelantado %}
                                                                                     <span class="badge bg-info ms-1" style="font-size: 0.7rem;">Adelantado</span>
                                                                                 {% endif %}
                                                                             </strong>
                                                                             <small class="text-muted">
-                                                                                ${{ montoMostrar | number_format(2, ',', '.') }}
+                                                                                ${{ mes.monto | number_format(2, ',', '.') }}
                                                                             </small>
                                                                         </div>
-                                                                        <div class="mes-check-icon" style="width: 24px; height: 24px; border: 2px solid #dee2e6; border-radius: 4px; display: flex; align-items: center; justify-content: center; background-color: white; transition: all 0.2s ease;">
-                                                                            <i class="bi bi-check" style="color: white; font-size: 16px; display: none;"></i>
+                                                                        <div class="mes-check-icon" style="width: 24px; height: 24px; border: 2px solid {% if estaPagado %}#28a745{% else %}#dee2e6{% endif %}; border-radius: 4px; display: flex; align-items: center; justify-content: center; background-color: {% if estaPagado %}#28a745{% else %}white{% endif %}; transition: all 0.2s ease;">
+                                                                            <i class="bi bi-check" style="color: white; font-size: 16px; display: {% if estaPagado %}block{% else %}none{% endif %};"></i>
                                                                         </div>
                                                                     </div>
                                                                 </div>
@@ -457,8 +461,26 @@
                 // Verificar si el mouse está sobre el elemento antes de restaurar estilos
                 const isHovering = container._isHovering && container._isHovering();
                 
-                if (checkbox.checked) {
-                    // Si está seleccionado, siempre mostrar estilo seleccionado (ignorar hover)
+                // Verificar si está pagado
+                const estaPagado = container.dataset.estaPagado === 'true';
+                
+                if (estaPagado) {
+                    // Si está pagado, mantener estilo de pagado (verde) independientemente del checkbox
+                    container.style.transform = 'translateY(0)';
+                    container.style.backgroundColor = '#d4edda';
+                    container.style.borderColor = '#28a745';
+                    container.style.opacity = '0.7';
+                    container.style.cursor = 'default';
+                    container.style.boxShadow = 'none';
+                    if (checkIcon) {
+                        checkIcon.style.backgroundColor = '#28a745';
+                        checkIcon.style.borderColor = '#28a745';
+                        if (checkIconInner) {
+                            checkIconInner.style.display = 'block';
+                        }
+                    }
+                } else if (checkbox.checked) {
+                    // Si está seleccionado (y NO está pagado), mostrar estilo seleccionado
                     container.style.transform = 'translateY(0)';
                     container.style.backgroundColor = '#e7f1ff';
                     container.style.borderColor = '#0d6efd';
@@ -471,7 +493,7 @@
                         }
                     }
                 } else {
-                    // Si está deshabilitado, usar estilos de deshabilitado
+                    // Si está deshabilitado (pero no pagado), usar estilos de deshabilitado
                     if (checkbox.disabled) {
                         container.style.transform = 'translateY(0)';
                         container.style.backgroundColor = '#f8f9fa';
@@ -508,6 +530,13 @@
                     const checkboxId = container.dataset.mesCheckboxId;
                     const checkbox = document.getElementById(checkboxId);
                     if (checkbox) {
+                        // Si el mes está pagado, forzar que no esté seleccionado
+                        const estaPagado = container.dataset.estaPagado === 'true';
+                        if (estaPagado) {
+                            checkbox.checked = false;
+                            checkbox.disabled = true;
+                        }
+                        
                         // Inicializar estilo
                         actualizarEstiloMes(container, checkbox);
                         
@@ -516,6 +545,12 @@
                             // Prevenir el comportamiento por defecto pero permitir que el checkbox cambie
                             e.preventDefault();
                             e.stopPropagation();
+                            
+                            // Verificar si está pagado
+                            const estaPagado = container.dataset.estaPagado === 'true';
+                            if (estaPagado) {
+                                return; // No hacer nada si ya está pagado
+                            }
                             
                             // Solo procesar si el checkbox no está deshabilitado
                             if (checkbox.disabled) {
@@ -551,8 +586,9 @@
                         
                         container.addEventListener('mouseenter', function() {
                             isHovering = true;
+                            const estaPagado = container.dataset.estaPagado === 'true';
                             // Verificar el estado actual del checkbox (puede haber cambiado)
-                            if (!checkboxRef.checked && !checkboxRef.disabled) {
+                            if (!checkboxRef.checked && !checkboxRef.disabled && !estaPagado) {
                                 container.style.backgroundColor = '#e9ecef';
                                 container.style.borderColor = '#adb5bd';
                                 container.style.transform = 'translateY(-2px)';

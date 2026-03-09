@@ -640,8 +640,6 @@ class AlumnosPagosController extends AbstractController
                 'curso' => $curso->getNombre(),
                 'curso_obj' => $curso,
                 'monto' => $deuda->getMontoTotal(),
-                'montoPendiente' => $deuda->getMontoPendiente(),
-                'montoPagado' => $deuda->getMontoPagado(),
                 'esPendiente' => true
             ];
         }
@@ -746,8 +744,8 @@ class AlumnosPagosController extends AbstractController
                             'ano' => $anoVerificar
                         ]);
                     
-                    // Si existe deuda con monto pendiente, agregarla como pendiente (aunque no haya vencido aún)
-                    if ($deudaExistente && $deudaExistente->getMontoPendiente() > 0.01) {
+                    // Si existe deuda NO pagada, agregarla como pendiente (aunque no haya vencido aún)
+                    if ($deudaExistente && !$deudaExistente->isPagado()) {
                         $mesesAdeudados[] = [
                             'mes' => $mesVerificar,
                             'ano' => $anoVerificar,
@@ -755,14 +753,13 @@ class AlumnosPagosController extends AbstractController
                             'curso' => $curso->getNombre(),
                             'curso_obj' => $curso,
                             'monto' => $deudaExistente->getMontoTotal(),
-                            'montoPendiente' => $deudaExistente->getMontoPendiente(),
-                            'montoPagado' => $deudaExistente->getMontoPagado(),
                             'esPendiente' => true,
                             'esAdelantado' => false
                         ];
                     }
-                    // Si no existe deuda o está pagada, agregarla como mes adelantado
-                    elseif (!$deudaExistente || $deudaExistente->getMontoPendiente() <= 0.01) {
+                    // Si no existe deuda, agregarla como mes adelantado
+                    // Si la deuda existe pero está pagada, NO agregarla (ya está saldada)
+                    elseif (!$deudaExistente) {
                         $mesesAdeudados[] = [
                             'mes' => $mesVerificar,
                             'ano' => $anoVerificar,
@@ -770,12 +767,11 @@ class AlumnosPagosController extends AbstractController
                             'curso' => $curso->getNombre(),
                             'curso_obj' => $curso,
                             'monto' => $curso->getPrecio(),
-                            'montoPendiente' => $curso->getPrecio(),
-                            'montoPagado' => $deudaExistente ? $deudaExistente->getMontoPagado() : 0,
                             'esPendiente' => false,
                             'esAdelantado' => true
                         ];
                     }
+                    // Si existe deuda pagada, no agregarla (saltar este mes)
                 }
                 
                 $fechaVerificacion->modify('+1 month');

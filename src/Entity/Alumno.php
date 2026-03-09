@@ -824,10 +824,10 @@ class Alumno
         $institutoId = $this->instituto->getId();
         $primerDiaVencimiento = $this->getPrimerDiaVencimiento($institutoId);
         
-        // Filtrar deudas que deben mostrarse (solo las que tienen monto pendiente)
+        // Filtrar deudas que deben mostrarse (solo las que NO están pagadas)
         foreach ($this->deudas as $deuda) {
-            // Solo incluir deudas con monto pendiente
-            if ($deuda->getMontoPendiente() > 0) {
+            // Solo incluir deudas NO pagadas (sin aplicaciones de pago)
+            if (!$deuda->isPagado()) {
                 $mesDeuda = $deuda->getMes();
                 $anoDeuda = $deuda->getAno();
                 
