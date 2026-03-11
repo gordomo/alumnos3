@@ -1,0 +1,146 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Emails del Alumno{% endblock %}
+
+{% block panelTitle %}
+    Historial de Emails - {{ alumno.nombreApellido }}
+{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .email-alumno-page {
+            padding: 1.2rem 0.75rem;
+        }
+
+        .alumno-info-card {
+            background: #ffffff;
+            border: 1px solid #e5eceb;
+            border-radius: 14px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 10px 28px rgba(19, 44, 43, 0.1);
+        }
+
+        .email-panel {
+            background: #ffffff;
+            border: 1px solid #e5eceb;
+            border-radius: 14px;
+            box-shadow: 0 10px 28px rgba(19, 44, 43, 0.1);
+            overflow: hidden;
+        }
+
+        .email-table thead th {
+            background: #f5f9f8;
+            color: #4a5a60;
+            font-weight: 700;
+            font-size: 0.82rem;
+            border-bottom: 1px solid #dce7e4;
+            padding: 0.72rem 0.6rem;
+            vertical-align: middle;
+        }
+
+        .email-table td {
+            vertical-align: middle;
+            padding: 0.66rem 0.6rem;
+            border-top-color: #ecf2f1;
+            color: #27343a;
+            font-size: 0.92rem;
+        }
+
+        .badge-tipo {
+            font-size: 0.75rem;
+            padding: 0.35rem 0.6rem;
+            border-radius: 999px;
+        }
+
+        .badge-recibo {
+            background: #e7f1ff;
+            color: #0d6efd;
+            border: 1px solid #b6d4fe;
+        }
+
+        .badge-recordatorio {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid mt-3 email-alumno-page">
+    {{ include('components/back_button.html.twig', {
+        'route': 'app_alumno_show',
+        'params': {'id': alumno.id},
+        'label': 'Volver al Alumno'
+    }) }}
+
+    <div class="alumno-info-card">
+        <h4>
+            <i class="bi bi-person-circle"></i> {{ alumno.nombreApellido }}
+        </h4>
+        <p class="mb-0">
+            <i class="bi bi-envelope"></i> {{ alumno.email ?: 'Sin email configurado' }}
+        </p>
+    </div>
+
+    <div class="email-panel">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover align-middle email-table">
+                <thead class="table-light">
+                    <tr>
+                        <th>Fecha/Hora</th>
+                        <th>Tipo</th>
+                        <th>Asunto</th>
+                        <th>Estado</th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for email in emails %}
+                    <tr>
+                        <td>
+                            <small>{{ email.fechaEnvio|date('d/m/Y H:i') }}</small>
+                        </td>
+                        <td>
+                            <span class="badge-tipo badge-{{ email.tipo }}">
+                                {% if email.tipo == 'recibo' %}
+                                    <i class="bi bi-receipt"></i> Recibo
+                                {% else %}
+                                    <i class="bi bi-bell"></i> Recordatorio
+                                {% endif %}
+                            </span>
+                        </td>
+                        <td>{{ email.asunto|length > 50 ? email.asunto|slice(0, 50) ~ '...' : email.asunto }}</td>
+                        <td>
+                            {% if email.estado == 'enviado' %}
+                                <span class="badge bg-success">
+                                    <i class="bi bi-check-circle"></i> Enviado
+                                </span>
+                            {% else %}
+                                <span class="badge bg-danger">
+                                    <i class="bi bi-x-circle"></i> Fallido
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <a href="{{ path('app_email_log_show', {'id': email.id}) }}" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-eye"></i> Ver
+                            </a>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center py-4">
+                            <i class="bi bi-inbox" style="font-size: 2rem; color: #ccc;"></i>
+                            <p class="text-muted mt-2">No se han enviado emails a este alumno</p>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

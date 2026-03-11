@@ -1207,7 +1207,15 @@ class AlumnosPagosController extends AbstractController
                         try {
                             $deudasIds = $deuda ? [$deuda->getId()] : null;
                             $resultado = $this->pagoService->registrarPago($nuevoPago, $deudasIds, true);
+                            $pagoRegistrado = $resultado['pago'];
                             $pagosCreados++;
+                            
+                            // Enviar email con el recibo si está configurado
+                            try {
+                                $this->notificationService->enviarReciboPago($pagoRegistrado, null, false, $this->getUser());
+                            } catch (\Exception $emailError) {
+                                // No interrumpir el flujo si falla el envío del email
+                            }
                             
                             // Con la política actual: si se paga un monto menor al debido, la deuda se cancela igual
                             // (PagoService ajusta el total de la deuda al monto pagado). No hay pagos parciales.
@@ -1335,10 +1343,13 @@ class AlumnosPagosController extends AbstractController
                     
                     // Enviar email con el recibo si está configurado
                     try {
-                        $this->notificationService->enviarReciboPago($alumnosPago);
+                        $enviado = $this->notificationService->enviarReciboPago($alumnosPago, null, false, $this->getUser());
+                        if ($enviado) {
+                            $this->addFlash('info', 'Se envió el recibo por email a ' . $alumno->getEmail());
+                        }
                     } catch (\Exception $e) {
                         // No interrumpir el flujo si falla el envío del email
-                        // Se puede loggear el error si es necesario
+                        $this->addFlash('warning', 'El pago se registró pero no se pudo enviar el email: ' . $e->getMessage());
                     }
                     
                     $this->addFlash('success', 'Pago creado correctamente.');
@@ -1995,9 +2006,13 @@ class AlumnosPagosController extends AbstractController
                 
                 // Enviar email con el recibo si está configurado
                 try {
-                    $this->notificationService->enviarReciboPago($pago);
+                    $enviado = $this->notificationService->enviarReciboPago($pago, null, false, $this->getUser());
+                    if ($enviado) {
+                        $mensaje .= ' Se envió el recibo por email.';
+                    }
                 } catch (\Exception $e) {
                     // No interrumpir el flujo si falla el envío del email
+                    $this->addFlash('warning', 'El pago se registró pero no se pudo enviar el email: ' . $e->getMessage());
                 }
                 
                 // Mostrar información sobre el resultado

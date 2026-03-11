@@ -1,0 +1,208 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Detalle del Email{% endblock %}
+
+{% block panelTitle %}
+    Detalle del Email
+{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .email-detail-card {
+            background: #ffffff;
+            border: 1px solid #e5eceb;
+            border-radius: 14px;
+            padding: 2rem;
+            box-shadow: 0 10px 28px rgba(19, 44, 43, 0.1);
+            margin-top: 1rem;
+        }
+
+        .detail-row {
+            display: flex;
+            padding: 1rem 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            font-weight: 700;
+            color: #6c757d;
+            min-width: 200px;
+        }
+
+        .detail-value {
+            color: #212529;
+            flex: 1;
+        }
+
+        .error-box {
+            background: #f8d7da;
+            border: 1px solid #f5c2c7;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .error-box pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid mt-3">
+    {{ include('components/back_button.html.twig', {
+        'route': 'app_email_log_index',
+        'label': 'Volver al Historial'
+    }) }}
+
+    <div class="email-detail-card">
+        <h2 class="mb-4">
+            {% if email.tipo == 'recibo' %}
+                <i class="bi bi-receipt text-primary"></i> Recibo de Pago
+            {% else %}
+                <i class="bi bi-bell text-warning"></i> Recordatorio de Deuda
+            {% endif %}
+        </h2>
+
+        <div class="detail-row">
+            <div class="detail-label">
+                <i class="bi bi-calendar3"></i> Fecha y Hora de Envío:
+            </div>
+            <div class="detail-value">
+                {{ email.fechaEnvio|date('d/m/Y H:i:s') }}
+            </div>
+        </div>
+
+        <div class="detail-row">
+            <div class="detail-label">
+                <i class="bi bi-envelope"></i> Destinatario:
+            </div>
+            <div class="detail-value">
+                {{ email.destinatario }}
+            </div>
+        </div>
+
+        <div class="detail-row">
+            <div class="detail-label">
+                <i class="bi bi-person"></i> Alumno:
+            </div>
+            <div class="detail-value">
+                {% if email.alumno %}
+                    <a href="{{ path('app_alumno_show', {'id': email.alumno.id}) }}">
+                        {{ email.alumno.nombreApellido }}
+                    </a>
+                {% else %}
+                    <span class="text-muted">No especificado</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="detail-row">
+            <div class="detail-label">
+                <i class="bi bi-chat-left-text"></i> Asunto:
+            </div>
+            <div class="detail-value">
+                {{ email.asunto }}
+            </div>
+        </div>
+
+        <div class="detail-row">
+            <div class="detail-label">
+                <i class="bi bi-check-circle"></i> Estado:
+            </div>
+            <div class="detail-value">
+                {% if email.estado == 'enviado' %}
+                    <span class="badge bg-success">
+                        <i class="bi bi-check-circle"></i> Enviado Exitosamente
+                    </span>
+                {% else %}
+                    <span class="badge bg-danger">
+                        <i class="bi bi-x-circle"></i> Fallido
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if email.pago %}
+        <div class="detail-row">
+            <div class="detail-label">
+                <i class="bi bi-cash"></i> Pago Asociado:
+            </div>
+            <div class="detail-value">
+                Pago #{{ email.pago.id }} - ${{ email.pago.monto|number_format(2, ',', '.') }}
+                <br>
+                <small class="text-muted">{{ email.pago.curso.nombre }} - {{ email.pago.mes }}/{{ email.pago.ano }}</small>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if email.deuda %}
+        <div class="detail-row">
+            <div class="detail-label">
+                <i class="bi bi-exclamation-triangle"></i> Deuda Asociada:
+            </div>
+            <div class="detail-value">
+                Deuda #{{ email.deuda.id }} - ${{ email.deuda.monto|number_format(2, ',', '.') }}
+                <br>
+                <small class="text-muted">{{ email.deuda.curso.nombre }} - {{ email.deuda.mes }}/{{ email.deuda.ano }}</small>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="detail-row">
+            <div class="detail-label">
+                <i class="bi bi-robot"></i> Tipo de Envío:
+            </div>
+            <div class="detail-value">
+                {% if email.esAutomatico %}
+                    <span class="badge bg-info">
+                        <i class="bi bi-robot"></i> Automático
+                    </span>
+                {% else %}
+                    <span class="badge bg-secondary">
+                        <i class="bi bi-person"></i> Manual
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if email.solicitadoPor %}
+        <div class="detail-row">
+            <div class="detail-label">
+                <i class="bi bi-person-check"></i> Solicitado Por:
+            </div>
+            <div class="detail-value">
+                {{ email.solicitadoPor.username }}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if email.errorMensaje %}
+        <div class="error-box">
+            <h5 class="text-danger">
+                <i class="bi bi-exclamation-triangle"></i> Mensaje de Error:
+            </h5>
+            <pre>{{ email.errorMensaje }}</pre>
+        </div>
+        {% endif %}
+
+        {% if email.tipo == 'recibo' and email.pago %}
+        <div class="mt-4">
+            <form method="post" action="{{ path('app_email_reenviar_recibo', {'id': email.id}) }}" onsubmit="return confirm('¿Reenviar recibo a {{ email.destinatario }}?');">
+                <input type="hidden" name="_token" value="{{ csrf_token('reenviar_recibo' ~ email.id) }}">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-arrow-repeat"></i> Reenviar Recibo
+                </button>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

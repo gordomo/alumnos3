@@ -6,6 +6,8 @@ use App\Entity\Instituto;
 use App\Entity\Alumno;
 use App\Entity\AlumnosPagos;
 use App\Entity\DeudaAlumno;
+use App\Entity\EmailLog;
+use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
@@ -45,13 +47,16 @@ class NotificationService
     /**
      * Envía un email con el recibo/factura de un pago
      */
-    public function enviarReciboPago(AlumnosPagos $pago, ?string $emailDestino = null, bool $forzarEnvio = false): bool
+    public function enviarReciboPago(AlumnosPagos $pago, ?string $emailDestino = null, bool $forzarEnvio = false, ?User $solicitadoPor = null): bool
     {
         $instituto = $pago->getAlumno()->getInstituto();
         $configuracion = $instituto->getConfiguracion();
         
         // Verificar si está habilitado el envío de facturas/recibos (a menos que se fuerce)
         if (!$forzarEnvio && (!$configuracion || !$configuracion->getEnviarFacturasRecibos())) {
+            $this->registrarEmailLog($instituto, $pago->getAlumno(), 'recibo', $emailDestino ?? $pago->getAlumno()->getEmail(), 
+                'Recibo de Pago - ' . $instituto->getNombre(), 'fallido', 
+                'Envío de recibos deshabilitado en configuración', $pago, null, $solicitadoPor, false);
             return false;
         }
         
@@ -59,6 +64,9 @@ class NotificationService
         $emailAlumno = $emailDestino ?? $alumno->getEmail();
         
         if (!$emailAlumno) {
+            $this->registrarEmailLog($instituto, $alumno, 'recibo', 'Sin email', 
+                'Recibo de Pago - ' . $instituto->getNombre(), 'fallido', 
+                'El alumno no tiene email configurado', $pago, null, $solicitadoPor, false);
             return false;
         }
         
@@ -77,6 +85,7 @@ class NotificationService
         }
         
         $fromName = $instituto->getNombre() ?? 'Instituto';
+        $asunto = 'Recibo de Pago - ' . $instituto->getNombre();
         
         try {
             $logoUrl = $this->getLogoUrl($instituto);
@@ -84,7 +93,7 @@ class NotificationService
             $email = (new TemplatedEmail())
                 ->from(new Address($fromEmail, $fromName))
                 ->to($emailAlumno)
-                ->subject('Recibo de Pago - ' . $instituto->getNombre())
+                ->subject($asunto)
                 ->htmlTemplate('emails/recibo_pago.html.twig')
                 ->context([
                     'instituto' => $instituto,
@@ -95,6 +104,10 @@ class NotificationService
                 ]);
             
             $this->mailer->send($email);
+            
+            // Registrar email enviado exitosamente
+            $this->registrarEmailLog($instituto, $alumno, 'recibo', $emailAlumno, $asunto, 
+                'enviado', null, $pago, null, $solicitadoPor, $solicitadoPor === null);
             
             // Consumir tokens por enviar notificación
             $this->tokenService->consumeTokens(
@@ -108,6 +121,10 @@ class NotificationService
             
             return true;
         } catch (\Exception $e) {
+            // Registrar email fallido
+            $this->registrarEmailLog($instituto, $alumno, 'recibo', $emailAlumno, $asunto, 
+                'fallido', $e->getMessage(), $pago, null, $solicitadoPor, $solicitadoPor === null);
+            
             // Log error si es necesario
             throw new \RuntimeException(
                 sprintf(
@@ -125,19 +142,25 @@ class NotificationService
     /**
      * Envía un recordatorio de deuda pendiente
      */
-    public function enviarRecordatorioDeuda(Alumno $alumno, DeudaAlumno $deuda, ?string $emailDestino = null, bool $forzarEnvio = false): bool
+    public function enviarRecordatorioDeuda(Alumno $alumno, DeudaAlumno $deuda, ?string $emailDestino = null, bool $forzarEnvio = false, ?User $solicitadoPor = null): bool
     {
         $instituto = $alumno->getInstituto();
         $configuracion = $instituto->getConfiguracion();
         
         // Verificar si está habilitado el envío de recordatorios (a menos que se fuerce)
         if (!$forzarEnvio && (!$configuracion || !$configuracion->getEnviarRecordatoriosDeudas())) {
+            $this->registrarEmailLog($instituto, $alumno, 'recordatorio', $emailDestino ?? $alumno->getEmail(), 
+                'Recordatorio de Pago Pendiente - ' . $instituto->getNombre(), 'fallido', 
+                'Envío de recordatorios deshabilitado en configuración', null, $deuda, $solicitadoPor, false);
             return false;
         }
         
         $emailAlumno = $emailDestino ?? $alumno->getEmail();
         
         if (!$emailAlumno) {
+            $this->registrarEmailLog($instituto, $alumno, 'recordatorio', 'Sin email', 
+                'Recordatorio de Pago Pendiente - ' . $instituto->getNombre(), 'fallido', 
+                'El alumno no tiene email configurado', null, $deuda, $solicitadoPor, false);
             return false;
         }
         
@@ -156,6 +179,7 @@ class NotificationService
         }
         
         $fromName = $instituto->getNombre() ?? 'Instituto';
+        $asunto = 'Recordatorio de Pago Pendiente - ' . $instituto->getNombre();
         
         try {
             $logoUrl = $this->getLogoUrl($instituto);
@@ -163,7 +187,7 @@ class NotificationService
             $email = (new TemplatedEmail())
                 ->from(new Address($fromEmail, $fromName))
                 ->to($emailAlumno)
-                ->subject('Recordatorio de Pago Pendiente - ' . $instituto->getNombre())
+                ->subject($asunto)
                 ->htmlTemplate('emails/recordatorio_deuda.html.twig')
                 ->context([
                     'instituto' => $instituto,
@@ -174,6 +198,10 @@ class NotificationService
                 ]);
             
             $this->mailer->send($email);
+            
+            // Registrar email enviado exitosamente
+            $this->registrarEmailLog($instituto, $alumno, 'recordatorio', $emailAlumno, $asunto, 
+                'enviado', null, null, $deuda, $solicitadoPor, $solicitadoPor === null);
             
             // Consumir tokens por enviar notificación
             $this->tokenService->consumeTokens(
@@ -187,6 +215,10 @@ class NotificationService
             
             return true;
         } catch (\Exception $e) {
+            // Registrar email fallido
+            $this->registrarEmailLog($instituto, $alumno, 'recordatorio', $emailAlumno, $asunto, 
+                'fallido', $e->getMessage(), null, $deuda, $solicitadoPor, $solicitadoPor === null);
+            
             // Log error si es necesario
             throw $e; // Re-lanzar para que el comando pueda mostrar el error
         }
@@ -272,6 +304,45 @@ class NotificationService
         
         // Construir la URL completa del logo
         return $this->baseUrl . '/uploads/logos/' . $instituto->getLogo();
+    }
+
+    /**
+     * Registra un email en el log
+     */
+    private function registrarEmailLog(
+        Instituto $instituto,
+        ?Alumno $alumno,
+        string $tipo,
+        string $destinatario,
+        string $asunto,
+        string $estado,
+        ?string $errorMensaje = null,
+        ?AlumnosPagos $pago = null,
+        ?DeudaAlumno $deuda = null,
+        ?User $solicitadoPor = null,
+        bool $esAutomatico = false
+    ): void {
+        try {
+            $emailLog = new EmailLog();
+            $emailLog->setInstituto($instituto);
+            $emailLog->setAlumno($alumno);
+            $emailLog->setTipo($tipo);
+            $emailLog->setDestinatario($destinatario);
+            $emailLog->setAsunto($asunto);
+            $emailLog->setFechaEnvio(new \DateTime());
+            $emailLog->setEstado($estado);
+            $emailLog->setErrorMensaje($errorMensaje);
+            $emailLog->setPago($pago);
+            $emailLog->setDeuda($deuda);
+            $emailLog->setSolicitadoPor($solicitadoPor);
+            $emailLog->setEsAutomatico($esAutomatico);
+            
+            $this->entityManager->persist($emailLog);
+            $this->entityManager->flush();
+        } catch (\Exception $e) {
+            // No interrumpir el flujo si falla el registro del log
+            // Podría loggear este error en un archivo si es necesario
+        }
     }
 }
 

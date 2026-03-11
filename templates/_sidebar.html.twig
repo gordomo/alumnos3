@@ -126,6 +126,14 @@
                     </a>
                 </li>
             </ul>
+
+            <ul class="nav nav-tabs sidebar-dropdown-ul">
+                <li class="nav-item">
+                    <a class="list-group-item list-group-item-action bg-light {% if app.request.get('_route') starts with 'app_email_log_' %}active{% endif %}" href="{{ path('app_email_log_index') }}">
+                        <i class="bi bi-envelope-check"></i> Historial de Emails
+                    </a>
+                </li>
+            </ul>
         {% endif %}
 
         {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_SUPER_ADMIN') %}

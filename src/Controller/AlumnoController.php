@@ -6,6 +6,7 @@ use App\Entity\Alumno;
 use App\Form\AlumnoType;
 use App\Repository\AlumnoRepository;
 use App\Repository\CursoRepository;
+use App\Repository\EmailLogRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -334,7 +335,7 @@ class AlumnoController extends AbstractController
     /**
      * @Route("/{id}", name="app_alumno_show", methods={"GET"})
      */
-    public function show(Alumno $alumno, AlumnoRepository $alumnoRepository): Response
+    public function show(Alumno $alumno, AlumnoRepository $alumnoRepository, EmailLogRepository $emailLogRepository): Response
     {
         $user = $this->getUser();
         if (!$user || !$user->getInstituto()) {
@@ -355,9 +356,22 @@ class AlumnoController extends AbstractController
                 $hermanos[] = $hermano;
             }
         }
+        
+        // Buscar el último recordatorio enviado a este alumno
+        $ultimoRecordatorio = $emailLogRepository->createQueryBuilder('e')
+            ->andWhere('e.alumno = :alumno')
+            ->andWhere('e.tipo = :tipo')
+            ->setParameter('alumno', $alumno)
+            ->setParameter('tipo', 'recordatorio')
+            ->orderBy('e.fechaEnvio', 'DESC')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+        
         return $this->render('alumno/show.html.twig', [
             'alumno' => $alumno,
-            'hermanos' => $hermanos
+            'hermanos' => $hermanos,
+            'ultimoRecordatorio' => $ultimoRecordatorio
         ]);
     }
 

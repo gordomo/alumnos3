@@ -147,7 +147,7 @@
             <h6 class="m-0 font-weight-bold text-primary">Acciones</h6>
         </div>
         <div class="card-body">
-            <div class="d-flex gap-2">
+            <div class="d-flex gap-2 flex-wrap">
                 {{ include('components/back_button.html.twig', {
                     'default_path': path('app_alumno_index'),
                     'force_reload': true
@@ -161,6 +161,45 @@
                 <a href="{{ path('app_alumnos_pagos_new', {'id': alumno.id}) }}" class="btn btn-success">
                     <i class="bi bi-journal-check"></i> Registrar Pago
                 </a>
+                
+                <a href="{{ path('app_email_log_alumno', {'id': alumno.id}) }}" class="btn btn-secondary">
+                    <i class="bi bi-envelope-check"></i> Ver Emails Enviados
+                </a>
+                
+                {% if alumno.email %}
+                {% set horasDesdeUltimoRecordatorio = null %}
+                {% set puedeEnviar = true %}
+                {% if ultimoRecordatorio %}
+                    {% set ahora = date() %}
+                    {% set diferencia = ahora.diff(ultimoRecordatorio.fechaEnvio) %}
+                    {% set horasDesdeUltimoRecordatorio = (diferencia.days * 24) + diferencia.h %}
+                    {% set puedeEnviar = horasDesdeUltimoRecordatorio >= 48 %}
+                {% endif %}
+                
+                <div style="display: inline-block;">
+                    <form method="post" action="{{ path('app_email_send_recordatorio', {'id': alumno.id}) }}" style="display: inline;" onsubmit="return confirm('¿Enviar recordatorio de deudas pendientes a {{ alumno.email }}?');">
+                        <input type="hidden" name="_token" value="{{ csrf_token('send_recordatorio' ~ alumno.id) }}">
+                        <button type="submit" class="btn btn-info" {% if not puedeEnviar %}disabled{% endif %}>
+                            <i class="bi bi-envelope"></i> Enviar Recordatorio
+                        </button>
+                    </form>
+                    {% if ultimoRecordatorio %}
+                    <div class="mt-2">
+                        <small class="text-muted">
+                            {% if ultimoRecordatorio.estado == 'enviado' %}
+                                <i class="bi bi-check-circle text-success"></i> Último envío: {{ ultimoRecordatorio.fechaEnvio|date('d/m/Y H:i') }}
+                                {% if not puedeEnviar %}
+                                    <br><span class="text-warning">⏳ Espera {{ 48 - horasDesdeUltimoRecordatorio }} horas para reenviar</span>
+                                {% endif %}
+                            {% else %}
+                                <i class="bi bi-x-circle text-danger"></i> Último intento falló: {{ ultimoRecordatorio.fechaEnvio|date('d/m/Y H:i') }}
+                            {% endif %}
+                        </small>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+                
                 {{ include('alumno/_delete_form.html.twig') }}
             </div>
         </div>
