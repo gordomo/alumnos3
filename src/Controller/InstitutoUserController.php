@@ -40,7 +40,7 @@ class InstitutoUserController extends AbstractController
         
         $instituto = $usuarioActual->getInstituto();
         $busqueda = $request->get('busqueda', '');
-        $limit = $request->get('limit', 10);
+        $limit = $request->get('limit', 999999999999999999);
         
         // Crear query base
         $qb = $userRepository->createQueryBuilder('u')
