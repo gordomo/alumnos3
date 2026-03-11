@@ -375,33 +375,15 @@
                             </td>
                             <td>{{ curso.fechaInicio|date(app_date_format|default('d/m/Y')) }}</td>
                             <td>{{ curso.fechaFin|date(app_date_format|default('d/m/Y')) }}</td>
-                            <td class="text-center position-relative">
-                                <div class="dropdown dropstart">
-                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle-clean btn-action-icon" type="button" id="dropdownMenuButton{{ curso.id }}" data-bs-toggle="dropdown" aria-expanded="false">
-                                        <i class="bi bi-three-dots-vertical"></i>
-                                    </button>
-                                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton{{ curso.id }}">
-                                        <li>
-                                            <a class="dropdown-item" href="{{ path('app_curso_show', {'id': curso.id}) }}">
-                                                <i class="bi bi-eye me-2"></i> Ver detalle
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a class="dropdown-item" href="{{ path('app_curso_edit', {'id': curso.id}) }}">
-                                                <i class="bi bi-pencil me-2"></i> Editar
-                                            </a>
-                                        </li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li>
-                                            <form method="post" action="{{ path('app_curso_delete', {'id': curso.id}) }}" onsubmit="return confirm('Está seguro que desea deshabilitar este curso?');" class="d-inline">
-                                                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ curso.id) }}">
-                                                <button type="submit" class="dropdown-item text-danger">
-                                                    <i class="bi bi-x-circle me-2"></i> Deshabilitar
-                                                </button>
-                                            </form>
-                                        </li>
-                                    </ul>
-                                </div>
+                            <td class="text-end">
+                                {{ include('components/action_buttons.html.twig', {
+                                    'show_url': path('app_curso_show', {'id': curso.id}),
+                                    'edit_url': path('app_curso_edit', {'id': curso.id}),
+                                    'delete_url': path('app_curso_delete', {'id': curso.id}),
+                                    'delete_confirm': '¿Está seguro que desea deshabilitar este curso?',
+                                    'delete_token': csrf_token('delete' ~ curso.id),
+                                    'delete_label': 'Deshabilitar'
+                                }) }}
                             </td>
                         </tr>
                     {% else %}
@@ -470,24 +452,11 @@
                             </td>
                             <td>{{ curso.fechaInicio|date(app_date_format|default('d/m/Y')) }}</td>
                             <td>{{ curso.fechaFin|date(app_date_format|default('d/m/Y')) }}</td>
-                            <td class="text-center position-relative">
-                                <div class="dropdown dropstart">
-                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle-clean btn-action-icon" type="button" id="dropdownMenuButtonDisabled{{ curso.id }}" data-bs-toggle="dropdown" aria-expanded="false">
-                                        <i class="bi bi-three-dots-vertical"></i>
-                                    </button>
-                                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButtonDisabled{{ curso.id }}">
-                                        <li>
-                                            <a class="dropdown-item" href="{{ path('app_curso_show', {'id': curso.id}) }}">
-                                                <i class="bi bi-eye me-2"></i> Ver detalle
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a class="dropdown-item text-success" href="{{ path('app_curso_habilitar', {id: curso.id}) }}">
-                                                <i class="bi bi-check-circle me-2"></i> Habilitar
-                                            </a>
-                                        </li>
-                                    </ul>
-                                </div>
+                            <td class="text-end">
+                                {{ include('components/action_buttons.html.twig', {
+                                    'show_url': path('app_curso_show', {'id': curso.id}),
+                                    'enable_url': path('app_curso_habilitar', {'id': curso.id})
+                                }) }}
                             </td>
                         </tr>
                     {% else %}

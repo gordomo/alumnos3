@@ -124,15 +124,6 @@
             font-size: 0.95rem;
         }
 
-        .acciones-pago-group {
-            display: inline-flex;
-            gap: 0.3rem;
-        }
-
-        .acciones-pago-group .btn {
-            border-radius: 8px;
-        }
-
         .pagos-pagination .pagination {
             margin-bottom: 0;
         }
@@ -470,17 +461,21 @@
                     <td>{{ nombresMeses[pago.mes] ?? pago.mes }}</td>
                     <td>{{ pago.ano }}</td>
                                             <td>
-                                                <div class="acciones-pago-group" role="group">
-                                                    <a href="{{ path('app_alumnos_pagos_show', {'id': pago.id}) }}" target="_blank" class="btn btn-sm btn-outline-primary btn-action-icon" title="Imprimir" data-toggle="tooltip">
-                            <i class="bi bi-printer"></i>
-                        </a>
-                                                    <a href="{{ path('app_alumnos_pagos_edit', {'id': pago.id}) }}" class="btn btn-sm btn-outline-secondary btn-action-icon" title="Editar" data-toggle="tooltip">
-                                <i class="bi bi-pencil"></i>
-                        </a>
-                        {{ include('alumnos_pagos/_delete_form.html.twig', {
-                            'pagoId': pago.id
-                        }) }}
-                                                </div>
+                                                {{ include('components/action_buttons.html.twig', {
+                                                    'custom_buttons': [
+                                                        {
+                                                            'url': path('app_alumnos_pagos_show', {'id': pago.id}),
+                                                            'class': 'btn-outline-primary',
+                                                            'icon': 'bi-printer',
+                                                            'title': 'Imprimir'
+                                                        }
+                                                    ],
+                                                    'edit_url': path('app_alumnos_pagos_edit', {'id': pago.id}),
+                                                    'delete_url': path('app_alumnos_pagos_delete', {'id': pago.id}),
+                                                    'delete_confirm': '¿Seguro desea borrar este pago?',
+                                                    'delete_token': csrf_token('delete' ~ pago.id),
+                                                    'delete_label': 'Borrar'
+                                                }) }}
                     </td>
                 </tr>
                                     {% else %}

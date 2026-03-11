@@ -1,0 +1,32 @@
+<div class="actions-group">
+{% if show_url is defined %}
+    <a href="{{ show_url }}" class="btn btn-sm btn-outline-primary btn-action-icon" title="Ver" data-toggle="tooltip" data-placement="left">
+        <i class="bi bi-eye"></i>
+    </a>
+{% endif %}
+{% if edit_url is defined %}
+    <a href="{{ edit_url }}" class="btn btn-sm btn-outline-secondary btn-action-icon" title="Editar" data-toggle="tooltip" data-placement="top">
+        <i class="bi bi-pencil"></i>
+    </a>
+{% endif %}
+{% if custom_buttons is defined %}
+    {% for button in custom_buttons %}
+    <a href="{{ button.url }}" class="btn btn-sm {{ button.class|default('btn-outline-info') }} btn-action-icon" title="{{ button.title }}" data-toggle="tooltip" data-placement="top">
+        <i class="bi {{ button.icon }}"></i>
+    </a>
+    {% endfor %}
+{% endif %}
+{% if enable_url is defined %}
+    <a href="{{ enable_url }}" class="btn btn-sm btn-outline-success btn-action-icon" title="Habilitar" data-toggle="tooltip" data-placement="right">
+        <i class="bi bi-check-circle"></i>
+    </a>
+{% endif %}
+{% if delete_url is defined %}
+    <form method="post" action="{{ delete_url }}" onsubmit="return confirm('{{ delete_confirm|default('¿Está seguro?') }}');" style="display: inline;">
+        <input type="hidden" name="_token" value="{{ delete_token }}">
+        <button type="submit" class="btn btn-sm btn-outline-danger btn-action-icon" title="{{ delete_label|default('Eliminar') }}" data-toggle="tooltip" data-placement="right">
+            <i class="bi {{ delete_icon|default(delete_label == 'Borrar' ? 'bi-trash' : 'bi-x-circle') }}"></i>
+        </button>
+    </form>
+{% endif %}
+</div>

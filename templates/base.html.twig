@@ -51,6 +51,34 @@
                 box-shadow: 0 0 0 0.2rem rgba(132, 157, 154, 0.16);
             }
 
+            .actions-group {
+                display: inline-flex;
+                gap: 0.3rem;
+                flex-wrap: nowrap;
+                align-items: center;
+            }
+
+            .actions-group .btn {
+                border-radius: 8px;
+                width: 38px !important;
+                min-width: 38px !important;
+                height: 38px !important;
+                padding: 0.2rem;
+                flex-shrink: 0;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .actions-group form {
+                display: inline-flex;
+                margin: 0;
+            }
+
+            td .actions-group {
+                white-space: nowrap;
+            }
+
             .ui-filter-card .btn-outline-secondary {
                 border-color: #d9e4e2;
                 color: #556067;
@@ -171,6 +199,36 @@
             });
         });
 
+        // Fix para el problema de doble clic en confirm()
+        document.addEventListener('DOMContentLoaded', function() {
+            // Encontrar todos los formularios con confirm
+            const formsWithConfirm = document.querySelectorAll('form[onsubmit*="confirm"]');
+            
+            formsWithConfirm.forEach(function(form) {
+                // Guardar el onsubmit original
+                const originalOnsubmit = form.getAttribute('onsubmit');
+                
+                // Remover el atributo onsubmit para evitar que se ejecute
+                form.removeAttribute('onsubmit');
+                
+                // Agregar un event listener que lo reemplace
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    // Extraer el mensaje del confirm
+                    const match = originalOnsubmit.match(/confirm\(['"](.+?)['"]\)/);
+                    const message = match ? match[1] : '¿Está seguro?';
+                    
+                    // Mostrar el confirm una sola vez
+                    if (confirm(message)) {
+                        // Enviar el formulario sin el event listener
+                        form.removeEventListener('submit', arguments.callee);
+                        form.submit();
+                    }
+                });
+            });
+        });
+
         $(document).ready(function(){
             $("[data-toggle=tooltip]").tooltip({ placement: function(tooltip, link) {
                 return $(link).data('placement') || 'right';
@@ -191,18 +249,6 @@
                     disable_search_threshold: 0           // Nunca deshabilitar la búsqueda
                 });
             }
-
-            // Fix para el problema de doble clic en confirm()
-            // Prevenir múltiples submits del mismo formulario
-            let formSubmitting = false;
-            $('form[onsubmit*="confirm"]').on('submit', function(e) {
-                if (formSubmitting) {
-                    e.preventDefault();
-                    return false;
-                }
-                formSubmitting = true;
-                setTimeout(() => { formSubmitting = false; }, 1000);
-            });
         });
     </script>
 {% endblock %}

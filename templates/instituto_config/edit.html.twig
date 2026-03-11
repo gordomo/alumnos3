@@ -317,13 +317,13 @@
                                                         <td><strong>Día {{ vencimiento.diaVencimiento }}</strong></td>
                                                         <td><span class="badge bg-success text-white">{{ vencimiento.porcentajeInteres }}%</span></td>
                                                         <td>
-                                                            <div class="btn-group btn-group-sm" role="group">
-                                                                <button type="button" class="btn btn-sm btn-outline-secondary btn-action-icon me-2" data-bs-toggle="modal" data-bs-target="#modalEditarVencimiento{{ vencimiento.id }}" title="Editar">
+                                                            <div class="actions-group">
+                                                                <button type="button" class="btn btn-sm btn-outline-secondary btn-action-icon" data-bs-toggle="modal" data-bs-target="#modalEditarVencimiento{{ vencimiento.id }}" title="Editar" data-toggle="tooltip">
                                                                     <i class="bi bi-pencil"></i>
                                                                 </button>
-                                                                <form method="post" action="{{ path('instituto_config_vencimiento_delete', {'id': vencimiento.id}) }}" onsubmit="return confirm('¿Está seguro que desea eliminar este vencimiento?');" style="display: inline-block;">
+                                                                <form method="post" action="{{ path('instituto_config_vencimiento_delete', {'id': vencimiento.id}) }}" onsubmit="return confirm('¿Está seguro que desea eliminar este vencimiento?');" style="display: inline;">
                                                                     <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ vencimiento.id) }}">
-                                                                    <button class="btn btn-danger btn-sm btn-action-icon" title="Eliminar">
+                                                                    <button type="submit" class="btn btn-danger btn-sm btn-action-icon" title="Eliminar" data-toggle="tooltip">
                                                                         <i class="bi bi-trash"></i>
                                                                     </button>
                                                                 </form>
@@ -479,13 +479,13 @@
                                                                 {% endif %}
                                                             </td>
                                                             <td>
-                                                                <div class="btn-group btn-group-sm" role="group">
-                                                                    <button type="button" class="btn btn-sm btn-outline-secondary btn-action-icon me-2" data-bs-toggle="modal" data-bs-target="#modalEditarDescuento{{ descuento.id }}" title="Editar">
+                                                                <div class="actions-group">
+                                                                    <button type="button" class="btn btn-sm btn-outline-secondary btn-action-icon" data-bs-toggle="modal" data-bs-target="#modalEditarDescuento{{ descuento.id }}" title="Editar" data-toggle="tooltip">
                                                                         <i class="bi bi-pencil"></i>
                                                                     </button>
-                                                                    <form method="post" action="{{ path('instituto_config_descuento_promocional_delete', {'id': descuento.id}) }}" onsubmit="return confirm('¿Está seguro que desea eliminar este descuento promocional?');" style="display: inline-block;">
+                                                                    <form method="post" action="{{ path('instituto_config_descuento_promocional_delete', {'id': descuento.id}) }}" onsubmit="return confirm('¿Está seguro que desea eliminar este descuento promocional?');" style="display: inline;">
                                                                         <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ descuento.id) }}">
-                                                                        <button class="btn btn-danger btn-sm btn-action-icon" title="Eliminar">
+                                                                        <button type="submit" class="btn btn-danger btn-sm btn-action-icon" title="Eliminar" data-toggle="tooltip">
                                                                             <i class="bi bi-trash"></i>
                                                                         </button>
                                                                     </form>
@@ -552,7 +552,7 @@
                                                 <strong>Enviar recordatorios de deudas automáticamente</strong>
                                             </label>
                                             <div class="form-text text-muted">
-                                                <strong>Activado:</strong> Se enviarán recordatorios automáticos según la configuración del cron job.<br>
+                                                <strong>Activado:</strong> Se enviarán recordatorios automáticos cada 3 días desde que se genera la deuda. Por ejemplo, si una deuda se genera el día 10, se enviarán recordatorios el día 10, 13, 16, 19, etc. <strong>Requiere configurar un cron job en el servidor.</strong><br>
                                                 <strong>Desactivado:</strong> Los recordatorios solo se pueden enviar manualmente desde el botón "Enviar Recordatorio" en la vista de cada alumno (con límite de 48 horas entre envíos).
                                             </div>
                                         </div>
@@ -564,10 +564,10 @@
                                                    name="enviarRecordatorioEnDiaVencimiento"
                                                    {% if configuracion.enviarRecordatorioEnDiaVencimiento %}checked{% endif %}>
                                             <label class="form-check-label" for="enviarRecordatorioEnDiaVencimiento">
-                                                <strong>Enviar recordatorios en el día de vencimiento</strong>
+                                                <strong>Enviar recordatorio adicional en el día de vencimiento</strong>
                                             </label>
                                             <div class="form-text text-muted">
-                                                Cuando está activado junto con "Enviar recordatorios de deudas automáticamente", el sistema enviará un email el primer día de vencimiento configurado de cada mes. Por ejemplo, si tu primer vencimiento es el día 10, se enviará el día 10 de cada mes a todos los alumnos con deudas pendientes. <strong>Requiere configurar un cron job en el servidor.</strong>
+                                                Cuando está activado junto con "Enviar recordatorios de deudas automáticamente", se enviará un recordatorio adicional específicamente el primer día de vencimiento configurado de cada mes. Por ejemplo, si tu primer vencimiento es el día 10, se enviará un recordatorio adicional el día 10 de cada mes (además de los recordatorios cada 3 días). <strong>Requiere configurar un cron job en el servidor.</strong>
                                             </div>
                                         </div>
                                         

@@ -240,32 +240,12 @@ class NotificationService
         foreach ($institutos as $instituto) {
             $configuracion = $instituto->getConfiguracion();
             
-            if (!$configuracion || !$configuracion->getEnviarRecordatorioEnDiaVencimiento()) {
+            // Verificar si tiene activado el envío automático de recordatorios
+            if (!$configuracion || !$configuracion->getEnviarRecordatoriosDeudas()) {
                 continue;
             }
             
-            // Obtener el primer día de vencimiento del instituto
-            $vencimientos = $instituto->getVencimientos()->toArray();
-            if (empty($vencimientos)) {
-                continue;
-            }
-            
-            usort($vencimientos, function($a, $b) {
-                return $a->getOrden() <=> $b->getOrden();
-            });
-            
-            $primerVencimiento = reset($vencimientos);
-            $diaVencimiento = $primerVencimiento->getDiaVencimiento();
-            
-            // Solo enviar si estamos en el día de vencimiento
-            if ($diaActual != $diaVencimiento) {
-                continue;
-            }
-            
-            // Obtener todas las deudas pendientes del mes actual
-            $mesActual = (int)$fechaActual->format('n');
-            $anoActual = (int)$fechaActual->format('Y');
-            
+            // Obtener todas las deudas pendientes (no solo del mes actual)
             $deudas = $this->entityManager->getRepository(DeudaAlumno::class)
                 ->createQueryBuilder('d')
                 ->leftJoin('d.alumno', 'a')
@@ -274,23 +254,84 @@ class NotificationService
                 ->having('COALESCE(SUM(pa.montoAplicado), 0) < d.monto + COALESCE(d.interes, 0)')
                 ->andWhere('a.instituto = :instituto')
                 ->andWhere('a.activo = :activo')
-                ->andWhere('d.mes = :mes')
-                ->andWhere('d.ano = :ano')
+                ->andWhere('a.email IS NOT NULL')
+                ->andWhere('a.email != :empty')
                 ->setParameter('instituto', $instituto)
                 ->setParameter('activo', true)
-                ->setParameter('mes', $mesActual)
-                ->setParameter('ano', $anoActual)
+                ->setParameter('empty', '')
                 ->getQuery()
                 ->getResult();
             
             foreach ($deudas as $deuda) {
-                if ($this->enviarRecordatorioDeuda($deuda->getAlumno(), $deuda)) {
-                    $enviados++;
+                $debeEnviar = false;
+                
+                // Opción 1: Enviar cada 3 días desde la creación o último envío
+                if ($this->debeEnviarRecordatorio($deuda)) {
+                    $debeEnviar = true;
+                }
+                
+                // Opción 2: Enviar en el día de vencimiento (si está activado)
+                if ($configuracion->getEnviarRecordatorioEnDiaVencimiento()) {
+                    $vencimientos = $instituto->getVencimientos()->toArray();
+                    if (!empty($vencimientos)) {
+                        usort($vencimientos, function($a, $b) {
+                            return $a->getOrden() <=> $b->getOrden();
+                        });
+                        $primerVencimiento = reset($vencimientos);
+                        $diaVencimiento = $primerVencimiento->getDiaVencimiento();
+                        
+                        // Si estamos en el día de vencimiento, enviar
+                        if ($diaActual == $diaVencimiento) {
+                            $debeEnviar = true;
+                        }
+                    }
+                }
+                
+                if ($debeEnviar) {
+                    if ($this->enviarRecordatorioDeuda($deuda->getAlumno(), $deuda, true)) {
+                        $enviados++;
+                    }
                 }
             }
         }
         
         return $enviados;
+    }
+
+    /**
+     * Verifica si debe enviarse un recordatorio para una deuda
+     * Se envía cada 3 días desde la creación de la deuda o desde el último recordatorio
+     */
+    private function debeEnviarRecordatorio(DeudaAlumno $deuda): bool
+    {
+        $fechaActual = new \DateTime();
+        
+        // Buscar el último recordatorio enviado para esta deuda
+        $ultimoRecordatorio = $this->entityManager->getRepository(EmailLog::class)
+            ->createQueryBuilder('e')
+            ->where('e.deuda = :deuda')
+            ->andWhere('e.tipo = :tipo')
+            ->andWhere('e.estado = :estado')
+            ->setParameter('deuda', $deuda)
+            ->setParameter('tipo', 'recordatorio')
+            ->setParameter('estado', 'enviado')
+            ->orderBy('e.fechaEnvio', 'DESC')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+        
+        // Si nunca se envió recordatorio, verificar desde la fecha de creación de la deuda
+        if (!$ultimoRecordatorio) {
+            $fechaReferencia = $deuda->getFechaCreacion();
+        } else {
+            $fechaReferencia = $ultimoRecordatorio->getFechaEnvio();
+        }
+        
+        // Calcular días transcurridos
+        $diasTranscurridos = $fechaActual->diff($fechaReferencia)->days;
+        
+        // Enviar si han pasado 3 o más días
+        return $diasTranscurridos >= 3;
     }
 
     /**

@@ -38,15 +38,13 @@
                                             <td>{{ vencimiento.diaVencimiento }}</td>
                                             <td>{{ vencimiento.porcentajeInteres }}%</td>
                                             <td>
-                                                <a href="{{ path('vencimiento_edit', {'id': vencimiento.id}) }}" class="btn btn-sm btn-info btn-action-icon">
-                                                    <i class="bi bi-pencil"></i>
-                                                </a>
-                                                <form method="post" action="{{ path('vencimiento_delete', {'id': vencimiento.id}) }}" onsubmit="return confirm('¿Está seguro que desea eliminar este vencimiento?');" style="display: inline-block;">
-                                                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ vencimiento.id) }}">
-                                                    <button class="btn btn-sm btn-danger btn-action-icon">
-                                                        <i class="bi bi-trash"></i>
-                                                    </button>
-                                                </form>
+                                                {{ include('components/action_buttons.html.twig', {
+                                                    'edit_url': path('vencimiento_edit', {'id': vencimiento.id}),
+                                                    'delete_url': path('vencimiento_delete', {'id': vencimiento.id}),
+                                                    'delete_confirm': '¿Está seguro que desea eliminar este vencimiento?',
+                                                    'delete_token': csrf_token('delete' ~ vencimiento.id),
+                                                    'delete_label': 'Eliminar'
+                                                }) }}
                                             </td>
                                         </tr>
                                     {% else %}

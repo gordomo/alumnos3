@@ -214,9 +214,9 @@
                             {% endif %}
                         </td>
                         <td class="text-center">
-                            <a href="{{ path('app_email_log_show', {'id': email.id}) }}" class="btn btn-sm btn-outline-secondary">
-                                <i class="bi bi-eye"></i> Ver
-                            </a>
+                            {{ include('components/action_buttons.html.twig', {
+                                'show_url': path('app_email_log_show', {'id': email.id})
+                            }) }}
                         </td>
                     </tr>
                 {% else %}
