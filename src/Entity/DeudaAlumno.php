@@ -48,7 +48,7 @@ class DeudaAlumno
     private $ano;
 
     /**
-     * @ORM\OneToMany(targetEntity=PagoAplicacion::class, mappedBy="deuda", cascade={"persist", "remove"})
+     * @ORM\OneToMany(targetEntity=PagoAplicacion::class, mappedBy="deuda", cascade={"persist", "remove"}, fetch="EAGER")
      */
     private $aplicaciones;
 
@@ -207,10 +207,11 @@ class DeudaAlumno
 
     /**
      * Verifica si la deuda está completamente pagada
+     * Una deuda está pagada si tiene al menos un pago aplicado (no hay pagos parciales)
      */
     public function isPagado(): bool
     {
-        return $this->getMontoPendiente() <= 0.01; // Tolerancia para comparaciones de float
+        return !$this->aplicaciones->isEmpty();
     }
 
     /**

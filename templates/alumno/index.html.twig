@@ -396,7 +396,7 @@
                         <a href="{{ path('app_alumnos_pagos_index', {'alumno': alumno.id}) }}" class="btn btn-sm btn-outline-success btn-action-icon" title="Ver Pagos" data-toggle="tooltip" data-placement="top">
                             <i class="bi bi-eye"></i>
                         </a>
-                        <a href="{{ path('app_alumno_deudas', {'id': alumno.id}) }}" class="btn btn-sm btn-outline-warning btn-action-icon" title="Gestionar Deudas" data-toggle="tooltip" data-placement="top">
+                        <a href="{{ path('app_alumno_deudas', {'id': alumno.id, 'return_url': app.request.uri}) }}" class="btn btn-sm btn-outline-warning btn-action-icon" title="Gestionar Deudas" data-toggle="tooltip" data-placement="top">
                             <i class="bi bi-cash-coin"></i>
                         </a>
                         {% if alumno.tieneDeudasVencidas() and alumno.activo %}

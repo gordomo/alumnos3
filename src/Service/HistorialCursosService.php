@@ -61,12 +61,9 @@ class HistorialCursosService
             return $historico;
         }
         
-        // Generar deudas usando DeudaService si está disponible
+        // Generar deudas usando DeudaService (centralizado)
         if ($this->deudaService) {
             $this->deudaService->generarDeudasParaHistorico($historico, $comenzarDeudaProximoMes);
-        } else {
-            // Mantener el método original como fallback
-            $this->generarDeudasParaHistorico($historico, $comenzarDeudaProximoMes);
         }
         
         return $historico;

@@ -74,6 +74,25 @@ class AlumnoController extends AbstractController
             $limit
         );
 
+        // Generar deudas faltantes solo para alumnos activos de esta página
+        // Esto asegura que las campanitas se muestren correctamente
+        foreach ($alumnos as $alumno) {
+            if ($alumno->getActivo()) {
+                $this->deudaService->generarDeudasVencidasFaltantes($alumno);
+            }
+        }
+        
+        // Limpiar y refrescar el entity manager para forzar recarga desde DB
+        $this->entityManager->clear();
+        
+        // Recargar los alumnos con las deudas recién creadas
+        $alumnosQuery = $this->createQuery($alumnoRepository, $instituto, $sort, $order, $busqueda, $activo, $cursoSelected);
+        $alumnos = $paginator->paginate(
+            $alumnosQuery, 
+            $currentPage, 
+            $limit
+        );
+
         return $this->render('alumno/index.html.twig', [
             'alumnos' => $alumnos,
             'busqueda' => $busqueda,
@@ -101,7 +120,12 @@ class AlumnoController extends AbstractController
         ?int $cursoSelected = null
     ) {
         $qb = $alumnoRepository->createQueryBuilder('a')
+            ->distinct()
             ->leftJoin('a.curso', 'c')
+            ->leftJoin('a.deudas', 'd')
+            ->addSelect('d')
+            ->leftJoin('d.aplicaciones', 'ap')
+            ->addSelect('ap')
             ->where('a.instituto = :instituto')
             ->setParameter('instituto', $instituto);
 
@@ -770,10 +794,16 @@ class AlumnoController extends AbstractController
      */
     public function cancelarDeuda(Alumno $alumno, int $deudaId, Request $request): Response
     {
+        // Capturar return_url si existe
+        $returnUrl = $request->query->get('return_url');
+        
         // Verificar token CSRF
         if (!$this->isCsrfTokenValid('cancelar-deuda'.$deudaId, $request->request->get('_token'))) {
             $this->addFlash('danger', 'Token CSRF inválido.');
-            return $this->redirectToRoute('app_alumno_deudas', ['id' => $alumno->getId()]);
+            return $this->redirectToRoute('app_alumno_deudas', [
+                'id' => $alumno->getId(),
+                'return_url' => $returnUrl
+            ]);
         }
         
         // Verificar que el alumno pertenece al instituto del usuario actual
@@ -789,13 +819,19 @@ class AlumnoController extends AbstractController
         // Verificar que la deuda existe y pertenece al alumno
         if (!$deuda || $deuda->getAlumno() !== $alumno) {
             $this->addFlash('danger', 'La deuda no existe o no pertenece a este alumno.');
-            return $this->redirectToRoute('app_alumno_deudas', ['id' => $alumno->getId()]);
+            return $this->redirectToRoute('app_alumno_deudas', [
+                'id' => $alumno->getId(),
+                'return_url' => $returnUrl
+            ]);
         }
         
         // Verificar que la deuda no está pagada
         if ($deuda->isPagado()) {
             $this->addFlash('danger', 'Esta deuda ya está pagada.');
-            return $this->redirectToRoute('app_alumno_deudas', ['id' => $alumno->getId()]);
+            return $this->redirectToRoute('app_alumno_deudas', [
+                'id' => $alumno->getId(),
+                'return_url' => $returnUrl
+            ]);
         }
         
         try {
@@ -814,7 +850,10 @@ class AlumnoController extends AbstractController
             $this->addFlash('danger', 'Ocurrió un error al cancelar la deuda: ' . $e->getMessage());
         }
         
-        return $this->redirectToRoute('app_alumno_deudas', ['id' => $alumno->getId()]);
+        return $this->redirectToRoute('app_alumno_deudas', [
+            'id' => $alumno->getId(),
+            'return_url' => $returnUrl
+        ]);
     }
 
     /**
@@ -822,10 +861,16 @@ class AlumnoController extends AbstractController
      */
     public function cancelarDeudasCurso(Alumno $alumno, int $cursoId, Request $request): Response
     {
+        // Capturar return_url si existe
+        $returnUrl = $request->query->get('return_url');
+        
         // Verificar token CSRF
         if (!$this->isCsrfTokenValid('cancelar-deudas-curso'.$cursoId, $request->request->get('_token'))) {
             $this->addFlash('danger', 'Token CSRF inválido.');
-            return $this->redirectToRoute('app_alumno_deudas', ['id' => $alumno->getId()]);
+            return $this->redirectToRoute('app_alumno_deudas', [
+                'id' => $alumno->getId(),
+                'return_url' => $returnUrl
+            ]);
         }
         
         // Verificar que el alumno pertenece al instituto del usuario actual
@@ -841,7 +886,10 @@ class AlumnoController extends AbstractController
         // Verificar que el curso existe y pertenece al instituto
         if (!$curso || $curso->getInstituto() !== $instituto) {
             $this->addFlash('danger', 'El curso no existe o no pertenece a este instituto.');
-            return $this->redirectToRoute('app_alumno_deudas', ['id' => $alumno->getId()]);
+            return $this->redirectToRoute('app_alumno_deudas', [
+                'id' => $alumno->getId(),
+                'return_url' => $returnUrl
+            ]);
         }
         
         try {
@@ -867,7 +915,10 @@ class AlumnoController extends AbstractController
             $this->addFlash('danger', 'Ocurrió un error al cancelar las deudas: ' . $e->getMessage());
         }
         
-        return $this->redirectToRoute('app_alumno_deudas', ['id' => $alumno->getId()]);
+        return $this->redirectToRoute('app_alumno_deudas', [
+            'id' => $alumno->getId(),
+            'return_url' => $returnUrl
+        ]);
     }
     
     /**
