@@ -191,6 +191,18 @@
                     disable_search_threshold: 0           // Nunca deshabilitar la búsqueda
                 });
             }
+
+            // Fix para el problema de doble clic en confirm()
+            // Prevenir múltiples submits del mismo formulario
+            let formSubmitting = false;
+            $('form[onsubmit*="confirm"]').on('submit', function(e) {
+                if (formSubmitting) {
+                    e.preventDefault();
+                    return false;
+                }
+                formSubmitting = true;
+                setTimeout(() => { formSubmitting = false; }, 1000);
+            });
         });
     </script>
 {% endblock %}

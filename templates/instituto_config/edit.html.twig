@@ -534,10 +534,11 @@
                                                    name="enviarFacturasRecibos"
                                                    {% if configuracion.enviarFacturasRecibos %}checked{% endif %}>
                                             <label class="form-check-label" for="enviarFacturasRecibos">
-                                                <strong>Enviar emails con facturas/recibos</strong>
+                                                <strong>Enviar recibos automáticamente al registrar pagos</strong>
                                             </label>
                                             <div class="form-text text-muted">
-                                                Cuando se registre un pago, se enviará automáticamente un email al alumno con el recibo.
+                                                <strong>Activado:</strong> Cada vez que se registre un pago, se enviará automáticamente un email al alumno con el comprobante de pago.<br>
+                                                <strong>Desactivado:</strong> Los recibos solo se pueden enviar manualmente desde el historial de emails.
                                             </div>
                                         </div>
                                         
@@ -548,10 +549,11 @@
                                                    name="enviarRecordatoriosDeudas"
                                                    {% if configuracion.enviarRecordatoriosDeudas %}checked{% endif %}>
                                             <label class="form-check-label" for="enviarRecordatoriosDeudas">
-                                                <strong>Enviar recordatorios de deudas pendientes</strong>
+                                                <strong>Enviar recordatorios de deudas automáticamente</strong>
                                             </label>
                                             <div class="form-text text-muted">
-                                                Permite enviar emails manuales recordando deudas pendientes.
+                                                <strong>Activado:</strong> Se enviarán recordatorios automáticos según la configuración del cron job.<br>
+                                                <strong>Desactivado:</strong> Los recordatorios solo se pueden enviar manualmente desde el botón "Enviar Recordatorio" en la vista de cada alumno (con límite de 48 horas entre envíos).
                                             </div>
                                         </div>
                                         
@@ -562,10 +564,10 @@
                                                    name="enviarRecordatorioEnDiaVencimiento"
                                                    {% if configuracion.enviarRecordatorioEnDiaVencimiento %}checked{% endif %}>
                                             <label class="form-check-label" for="enviarRecordatorioEnDiaVencimiento">
-                                                <strong>Enviar recordatorio automático el día de vencimiento</strong>
+                                                <strong>Enviar recordatorios en el día de vencimiento</strong>
                                             </label>
                                             <div class="form-text text-muted">
-                                                El primer día de vencimiento configurado, se enviará automáticamente un email recordando el pago pendiente del mes actual.
+                                                Cuando está activado junto con "Enviar recordatorios de deudas automáticamente", el sistema enviará un email el primer día de vencimiento configurado de cada mes. Por ejemplo, si tu primer vencimiento es el día 10, se enviará el día 10 de cada mes a todos los alumnos con deudas pendientes. <strong>Requiere configurar un cron job en el servidor.</strong>
                                             </div>
                                         </div>
                                         
