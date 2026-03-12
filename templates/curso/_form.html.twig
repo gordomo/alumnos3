@@ -324,25 +324,29 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 {% endif %}
 
-{# Botones de Acción #}
-<div class="d-flex gap-2 mt-3 pt-2 mb-5 border-top">
+{# Botones de Acción dentro del formulario #}
+<div class="d-flex gap-2 mt-3 pt-2 border-top align-items-center">
     <a href="{{ path('app_curso_index') }}" class="btn btn-secondary">
         <i class="bi bi-arrow-left"></i> Volver
     </a>
     <button type="submit" class="btn btn-success">
         <i class="bi bi-save"></i> {{ button_label|default('Guardar') }}
     </button>
-    {% if show_delete_button|default(false) and curso is defined %}
-        <form method="post" action="{{ path('app_curso_delete', {'id': curso.id}) }}" onsubmit="return confirm('¿Está seguro que desea deshabilitar este curso?');" class="d-inline ms-auto">
+</div>
+
+{{ form_end(form) }}
+
+{# Formulario de eliminación separado (debe estar fuera del form principal) #}
+{% if show_delete_button|default(false) and curso is defined %}
+    <div class="d-flex justify-content-end mb-5" style="margin-top: -3.5rem;">
+        <form method="post" action="{{ path('app_curso_delete', {'id': curso.id}) }}" onsubmit="return confirm('¿Está seguro que desea deshabilitar este curso?');">
             <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ curso.id) }}">
             <button type="submit" class="btn btn-danger">
                 <i class="bi bi-x-circle"></i> Deshabilitar
             </button>
         </form>
-    {% endif %}
-</div>
-
-{{ form_end(form) }}
+    </div>
+{% endif %}
 </div>
 
 <style>
