@@ -1260,6 +1260,14 @@
     {{ parent() }}
     <script>
         $(document).ready(function() {
+            // Forzar la fecha correcta del instituto en el campo de fecha
+            {% if fechaActualInstituto is defined %}
+            const campoFecha = document.querySelector('input[name="alumnos_pagos[fecha]"]');
+            if (campoFecha && !campoFecha.value) {
+                campoFecha.value = '{{ fechaActualInstituto }}';
+            }
+            {% endif %}
+
             // Redirigir al seleccionar alumno (actualiza URL con ?id=X para cargar deudas del alumno)
             // Usar jQuery .on() para compatibilidad con Chosen.js - addEventListener no captura bien el change de Chosen
             $('#alumnos_pagos_alumno').on('change', function() {

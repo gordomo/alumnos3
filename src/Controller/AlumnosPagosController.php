@@ -1386,7 +1386,8 @@ class AlumnosPagosController extends AbstractController
             'descuentosPromocionales' => $descuentosPromocionales,
             'descuentosPromocionalesSeleccionados' => $descuentosPromocionalesSeleccionados,
             'calculoMonto' => $calculoMonto,
-            'ordenCalculo' => $ordenCalculo
+            'ordenCalculo' => $ordenCalculo,
+            'fechaActualInstituto' => $this->institutoTimezoneService->getNowForInstituto($instituto)->format('Y-m-d')
         ]);
     }
 
