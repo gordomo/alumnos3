@@ -130,7 +130,7 @@
                                                                 {% if deuda.mes < mes_actual and deuda.ano <= ano_actual %}
                                                                     <span class="badge bg-danger">Vencida</span>
                                                                 {% elseif deuda.mes == mes_actual and deuda.ano == ano_actual %}
-                                                                    {% if dia_actual > primer_dia_vencimiento %}
+                                                                    {% if dia_actual >= primer_dia_vencimiento %}
                                                                         <span class="badge bg-danger">Vencida</span>
                                                                     {% else %}
                                                                         <span class="badge bg-warning">Mes actual - Pendiente de pago</span>
