@@ -27,7 +27,7 @@ class DescuentoPromocionalRepository extends ServiceEntityRepository
             ->andWhere('d.activo = :activo')
             ->setParameter('configuracion', $configuracion)
             ->setParameter('activo', true)
-            ->orderBy('d.nombre', 'ASC')
+            ->orderBy('d.porcentaje', 'ASC')
             ->getQuery()
             ->getResult();
     }
