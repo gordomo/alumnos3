@@ -90,9 +90,16 @@ class ActualizarInteresesCommand extends Command
                 if ($diaActual >= $primerDiaVencimiento) {
                     $estaVencida = true;
                     // Determinar el escalón de interés según el día actual
+                    // Aplicar el interés del último vencimiento que ya pasó
                     foreach ($vencimientos as $vencimiento) {
-                        if ($diaActual >= $vencimiento->getDiaVencimiento()) {
+                        $diaVenc = $vencimiento->getDiaVencimiento();
+                        if ($diaActual >= $diaVenc) {
                             $porcentajeInteres = $vencimiento->getPorcentajeInteres();
+                            $io->writeln("  Mes actual: día $diaActual >= día vencimiento $diaVenc -> aplicando {$porcentajeInteres}%");
+                        } else {
+                            $io->writeln("  Mes actual: día $diaActual < día vencimiento $diaVenc -> no aplicar este escalón");
+                            // No seguir buscando si el día actual no llegó a este vencimiento
+                            break;
                         }
                     }
                 }
