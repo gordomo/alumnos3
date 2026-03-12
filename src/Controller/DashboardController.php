@@ -37,7 +37,8 @@ class DashboardController extends AbstractController
     public function index(
         Request $request, 
         AlumnoRepository $alumnoRepository, 
-        PaginatorInterface $paginator
+        PaginatorInterface $paginator,
+        EntityManagerInterface $entityManager
     ): Response {
         $busqueda = $request->get('busqueda', '');
         $order = $request->get('order', 'asc');
@@ -124,6 +125,74 @@ class DashboardController extends AbstractController
         $montoPromedioAdeudado = $totalDeudores > 0 ? $montoTotalAdeudado / $totalDeudores : 0;
         $promedioMesesAdeudados = $totalDeudores > 0 ? $totalMesesAdeudados / $totalDeudores : 0;
 
+        // Calcular montos cobrados (mensual y anual)
+        $fechaActual = new \DateTime();
+        $mesActual = (int)$fechaActual->format('n');
+        $anoActual = (int)$fechaActual->format('Y');
+
+        // Calcular inicio y fin del mes actual
+        $inicioMes = new \DateTime('first day of this month 00:00:00');
+        $finMes = new \DateTime('last day of this month 23:59:59');
+
+        // Calcular inicio y fin del año actual
+        $inicioAno = new \DateTime('first day of January ' . $anoActual . ' 00:00:00');
+        $finAno = new \DateTime('last day of December ' . $anoActual . ' 23:59:59');
+
+        // Monto cobrado en el mes actual
+        $montoCobradoMensual = $entityManager->createQueryBuilder()
+            ->select('COALESCE(SUM(p.monto), 0)')
+            ->from('App\Entity\AlumnosPagos', 'p')
+            ->join('p.alumno', 'a')
+            ->where('a.instituto = :instituto')
+            ->andWhere('p.fecha >= :inicioMes')
+            ->andWhere('p.fecha <= :finMes')
+            ->setParameter('instituto', $instituto)
+            ->setParameter('inicioMes', $inicioMes)
+            ->setParameter('finMes', $finMes)
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        // Monto cobrado en el año actual
+        $montoCobradoAnual = $entityManager->createQueryBuilder()
+            ->select('COALESCE(SUM(p.monto), 0)')
+            ->from('App\Entity\AlumnosPagos', 'p')
+            ->join('p.alumno', 'a')
+            ->where('a.instituto = :instituto')
+            ->andWhere('p.fecha >= :inicioAno')
+            ->andWhere('p.fecha <= :finAno')
+            ->setParameter('instituto', $instituto)
+            ->setParameter('inicioAno', $inicioAno)
+            ->setParameter('finAno', $finAno)
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        // Calcular monto adeudado del mes actual (deudas del mes actual que no están pagadas)
+        $deudasMesActual = $entityManager->getRepository('App\Entity\DeudaAlumno')
+            ->createQueryBuilder('d')
+            ->leftJoin('d.alumno', 'a')
+            ->leftJoin('d.aplicaciones', 'pa')
+            ->where('a.instituto = :instituto')
+            ->andWhere('d.mes = :mes')
+            ->andWhere('d.ano = :ano')
+            ->setParameter('instituto', $instituto)
+            ->setParameter('mes', $mesActual)
+            ->setParameter('ano', $anoActual)
+            ->getQuery()
+            ->getResult();
+
+        $montoAdeudadoMensual = 0;
+        foreach ($deudasMesActual as $deuda) {
+            $montoDeuda = $deuda->getMonto() + ($deuda->getInteres() ?? 0);
+            $montoPagado = 0;
+            foreach ($deuda->getAplicaciones() as $aplicacion) {
+                $montoPagado += $aplicacion->getMontoAplicado();
+            }
+            $saldoPendiente = $montoDeuda - $montoPagado;
+            if ($saldoPendiente > 0) {
+                $montoAdeudadoMensual += $saldoPendiente;
+            }
+        }
+
         // Calcular deudores únicos por curso
         foreach ($deudores as $deudor) {
             $cursosUnicos = [];
@@ -190,6 +259,9 @@ class DashboardController extends AbstractController
             'totalDeudores' => $totalDeudores,
             'deudoresCriticos' => $deudoresCriticos,
             'montoTotalAdeudado' => $montoTotalAdeudado,
+            'montoAdeudadoMensual' => $montoAdeudadoMensual,
+            'montoCobradoMensual' => $montoCobradoMensual,
+            'montoCobradoAnual' => $montoCobradoAnual,
             'promedioMesesAdeudados' => $promedioMesesAdeudados,
             'porcentajeDeudores' => $porcentajeDeudores,
             'montoPromedioAdeudado' => $montoPromedioAdeudado,

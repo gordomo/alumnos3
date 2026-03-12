@@ -91,6 +91,10 @@
             background: linear-gradient(140deg, #2e9f68 0%, #258555 100%);
         }
 
+        .metric-card--success {
+            background: linear-gradient(140deg, #28a745 0%, #218838 100%);
+        }
+
         .dashboard-panel {
             background: var(--db-surface);
             border: 1px solid var(--db-border);
@@ -259,39 +263,48 @@
 {% block body %}
     <div class="container-fluid mt-3 dashboard-shell">
         <div class="row mb-4">
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <div class="card metric-card metric-card--total">
                     <div class="card-body">
                         <span class="metric-label"><i class="bi bi-people-fill"></i> Total Deudores</span>
                         <h2 class="metric-value">{{ totalDeudores }}</h2>
-                        <p class="metric-note">{{ porcentajeDeudores|number_format(2, ',', '.') }}% del total de alumnos</p>
+                        <p class="metric-note">{{ porcentajeDeudores|number_format(1, ',', '.') }}% del total</p>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <div class="card metric-card metric-card--critical">
                     <div class="card-body">
-                        <span class="metric-label"><i class="bi bi-exclamation-triangle-fill"></i> Deudores Críticos</span>
-                        <h2 class="metric-value">{{ deudoresCriticos }}</h2>
-                        <p class="metric-note">Más de 3 meses sin pagar</p>
+                        <span class="metric-label"><i class="bi bi-calendar-x"></i> Adeudado Mensual</span>
+                        <h2 class="metric-value">${{ (montoAdeudadoMensual / 1000)|number_format(0, ',', '.') }}k</h2>
+                        <p class="metric-note">Mes actual</p>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <div class="card metric-card metric-card--amount">
                     <div class="card-body">
-                        <span class="metric-label"><i class="bi bi-cash-stack"></i> Monto Total Adeudado</span>
-                        <h2 class="metric-value">${{ montoTotalAdeudado|number_format(2, ',', '.') }}</h2>
-                        <p class="metric-note">Promedio: ${{ montoPromedioAdeudado|number_format(2, ',', '.') }}</p>
+                        <span class="metric-label"><i class="bi bi-cash-stack"></i> Adeudado Total</span>
+                        <h2 class="metric-value">${{ (montoTotalAdeudado / 1000)|number_format(0, ',', '.') }}k</h2>
+                        <p class="metric-note">Todas las deudas</p>
                     </div>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="card metric-card metric-card--months">
                     <div class="card-body">
-                        <span class="metric-label"><i class="bi bi-calendar2-week-fill"></i> Promedio de Meses</span>
-                        <h2 class="metric-value">{{ promedioMesesAdeudados|number_format(1) }}</h2>
-                        <p class="metric-note">Por deudor</p>
+                        <span class="metric-label"><i class="bi bi-calendar-check"></i> Cobrado Mensual</span>
+                        <h2 class="metric-value">${{ (montoCobradoMensual / 1000)|number_format(0, ',', '.') }}k</h2>
+                        <p class="metric-note">{{ 'now'|date('F Y') }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card metric-card metric-card--success">
+                    <div class="card-body">
+                        <span class="metric-label"><i class="bi bi-graph-up-arrow"></i> Cobrado Anual</span>
+                        <h2 class="metric-value">${{ (montoCobradoAnual / 1000)|number_format(0, ',', '.') }}k</h2>
+                        <p class="metric-note">Año {{ 'now'|date('Y') }}</p>
                     </div>
                 </div>
             </div>
