@@ -148,6 +148,48 @@ document.addEventListener('DOMContentLoaded', function() {
 
     var diasOrden = ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado', 'Domingo'];
 
+    // Función para ordenar los horarios al cargar la página
+    function ordenarHorarios() {
+        var rows = Array.from(list.querySelectorAll('.horario-row'));
+        if (rows.length === 0) return;
+        
+        // Ordenar las filas
+        rows.sort(function(rowA, rowB) {
+            var diaSelectA = getDiaSelect(rowA);
+            var diaSelectB = getDiaSelect(rowB);
+            
+            if (!diaSelectA || !diaSelectB) return 0;
+            
+            var diaA = diaSelectA.value;
+            var diaB = diaSelectB.value;
+            
+            var idxA = diasOrden.indexOf(diaA);
+            var idxB = diasOrden.indexOf(diaB);
+            
+            // Ordenar por día
+            if (idxA !== idxB) {
+                return idxA - idxB;
+            }
+            
+            // Si es el mismo día, ordenar por hora de inicio
+            var selectsA = getInicioFinSelects(rowA);
+            var selectsB = getInicioFinSelects(rowB);
+            
+            if (selectsA && selectsB && selectsA.inicio && selectsB.inicio) {
+                var horaA = selectsA.inicio.value || '';
+                var horaB = selectsB.inicio.value || '';
+                return horaA.localeCompare(horaB);
+            }
+            
+            return 0;
+        });
+        
+        // Reordenar en el DOM
+        rows.forEach(function(row) {
+            list.appendChild(row);
+        });
+    }
+
     function getDiaSelect(row) {
         var selects = row.querySelectorAll('select.form-select, select.form-control');
         return selects.length >= 1 ? selects[0] : null;
@@ -196,8 +238,19 @@ document.addEventListener('DOMContentLoaded', function() {
     function bindInicioFinRow(row) {
         var sel = getInicioFinSelects(row);
         if (!sel) return;
-        sel.inicio.addEventListener('change', function() { actualizarFinDesdeInicio(row); });
+        sel.inicio.addEventListener('change', function() { 
+            actualizarFinDesdeInicio(row);
+            ordenarHorarios();
+        });
         actualizarFinDesdeInicio(row);
+        
+        // También reordenar cuando cambie el día
+        var diaSelect = getDiaSelect(row);
+        if (diaSelect) {
+            diaSelect.addEventListener('change', function() {
+                ordenarHorarios();
+            });
+        }
     }
 
     function addHorarioRow() {
@@ -215,6 +268,8 @@ document.addEventListener('DOMContentLoaded', function() {
             actualizarFinDesdeInicio(newRow);
             sel.inicio.addEventListener('change', function() { actualizarFinDesdeInicio(newRow); });
         }
+        // Reordenar después de agregar
+        ordenarHorarios();
         list.setAttribute('data-index', index + 1);
         index++;
     }
@@ -233,6 +288,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
+    
+    // Ordenar horarios al cargar la página
+    ordenarHorarios();
 });
 </script>
 
