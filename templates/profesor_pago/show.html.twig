@@ -1,0 +1,133 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Detalle de Pago{% endblock %}
+
+{% block panelTitle %}
+    Detalle de Pago a Profesor
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid px-4 mt-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-receipt"></i> Detalle de Pago</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Profesor</h6>
+                            <p class="mb-1"><strong>{{ pago.profesor.apellido }}, {{ pago.profesor.nombre }}</strong></p>
+                            <p class="mb-0 text-muted">{{ pago.profesor.email }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Período</h6>
+                            {% set nombresMeses = {
+                                1: 'Enero', 2: 'Febrero', 3: 'Marzo', 4: 'Abril',
+                                5: 'Mayo', 6: 'Junio', 7: 'Julio', 8: 'Agosto',
+                                9: 'Septiembre', 10: 'Octubre', 11: 'Noviembre', 12: 'Diciembre'
+                            } %}
+                            <p class="mb-0"><strong>{{ nombresMeses[pago.mes] }} {{ pago.ano }}</strong></p>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Fecha de Pago</h6>
+                            <p class="mb-0">{{ pago.fechaPago|date('d/m/Y') }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Método de Pago</h6>
+                            <p class="mb-0"><span class="badge bg-secondary">{{ pago.metodoPago }}</span></p>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-muted">Monto</h6>
+                            <h3 class="text-success mb-0">${{ pago.monto|number_format(2, ',', '.') }}</h3>
+                        </div>
+                    </div>
+
+                    {% if pago.observacion %}
+                        <div class="mb-4">
+                            <h6 class="text-muted">Observación</h6>
+                            <p class="mb-0">{{ pago.observacion }}</p>
+                        </div>
+                    {% endif %}
+
+                    {% if pago.detalleCalculo %}
+                        <hr>
+                        <div class="mb-4">
+                            <h6 class="text-muted">Detalle de Cálculo</h6>
+                            {% set detalle = pago.detalleCalculo|json_decode %}
+                            
+                            {% if detalle.tipo_pago == 'por_hora' %}
+                                <table class="table table-sm table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>Curso</th>
+                                            <th class="text-end">Horas</th>
+                                            <th class="text-end">Precio/Hora</th>
+                                            <th class="text-end">Viático</th>
+                                            <th class="text-end">Subtotal</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for curso in detalle.cursos %}
+                                            <tr>
+                                                <td>{{ curso.curso }}</td>
+                                                <td class="text-end">{{ curso.horas_trabajadas|number_format(2, ',', '.') }}h</td>
+                                                <td class="text-end">${{ curso.precio_hora|number_format(2, ',', '.') }}</td>
+                                                <td class="text-end">${{ curso.viatico|number_format(2, ',', '.') }}</td>
+                                                <td class="text-end">${{ curso.monto|number_format(2, ',', '.') }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            
+                            {% elseif detalle.tipo_pago == 'porcentaje' %}
+                                <table class="table table-sm table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>Curso</th>
+                                            <th class="text-end">Alumnos</th>
+                                            <th class="text-end">Total Curso</th>
+                                            <th class="text-end">%</th>
+                                            <th class="text-end">Subtotal</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for curso in detalle.cursos %}
+                                            <tr>
+                                                <td>{{ curso.curso }}</td>
+                                                <td class="text-end">{{ curso.cantidad_alumnos }}</td>
+                                                <td class="text-end">${{ curso.total_curso|number_format(2, ',', '.') }}</td>
+                                                <td class="text-end">{{ curso.porcentaje }}%</td>
+                                                <td class="text-end">${{ curso.monto|number_format(2, ',', '.') }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+
+                    <div class="d-flex gap-2 mt-4">
+                        <a href="{{ path('app_profesor_pago_index') }}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Volver
+                        </a>
+                        <a href="{{ path('app_profesor_pago_recibo', {'id': pago.id}) }}" 
+                           class="btn btn-success" target="_blank">
+                            <i class="bi bi-printer"></i> Imprimir Recibo
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -87,8 +87,50 @@
         </h4>
     </div>
     <div class="card-body">
+        <div class="mb-4">
+            <label class="form-label fw-semibold text-dark">Tipo de Pago <span class="text-danger">*</span></label>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="tipo_pago" id="tipo_pago_hora" value="por_hora" 
+                            {% if not profesor or profesor.tipoPago == 'por_hora' %}checked{% endif %}>
+                        <label class="form-check-label" for="tipo_pago_hora">
+                            <strong>Fijo por hora</strong>
+                            <small class="d-block text-muted">Se paga según las horas trabajadas</small>
+                        </label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="tipo_pago" id="tipo_pago_mensual" value="fijo_mensual"
+                            {% if profesor and profesor.tipoPago == 'fijo_mensual' %}checked{% endif %}>
+                        <label class="form-check-label" for="tipo_pago_mensual">
+                            <strong>Fijo mensual</strong>
+                            <small class="d-block text-muted">Monto fijo por mes, sin importar horas</small>
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="tipo_pago" id="tipo_pago_porcentaje" value="porcentaje"
+                            {% if profesor and profesor.tipoPago == 'porcentaje' %}checked{% endif %}>
+                        <label class="form-check-label" for="tipo_pago_porcentaje">
+                            <strong>Porcentaje del curso</strong>
+                            <small class="d-block text-muted">% sobre (alumnos activos × precio del curso)</small>
+                        </label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="tipo_pago" id="tipo_pago_combinado" value="combinado"
+                            {% if profesor and profesor.tipoPago == 'combinado' %}checked{% endif %}>
+                        <label class="form-check-label" for="tipo_pago_combinado">
+                            <strong>Combinado</strong>
+                            <small class="d-block text-muted">Fijo mensual + porcentaje adicional</small>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="row mb-3">
-            <div class="col-md-6">
+            <div class="col-md-4" id="campo_precio_hora">
                 <div class="mb-3">
                     <label for="{{ form.precioHora.vars.id }}" class="form-label fw-semibold text-dark">
                         Precio/Hora
@@ -97,7 +139,25 @@
                     {{ form_errors(form.precioHora) }}
                 </div>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-4" id="campo_monto_fijo" style="display: none;">
+                <div class="mb-3">
+                    <label for="monto_fijo_mensual" class="form-label fw-semibold text-dark">
+                        Monto Fijo Mensual
+                    </label>
+                    <input type="number" step="0.01" class="form-control" id="monto_fijo_mensual" name="monto_fijo_mensual" 
+                        value="{{ profesor.montoFijoMensual|default('') }}">
+                </div>
+            </div>
+            <div class="col-md-4" id="campo_porcentaje" style="display: none;">
+                <div class="mb-3">
+                    <label for="porcentaje_curso" class="form-label fw-semibold text-dark">
+                        Porcentaje (%)
+                    </label>
+                    <input type="number" step="0.01" min="0" max="100" class="form-control" id="porcentaje_curso" name="porcentaje_curso" 
+                        value="{{ profesor.porcentajeCurso|default('') }}">
+                </div>
+            </div>
+            <div class="col-md-4">
                 <div class="mb-3">
                     <label for="{{ form.viatico.vars.id }}" class="form-label fw-semibold text-dark">
                         Viático
@@ -109,6 +169,48 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tipoPagoRadios = document.querySelectorAll('input[name="tipo_pago"]');
+    const campoPrecioHora = document.getElementById('campo_precio_hora');
+    const campoMontoFijo = document.getElementById('campo_monto_fijo');
+    const campoPorcentaje = document.getElementById('campo_porcentaje');
+    
+    function actualizarCampos() {
+        const tipoSeleccionado = document.querySelector('input[name="tipo_pago"]:checked')?.value;
+        
+        // Ocultar todos
+        campoPrecioHora.style.display = 'none';
+        campoMontoFijo.style.display = 'none';
+        campoPorcentaje.style.display = 'none';
+        
+        // Mostrar según tipo
+        switch(tipoSeleccionado) {
+            case 'por_hora':
+                campoPrecioHora.style.display = 'block';
+                break;
+            case 'fijo_mensual':
+                campoMontoFijo.style.display = 'block';
+                break;
+            case 'porcentaje':
+                campoPorcentaje.style.display = 'block';
+                break;
+            case 'combinado':
+                campoMontoFijo.style.display = 'block';
+                campoPorcentaje.style.display = 'block';
+                break;
+        }
+    }
+    
+    tipoPagoRadios.forEach(radio => {
+        radio.addEventListener('change', actualizarCampos);
+    });
+    
+    // Inicializar al cargar
+    actualizarCampos();
+});
+</script>
 
 {# Cursos Asignados #}
 <div class="card mb-4 shadow-sm">

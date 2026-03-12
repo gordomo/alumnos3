@@ -433,6 +433,24 @@ class ProfesorController extends AbstractController
                     $user->setProfesor($profesor);
                     $profesor->setUser($user);
 
+                    // Guardar configuración de pago
+                    $tipoPago = $request->request->get('tipo_pago', 'por_hora');
+                    $profesor->setTipoPago($tipoPago);
+                    
+                    if ($tipoPago === 'fijo_mensual' || $tipoPago === 'combinado') {
+                        $montoFijo = $request->request->get('monto_fijo_mensual');
+                        $profesor->setMontoFijoMensual($montoFijo ? (float)$montoFijo : null);
+                    } else {
+                        $profesor->setMontoFijoMensual(null);
+                    }
+                    
+                    if ($tipoPago === 'porcentaje' || $tipoPago === 'combinado') {
+                        $porcentaje = $request->request->get('porcentaje_curso');
+                        $profesor->setPorcentajeCurso($porcentaje ? (float)$porcentaje : null);
+                    } else {
+                        $profesor->setPorcentajeCurso(null);
+                    }
+
                     // Guardar el usuario y el profesor
                     $entityManager->persist($user);
                     $entityManager->persist($profesor);
@@ -671,6 +689,24 @@ class ProfesorController extends AbstractController
                         $curso->addProfesor($profesor);
                         $cursoRepository->add($curso, true);
                     }
+                }
+                
+                // Guardar configuración de pago
+                $tipoPago = $request->request->get('tipo_pago', 'por_hora');
+                $profesor->setTipoPago($tipoPago);
+                
+                if ($tipoPago === 'fijo_mensual' || $tipoPago === 'combinado') {
+                    $montoFijo = $request->request->get('monto_fijo_mensual');
+                    $profesor->setMontoFijoMensual($montoFijo ? (float)$montoFijo : null);
+                } else {
+                    $profesor->setMontoFijoMensual(null);
+                }
+                
+                if ($tipoPago === 'porcentaje' || $tipoPago === 'combinado') {
+                    $porcentaje = $request->request->get('porcentaje_curso');
+                    $profesor->setPorcentajeCurso($porcentaje ? (float)$porcentaje : null);
+                } else {
+                    $profesor->setPorcentajeCurso(null);
                 }
                 
                 // Finalmente, guardar el profesor

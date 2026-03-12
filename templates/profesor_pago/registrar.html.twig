@@ -1,0 +1,154 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Registrar Pago a Profesor{% endblock %}
+
+{% block panelTitle %}
+    Registrar Pago a Profesor
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid px-4 mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-cash-coin"></i> Registrar Pago</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <h6>Profesor</h6>
+                        <p class="mb-1"><strong>{{ profesor.apellido }}, {{ profesor.nombre }}</strong></p>
+                        <p class="mb-0 text-muted">{{ profesor.email }}</p>
+                    </div>
+
+                    <div class="mb-4">
+                        <h6>Período</h6>
+                        {% set nombresMeses = {
+                            1: 'Enero', 2: 'Febrero', 3: 'Marzo', 4: 'Abril',
+                            5: 'Mayo', 6: 'Junio', 7: 'Julio', 8: 'Agosto',
+                            9: 'Septiembre', 10: 'Octubre', 11: 'Noviembre', 12: 'Diciembre'
+                        } %}
+                        <p class="mb-0"><strong>{{ nombresMeses[mes] }} {{ ano }}</strong></p>
+                    </div>
+
+                    <form method="post">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Monto <span class="text-danger">*</span></label>
+                                <input type="number" step="0.01" class="form-control" name="monto" 
+                                       value="{{ liquidacion.saldo_pendiente|number_format(2, '.', '') }}" required>
+                                <small class="text-muted">Monto sugerido: ${{ liquidacion.saldo_pendiente|number_format(2, ',', '.') }}</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Fecha de Pago <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" name="fecha_pago" 
+                                       value="{{ fecha_actual_instituto }}" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Método de Pago <span class="text-danger">*</span></label>
+                            <select name="metodo_pago" class="form-select" required>
+                                <option value="">Seleccione...</option>
+                                <option value="Efectivo">Efectivo</option>
+                                <option value="Transferencia">Transferencia</option>
+                                <option value="Cheque">Cheque</option>
+                                <option value="Débito">Débito</option>
+                                <option value="Crédito">Crédito</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Observación</label>
+                            <textarea class="form-control" name="observacion" rows="3"></textarea>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <a href="{{ path('app_profesor_pago_liquidacion', {'mes': mes, 'ano': ano}) }}" 
+                               class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Volver
+                            </a>
+                            <button type="submit" class="btn btn-success" onclick="showLoading()">
+                                <i class="bi bi-save"></i> Registrar Pago
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0"><i class="bi bi-calculator"></i> Detalle de Liquidación</h6>
+                </div>
+                <div class="card-body">
+                    {% set detalle = liquidacion.detalle_calculo %}
+                    
+                    {% if detalle.tipo_pago == 'por_hora' %}
+                        <p class="mb-2"><strong>Tipo:</strong> Por Hora</p>
+                        {% for curso in detalle.cursos %}
+                            <div class="mb-3 pb-3 border-bottom">
+                                <p class="mb-1"><strong>{{ curso.curso }}</strong></p>
+                                <p class="mb-1 small">Horas: {{ curso.horas_trabajadas|number_format(2, ',', '.') }}h × ${{ curso.precio_hora|number_format(2, ',', '.') }}</p>
+                                <p class="mb-1 small">Viático: ${{ curso.viatico|number_format(2, ',', '.') }}</p>
+                                <p class="mb-0"><strong>Subtotal: ${{ curso.monto|number_format(2, ',', '.') }}</strong></p>
+                            </div>
+                        {% endfor %}
+                    
+                    {% elseif detalle.tipo_pago == 'fijo_mensual' %}
+                        <p class="mb-2"><strong>Tipo:</strong> Fijo Mensual</p>
+                        <p class="mb-0"><strong>Monto: ${{ detalle.monto_fijo|number_format(2, ',', '.') }}</strong></p>
+                    
+                    {% elseif detalle.tipo_pago == 'porcentaje' %}
+                        <p class="mb-2"><strong>Tipo:</strong> Porcentaje</p>
+                        {% for curso in detalle.cursos %}
+                            <div class="mb-3 pb-3 border-bottom">
+                                <p class="mb-1"><strong>{{ curso.curso }}</strong></p>
+                                <p class="mb-1 small">{{ curso.cantidad_alumnos }} alumnos × ${{ curso.precio_curso|number_format(2, ',', '.') }}</p>
+                                <p class="mb-1 small">Total: ${{ curso.total_curso|number_format(2, ',', '.') }}</p>
+                                <p class="mb-1 small">{{ curso.porcentaje }}% = <strong>${{ curso.monto|number_format(2, ',', '.') }}</strong></p>
+                            </div>
+                        {% endfor %}
+                    
+                    {% elseif detalle.tipo_pago == 'combinado' %}
+                        <p class="mb-2"><strong>Tipo:</strong> Combinado</p>
+                        <div class="mb-3">
+                            <p class="mb-1"><strong>Fijo Mensual:</strong> ${{ detalle.monto_fijo|number_format(2, ',', '.') }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <p class="mb-2"><strong>Porcentaje Adicional:</strong></p>
+                            {% for curso in detalle.cursos %}
+                                <div class="mb-2 pb-2 border-bottom">
+                                    <p class="mb-1 small"><strong>{{ curso.curso }}</strong></p>
+                                    <p class="mb-1 small">{{ curso.cantidad_alumnos }} alumnos × ${{ curso.precio_curso|number_format(2, ',', '.') }}</p>
+                                    <p class="mb-0 small">{{ curso.porcentaje }}% = ${{ curso.monto|number_format(2, ',', '.') }}</p>
+                                </div>
+                            {% endfor %}
+                            <p class="mb-0"><strong>Subtotal %: ${{ detalle.monto_porcentaje|number_format(2, ',', '.') }}</strong></p>
+                        </div>
+                    {% endif %}
+
+                    <hr>
+                    <div class="bg-light p-3 rounded">
+                        <p class="mb-1"><strong>Total Calculado:</strong></p>
+                        <h4 class="mb-0 text-primary">${{ liquidacion.monto_calculado|number_format(2, ',', '.') }}</h4>
+                    </div>
+
+                    {% if liquidacion.total_pagado > 0 %}
+                        <div class="mt-3 p-3 bg-success bg-opacity-10 rounded">
+                            <p class="mb-1"><strong>Ya Pagado:</strong></p>
+                            <h5 class="mb-0 text-success">${{ liquidacion.total_pagado|number_format(2, ',', '.') }}</h5>
+                        </div>
+                    {% endif %}
+
+                    <div class="mt-3 p-3 bg-danger bg-opacity-10 rounded">
+                        <p class="mb-1"><strong>Saldo Pendiente:</strong></p>
+                        <h4 class="mb-0 text-danger">${{ liquidacion.saldo_pendiente|number_format(2, ',', '.') }}</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

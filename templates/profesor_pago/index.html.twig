@@ -1,0 +1,77 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Historial de Pagos a Profesores{% endblock %}
+
+{% block panelTitle %}
+    Historial de Pagos a Profesores
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid px-4 mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="mb-0">Historial de Pagos</h4>
+        <a href="{{ path('app_profesor_pago_liquidacion') }}" class="btn btn-primary">
+            <i class="bi bi-calculator"></i> Ver Liquidación
+        </a>
+    </div>
+
+    {% if pagos.items is empty %}
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> No hay pagos registrados.
+        </div>
+    {% else %}
+        <div class="table-responsive">
+            <table class="table table-hover table-striped">
+                <thead class="table-light">
+                    <tr>
+                        <th>Fecha de Pago</th>
+                        <th>Profesor</th>
+                        <th>Período</th>
+                        <th>Curso</th>
+                        <th class="text-end">Monto</th>
+                        <th>Método</th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% set nombresMeses = {
+                        1: 'Enero', 2: 'Febrero', 3: 'Marzo', 4: 'Abril',
+                        5: 'Mayo', 6: 'Junio', 7: 'Julio', 8: 'Agosto',
+                        9: 'Septiembre', 10: 'Octubre', 11: 'Noviembre', 12: 'Diciembre'
+                    } %}
+                    {% for pago in pagos %}
+                        <tr>
+                            <td>{{ pago.fechaPago|date('d/m/Y') }}</td>
+                            <td>
+                                <strong>{{ pago.profesor.apellido }}, {{ pago.profesor.nombre }}</strong>
+                            </td>
+                            <td>{{ nombresMeses[pago.mes] }} {{ pago.ano }}</td>
+                            <td>{{ pago.curso ? pago.curso.nombre : 'Todos los cursos' }}</td>
+                            <td class="text-end"><strong>${{ pago.monto|number_format(2, ',', '.') }}</strong></td>
+                            <td><span class="badge bg-secondary">{{ pago.metodoPago }}</span></td>
+                            <td class="text-center">
+                                {{ include('components/action_buttons.html.twig', {
+                                    'view_url': path('app_profesor_pago_show', {'id': pago.id}),
+                                    'custom_buttons': [
+                                        {
+                                            'url': path('app_profesor_pago_recibo', {'id': pago.id}),
+                                            'class': 'btn-outline-success',
+                                            'icon': 'bi-printer',
+                                            'title': 'Imprimir Recibo',
+                                            'target': '_blank'
+                                        }
+                                    ]
+                                }) }}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="d-flex justify-content-center mt-4">
+            {{ knp_pagination_render(pagos) }}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

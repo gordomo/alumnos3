@@ -78,6 +78,9 @@
                         <li><a class="dropdown-item {% if app.request.get('_route') == 'app_profesor_index' %}active{% endif %}" href="{{ path('app_profesor_index') }}">Listado</a></li>
                         <li><a class="dropdown-item {% if app.request.get('_route') == 'asistencias' %}active{% endif %}" href="{{ path('asistencias') }}">Asistencias</a></li>
                         <li><a class="dropdown-item {% if app.request.get('_route') == 'informes' %}active{% endif %}" href="{{ path('informes') }}">Informes</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item {% if app.request.get('_route') == 'app_profesor_pago_liquidacion' %}active{% endif %}" href="{{ path('app_profesor_pago_liquidacion') }}">Liquidación</a></li>
+                        <li><a class="dropdown-item {% if app.request.get('_route') == 'app_profesor_pago_index' %}active{% endif %}" href="{{ path('app_profesor_pago_index') }}">Historial de Pagos</a></li>
                     </ul>
                 </li>
             </ul>

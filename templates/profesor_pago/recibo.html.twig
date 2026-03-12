@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recibo de Pago - {{ pago.profesor.apellido }}, {{ pago.profesor.nombre }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            body {
+                margin: 0;
+                padding: 20px;
+            }
+        }
+        
+        .recibo-container {
+            max-width: 800px;
+            margin: 30px auto;
+            background: white;
+            padding: 40px;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+        }
+        
+        .recibo-header {
+            text-align: center;
+            border-bottom: 3px solid #0d6efd;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .recibo-title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #0d6efd;
+            margin-bottom: 10px;
+        }
+        
+        .recibo-numero {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        .info-section {
+            margin-bottom: 25px;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 5px;
+        }
+        
+        .info-value {
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+        }
+        
+        .monto-total {
+            background: #e7f1ff;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        .monto-label {
+            font-size: 1.2rem;
+            color: #495057;
+            margin-bottom: 10px;
+        }
+        
+        .monto-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #0d6efd;
+        }
+        
+        .firma-section {
+            margin-top: 60px;
+            padding-top: 30px;
+            border-top: 2px solid #dee2e6;
+        }
+        
+        .firma-linea {
+            border-top: 2px solid #000;
+            margin-top: 60px;
+            padding-top: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="no-print text-center mb-3">
+        <button onclick="window.print()" class="btn btn-primary">
+            <i class="bi bi-printer"></i> Imprimir
+        </button>
+        <button onclick="window.close()" class="btn btn-secondary">
+            <i class="bi bi-x-circle"></i> Cerrar
+        </button>
+    </div>
+
+    <div class="recibo-container">
+        <div class="recibo-header">
+            <div class="recibo-title">RECIBO DE PAGO</div>
+            <div class="recibo-numero">N° {{ pago.id|str_pad(8, '0', 'left') }}</div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="info-section">
+                    <div class="info-label">FECHA DE PAGO</div>
+                    <div class="info-value">{{ pago.fechaPago|date('d/m/Y') }}</div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="info-section">
+                    <div class="info-label">PERÍODO</div>
+                    <div class="info-value">
+                        {% set nombresMeses = {
+                            1: 'Enero', 2: 'Febrero', 3: 'Marzo', 4: 'Abril',
+                            5: 'Mayo', 6: 'Junio', 7: 'Julio', 8: 'Agosto',
+                            9: 'Septiembre', 10: 'Octubre', 11: 'Noviembre', 12: 'Diciembre'
+                        } %}
+                        {{ nombresMeses[pago.mes] }} {{ pago.ano }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-section">
+            <div class="info-label">PROFESOR</div>
+            <div class="info-value">{{ pago.profesor.apellido }}, {{ pago.profesor.nombre }}</div>
+            <div class="text-muted">DNI: {{ pago.profesor.dni }}</div>
+        </div>
+
+        {% if pago.curso %}
+            <div class="info-section">
+                <div class="info-label">CURSO</div>
+                <div class="info-value">{{ pago.curso.nombre }}</div>
+            </div>
+        {% endif %}
+
+        <div class="monto-total">
+            <div class="monto-label">MONTO PAGADO</div>
+            <div class="monto-value">${{ pago.monto|number_format(2, ',', '.') }}</div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="info-section">
+                    <div class="info-label">MÉTODO DE PAGO</div>
+                    <div class="info-value">{{ pago.metodoPago }}</div>
+                </div>
+            </div>
+        </div>
+
+        {% if pago.observacion %}
+            <div class="info-section">
+                <div class="info-label">OBSERVACIÓN</div>
+                <div class="info-value">{{ pago.observacion }}</div>
+            </div>
+        {% endif %}
+
+        {% if pago.detalleCalculo %}
+            <div class="info-section">
+                <div class="info-label">DETALLE DE CÁLCULO</div>
+                {% set detalle = pago.detalleCalculo|json_decode %}
+                
+                {% if detalle.tipo_pago == 'por_hora' %}
+                    <table class="table table-sm table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Curso</th>
+                                <th class="text-end">Horas</th>
+                                <th class="text-end">Precio/Hora</th>
+                                <th class="text-end">Viático</th>
+                                <th class="text-end">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for curso in detalle.cursos %}
+                                <tr>
+                                    <td>{{ curso.curso }}</td>
+                                    <td class="text-end">{{ curso.horas_trabajadas|number_format(2, ',', '.') }}h</td>
+                                    <td class="text-end">${{ curso.precio_hora|number_format(2, ',', '.') }}</td>
+                                    <td class="text-end">${{ curso.viatico|number_format(2, ',', '.') }}</td>
+                                    <td class="text-end">${{ curso.monto|number_format(2, ',', '.') }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                
+                {% elseif detalle.tipo_pago == 'fijo_mensual' %}
+                    <p>Monto Fijo Mensual: ${{ detalle.monto_fijo|number_format(2, ',', '.') }}</p>
+                
+                {% elseif detalle.tipo_pago == 'porcentaje' %}
+                    <table class="table table-sm table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Curso</th>
+                                <th class="text-end">Alumnos</th>
+                                <th class="text-end">Total Curso</th>
+                                <th class="text-end">%</th>
+                                <th class="text-end">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for curso in detalle.cursos %}
+                                <tr>
+                                    <td>{{ curso.curso }}</td>
+                                    <td class="text-end">{{ curso.cantidad_alumnos }}</td>
+                                    <td class="text-end">${{ curso.total_curso|number_format(2, ',', '.') }}</td>
+                                    <td class="text-end">{{ curso.porcentaje }}%</td>
+                                    <td class="text-end">${{ curso.monto|number_format(2, ',', '.') }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                
+                {% elseif detalle.tipo_pago == 'combinado' %}
+                    <p><strong>Fijo Mensual:</strong> ${{ detalle.monto_fijo|number_format(2, ',', '.') }}</p>
+                    <p><strong>Porcentaje Adicional:</strong> ${{ detalle.monto_porcentaje|number_format(2, ',', '.') }}</p>
+                    <table class="table table-sm table-bordered mt-2">
+                        <thead>
+                            <tr>
+                                <th>Curso</th>
+                                <th class="text-end">Alumnos</th>
+                                <th class="text-end">Total</th>
+                                <th class="text-end">%</th>
+                                <th class="text-end">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for curso in detalle.cursos %}
+                                <tr>
+                                    <td>{{ curso.curso }}</td>
+                                    <td class="text-end">{{ curso.cantidad_alumnos }}</td>
+                                    <td class="text-end">${{ curso.total_curso|number_format(2, ',', '.') }}</td>
+                                    <td class="text-end">{{ curso.porcentaje }}%</td>
+                                    <td class="text-end">${{ curso.monto|number_format(2, ',', '.') }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% endif %}
+            </div>
+        {% endif %}
+
+        <div class="firma-section">
+            <div class="row">
+                <div class="col-6">
+                    <div class="firma-linea">
+                        Firma del Profesor
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="firma-linea">
+                        Firma del Instituto
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center text-muted mt-4">
+            <small>Recibo generado el {{ 'now'|date('d/m/Y H:i') }}</small>
+        </div>
+    </div>
+</body>
+</html>

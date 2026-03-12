@@ -56,6 +56,24 @@ class Profesor
     private $viatico;
 
     /**
+     * Tipo de pago: 'por_hora', 'fijo_mensual', 'porcentaje', 'combinado'
+     * @ORM\Column(type="string", length=50, nullable=true)
+     */
+    private $tipoPago;
+
+    /**
+     * Monto fijo mensual (cuando tipoPago es 'fijo_mensual' o 'combinado')
+     * @ORM\Column(type="decimal", precision=10, scale=2, nullable=true)
+     */
+    private $montoFijoMensual;
+
+    /**
+     * Porcentaje sobre el total del curso (cuando tipoPago es 'porcentaje' o 'combinado')
+     * @ORM\Column(type="decimal", precision=5, scale=2, nullable=true)
+     */
+    private $porcentajeCurso;
+
+    /**
      * @return mixed
      */
     public function getViatico()
@@ -259,5 +277,38 @@ class Profesor
     public function setPrecioHora($precioHora): void
     {
         $this->precioHora = $precioHora;
+    }
+
+    public function getTipoPago(): ?string
+    {
+        return $this->tipoPago ?? 'por_hora';
+    }
+
+    public function setTipoPago(?string $tipoPago): self
+    {
+        $this->tipoPago = $tipoPago;
+        return $this;
+    }
+
+    public function getMontoFijoMensual(): ?float
+    {
+        return $this->montoFijoMensual ? (float)$this->montoFijoMensual : null;
+    }
+
+    public function setMontoFijoMensual(?float $montoFijoMensual): self
+    {
+        $this->montoFijoMensual = $montoFijoMensual;
+        return $this;
+    }
+
+    public function getPorcentajeCurso(): ?float
+    {
+        return $this->porcentajeCurso ? (float)$this->porcentajeCurso : null;
+    }
+
+    public function setPorcentajeCurso(?float $porcentajeCurso): self
+    {
+        $this->porcentajeCurso = $porcentajeCurso;
+        return $this;
     }
 }
