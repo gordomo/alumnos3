@@ -418,7 +418,20 @@
                     if (eventModal) {
                         document.getElementById('modalCursoNombre').textContent = info.event.title || '-';
                         document.getElementById('modalCursoProfesor').textContent = profesoresTexto || 'Sin profesor';
-                        document.getElementById('modalCursoDuracion').textContent = (props.duracion || '-') + ' hs';
+                        
+                        // Formatear duración
+                        var duracionTexto = '-';
+                        if (props.duracion) {
+                            var horas = Math.floor(props.duracion);
+                            var minutos = Math.round((props.duracion - horas) * 60);
+                            if (minutos === 0) {
+                                duracionTexto = horas + 'h';
+                            } else {
+                                duracionTexto = horas + 'h ' + minutos + 'm';
+                            }
+                        }
+                        document.getElementById('modalCursoDuracion').textContent = duracionTexto;
+                        
                         document.getElementById('modalCursoPrecio').textContent = '$' + formatMoney(props.precio);
                         eventModal.show();
                     }

@@ -43,15 +43,7 @@
                             </tr>
                             <tr>
                                 <th>Duración total</th>
-                                <td>
-                                    {% if curso.duracion and curso.duracion > 0 %}
-                                        {% set horas = (curso.duracion)|round(0, 'floor') %}
-                                        {% set minutos = ((curso.duracion - horas) * 60)|round(0, 'floor') %}
-                                        {{ horas }}:{{ '%02d'|format(minutos) }} hs
-                                    {% else %}
-                                        <span class="text-muted">-</span>
-                                    {% endif %}
-                                </td>
+                                <td>{{ curso.duracion|format_duracion }}</td>
                             </tr>
                         </tbody>
                     </table>

@@ -365,13 +365,7 @@
                                 {% endif %}
                             </td>
                             <td>
-                                {% if curso.duracion and curso.duracion > 0 %}
-                                    {% set horas = (curso.duracion)|round(0, 'floor') %}
-                                    {% set minutos = ((curso.duracion - horas) * 60)|round(0, 'floor') %}
-                                    <span class="time-badge">{{ horas }}:{{ '%02d'|format(minutos) }}hs</span>
-                                {% else %}
-                                    <span class="text-muted">-</span>
-                                {% endif %}
+                                <span class="time-badge">{{ curso.duracion|format_duracion }}</span>
                             </td>
                             <td>{{ curso.fechaInicio|date(app_date_format|default('d/m/Y')) }}</td>
                             <td>{{ curso.fechaFin|date(app_date_format|default('d/m/Y')) }}</td>
@@ -442,13 +436,7 @@
                                 {% endif %}
                             </td>
                             <td>
-                                {% if curso.duracion and curso.duracion > 0 %}
-                                    {% set horas = (curso.duracion)|round(0, 'floor') %}
-                                    {% set minutos = ((curso.duracion - horas) * 60)|round(0, 'floor') %}
-                                    <span class="time-badge">{{ horas }}:{{ '%02d'|format(minutos) }}hs</span>
-                                {% else %}
-                                    <span class="text-muted">-</span>
-                                {% endif %}
+                                <span class="time-badge">{{ curso.duracion|format_duracion }}</span>
                             </td>
                             <td>{{ curso.fechaInicio|date(app_date_format|default('d/m/Y')) }}</td>
                             <td>{{ curso.fechaFin|date(app_date_format|default('d/m/Y')) }}</td>

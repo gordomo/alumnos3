@@ -218,13 +218,20 @@ class AlumnosPagosController extends AbstractController
         // Obtener todos los cursos para el filtro
         $cursos = $cursoRepository->findBy(['instituto' => $instituto]);
 
-        // Obtener métodos de pago únicos
-        $metodosPago = $alumnosPagosRepository->createQueryBuilder('p')
+        // Definir métodos de pago disponibles
+        $metodosPagoBase = ['Efectivo', 'Transferencia', 'Débito', 'Crédito', 'Mercado Pago'];
+        
+        // Obtener métodos de pago únicos ya usados en el instituto
+        $metodosPagoUsados = $alumnosPagosRepository->createQueryBuilder('p')
             ->select('DISTINCT p.metodoPago')
             ->andWhere('p.alumno IN (SELECT a2 FROM App\Entity\Alumno a2 WHERE a2.instituto = :instituto)')
             ->setParameter('instituto', $instituto)
             ->getQuery()
             ->getSingleColumnResult();
+        
+        // Combinar métodos base con los usados y eliminar duplicados
+        $metodosPago = array_unique(array_merge($metodosPagoBase, $metodosPagoUsados));
+        sort($metodosPago);
 
         // Paginar resultados
         $pagination = $paginator->paginate(
