@@ -355,7 +355,7 @@
                             <td><strong class="text-success">${{ curso.precio | number_format(2, ',', '.') }}</strong></td>
                             <td>
                                 {% if curso.horarios|length > 0 %}
-                                    {% for h in curso.horarios %}
+                                    {% for h in curso.horarios|sort_horarios %}
                                         <span class="time-badge d-block mb-1">{{ h.dia }} {{ h.horarioInicio|date('H:i') }}-{{ h.horarioFin|date('H:i') }}</span>
                                     {% endfor %}
                                 {% elseif curso.horarioInicio and curso.horarioFin and curso.horarioInicio|date('H:i') != curso.horarioFin|date('H:i') %}
@@ -434,7 +434,7 @@
                             <td><strong class="text-success">${{ curso.precio | number_format(2, ',', '.') }}</strong></td>
                             <td>
                                 {% if curso.horarios|length > 0 %}
-                                    {% for h in curso.horarios %}
+                                    {% for h in curso.horarios|sort_horarios %}
                                         <span class="time-badge d-block mb-1">{{ h.dia }} {{ h.horarioInicio|date('H:i') }}-{{ h.horarioFin|date('H:i') }}</span>
                                     {% endfor %}
                                 {% else %}
