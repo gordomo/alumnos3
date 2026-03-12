@@ -90,7 +90,11 @@
                         {% for curso in detalle.cursos %}
                             <div class="mb-3 pb-3 border-bottom">
                                 <p class="mb-1"><strong>{{ curso.curso }}</strong></p>
-                                <p class="mb-1 small">Horas: {{ curso.horas_trabajadas|number_format(2, ',', '.') }}h × ${{ curso.precio_hora|number_format(2, ',', '.') }}</p>
+                                <p class="mb-1 small">Clases programadas: {{ curso.clases_programadas }}</p>
+                                <p class="mb-1 small">Ausencias: {{ curso.ausencias }}</p>
+                                <p class="mb-1 small">Clases dadas: {{ curso.cantidad_asistencias }}</p>
+                                <p class="mb-1 small">{{ curso.cantidad_asistencias }} clases × {{ curso.duracion_curso|format_duracion }} = {{ curso.horas_trabajadas|format_duracion }}</p>
+                                <p class="mb-1 small">{{ curso.horas_trabajadas|format_duracion }} × ${{ curso.precio_hora|number_format(2, ',', '.') }} = ${{ (curso.horas_trabajadas * curso.precio_hora)|number_format(2, ',', '.') }}</p>
                                 <p class="mb-1 small">Viático: ${{ curso.viatico|number_format(2, ',', '.') }}</p>
                                 <p class="mb-0"><strong>Subtotal: ${{ curso.monto|number_format(2, ',', '.') }}</strong></p>
                             </div>

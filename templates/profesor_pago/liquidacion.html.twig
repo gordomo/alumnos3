@@ -140,7 +140,11 @@
                                             <thead>
                                                 <tr>
                                                     <th>Curso</th>
-                                                    <th class="text-end">Horas Trabajadas</th>
+                                                    <th class="text-end">Clases Programadas</th>
+                                                    <th class="text-end">Ausencias</th>
+                                                    <th class="text-end">Clases Dadas</th>
+                                                    <th class="text-end">Duración</th>
+                                                    <th class="text-end">Total Horas</th>
                                                     <th class="text-end">Precio/Hora</th>
                                                     <th class="text-end">Viático</th>
                                                     <th class="text-end">Subtotal</th>
@@ -150,7 +154,11 @@
                                                 {% for curso in liq.detalle_calculo.cursos %}
                                                     <tr>
                                                         <td>{{ curso.curso }}</td>
-                                                        <td class="text-end">{{ curso.horas_trabajadas|number_format(2, ',', '.') }}h</td>
+                                                        <td class="text-end">{{ curso.clases_programadas }}</td>
+                                                        <td class="text-end">{{ curso.ausencias }}</td>
+                                                        <td class="text-end"><strong>{{ curso.cantidad_asistencias }}</strong></td>
+                                                        <td class="text-end">{{ curso.duracion_curso|format_duracion }}</td>
+                                                        <td class="text-end">{{ curso.horas_trabajadas|format_duracion }}</td>
                                                         <td class="text-end">${{ curso.precio_hora|number_format(2, ',', '.') }}</td>
                                                         <td class="text-end">${{ curso.viatico|number_format(2, ',', '.') }}</td>
                                                         <td class="text-end"><strong>${{ curso.monto|number_format(2, ',', '.') }}</strong></td>

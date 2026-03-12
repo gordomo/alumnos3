@@ -104,33 +104,74 @@ class ProfesorPagoService
             $finMes = clone $inicioMes;
             $finMes->modify('last day of this month')->setTime(23, 59, 59);
             
-            // Obtener asistencias del profesor en este curso para el mes/año
-            $asistencias = $this->asistenciaProfesoresRepository->createQueryBuilder('ap')
+            // Contar clases programadas del curso en el mes
+            $horarios = $curso->getHorarios();
+            $clasesTotales = 0;
+            
+            // Mapeo de días en español a números (1=Lunes, 7=Domingo)
+            $diasSemana = [
+                'Lunes' => 1, 'Martes' => 2, 'Miercoles' => 3, 'Jueves' => 4,
+                'Viernes' => 5, 'Sabado' => 6, 'Domingo' => 0
+            ];
+            
+            foreach ($horarios as $horario) {
+                $dia = $horario->getDia();
+                $numeroDia = $diasSemana[$dia] ?? null;
+                
+                if ($numeroDia !== null) {
+                    // Contar cuántos días de este tipo hay en el mes
+                    $fecha = clone $inicioMes;
+                    while ($fecha <= $finMes) {
+                        if ((int)$fecha->format('w') === $numeroDia) {
+                            // Verificar que la fecha esté dentro del período del curso
+                            if ($curso->getFechaInicio() && $fecha < $curso->getFechaInicio()) {
+                                $fecha->modify('+1 day');
+                                continue;
+                            }
+                            if ($curso->getFechaFin() && $fecha > $curso->getFechaFin()) {
+                                break;
+                            }
+                            $clasesTotales++;
+                        }
+                        $fecha->modify('+1 day');
+                    }
+                }
+            }
+            
+            // Obtener días donde el profesor NO estuvo (ausencias/reemplazos)
+            $ausencias = $this->asistenciaProfesoresRepository->createQueryBuilder('ap')
                 ->andWhere('ap.profesor = :profesor')
-                ->andWhere('ap.curso = :curso')
+                ->andWhere('ap.curso = :cursoId')
                 ->andWhere('ap.fecha >= :inicioMes')
                 ->andWhere('ap.fecha <= :finMes')
-                ->andWhere('ap.presente = true')
+                ->andWhere('ap.presente = false')
                 ->setParameter('profesor', $profesor)
-                ->setParameter('curso', $curso)
+                ->setParameter('cursoId', $curso->getId())
                 ->setParameter('inicioMes', $inicioMes)
                 ->setParameter('finMes', $finMes)
                 ->getQuery()
                 ->getResult();
+            
+            $cantidadAusencias = count($ausencias);
+            $clasesAsistidas = $clasesTotales - $cantidadAusencias;
 
-            $horasTrabajadas = 0;
-            foreach ($asistencias as $asistencia) {
-                $horasTrabajadas += $asistencia->getHorasTrabajadas() ?? 0;
-            }
+            // Calcular horas trabajadas basándose en la duración del curso
+            $duracionCurso = $curso->getDuracion() ?? 0;
+            $horasTrabajadas = $clasesAsistidas * $duracionCurso;
 
-            $montoCurso = ($horasTrabajadas * $precioHora) + $viatico;
+            $montoCurso = ($horasTrabajadas * $precioHora) + ($clasesAsistidas > 0 ? $viatico : 0);
             $montoTotal += $montoCurso;
 
             $detalleCursos[] = [
                 'curso' => $curso->getNombre(),
+                'curso_id' => $curso->getId(),
+                'clases_programadas' => $clasesTotales,
+                'ausencias' => $cantidadAusencias,
+                'cantidad_asistencias' => $clasesAsistidas,
+                'duracion_curso' => $duracionCurso,
                 'horas_trabajadas' => $horasTrabajadas,
                 'precio_hora' => $precioHora,
-                'viatico' => $viatico,
+                'viatico' => $clasesAsistidas > 0 ? $viatico : 0,
                 'monto' => $montoCurso
             ];
         }
