@@ -281,11 +281,17 @@
                                 </div>
                                 <div class="col">
                                     <label class="form-label small text-muted mb-1">Desde</label>
-                                    <input type="date" name="fechaDesde" class="form-control" value="{{ fechaDesde }}" onchange="this.form.submit()">
+                                    <input type="date" name="fechaDesde" class="form-control" value="{{ fechaDesde }}">
                                 </div>
                                 <div class="col">
                                     <label class="form-label small text-muted mb-1">Hasta</label>
-                                    <input type="date" name="fechaHasta" class="form-control" value="{{ fechaHasta }}" onchange="this.form.submit()">
+                                    <input type="date" name="fechaHasta" class="form-control" value="{{ fechaHasta }}">
+                                </div>
+                                <div class="col-auto">
+                                    <label class="form-label small text-muted mb-1 d-block">&nbsp;</label>
+                                    <button type="submit" class="btn btn-primary" title="Buscar">
+                                        <i class="bi bi-search"></i>
+                                    </button>
                                 </div>
                                 {% if fechaDesde or fechaHasta or busqueda or cursoSelected or metodoSelected or alumnoSelected or (alumnoId is defined and alumnoId) %}
                                 <div class="col-auto">
@@ -577,11 +583,17 @@
                                 </div>
                                 <div class="col">
                                     <label class="form-label small text-muted mb-1">Desde</label>
-                                    <input type="date" name="fechaDesde" class="form-control" value="{{ fechaDesde }}" onchange="this.form.submit()">
+                                    <input type="date" name="fechaDesde" class="form-control" value="{{ fechaDesde }}">
                                 </div>
                                 <div class="col">
                                     <label class="form-label small text-muted mb-1">Hasta</label>
-                                    <input type="date" name="fechaHasta" class="form-control" value="{{ fechaHasta }}" onchange="this.form.submit()">
+                                    <input type="date" name="fechaHasta" class="form-control" value="{{ fechaHasta }}">
+                                </div>
+                                <div class="col-auto">
+                                    <label class="form-label small text-muted mb-1 d-block">&nbsp;</label>
+                                    <button type="submit" class="btn btn-primary" title="Buscar">
+                                        <i class="bi bi-search"></i>
+                                    </button>
                                 </div>
                                 {% if busqueda or cursoSelected or alumnoSelected or estadoDeuda or fechaDesde or fechaHasta or (alumnoId is defined and alumnoId) %}
                                 <div class="col-auto">
@@ -804,6 +816,30 @@
         var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-toggle="tooltip"]'))
         var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
             return new bootstrap.Tooltip(tooltipTriggerEl)
+        });
+
+        // Validación de fechas: Si Desde > Hasta, ajustar Hasta automáticamente antes de enviar
+        document.addEventListener('DOMContentLoaded', function() {
+            const forms = document.querySelectorAll('form');
+            
+            forms.forEach(function(form) {
+                form.addEventListener('submit', function(e) {
+                    const inputDesde = form.querySelector('input[name="fechaDesde"]');
+                    const inputHasta = form.querySelector('input[name="fechaHasta"]');
+                    
+                    if (inputDesde && inputHasta && inputDesde.value && inputHasta.value) {
+                        const desde = new Date(inputDesde.value);
+                        const hasta = new Date(inputHasta.value);
+                        
+                        if (desde > hasta) {
+                            // Ajustar hasta para que sea un día después de desde
+                            const nuevaHasta = new Date(desde);
+                            nuevaHasta.setDate(nuevaHasta.getDate() + 1);
+                            inputHasta.value = nuevaHasta.toISOString().split('T')[0];
+                        }
+                    }
+                });
+            });
         });
     </script>
 {% endblock %}
