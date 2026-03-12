@@ -110,7 +110,13 @@
                                                                 } %}
                                                                 {{ meses[deuda.mes] }} {{ deuda.ano }}
                                                             </td>
-                                                            <td>${{ deuda.monto|number_format(2, ',', '.') }}</td>
+                                                            <td>
+                                                                {% set monto_total = deuda.monto + (deuda.interes ?? 0) %}
+                                                                ${{ monto_total|number_format(2, ',', '.') }}
+                                                                {% if deuda.interes > 0 %}
+                                                                    <br><small class="text-muted">(Base: ${{ deuda.monto|number_format(2, ',', '.') }} + Interés: ${{ deuda.interes|number_format(2, ',', '.') }})</small>
+                                                                {% endif %}
+                                                            </td>
                                                             <td>
                                                                 {% set hoy = "now"|date("Y-m-d") %}
                                                                 {% set mes_actual = "now"|date("n") %}

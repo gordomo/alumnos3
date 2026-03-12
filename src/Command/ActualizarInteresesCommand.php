@@ -95,9 +95,7 @@ class ActualizarInteresesCommand extends Command
                         $diaVenc = $vencimiento->getDiaVencimiento();
                         if ($diaActual >= $diaVenc) {
                             $porcentajeInteres = $vencimiento->getPorcentajeInteres();
-                            $io->writeln("  Mes actual: día $diaActual >= día vencimiento $diaVenc -> aplicando {$porcentajeInteres}%");
                         } else {
-                            $io->writeln("  Mes actual: día $diaActual < día vencimiento $diaVenc -> no aplicar este escalón");
                             // No seguir buscando si el día actual no llegó a este vencimiento
                             break;
                         }
