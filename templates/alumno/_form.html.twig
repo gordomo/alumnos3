@@ -298,7 +298,7 @@
             </div>
         </div>
 
-        <div class="row mb-1">
+        <div class="row mb-1" id="comenzarDeudaFormContainer" style="display: none;">
             <div class="col-md-12">
                 <div class="form-check mt-2">
                     {{ form_widget(form.comenzarDeudaProximoMes, {'attr': {'class': 'form-check-input'}}) }}
@@ -442,3 +442,57 @@
         width: 100% !important;
     }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const cursoSelect = document.getElementById('{{ form.curso.vars.id }}');
+    const comenzarDeudaContainer = document.getElementById('comenzarDeudaFormContainer');
+    const comenzarDeudaCheckbox = document.getElementById('{{ form.comenzarDeudaProximoMes.vars.id }}');
+    
+    if (cursoSelect && comenzarDeudaContainer) {
+        // Guardar los cursos iniciales (los que el alumno ya tiene)
+        const cursosIniciales = new Set();
+        Array.from(cursoSelect.selectedOptions).forEach(option => {
+            cursosIniciales.add(option.value);
+        });
+        
+        // Determinar si estamos en modo edición (si hay cursos iniciales)
+        const modoEdicion = cursosIniciales.size > 0;
+        
+        // Función para verificar si hay cursos NUEVOS siendo agregados
+        function verificarCursosNuevos() {
+            const cursosSeleccionados = Array.from(cursoSelect.selectedOptions);
+            let hayCursosNuevos = false;
+            
+            // En modo edición: solo mostrar si hay cursos que no estaban inicialmente
+            if (modoEdicion) {
+                cursosSeleccionados.forEach(option => {
+                    if (!cursosIniciales.has(option.value)) {
+                        hayCursosNuevos = true;
+                    }
+                });
+            } else {
+                // En modo creación: mostrar si hay al menos un curso seleccionado
+                hayCursosNuevos = cursosSeleccionados.length > 0;
+            }
+            
+            // Mostrar/ocultar el checkbox según si hay cursos nuevos
+            comenzarDeudaContainer.style.display = hayCursosNuevos ? 'block' : 'none';
+            
+            // Desmarcar si se oculta
+            if (!hayCursosNuevos && comenzarDeudaCheckbox) {
+                comenzarDeudaCheckbox.checked = false;
+            }
+        }
+        
+        // Escuchar cambios en el select de cursos
+        cursoSelect.addEventListener('change', verificarCursosNuevos);
+        
+        // También escuchar el evento de Chosen.js
+        $('#{{ form.curso.vars.id }}').on('change', verificarCursosNuevos);
+        
+        // Verificar al cargar la página
+        verificarCursosNuevos();
+    }
+});
+</script>
