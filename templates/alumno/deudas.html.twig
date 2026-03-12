@@ -49,7 +49,7 @@
                                     </li>
                                 {% endfor %}
                                 </ul>
-                                <p class="mb-0"><strong>Nota:</strong> Las deudas del mes actual se consideran vencidas después del día {{ vencimientos_sorted|first.diaVencimiento }} del mes.</p>
+                                <p class="mb-0"><strong>Nota:</strong> Las deudas del mes actual se consideran vencidas después a partir del día {{ vencimientos_sorted|first.diaVencimiento }} del mes.</p>
                             {% else %}
                                 <p>No hay vencimientos configurados para este instituto. Se considera el día 5 de cada mes como fecha de vencimiento por defecto.</p>
                             {% endif %}
