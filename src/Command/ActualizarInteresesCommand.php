@@ -97,6 +97,17 @@ class ActualizarInteresesCommand extends Command
                     }
                 }
             }
+            // Deudas futuras: NO aplicar interés
+            else {
+                // Asegurarse de que las deudas futuras no tengan interés
+                if ($deuda->getInteres() > 0) {
+                    $deuda->setInteres(0);
+                    $deudasActualizadas++;
+                } else {
+                    $deudasSinCambios++;
+                }
+                continue;
+            }
 
             // Calcular y actualizar el interés si la deuda está vencida
             if ($estaVencida && $porcentajeInteres > 0) {
@@ -107,11 +118,17 @@ class ActualizarInteresesCommand extends Command
                 if ($deuda->getInteres() !== $interesCalculado) {
                     $deuda->setInteres($interesCalculado);
                     $deudasActualizadas++;
+                } else {
+                    $deudasSinCambios++;
                 }
-            } elseif (!$estaVencida && $deuda->getInteres() > 0) {
-                // Si la deuda ya no está vencida (caso raro), quitar el interés
-                $deuda->setInteres(0);
-                $deudasActualizadas++;
+            } elseif ($estaVencida && $porcentajeInteres == 0) {
+                // Deuda vencida pero sin interés configurado
+                if ($deuda->getInteres() > 0) {
+                    $deuda->setInteres(0);
+                    $deudasActualizadas++;
+                } else {
+                    $deudasSinCambios++;
+                }
             } else {
                 $deudasSinCambios++;
             }
