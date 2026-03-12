@@ -211,6 +211,7 @@ class ProfesorPagoController extends AbstractController
 
         return $this->render('profesor_pago/recibo.html.twig', [
             'pago' => $profesorPago,
+            'instituto' => $instituto,
             'app_date_format' => $app_date_format
         ]);
     }

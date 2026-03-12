@@ -106,15 +106,27 @@
 
     <div class="recibo-container">
         <div class="recibo-header">
+            <div class="row mb-3">
+                <div class="col-4">
+                    {% if instituto.logo %}
+                        <img src="{{ asset('uploads/logos/' ~ instituto.logo) }}" alt="Logo" style="max-height: 80px;">
+                    {% endif %}
+                </div>
+                <div class="col-8 text-end">
+                    <div style="font-size: 1.2rem; font-weight: bold; color: #495057;">{{ instituto.nombre }}</div>
+                    <div style="font-size: 0.9rem; color: #6c757d;">{{ instituto.dir }}</div>
+                    <div style="font-size: 0.9rem; color: #6c757d;">{{ instituto.tel }}</div>
+                </div>
+            </div>
             <div class="recibo-title">RECIBO DE PAGO</div>
-            <div class="recibo-numero">N° {{ pago.id|str_pad(8, '0', 'left') }}</div>
+            <div class="recibo-numero">N° {{ '%08d'|format(pago.id) }}</div>
         </div>
 
         <div class="row">
             <div class="col-md-6">
                 <div class="info-section">
                     <div class="info-label">FECHA DE PAGO</div>
-                    <div class="info-value">{{ pago.fechaPago|date('d/m/Y') }}</div>
+                    <div class="info-value">{{ pago.fechaPago|date(app_date_format|default('d/m/Y')) }}</div>
                 </div>
             </div>
             <div class="col-md-6">
