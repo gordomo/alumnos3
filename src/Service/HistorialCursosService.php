@@ -251,11 +251,21 @@ class HistorialCursosService
             return;
         }
 
-        // Generar deudas para cada mes entre la fecha inicio efectiva y fin del curso
+        // IMPORTANTE: Generar deudas solo hasta el mes actual, no hasta el fin del curso
+        // Las deudas futuras se generarán automáticamente mediante el comando cron mensual
+        $fechaActual = new \DateTime();
         $fechaIteracion = clone $fechaInicioEfectiva;
         $fechaIteracion->modify('first day of this month');
-        $fechaFinIteracion = clone $fechaFinCurso;
+        
+        // Determinar hasta qué mes generar: el menor entre mes actual y fin del curso
+        $fechaFinIteracion = clone $fechaActual;
         $fechaFinIteracion->modify('last day of this month');
+        
+        // Si el curso ya finalizó, generar hasta la fecha de fin
+        if ($fechaFinCurso < $fechaFinIteracion) {
+            $fechaFinIteracion = clone $fechaFinCurso;
+            $fechaFinIteracion->modify('last day of this month');
+        }
 
         while ($fechaIteracion <= $fechaFinIteracion) {
             $mes = (int)$fechaIteracion->format('n');
