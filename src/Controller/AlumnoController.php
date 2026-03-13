@@ -180,7 +180,8 @@ class AlumnoController extends AbstractController
             if ($form->isValid()) {
 
                 try {
-                    $comenzarDeudaProximoMes = (bool) $form->get('comenzarDeudaProximoMes')->getData();
+                    $modoGeneracionDeuda = $form->get('modoGeneracionDeuda')->getData() ?? 'inscripcion';
+                    $comenzarDeudaProximoMes = ($modoGeneracionDeuda === 'proximo_mes');
                     $email = $alumno->getEmail();
                     
                     // Verificar si el email ya existe en usuarios
@@ -405,7 +406,8 @@ class AlumnoController extends AbstractController
             if ($form->isValid()) {
 
                 try {
-                    $comenzarDeudaProximoMes = (bool) $form->get('comenzarDeudaProximoMes')->getData();
+                    $modoGeneracionDeuda = $form->get('modoGeneracionDeuda')->getData() ?? 'inscripcion';
+                    $comenzarDeudaProximoMes = ($modoGeneracionDeuda === 'proximo_mes');
                     // Sincronizar email con el usuario asociado
                     if ($alumno->getUser()) {
                         $alumno->getUser()->setEmail($alumno->getEmail());
@@ -679,10 +681,8 @@ class AlumnoController extends AbstractController
         $instituto = $this->getUser()->getInstituto();
         $dateFormat = $institutoTimezoneService->getDateFormatForInstituto($instituto);
         $cursoIds = $request->request->get('cursos', []);
-        $comenzarDeudaProximoMes = filter_var(
-            $request->request->get('comenzar_deuda_proximo_mes', false),
-            FILTER_VALIDATE_BOOLEAN
-        );
+        $modoGeneracionDeuda = $request->request->get('modo_generacion_deuda', 'inscripcion');
+        $comenzarDeudaProximoMes = ($modoGeneracionDeuda === 'proximo_mes');
         
         // Obtener los cursos seleccionados
         $cursosSeleccionados = $cursoRepository->findBy(['id' => $cursoIds, 'instituto' => $instituto]);

@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Buscar checkboxes directamente en el modal (no en el form)
         const checkboxes = modal.querySelectorAll('input[type="checkbox"][name="cursos[]"]');
         const comenzarDeudaContainer = document.getElementById(`comenzarDeudaContainer_${alumnoId}`);
-        const comenzarDeudaCheckbox = document.getElementById(`comenzarDeudaProximoMes_${alumnoId}`);
+        const modoRadios = modal.querySelectorAll('input[type="radio"][name="modo_generacion_deuda"]');
         
         // Guardar cursos iniciales
         const cursosIniciales = new Set();
@@ -39,8 +39,12 @@ document.addEventListener('DOMContentLoaded', function() {
             if (comenzarDeudaContainer) {
                 comenzarDeudaContainer.style.display = hayCursosNuevos ? 'block' : 'none';
                 
-                if (!hayCursosNuevos && comenzarDeudaCheckbox) {
-                    comenzarDeudaCheckbox.checked = false;
+                // Resetear a opción por defecto si no hay cursos nuevos
+                if (!hayCursosNuevos) {
+                    const defaultRadio = modal.querySelector('input[type="radio"][name="modo_generacion_deuda"][value="inscripcion"]');
+                    if (defaultRadio) {
+                        defaultRadio.checked = true;
+                    }
                 }
             }
         }

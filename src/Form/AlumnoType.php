@@ -126,11 +126,18 @@ class AlumnoType extends AbstractType
                 'label' => 'Cursos',
                 'attr' => ['class' => 'form-control chosen-select']
             ])
-            ->add('comenzarDeudaProximoMes', CheckboxType::class, [
-                'label' => 'Comenzar deuda a partir del próximo mes',
+            ->add('modoGeneracionDeuda', ChoiceType::class, [
+                'label' => '¿Desde cuándo generar deudas?',
                 'mapped' => false,
-                'required' => false,
-                'label_attr' => ['class' => 'form-check-label fw-semibold text-dark'],
+                'required' => true,
+                'expanded' => true,
+                'choices' => [
+                    'Desde el mes de inscripción' => 'inscripcion',
+                    'Desde el mes siguiente a la inscripción' => 'proximo_mes',
+                    'Desde el inicio del curso' => 'inicio_curso',
+                ],
+                'data' => 'inscripcion',
+                'label_attr' => ['class' => 'form-label fw-semibold text-dark'],
                 'attr' => ['class' => 'form-check-input']
             ]);
     }

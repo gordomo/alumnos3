@@ -18,14 +18,29 @@
                         </div>
                     {% endfor %}
 
-                    <hr class="my-3 mori">
-                    <div class="form-check" id="comenzarDeudaContainer_{{ alumno.id }}">
-                        <input class="form-check-input" type="checkbox" name="comenzar_deuda_proximo_mes" id="comenzarDeudaProximoMes_{{ alumno.id }}">
-                        <label class="form-check-label fw-semibold" for="comenzarDeudaProximoMes_{{ alumno.id }}">
-                            Comenzar deuda a partir del próximo mes
-                        </label>
-                        <small class="text-muted d-block mt-1">
-                            Si no se marca, la deuda comienza en el mes corriente. Si se marca, comienza el próximo mes.
+                    <hr class="my-3">
+                    <div id="comenzarDeudaContainer_{{ alumno.id }}" style="display: none;">
+                        <label class="form-label fw-semibold">¿Desde cuándo generar deudas?</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="modo_generacion_deuda" value="inscripcion" id="modoInscripcion_{{ alumno.id }}" checked>
+                            <label class="form-check-label" for="modoInscripcion_{{ alumno.id }}">
+                                Desde el mes de inscripción
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="modo_generacion_deuda" value="proximo_mes" id="modoProximoMes_{{ alumno.id }}">
+                            <label class="form-check-label" for="modoProximoMes_{{ alumno.id }}">
+                                Desde el mes siguiente a la inscripción
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="modo_generacion_deuda" value="inicio_curso" id="modoInicioCurso_{{ alumno.id }}">
+                            <label class="form-check-label" for="modoInicioCurso_{{ alumno.id }}">
+                                Desde el inicio del curso
+                            </label>
+                        </div>
+                        <small class="text-muted d-block mt-2">
+                            Selecciona desde qué momento se deben generar las deudas para los cursos nuevos.
                         </small>
                     </div>
                 </div>

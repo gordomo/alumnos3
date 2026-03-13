@@ -29,7 +29,8 @@ class HistorialCursosService
         Alumno $alumno, 
         Curso $curso, 
         \DateTime $fechaAlta = null,
-        bool $comenzarDeudaProximoMes = false
+        bool $comenzarDeudaProximoMes = false,
+        string $modoGeneracionDeuda = 'inscripcion'
     ): AlumnoCursoHistorico {
         // Verificar si ya existe un histórico activo para este alumno y curso
         $historicoExistente = $this->getHistoricoActivoPorAlumnoYCurso($alumno, $curso);
@@ -58,6 +59,7 @@ class HistorialCursosService
         $historico->setFechaInicio($curso->getFechaInicio() ? clone $curso->getFechaInicio() : null);
         $historico->setFechaFin($curso->getFechaFin() ? clone $curso->getFechaFin() : null);
         $historico->setComenzarDeudaProximoMes($comenzarDeudaProximoMes);
+        $historico->setModoGeneracionDeuda($modoGeneracionDeuda);
     
         // Persistir el nuevo registro
         $this->entityManager->persist($historico);

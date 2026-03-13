@@ -80,17 +80,32 @@ class DeudaCalculatorService
         // Fecha de alta del alumno en el curso
         $fechaAlta = $historico->getFechaAlta() ?: new \DateTime();
         
-        // La deuda comienza desde el mayor entre fecha de inicio del curso y fecha de alta
-        $fechaInicioDeuda = max($fechaInicio, $fechaAlta);
+        // Determinar fecha de inicio de deuda según el modo configurado
+        $modoGeneracion = $historico->getModoGeneracionDeuda();
+        
+        switch ($modoGeneracion) {
+            case 'inicio_curso':
+                // Deuda desde el inicio del curso
+                $fechaInicioDeuda = $fechaInicio;
+                break;
+                
+            case 'proximo_mes':
+                // Deuda desde el mes siguiente a la inscripción
+                $fechaInicioDeuda = max($fechaInicio, $fechaAlta);
+                $fechaInicioDeuda = clone $fechaInicioDeuda;
+                $fechaInicioDeuda->modify('first day of next month');
+                break;
+                
+            case 'inscripcion':
+            default:
+                // Deuda desde el mes de inscripción (pero no antes del inicio del curso)
+                $fechaInicioDeuda = max($fechaInicio, $fechaAlta);
+                break;
+        }
         
         // Ajustar al primer día del mes
         $fechaIteracion = clone $fechaInicioDeuda;
         $fechaIteracion->modify('first day of this month');
-        
-        // Si está marcado "comenzar deuda próximo mes", avanzar un mes
-        if ($historico->getComenzarDeudaProximoMes()) {
-            $fechaIteracion->modify('first day of next month');
-        }
         
         // Fecha actual del instituto
         $fechaActual = $this->institutoTimezoneService->getNowForInstituto($instituto);

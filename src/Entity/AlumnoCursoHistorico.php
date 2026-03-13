@@ -81,6 +81,16 @@ class AlumnoCursoHistorico
      */
     private $comenzarDeudaProximoMes = false;
 
+    /**
+     * Modo de generación de deuda:
+     * - 'inscripcion': desde el mes de inscripción (default)
+     * - 'proximo_mes': desde el mes siguiente a la inscripción
+     * - 'inicio_curso': desde el inicio del curso
+     * 
+     * @ORM\Column(type="string", length=20, options={"default": "inscripcion"})
+     */
+    private $modoGeneracionDeuda = 'inscripcion';
+
     public function __construct()
     {
         $this->pagos = new ArrayCollection();
@@ -243,6 +253,17 @@ class AlumnoCursoHistorico
     public function setComenzarDeudaProximoMes(bool $comenzarDeudaProximoMes): self
     {
         $this->comenzarDeudaProximoMes = $comenzarDeudaProximoMes;
+        return $this;
+    }
+
+    public function getModoGeneracionDeuda(): string
+    {
+        return $this->modoGeneracionDeuda ?? 'inscripcion';
+    }
+
+    public function setModoGeneracionDeuda(string $modoGeneracionDeuda): self
+    {
+        $this->modoGeneracionDeuda = $modoGeneracionDeuda;
         return $this;
     }
 } 

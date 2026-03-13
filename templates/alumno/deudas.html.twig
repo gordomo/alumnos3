@@ -40,7 +40,16 @@
                                         <li><strong>Período del curso:</strong> {{ historico.fechaInicioPeriodo|date('d/m/Y') }} - {{ historico.fechaFinPeriodo ? historico.fechaFinPeriodo|date('d/m/Y') : 'Sin fecha de fin' }}</li>
                                         <li>
                                             <strong>Generación de deudas:</strong> 
-                                            {% if historico.comenzarDeudaProximoMes %}
+                                            {% set modo = historico.modoGeneracionDeuda %}
+                                            {% if modo == 'inicio_curso' %}
+                                                <span class="badge bg-primary">Desde el inicio del curso</span>
+                                                <br><small class="text-muted">
+                                                    Primera deuda: {{ historico.fechaInicioPeriodo|date('F Y') }}
+                                                    {% if historico.fechaAlta > historico.fechaInicioPeriodo %}
+                                                        <br><em>Nota: El alumno se inscribió el {{ historico.fechaAlta|date('d/m/Y') }}, pero se le generan deudas desde el inicio del curso ({{ historico.fechaInicioPeriodo|date('d/m/Y') }}).</em>
+                                                    {% endif %}
+                                                </small>
+                                            {% elseif modo == 'proximo_mes' %}
                                                 <span class="badge bg-warning text-dark">Desde el mes siguiente a la inscripción</span>
                                                 <br><small class="text-muted">Primera deuda: {{ historico.fechaAlta|date_modify('+1 month')|date('F Y') }}</small>
                                             {% else %}

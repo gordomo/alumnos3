@@ -298,18 +298,23 @@
             </div>
         </div>
 
-        <div class="row mb-1" id="comenzarDeudaFormContainer" style="display: none;">
+        <div class="row mb-3" id="comenzarDeudaFormContainer" style="display: none;">
             <div class="col-md-12">
-                <div class="form-check mt-2">
-                    {{ form_widget(form.comenzarDeudaProximoMes, {'attr': {'class': 'form-check-input'}}) }}
-                    <label class="form-check-label fw-semibold text-dark" for="{{ form.comenzarDeudaProximoMes.vars.id }}">
-                        Comenzar deuda a partir del próximo mes
-                    </label>
+                <div class="mt-2">
+                    <label class="form-label fw-semibold text-dark">{{ form.modoGeneracionDeuda.vars.label }}</label>
+                    <div class="ms-2">
+                        {% for choice in form.modoGeneracionDeuda %}
+                            <div class="form-check mb-2">
+                                {{ form_widget(choice, {'attr': {'class': 'form-check-input'}}) }}
+                                {{ form_label(choice, null, {'label_attr': {'class': 'form-check-label'}}) }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <small class="text-muted d-block mt-2">
+                        Selecciona desde qué momento se deben generar las deudas para los cursos nuevos.
+                    </small>
+                    {{ form_errors(form.modoGeneracionDeuda) }}
                 </div>
-                <small class="text-muted d-block mt-1">
-                    Si no se marca, la deuda comienza en el mes corriente. Si se marca, comienza el próximo mes.
-                </small>
-                {{ form_errors(form.comenzarDeudaProximoMes) }}
             </div>
         </div>
     </div>
@@ -447,7 +452,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     const cursoSelect = document.getElementById('{{ form.curso.vars.id }}');
     const comenzarDeudaContainer = document.getElementById('comenzarDeudaFormContainer');
-    const comenzarDeudaCheckbox = document.getElementById('{{ form.comenzarDeudaProximoMes.vars.id }}');
+    const modoRadios = document.querySelectorAll('input[name="{{ form.modoGeneracionDeuda.vars.full_name }}"]');
     
     if (cursoSelect && comenzarDeudaContainer) {
         // Guardar los cursos iniciales (los que el alumno ya tiene)
@@ -476,12 +481,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 hayCursosNuevos = cursosSeleccionados.length > 0;
             }
             
-            // Mostrar/ocultar el checkbox según si hay cursos nuevos
+            // Mostrar/ocultar las opciones según si hay cursos nuevos
             comenzarDeudaContainer.style.display = hayCursosNuevos ? 'block' : 'none';
             
-            // Desmarcar si se oculta
-            if (!hayCursosNuevos && comenzarDeudaCheckbox) {
-                comenzarDeudaCheckbox.checked = false;
+            // Resetear a opción por defecto si se oculta
+            if (!hayCursosNuevos && modoRadios.length > 0) {
+                const defaultRadio = document.querySelector('input[name="{{ form.modoGeneracionDeuda.vars.full_name }}"][value="inscripcion"]');
+                if (defaultRadio) {
+                    defaultRadio.checked = true;
+                }
             }
         }
         
