@@ -115,7 +115,9 @@ class EmailLogController extends AbstractController
         DeudaAlumnoRepository $deudaRepository,
         NotificationService $notificationService,
         EmailLogRepository $emailLogRepository,
-        Request $request
+        Request $request,
+        \App\Service\DeudaCalculatorService $deudaCalculator,
+        \Doctrine\ORM\EntityManagerInterface $entityManager
     ): Response {
         $instituto = $this->getUser()->getInstituto();
         
@@ -140,6 +142,10 @@ class EmailLogController extends AbstractController
             $this->addFlash('warning', "Debes esperar {$horasRestantes} horas más para enviar otro recordatorio a este alumno. Último envío: " . $ultimoRecordatorio->getFechaEnvio()->format('d/m/Y H:i'));
             return $this->redirectToRoute('app_alumno_show', ['id' => $alumno->getId()]);
         }
+        
+        // Sincronizar deudas calculadas on-demand con la tabla
+        $deudaCalculator->sincronizarDeudasConTabla($alumno);
+        $entityManager->refresh($alumno);
         
         // Obtener deudas pendientes del alumno
         $deudas = $deudaRepository->createQueryBuilder('d')

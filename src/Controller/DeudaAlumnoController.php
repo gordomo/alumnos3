@@ -34,7 +34,8 @@ class DeudaAlumnoController extends AbstractController
         Alumno $alumno, 
         DeudaAlumnoRepository $deudaRepository,
         CursoRepository $cursoRepository,
-        PaginatorInterface $paginator
+        PaginatorInterface $paginator,
+        \App\Service\DeudaCalculatorService $deudaCalculator
     ): Response {
         // Verificar acceso
         $instituto = $this->getUser()->getInstituto();
@@ -42,6 +43,10 @@ class DeudaAlumnoController extends AbstractController
             $this->addFlash('danger', 'No tiene acceso a este alumno.');
             return $this->redirectToRoute('app_alumno_index');
         }
+        
+        // Sincronizar deudas calculadas on-demand con la tabla
+        $deudaCalculator->sincronizarDeudasConTabla($alumno);
+        $this->entityManager->refresh($alumno);
         
         // Obtener parámetros de filtrado
         $cursoId = $request->query->get('curso');

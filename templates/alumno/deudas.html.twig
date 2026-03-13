@@ -24,12 +24,38 @@
                 <div class="card-body">
                     {% if deudasPorCurso|length > 0 %}
                         <div class="alert alert-info">
-                            <p><i class="bi bi-info-circle"></i> Esta página permite gestionar las deudas pendientes del alumno. Puedes:</p>
-                            <ul>
-                                <li>Cancelar deudas individuales si fueron generadas por error</li>
-                                <li>Cancelar todas las deudas pendientes de un curso</li>
-                                <li>Cancelar solo las deudas futuras de un curso (manteniendo las deudas del mes actual y anteriores)</li>
-                            </ul>
+                            <p><i class="bi bi-info-circle"></i> Las deudas se calculan automáticamente basándose en los cursos activos del alumno y los pagos realizados. Para cancelar una deuda, registre un pago que la cubra completamente.</p>
+                        </div>
+                        
+                        <div class="alert alert-secondary">
+                            <h5><i class="bi bi-book"></i> Cursos activos del alumno</h5>
+                            {% for cursoId, datos in deudasPorCurso %}
+                                {% set historico = datos.historico %}
+                                {% set curso = datos.curso %}
+                                <div class="mb-3">
+                                    <strong>{{ curso.nombre }}</strong>
+                                    <ul class="mb-0">
+                                        <li><strong>Fecha de inscripción:</strong> {{ historico.fechaAlta|date('d/m/Y') }}</li>
+                                        <li><strong>Precio mensual:</strong> ${{ historico.precioMensual|number_format(2, ',', '.') }}</li>
+                                        <li><strong>Período del curso:</strong> {{ historico.fechaInicioPeriodo|date('d/m/Y') }} - {{ historico.fechaFinPeriodo ? historico.fechaFinPeriodo|date('d/m/Y') : 'Sin fecha de fin' }}</li>
+                                        <li>
+                                            <strong>Generación de deudas:</strong> 
+                                            {% if historico.comenzarDeudaProximoMes %}
+                                                <span class="badge bg-warning text-dark">Desde el mes siguiente a la inscripción</span>
+                                                <br><small class="text-muted">Primera deuda: {{ historico.fechaAlta|date_modify('+1 month')|date('F Y') }}</small>
+                                            {% else %}
+                                                <span class="badge bg-info">Desde el mes de inscripción</span>
+                                                <br><small class="text-muted">
+                                                    Primera deuda: {{ historico.fechaAlta|date('F Y') }}
+                                                    {% if historico.fechaAlta > historico.fechaInicioPeriodo %}
+                                                        <br><em>Nota: El alumno se inscribió después del inicio del curso ({{ historico.fechaInicioPeriodo|date('d/m/Y') }}), por lo que las deudas comienzan desde su fecha de inscripción.</em>
+                                                    {% endif %}
+                                                </small>
+                                            {% endif %}
+                                        </li>
+                                    </ul>
+                                </div>
+                            {% endfor %}
                         </div>
                         
                         <div class="alert alert-warning">
@@ -65,29 +91,12 @@
                                     </h2>
                                     <div id="collapse{{ cursoId }}" class="accordion-collapse collapse show" aria-labelledby="heading{{ cursoId }}" data-bs-parent="#accordionDeudas">
                                         <div class="accordion-body">
-                                            <div class="mb-3 d-flex justify-content-end">
-                                                <form method="post" action="{{ path('app_alumno_cancelar_deudas_curso', {'id': alumno.id, 'cursoId': cursoId}) }}" class="me-2">
-                                                    <input type="hidden" name="_token" value="{{ csrf_token('cancelar-deudas-curso' ~ cursoId) }}">
-                                                    <input type="hidden" name="solo_futuras" value="1">
-                                                    <button type="submit" class="btn btn-warning btn-sm" onclick="return confirm('¿Estás seguro de que deseas cancelar todas las deudas FUTURAS para este curso? Esta acción no se puede deshacer.')">
-                                                        <i class="bi bi-calendar-x"></i> Cancelar deudas futuras
-                                                    </button>
-                                                </form>
-                                                <form method="post" action="{{ path('app_alumno_cancelar_deudas_curso', {'id': alumno.id, 'cursoId': cursoId}) }}">
-                                                    <input type="hidden" name="_token" value="{{ csrf_token('cancelar-deudas-curso' ~ cursoId) }}">
-                                                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('¿Estás seguro de que deseas cancelar TODAS las deudas pendientes para este curso? Esta acción no se puede deshacer.')">
-                                                        <i class="bi bi-trash"></i> Cancelar todas las deudas
-                                                    </button>
-                                                </form>
-                                            </div>
-                                            
                                             <table class="table table-striped table-hover">
                                                 <thead>
                                                     <tr>
                                                         <th>Periodo</th>
                                                         <th>Monto</th>
                                                         <th>Estado</th>
-                                                        <th>Acciones</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -144,14 +153,6 @@
                                                                 {% else %}
                                                                     <span class="badge bg-info">Futura</span>
                                                                 {% endif %}
-                                                            </td>
-                                                            <td>
-                                                                <form method="post" action="{{ path('app_alumno_cancelar_deuda', {'id': alumno.id, 'deudaId': deuda.id}) }}" style="display: inline-block;">
-                                                                    <input type="hidden" name="_token" value="{{ csrf_token('cancelar-deuda' ~ deuda.id) }}">
-                                                                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('¿Estás seguro de que deseas cancelar esta deuda? Esta acción no se puede deshacer.')">
-                                                                        <i class="bi bi-trash"></i> Cancelar
-                                                                    </button>
-                                                                </form>
                                                             </td>
                                                         </tr>
                                                     {% endfor %}

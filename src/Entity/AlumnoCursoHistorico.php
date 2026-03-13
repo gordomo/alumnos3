@@ -51,6 +51,36 @@ class AlumnoCursoHistorico
      */
     private $pagos;
 
+    /**
+     * Snapshot del curso al momento de la inscripción
+     * Estos campos preservan la información original aunque el curso cambie después
+     */
+    
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $nombreCurso;
+
+    /**
+     * @ORM\Column(type="decimal", precision=10, scale=2, nullable=true)
+     */
+    private $precioMensual;
+
+    /**
+     * @ORM\Column(type="date", nullable=true)
+     */
+    private $fechaInicio;
+
+    /**
+     * @ORM\Column(type="date", nullable=true)
+     */
+    private $fechaFin;
+
+    /**
+     * @ORM\Column(type="boolean", options={"default": false})
+     */
+    private $comenzarDeudaProximoMes = false;
+
     public function __construct()
     {
         $this->pagos = new ArrayCollection();
@@ -144,18 +174,75 @@ class AlumnoCursoHistorico
     }
 
     /**
-     * Obtiene la fecha de inicio del período académico (usa la fecha del curso)
+     * Obtiene la fecha de inicio del período académico
+     * Prioriza el snapshot, si no existe usa la fecha del curso
      */
     public function getFechaInicioPeriodo(): ?\DateTimeInterface
     {
-        return $this->curso->getFechaInicio();
+        return $this->fechaInicio ?? $this->curso->getFechaInicio();
     }
 
     /**
-     * Obtiene la fecha de fin del período académico (usa la fecha del curso)
+     * Obtiene la fecha de fin del período académico
+     * Prioriza el snapshot, si no existe usa la fecha del curso
      */
     public function getFechaFinPeriodo(): ?\DateTimeInterface
     {
-        return $this->curso->getFechaFin();
+        return $this->fechaFin ?? $this->curso->getFechaFin();
+    }
+
+    public function getNombreCurso(): ?string
+    {
+        return $this->nombreCurso ?? $this->curso->getNombre();
+    }
+
+    public function setNombreCurso(?string $nombreCurso): self
+    {
+        $this->nombreCurso = $nombreCurso;
+        return $this;
+    }
+
+    public function getPrecioMensual(): ?float
+    {
+        return $this->precioMensual ?? $this->curso->getPrecio();
+    }
+
+    public function setPrecioMensual(?float $precioMensual): self
+    {
+        $this->precioMensual = $precioMensual;
+        return $this;
+    }
+
+    public function getFechaInicio(): ?\DateTimeInterface
+    {
+        return $this->fechaInicio;
+    }
+
+    public function setFechaInicio(?\DateTimeInterface $fechaInicio): self
+    {
+        $this->fechaInicio = $fechaInicio;
+        return $this;
+    }
+
+    public function getFechaFin(): ?\DateTimeInterface
+    {
+        return $this->fechaFin;
+    }
+
+    public function setFechaFin(?\DateTimeInterface $fechaFin): self
+    {
+        $this->fechaFin = $fechaFin;
+        return $this;
+    }
+
+    public function getComenzarDeudaProximoMes(): bool
+    {
+        return $this->comenzarDeudaProximoMes;
+    }
+
+    public function setComenzarDeudaProximoMes(bool $comenzarDeudaProximoMes): self
+    {
+        $this->comenzarDeudaProximoMes = $comenzarDeudaProximoMes;
+        return $this;
     }
 } 

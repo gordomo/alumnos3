@@ -373,6 +373,14 @@
                                 {{ include('components/action_buttons.html.twig', {
                                     'show_url': path('app_curso_show', {'id': curso.id}),
                                     'edit_url': path('app_curso_edit', {'id': curso.id}),
+                                    'custom_buttons': [
+                                        {
+                                            'url': path('app_curso_duplicar', {'id': curso.id}),
+                                            'icon': 'bi-files',
+                                            'title': 'Duplicar',
+                                            'class': 'btn-outline-info'
+                                        }
+                                    ],
                                     'delete_url': path('app_curso_delete', {'id': curso.id}),
                                     'delete_confirm': '¿Está seguro que desea deshabilitar este curso?',
                                     'delete_token': csrf_token('delete' ~ curso.id),

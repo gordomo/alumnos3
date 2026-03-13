@@ -11,27 +11,30 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
- * Comando para generar las deudas mensuales de todos los alumnos activos
- * Debe ejecutarse automáticamente el primer día de cada mes mediante cron
+ * Comando para sincronizar deudas calculadas on-demand con la tabla deuda_alumno
+ * Esto asegura que el sistema de pagos y notificaciones funcione correctamente
  * 
  * Ejemplo de configuración cron:
- * 0 1 1 * * php /ruta/a/proyecto/bin/console app:generar-deudas-mensuales
+ * 0 1 * * * php /ruta/a/proyecto/bin/console app:generar-deudas-mensuales
  */
 class GenerarDeudasMensualesCommand extends Command
 {
     protected static $defaultName = 'app:generar-deudas-mensuales';
-    protected static $defaultDescription = 'Genera las deudas faltantes desde el inicio del curso hasta el mes actual para todos los alumnos activos';
+    protected static $defaultDescription = 'Sincroniza las deudas calculadas on-demand con la tabla deuda_alumno';
 
     private DeudaService $deudaService;
     private EntityManagerInterface $entityManager;
+    private $deudaCalculator;
 
     public function __construct(
         DeudaService $deudaService,
-        EntityManagerInterface $entityManager
+        EntityManagerInterface $entityManager,
+        \App\Service\DeudaCalculatorService $deudaCalculator
     ) {
         parent::__construct();
         $this->deudaService = $deudaService;
         $this->entityManager = $entityManager;
+        $this->deudaCalculator = $deudaCalculator;
     }
 
     protected function configure(): void
@@ -82,11 +85,44 @@ class GenerarDeudasMensualesCommand extends Command
             $io->info("Procesando todos los institutos");
         }
 
-        $io->section('Generando deudas faltantes desde el inicio de los cursos hasta el mes actual...');
+        $io->section('Sincronizando deudas calculadas on-demand con la tabla deuda_alumno...');
         
         try {
-            // Generar deudas (pasando el flag dryRun)
-            $estadisticas = $this->deudaService->generarDeudasMesActual($instituto, $dryRun);
+            // Obtener todos los alumnos activos
+            $qb = $this->entityManager->getRepository(\App\Entity\Alumno::class)
+                ->createQueryBuilder('a')
+                ->where('a.activo = :activo')
+                ->setParameter('activo', true);
+            
+            if ($instituto) {
+                $qb->andWhere('a.instituto = :instituto')
+                   ->setParameter('instituto', $instituto);
+            }
+            
+            $alumnos = $qb->getQuery()->getResult();
+            
+            $alumnosProcesados = 0;
+            $deudasSincronizadas = 0;
+            $errores = [];
+            
+            foreach ($alumnos as $alumno) {
+                try {
+                    if (!$dryRun) {
+                        $deudasEntidades = $this->deudaCalculator->sincronizarDeudasConTabla($alumno);
+                        $deudasSincronizadas += count($deudasEntidades);
+                    } else {
+                        // En modo dry-run, solo calcular sin guardar
+                        $deudasCalculadas = $this->deudaCalculator->calcularDeudasAlumno($alumno);
+                        $deudasSincronizadas += count($deudasCalculadas);
+                    }
+                    $alumnosProcesados++;
+                } catch (\Exception $e) {
+                    $errores[] = [
+                        'alumno' => $alumno->getNombreApellido(),
+                        'error' => $e->getMessage()
+                    ];
+                }
+            }
             
             if ($dryRun) {
                 $io->warning('Cambios no guardados (modo dry-run)');
@@ -98,32 +134,25 @@ class GenerarDeudasMensualesCommand extends Command
             $io->table(
                 ['Métrica', 'Cantidad'],
                 [
-                    ['Alumnos procesados', $estadisticas['alumnosProcesados']],
-                    ['Deudas creadas', $estadisticas['deudasCreadas']],
-                    ['Deudas omitidas (ya existían)', $estadisticas['deudasOmitidas']],
-                    ['Errores', count($estadisticas['errores'])]
+                    ['Alumnos procesados', $alumnosProcesados],
+                    ['Deudas sincronizadas', $deudasSincronizadas],
+                    ['Errores', count($errores)]
                 ]
             );
             
             // Mostrar errores si los hay
-            if (!empty($estadisticas['errores'])) {
+            if (!empty($errores)) {
                 $io->section('Errores encontrados:');
-                foreach ($estadisticas['errores'] as $error) {
+                foreach ($errores as $error) {
                     $io->error(sprintf(
-                        "Alumno: %s | Curso: %s | Error: %s",
+                        "Alumno: %s | Error: %s",
                         $error['alumno'],
-                        $error['curso'],
                         $error['error']
                     ));
                 }
             }
             
-            // Mensajes adicionales
-            if ($estadisticas['deudasCreadas'] === 0 && $estadisticas['deudasOmitidas'] > 0) {
-                $io->note('Todas las deudas del mes actual ya habían sido generadas previamente.');
-            }
-            
-            if ($estadisticas['alumnosProcesados'] === 0) {
+            if ($alumnosProcesados === 0) {
                 $io->warning('No se encontraron alumnos activos para procesar.');
             }
             

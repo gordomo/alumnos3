@@ -22,17 +22,20 @@ class NotificationService
     private UrlGeneratorInterface $urlGenerator;
     private TokenService $tokenService;
     private string $baseUrl;
+    private $deudaCalculator;
 
     public function __construct(
         MailerInterface $mailer,
         EntityManagerInterface $entityManager,
         UrlGeneratorInterface $urlGenerator,
-        TokenService $tokenService
+        TokenService $tokenService,
+        DeudaCalculatorService $deudaCalculator
     ) {
         $this->mailer = $mailer;
         $this->entityManager = $entityManager;
         $this->urlGenerator = $urlGenerator;
         $this->tokenService = $tokenService;
+        $this->deudaCalculator = $deudaCalculator;
         
         // Obtener URL base
         try {
@@ -243,6 +246,16 @@ class NotificationService
             // Verificar si tiene activado el envío automático de recordatorios
             if (!$configuracion || !$configuracion->getEnviarRecordatoriosDeudas()) {
                 continue;
+            }
+            
+            // Sincronizar deudas calculadas on-demand para todos los alumnos activos del instituto
+            $alumnos = $this->entityManager->getRepository(Alumno::class)->findBy([
+                'instituto' => $instituto,
+                'activo' => true
+            ]);
+            
+            foreach ($alumnos as $alumno) {
+                $this->deudaCalculator->sincronizarDeudasConTabla($alumno);
             }
             
             // Obtener todas las deudas pendientes (no solo del mes actual)

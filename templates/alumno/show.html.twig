@@ -147,22 +147,22 @@
             <h6 class="m-0 font-weight-bold text-primary">Acciones</h6>
         </div>
         <div class="card-body">
-            <div class="d-flex gap-2 flex-wrap">
+            <div class="d-flex gap-2 flex-wrap align-items-start">
                 {{ include('components/back_button.html.twig', {
                     'default_path': path('app_alumno_index'),
                     'force_reload': true
                 }) }}
-                <a href="{{ path('app_alumno_edit', {'id': alumno.id}) }}" class="btn btn-primary">
+                <a href="{{ path('app_alumno_edit', {'id': alumno.id}) }}" class="btn btn-primary" style="white-space: nowrap;">
                     <i class="bi bi-pencil"></i> Editar
                 </a>
-                <a href="{{ path('app_alumno_deudas', {'id': alumno.id, 'return_url': app.request.uri}) }}" class="btn btn-warning">
+                <a href="{{ path('app_alumno_deudas', {'id': alumno.id, 'return_url': app.request.uri}) }}" class="btn btn-warning" style="white-space: nowrap;">
                     <i class="bi bi-cash-coin"></i> Gestionar Deudas
                 </a>
-                <a href="{{ path('app_alumnos_pagos_new', {'id': alumno.id}) }}" class="btn btn-success">
+                <a href="{{ path('app_alumnos_pagos_new', {'id': alumno.id}) }}" class="btn btn-success" style="white-space: nowrap;">
                     <i class="bi bi-journal-check"></i> Registrar Pago
                 </a>
                 
-                <a href="{{ path('app_email_log_alumno', {'id': alumno.id}) }}" class="btn btn-secondary">
+                <a href="{{ path('app_email_log_alumno', {'id': alumno.id}) }}" class="btn btn-secondary" style="white-space: nowrap;">
                     <i class="bi bi-envelope-check"></i> Ver Emails Enviados
                 </a>
                 
@@ -176,10 +176,10 @@
                     {% set puedeEnviar = horasDesdeUltimoRecordatorio >= 48 %}
                 {% endif %}
                 
-                <div style="display: inline-block;">
+                <div style="display: inline-block; white-space: nowrap;">
                     <form method="post" action="{{ path('app_email_send_recordatorio', {'id': alumno.id}) }}" style="display: inline;" onsubmit="return confirm('¿Enviar recordatorio de deudas pendientes a {{ alumno.email }}?');">
                         <input type="hidden" name="_token" value="{{ csrf_token('send_recordatorio' ~ alumno.id) }}">
-                        <button type="submit" class="btn btn-info" {% if not puedeEnviar %}disabled{% endif %}>
+                        <button type="submit" class="btn btn-info" {% if not puedeEnviar %}disabled{% endif %} style="white-space: nowrap;">
                             <i class="bi bi-envelope"></i> Enviar Recordatorio
                         </button>
                     </form>
@@ -202,6 +202,77 @@
                 
                 {{ include('alumno/_delete_form.html.twig') }}
             </div>
+        </div>
+    </div>
+
+    {# Historial de Cursos #}
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 bg-info text-white">
+            <h6 class="m-0 font-weight-bold"><i class="bi bi-clock-history"></i> Historial de Cursos</h6>
+        </div>
+        <div class="card-body">
+            {% set historicos = alumno.cursosHistoricos|sort((a, b) => b.fechaAlta <=> a.fechaAlta) %}
+            {% if historicos|length > 0 %}
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Curso</th>
+                                <th>Precio Mensual</th>
+                                <th>Período del Curso</th>
+                                <th>Fecha de Inscripción</th>
+                                <th>Fecha de Baja</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for historico in historicos %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ historico.nombreCurso ?? historico.curso.nombre }}</strong>
+                                        {% if historico.nombreCurso and historico.nombreCurso != historico.curso.nombre %}
+                                            <br><small class="text-muted">(Ahora: {{ historico.curso.nombre }})</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        ${{ (historico.precioMensual ?? historico.curso.precio)|number_format(2, ',', '.') }}
+                                        {% if historico.precioMensual and historico.precioMensual != historico.curso.precio %}
+                                            <br><small class="text-muted">(Ahora: ${{ historico.curso.precio|number_format(2, ',', '.') }})</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% set fecha_inicio = historico.fechaInicio ?? historico.curso.fechaInicio %}
+                                        {% set fecha_fin = historico.fechaFin ?? historico.curso.fechaFin %}
+                                        {{ fecha_inicio|date(app_date_format|default('d/m/Y')) }} - {{ fecha_fin|date(app_date_format|default('d/m/Y')) }}
+                                    </td>
+                                    <td>{{ historico.fechaAlta|date(app_date_format|default('d/m/Y')) }}</td>
+                                    <td>
+                                        {% if historico.fechaBaja %}
+                                            {{ historico.fechaBaja|date(app_date_format|default('d/m/Y')) }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if historico.activo %}
+                                            <span class="badge bg-success">Activo</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Finalizado</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="alert alert-info mt-3">
+                    <i class="bi bi-info-circle"></i> 
+                    <strong>Nota:</strong> Este historial preserva los datos del curso al momento de la inscripción. 
+                    Si ves diferencias entre el precio/nombre original y el actual, es porque el curso fue modificado después de la inscripción.
+                </div>
+            {% else %}
+                <p class="text-muted">El alumno no tiene historial de cursos registrado.</p>
+            {% endif %}
         </div>
     </div>
 </div>

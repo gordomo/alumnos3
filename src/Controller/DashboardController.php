@@ -22,13 +22,16 @@ class DashboardController extends AbstractController
 {
     private $historialCursosService;
     private $deudaService;
+    private $deudaCalculator;
 
     public function __construct(
         HistorialCursosService $historialCursosService,
-        DeudaService $deudaService
+        DeudaService $deudaService,
+        \App\Service\DeudaCalculatorService $deudaCalculator
     ) {
         $this->historialCursosService = $historialCursosService;
         $this->deudaService = $deudaService;
+        $this->deudaCalculator = $deudaCalculator;
     }
 
     /**
@@ -71,58 +74,62 @@ class DashboardController extends AbstractController
         // Obtener todos los alumnos
         $alumnos = $alumnosQuery->getQuery()->getResult();
 
-        // Filtrar solo los deudores y calcular estadísticas
+        // Usar el nuevo servicio para calcular estadísticas de deudas
+        $estadisticas = $this->deudaCalculator->getEstadisticasDeudas($instituto);
+        $totalDeudores = $estadisticas['totalDeudores'];
+        $montoTotalAdeudado = $estadisticas['montoTotalAdeudado'];
+        $montoAdeudadoMensual = $estadisticas['montoAdeudadoMensual'];
+        
+        // Filtrar solo los deudores para la tabla
         $deudores = [];
-        $deudoresCriticos = 0;
-        $montoTotalAdeudado = 0;
-        $totalMesesAdeudados = 0;
         $deudasPorCurso = [];
         $totalAlumnos = count($alumnos);
 
         foreach ($alumnos as $alumno) {
-            $mesesAdeudados = $this->historialCursosService->verificarMesesAdeudados($alumno);
+            $deudasAlumno = $this->deudaCalculator->calcularDeudasAlumno($alumno);
             
-            if (!empty($mesesAdeudados)) {
-                $cantidadMeses = count($mesesAdeudados);
+            if (!empty($deudasAlumno)) {
+                $cantidadMeses = count($deudasAlumno);
                 $deudores[] = [
                     'alumno' => $alumno,
-                    'mesesAdeudados' => $mesesAdeudados,
+                    'mesesAdeudados' => $deudasAlumno,
                     'motivo' => 'Tiene ' . $cantidadMeses . ' mes(es) adeudado(s)',
                     'ultimoPago' => $alumno->getUltimoPago()
                 ];
 
-                // Calcular estadísticas
-                if ($cantidadMeses > 3) {
-                    $deudoresCriticos++;
-                }
-
-                // Calcular monto adeudado y estadísticas por curso
-                foreach ($mesesAdeudados as $mes) {
-                    if (isset($mes['curso_obj'])) {
-                        $curso = $mes['curso_obj'];
-                        $montoTotalAdeudado += $curso->getPrecio();
-                        
-                        // Agrupar deudas por curso
-                        if (!isset($deudasPorCurso[$curso->getId()])) {
-                            $deudasPorCurso[$curso->getId()] = [
-                                'nombre' => $curso->getNombre(),
-                                'deudores' => 0,
-                                'monto' => 0,
-                                'porcentaje' => 0
-                            ];
-                        }
-                        $deudasPorCurso[$curso->getId()]['monto'] += $curso->getPrecio();
+                // Calcular estadísticas por curso
+                foreach ($deudasAlumno as $deuda) {
+                    $curso = $deuda['curso'];
+                    $montoDeuda = $deuda['monto'] + $deuda['interes'];
+                    
+                    // Agrupar deudas por curso
+                    if (!isset($deudasPorCurso[$curso->getId()])) {
+                        $deudasPorCurso[$curso->getId()] = [
+                            'nombre' => $curso->getNombre(),
+                            'deudores' => 0,
+                            'monto' => 0,
+                            'porcentaje' => 0
+                        ];
                     }
+                    $deudasPorCurso[$curso->getId()]['monto'] += $montoDeuda;
                 }
-
-                $totalMesesAdeudados += $cantidadMeses;
             }
         }
 
         // Calcular estadísticas adicionales
-        $totalDeudores = count($deudores);
         $porcentajeDeudores = $totalAlumnos > 0 ? ($totalDeudores / $totalAlumnos) * 100 : 0;
         $montoPromedioAdeudado = $totalDeudores > 0 ? $montoTotalAdeudado / $totalDeudores : 0;
+        
+        // Calcular deudores críticos (con más de 2 meses adeudados)
+        $deudoresCriticos = 0;
+        $totalMesesAdeudados = 0;
+        foreach ($deudores as $deudor) {
+            $mesesAdeudados = count($deudor['mesesAdeudados']);
+            $totalMesesAdeudados += $mesesAdeudados;
+            if ($mesesAdeudados > 2) {
+                $deudoresCriticos++;
+            }
+        }
         $promedioMesesAdeudados = $totalDeudores > 0 ? $totalMesesAdeudados / $totalDeudores : 0;
 
         // Calcular montos cobrados (mensual y anual)
@@ -166,41 +173,14 @@ class DashboardController extends AbstractController
             ->getQuery()
             ->getSingleScalarResult();
 
-        // Calcular monto adeudado del mes actual (deudas del mes actual que no están pagadas)
-        $deudasMesActual = $entityManager->getRepository('App\Entity\DeudaAlumno')
-            ->createQueryBuilder('d')
-            ->leftJoin('d.alumno', 'a')
-            ->leftJoin('d.aplicaciones', 'pa')
-            ->where('a.instituto = :instituto')
-            ->andWhere('d.mes = :mes')
-            ->andWhere('d.ano = :ano')
-            ->setParameter('instituto', $instituto)
-            ->setParameter('mes', $mesActual)
-            ->setParameter('ano', $anoActual)
-            ->getQuery()
-            ->getResult();
-
-        $montoAdeudadoMensual = 0;
-        foreach ($deudasMesActual as $deuda) {
-            $montoDeuda = $deuda->getMonto() + ($deuda->getInteres() ?? 0);
-            $montoPagado = 0;
-            foreach ($deuda->getAplicaciones() as $aplicacion) {
-                $montoPagado += $aplicacion->getMontoAplicado();
-            }
-            $saldoPendiente = $montoDeuda - $montoPagado;
-            if ($saldoPendiente > 0) {
-                $montoAdeudadoMensual += $saldoPendiente;
-            }
-        }
-
         // Calcular deudores únicos por curso
         foreach ($deudores as $deudor) {
             $cursosUnicos = [];
-            foreach ($deudor['mesesAdeudados'] as $mes) {
-                if (isset($mes['curso_obj'])) {
-                    $cursoId = $mes['curso_obj']->getId();
-                    if (!in_array($cursoId, $cursosUnicos)) {
-                        $cursosUnicos[] = $cursoId;
+            foreach ($deudor['mesesAdeudados'] as $deuda) {
+                $cursoId = $deuda['curso']->getId();
+                if (!in_array($cursoId, $cursosUnicos)) {
+                    $cursosUnicos[] = $cursoId;
+                    if (isset($deudasPorCurso[$cursoId])) {
                         $deudasPorCurso[$cursoId]['deudores']++;
                     }
                 }

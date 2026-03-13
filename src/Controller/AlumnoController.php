@@ -32,17 +32,20 @@ class AlumnoController extends AbstractController
     private $historialCursosService;
     private $deudaService;
     private $passwordHasher;
+    private $deudaCalculator;
 
     public function __construct(
         EntityManagerInterface $entityManager,
         HistorialCursosService $historialCursosService,
         DeudaService $deudaService,
-        UserPasswordHasherInterface $passwordHasher
+        UserPasswordHasherInterface $passwordHasher,
+        \App\Service\DeudaCalculatorService $deudaCalculator
     ) {
         $this->entityManager = $entityManager;
         $this->historialCursosService = $historialCursosService;
         $this->deudaService = $deudaService;
         $this->passwordHasher = $passwordHasher;
+        $this->deudaCalculator = $deudaCalculator;
     }
 
     /**
@@ -75,18 +78,18 @@ class AlumnoController extends AbstractController
             $limit
         );
 
-        // Generar deudas faltantes solo para alumnos activos de esta página
-        // Esto asegura que las campanitas se muestren correctamente
+        // Sincronizar deudas calculadas on-demand con la tabla para cada alumno de esta página
+        // Esto asegura que la campanita y otros indicadores funcionen correctamente
         foreach ($alumnos as $alumno) {
             if ($alumno->getActivo()) {
-                $this->deudaService->generarDeudasVencidasFaltantes($alumno);
+                $this->deudaCalculator->sincronizarDeudasConTabla($alumno);
             }
         }
         
-        // Limpiar y refrescar el entity manager para forzar recarga desde DB
+        // Refrescar entity manager para cargar las deudas sincronizadas
         $this->entityManager->clear();
         
-        // Recargar los alumnos con las deudas recién creadas
+        // Recargar alumnos con las deudas sincronizadas
         $alumnosQuery = $this->createQuery($alumnoRepository, $instituto, $sort, $order, $busqueda, $activo, $cursoSelected);
         $alumnos = $paginator->paginate(
             $alumnosQuery, 
@@ -720,39 +723,42 @@ class AlumnoController extends AbstractController
                     $comenzarDeudaProximoMes
                 );
                 
-                // Determinar la fecha límite para generar deudas
+                // IMPORTANTE: Generar deudas solo hasta el mes actual, no hasta fin de año
+                // Las deudas futuras se generarán automáticamente mediante el comando cron mensual
                 $fechaActual = new \DateTime();
-                $finDeAno = new \DateTime($fechaActual->format('Y') . '-12-31');
                 $fechaInicioDeuda = $this->resolverFechaInicioDeuda($curso, $comenzarDeudaProximoMes);
                 
-                // Si el curso tiene fecha de finalización, usar la más cercana
+                // Determinar fecha límite: mes actual o fin del curso (lo que sea menor)
+                $fechaLimite = clone $fechaActual;
+                $fechaLimite->modify('last day of this month');
+                
+                // Si el curso tiene fecha de finalización y es anterior al mes actual, usar esa fecha
                 if (method_exists($curso, 'getFechaFin') && $curso->getFechaFin() !== null) {
                     $fechaFinCurso = $curso->getFechaFin();
-                    if ($fechaFinCurso < $finDeAno) {
-                        $finDeAno = $fechaFinCurso;
+                    if ($fechaFinCurso < $fechaLimite) {
+                        $fechaLimite = clone $fechaFinCurso;
+                        $fechaLimite->modify('last day of this month');
                     }
                 }
                 
-                // Generar deudas hasta la fecha límite
+                // Generar deudas hasta la fecha límite (mes actual o fin del curso)
                 $resultado = $deudaService->generarDeudasParaPeriodo(
                     $alumno,
                     $curso,
                     $historico,
                     $fechaInicioDeuda,
-                    $finDeAno,
+                    $fechaLimite,
                     false
                 );
                 
                 $detallesMensaje = sprintf(
-                    'Se ha inscrito al alumno en el curso %s y generado %d deudas mensuales',
+                    'Se ha inscrito al alumno en el curso %s y generado %d deudas hasta el mes actual',
                     $curso->getNombre(),
                     $resultado['creadas']
                 );
                 
-                if (method_exists($curso, 'getFechaFin') && $curso->getFechaFin() !== null) {
-                    $detallesMensaje .= sprintf(' hasta %s (fecha fin del curso)', $curso->getFechaFin()->format($dateFormat));
-                } else {
-                    $detallesMensaje .= sprintf(' hasta %s (fin del año)', $finDeAno->format($dateFormat));
+                if ($comenzarDeudaProximoMes) {
+                    $detallesMensaje .= ' (comenzando desde el próximo mes)';
                 }
                 
                 $mensajes[] = $detallesMensaje;
@@ -771,7 +777,7 @@ class AlumnoController extends AbstractController
     /**
      * @Route("/{id}/deudas", name="app_alumno_deudas", methods={"GET"})
      */
-    public function verDeudas(Alumno $alumno, CursoRepository $cursoRepository): Response
+    public function verDeudas(Alumno $alumno, CursoRepository $cursoRepository, \App\Service\DeudaCalculatorService $deudaCalculator): Response
     {
         // Verificar que el alumno pertenece al instituto del usuario actual
         $instituto = $this->getUser()->getInstituto();
@@ -780,16 +786,17 @@ class AlumnoController extends AbstractController
             return $this->redirectToRoute('app_alumno_index');
         }
         
-        // Obtener todas las deudas pendientes del alumno
-        $deudasPendientes = $this->deudaService->getDeudasPendientesPorAlumno($alumno);
+        // Calcular deudas on-demand desde el historial (sin usar tabla deuda_alumno)
+        $deudasCalculadas = $deudaCalculator->calcularDeudasAlumno($alumno);
         
         // Agrupar las deudas por curso
         $deudasPorCurso = [];
-        foreach ($deudasPendientes as $deuda) {
-            $cursoId = $deuda->getCurso()->getId();
+        foreach ($deudasCalculadas as $deuda) {
+            $cursoId = $deuda['curso']->getId();
             if (!isset($deudasPorCurso[$cursoId])) {
                 $deudasPorCurso[$cursoId] = [
-                    'curso' => $deuda->getCurso(),
+                    'curso' => $deuda['curso'],
+                    'historico' => $deuda['cursoHistorico'],
                     'deudas' => []
                 ];
             }

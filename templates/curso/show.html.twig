@@ -163,6 +163,9 @@
                 <a href="{{ path('app_curso_edit', {'id': curso.id}) }}" class="btn btn-primary">
                     <i class="bi bi-pencil"></i> Editar
                 </a>
+                <a href="{{ path('app_curso_duplicar', {'id': curso.id}) }}" class="btn btn-info">
+                    <i class="bi bi-files"></i> Duplicar
+                </a>
                 {% if not curso.disabled %}
     {{ include('curso/_delete_form.html.twig') }}
                 {% else %}

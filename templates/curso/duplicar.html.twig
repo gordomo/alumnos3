@@ -1,0 +1,36 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Duplicar Curso{% endblock %}
+
+{% block body %}
+<div class="container-fluid mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ path('app_curso_index') }}">Cursos</a></li>
+            <li class="breadcrumb-item"><a href="{{ path('app_curso_show', {'id': curso_original.id}) }}">{{ curso_original.nombre }}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Duplicar Curso</li>
+        </ol>
+    </nav>
+
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0"><i class="bi bi-files"></i> Duplicar Curso: {{ curso_original.nombre }}</h4>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i> 
+                <strong>Duplicación de Curso:</strong> Se creará una copia del curso "{{ curso_original.nombre }}" con todos sus horarios, profesores y configuraciones. 
+                Los alumnos NO se copian, deberás inscribirlos manualmente en el nuevo curso.
+                Las fechas sugeridas son automáticas, pero puedes ajustarlas según sea necesario.
+            </div>
+
+            {{ form_start(form) }}
+                {{ include('curso/_form.html.twig', {
+                    'button_label': 'Crear Curso Duplicado',
+                    'show_delete_button': false
+                }) }}
+            {{ form_end(form) }}
+        </div>
+    </div>
+</div>
+{% endblock %}

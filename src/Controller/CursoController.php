@@ -442,6 +442,41 @@ class CursoController extends AbstractController
             }
             
             try {
+                // Verificar si se intentan cambiar las fechas del curso
+                $fechasCambiadas = false;
+                if (($fechaInicioOriginal && $curso->getFechaInicio() && $fechaInicioOriginal->format('Y-m-d') !== $curso->getFechaInicio()->format('Y-m-d')) ||
+                    ($fechaFinOriginal && $curso->getFechaFin() && $fechaFinOriginal->format('Y-m-d') !== $curso->getFechaFin()->format('Y-m-d')) ||
+                    (!$fechaInicioOriginal && $curso->getFechaInicio()) ||
+                    (!$fechaFinOriginal && $curso->getFechaFin())) {
+                    $fechasCambiadas = true;
+                }
+                
+                // Si se cambiaron las fechas, verificar si hay alumnos activos
+                if ($fechasCambiadas) {
+                    $historicoRepository = $entityManager->getRepository(AlumnoCursoHistorico::class);
+                    $alumnosActivos = $historicoRepository->findBy([
+                        'curso' => $curso,
+                        'activo' => true
+                    ]);
+                    
+                    if (count($alumnosActivos) > 0) {
+                        // Restaurar fechas originales
+                        $curso->setFechaInicio($fechaInicioOriginal);
+                        $curso->setFechaFin($fechaFinOriginal);
+                        
+                        $this->addFlash('danger', sprintf(
+                            'No se pueden modificar las fechas del curso porque hay %d alumno(s) activo(s) inscripto(s). Para cambiar las fechas, primero debe dar de baja a todos los alumnos o duplicar el curso para un nuevo período.',
+                            count($alumnosActivos)
+                        ));
+                        
+                        return $this->renderForm('curso/edit.html.twig', [
+                            'curso' => $curso,
+                            'form' => $form,
+                            'date_format' => $dateFormat,
+                        ]);
+                    }
+                }
+                
                 // Verificar si se cambiaron los profesores
                 $profesoresNuevos = [];
                 foreach ($curso->getProfesores() as $profesor) {
@@ -722,13 +757,20 @@ class CursoController extends AbstractController
                     'activo' => true
                 ]);
                 
-            // Si no hay histórico activo, crear uno nuevo
+            // Si no hay histórico activo, crear uno nuevo con snapshot
             if (!$historico) {
                 $historico = new AlumnoCursoHistorico();
                 $historico->setAlumno($alumno);
                 $historico->setCurso($curso);
                 $historico->setFechaAlta(new \DateTime());
                 $historico->setActivo(true);
+                
+                // Guardar snapshot del curso
+                $historico->setNombreCurso($curso->getNombre());
+                $historico->setPrecioMensual($curso->getPrecio());
+                $historico->setFechaInicio($curso->getFechaInicio() ? clone $curso->getFechaInicio() : null);
+                $historico->setFechaFin($curso->getFechaFin() ? clone $curso->getFechaFin() : null);
+                
                 $entityManager->persist($historico);
             }
             
@@ -887,6 +929,107 @@ class CursoController extends AbstractController
 
         return $this->json([
             'precio' => $curso->getPrecio()
+        ]);
+    }
+
+    /**
+     * @Route("/{id}/duplicar", name="app_curso_duplicar", methods={"GET", "POST"})
+     */
+    public function duplicar(Request $request, Curso $cursoOriginal, CursoRepository $cursoRepository, EntityManagerInterface $entityManager): Response
+    {
+        // Verificar acceso
+        $instituto = $this->getUser()->getInstituto();
+        if ($cursoOriginal->getInstituto() !== $instituto) {
+            $this->addFlash('danger', 'El curso no pertenece al instituto del usuario.');
+            return $this->redirectToRoute('app_curso_index');
+        }
+        
+        // Verificar tokens antes de duplicar
+        if (!$this->tokenService->hasEnoughTokens($instituto, 'curso.create')) {
+            $this->addFlash('danger', 'No tienes suficientes tokens para duplicar un curso. Balance actual: ' . $this->tokenService->getBalance($instituto)->getBalance());
+            return $this->redirectToRoute('app_curso_show', ['id' => $cursoOriginal->getId()]);
+        }
+        
+        // Crear nuevo curso duplicado
+        $cursoNuevo = new Curso();
+        $cursoNuevo->setNombre($cursoOriginal->getNombre() . ' (Copia)');
+        $cursoNuevo->setDescripcion($cursoOriginal->getDescripcion());
+        $cursoNuevo->setPrecio($cursoOriginal->getPrecio());
+        $cursoNuevo->setInstituto($instituto);
+        $cursoNuevo->setDisabled(false);
+        
+        // Copiar profesores
+        foreach ($cursoOriginal->getProfesores() as $profesor) {
+            $cursoNuevo->addProfesore($profesor);
+        }
+        
+        // Copiar horarios
+        foreach ($cursoOriginal->getHorarios() as $horarioOriginal) {
+            $horarioNuevo = new \App\Entity\CursoHorario();
+            $horarioNuevo->setDia($horarioOriginal->getDia());
+            $horarioNuevo->setHorarioInicio(clone $horarioOriginal->getHorarioInicio());
+            $horarioNuevo->setHorarioFin(clone $horarioOriginal->getHorarioFin());
+            $cursoNuevo->addHorario($horarioNuevo);
+        }
+        
+        // Copiar configuraciones de pago de profesores
+        foreach ($cursoOriginal->getProfesorPagoConfigs() as $configOriginal) {
+            $configNueva = new \App\Entity\ProfesorPagoConfig();
+            $configNueva->setProfesor($configOriginal->getProfesor());
+            $configNueva->setTipoPago($configOriginal->getTipoPago());
+            $configNueva->setMontoPorHora($configOriginal->getMontoPorHora());
+            $configNueva->setMontoFijoMensual($configOriginal->getMontoFijoMensual());
+            $configNueva->setPorcentajeCurso($configOriginal->getPorcentajeCurso());
+            $cursoNuevo->addProfesorPagoConfig($configNueva);
+        }
+        
+        // Sugerir fechas (3 meses después del fin del curso original)
+        if ($cursoOriginal->getFechaFin()) {
+            $nuevaFechaInicio = clone $cursoOriginal->getFechaFin();
+            $nuevaFechaInicio->modify('+1 day');
+            
+            $duracionOriginal = $cursoOriginal->getFechaInicio()->diff($cursoOriginal->getFechaFin());
+            $nuevaFechaFin = clone $nuevaFechaInicio;
+            $nuevaFechaFin->add($duracionOriginal);
+            
+            $cursoNuevo->setFechaInicio($nuevaFechaInicio);
+            $cursoNuevo->setFechaFin($nuevaFechaFin);
+        }
+        
+        $dateFormat = $this->institutoTimezoneService->getDateFormatForInstituto($instituto);
+        $form = $this->createForm(CursoType::class, $cursoNuevo, [
+            'instituto' => $instituto,
+            'date_format' => $dateFormat
+        ]);
+        
+        $form->handleRequest($request);
+        
+        if ($form->isSubmitted() && $form->isValid()) {
+            $this->removerHorariosVacios($cursoNuevo);
+            $cursoNuevo->syncLegacyFromHorarios();
+            
+            $cursoRepository->add($cursoNuevo);
+            
+            // Consumir tokens
+            $this->tokenService->consumeTokens(
+                $instituto,
+                'curso.create',
+                $this->getUser(),
+                'Duplicar curso: ' . $cursoNuevo->getNombre(),
+                'Curso',
+                $cursoNuevo->getId()
+            );
+            
+            $this->addFlash('success', 'El curso ha sido duplicado exitosamente. Puedes ajustar las fechas y otros detalles según sea necesario.');
+            
+            return $this->redirectToRoute('app_curso_edit', ['id' => $cursoNuevo->getId()]);
+        }
+        
+        return $this->renderForm('curso/duplicar.html.twig', [
+            'curso_original' => $cursoOriginal,
+            'curso_nuevo' => $cursoNuevo,
+            'form' => $form,
+            'date_format' => $dateFormat,
         ]);
     }
 

@@ -18,14 +18,14 @@
                         </div>
                     {% endfor %}
 
-                    <hr class="my-3">
-                    <div class="form-check" id="comenzarDeudaContainer_{{ alumno.id }}" style="display: none;">
+                    <hr class="my-3 mori">
+                    <div class="form-check" id="comenzarDeudaContainer_{{ alumno.id }}">
                         <input class="form-check-input" type="checkbox" name="comenzar_deuda_proximo_mes" id="comenzarDeudaProximoMes_{{ alumno.id }}">
                         <label class="form-check-label fw-semibold" for="comenzarDeudaProximoMes_{{ alumno.id }}">
                             Comenzar deuda a partir del próximo mes
                         </label>
                         <small class="text-muted d-block mt-1">
-                            Se aplicará solo a los cursos nuevos que estás agregando.
+                            Si no se marca, la deuda comienza en el mes corriente. Si se marca, comienza el próximo mes.
                         </small>
                     </div>
                 </div>

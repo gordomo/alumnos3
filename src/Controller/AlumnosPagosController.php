@@ -37,6 +37,7 @@ class AlumnosPagosController extends AbstractController
     private $tokenService;
     private $pagoService;
     private InstitutoTimezoneService $institutoTimezoneService;
+    private $deudaCalculator;
 
     public function __construct(
         EntityManagerInterface $entityManager,
@@ -45,9 +46,11 @@ class AlumnosPagosController extends AbstractController
         NotificationService $notificationService,
         TokenService $tokenService,
         PagoService $pagoService,
-        InstitutoTimezoneService $institutoTimezoneService
+        InstitutoTimezoneService $institutoTimezoneService,
+        \App\Service\DeudaCalculatorService $deudaCalculator
     ) {
         $this->entityManager = $entityManager;
+        $this->deudaCalculator = $deudaCalculator;
         $this->historialCursosService = $historialCursosService;
         $this->deudaService = $deudaService;
         $this->notificationService = $notificationService;
@@ -615,6 +618,14 @@ class AlumnosPagosController extends AbstractController
         if ($alumnoId) {
             // Cargar alumno con sus deudas y aplicaciones (eager loading) para evitar lazy loading
             $alumno = $alumnoRepository->findWithDeudasAndAplicaciones($alumnoId);
+            
+            // IMPORTANTE: Sincronizar deudas calculadas on-demand con la tabla deuda_alumno
+            // Esto asegura que el sistema de pagos funcione correctamente
+            if ($alumno) {
+                $this->deudaCalculator->sincronizarDeudasConTabla($alumno);
+                // Refrescar el alumno para cargar las deudas recién sincronizadas
+                $this->entityManager->refresh($alumno);
+            }
         } else {
             // Sin id en URL: no preseleccionar alumno; el usuario debe seleccionar manualmente
             $alumno = null;

@@ -43,13 +43,21 @@ class HistorialCursosService
             $fechaAlta = new \DateTime();
         }
         
-        // Crear nuevo registro histórico
+        // Crear nuevo registro histórico con snapshot del curso
         $historico = new AlumnoCursoHistorico();
         $historico->setAlumno($alumno);
         $historico->setCurso($curso);
         $historico->setFechaAlta($fechaAlta);
-        $historico->setFechaBaja(null); // No tiene fecha de baja porque está activo
+        $historico->setFechaBaja(null);
         $historico->setActivo(true);
+        
+        // Guardar snapshot del curso al momento de la inscripción
+        // Esto preserva la información aunque el curso cambie después
+        $historico->setNombreCurso($curso->getNombre());
+        $historico->setPrecioMensual($curso->getPrecio());
+        $historico->setFechaInicio($curso->getFechaInicio() ? clone $curso->getFechaInicio() : null);
+        $historico->setFechaFin($curso->getFechaFin() ? clone $curso->getFechaFin() : null);
+        $historico->setComenzarDeudaProximoMes($comenzarDeudaProximoMes);
     
         // Persistir el nuevo registro
         $this->entityManager->persist($historico);

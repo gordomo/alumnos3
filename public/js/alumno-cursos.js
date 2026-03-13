@@ -1,13 +1,25 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // Manejar el envío del formulario de cursos
-    const cursoForms = document.querySelectorAll('.curso-form');
-    cursoForms.forEach(form => {
-        const alumnoId = form.dataset.alumnoId;
-        const checkboxes = form.querySelectorAll('input[type="checkbox"][name="cursos[]"]');
+    // Manejar apertura de modales de cursos (usar 'shown' en lugar de 'show')
+    document.addEventListener('shown.bs.modal', function(e) {
+        const modal = e.target;
+        if (!modal.id || !modal.id.startsWith('cursosModal')) {
+            return;
+        }
+        
+        const alumnoId = modal.id.replace('cursosModal', '');
+        const form = modal.querySelector('.curso-form');
+        
+        if (!form) {
+            console.error('No se encontró el formulario en el modal');
+            return;
+        }
+        
+        // Buscar checkboxes directamente en el modal (no en el form)
+        const checkboxes = modal.querySelectorAll('input[type="checkbox"][name="cursos[]"]');
         const comenzarDeudaContainer = document.getElementById(`comenzarDeudaContainer_${alumnoId}`);
         const comenzarDeudaCheckbox = document.getElementById(`comenzarDeudaProximoMes_${alumnoId}`);
         
-        // Guardar el estado inicial de los cursos
+        // Guardar cursos iniciales
         const cursosIniciales = new Set();
         checkboxes.forEach(cb => {
             if (cb.checked) {
@@ -15,33 +27,36 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
-        // Función para verificar si hay cursos nuevos siendo agregados
+        // Función para verificar si hay cursos nuevos
         function verificarCursosNuevos() {
             let hayCursosNuevos = false;
             checkboxes.forEach(cb => {
-                // Si está marcado ahora pero no estaba inicialmente, es un curso nuevo
                 if (cb.checked && !cursosIniciales.has(cb.value)) {
                     hayCursosNuevos = true;
                 }
             });
             
-            // Mostrar/ocultar el checkbox según si hay cursos nuevos
             if (comenzarDeudaContainer) {
                 comenzarDeudaContainer.style.display = hayCursosNuevos ? 'block' : 'none';
-                // Desmarcar si se oculta
+                
                 if (!hayCursosNuevos && comenzarDeudaCheckbox) {
                     comenzarDeudaCheckbox.checked = false;
                 }
             }
         }
         
-        // Verificar cuando cambian los checkboxes
+        // Escuchar cambios en los checkboxes
         checkboxes.forEach(cb => {
             cb.addEventListener('change', verificarCursosNuevos);
         });
         
-        // Verificar al abrir el modal
+        // Verificar al abrir
         verificarCursosNuevos();
+    });
+    
+    // Manejar envío de formularios de cursos
+    document.querySelectorAll('.curso-form').forEach(form => {
+        const alumnoId = form.dataset.alumnoId;
         
         form.addEventListener('submit', function(e) {
             e.preventDefault();

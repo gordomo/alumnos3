@@ -396,7 +396,8 @@
                                     </td>
                                     <td>
                                         <span class="meses-adeudados" data-bs-toggle="modal" data-bs-target="#mesesModal{{ deudor.alumno.id }}" style="cursor: pointer;">
-                                            {{ deudor.mesesAdeudados|slice(0, 2)|map(mes => mes.nombre)|join(', ') }}
+                                            {% set meses_nombres = {1: 'Enero', 2: 'Febrero', 3: 'Marzo', 4: 'Abril', 5: 'Mayo', 6: 'Junio', 7: 'Julio', 8: 'Agosto', 9: 'Septiembre', 10: 'Octubre', 11: 'Noviembre', 12: 'Diciembre'} %}
+                                            {{ deudor.mesesAdeudados|slice(0, 2)|map(deuda => meses_nombres[deuda.mes] ~ ' ' ~ deuda.ano)|join(', ') }}
                                             {% if deudor.mesesAdeudados|length > 2 %}
                                                 <span class="text-muted">(+{{ deudor.mesesAdeudados|length - 2 }} más)</span>
                                             {% endif %}
@@ -414,15 +415,15 @@
                                                     </div>
                                                     <div class="modal-body">
                                                         <div class="list-group">
-                                                            {% for mes in deudor.mesesAdeudados %}
+                                                            {% for deuda in deudor.mesesAdeudados %}
                                                                 <div class="list-group-item">
                                                                     <div class="d-flex justify-content-between align-items-center">
                                                                         <div>
-                                                                            <h6 class="mb-1">{{ mes.nombre }}</h6>
-                                                                            <small class="text-muted">Curso: {{ mes.curso }}</small>
+                                                                            <h6 class="mb-1">{{ meses_nombres[deuda.mes] }} {{ deuda.ano }}</h6>
+                                                                            <small class="text-muted">Curso: {{ deuda.curso.nombre }}</small>
                                                                         </div>
                                                                         <div class="text-end">
-                                                                            <strong>${{ mes.curso_obj.precio|number_format(2, ',', '.') }}</strong>
+                                                                            <strong>${{ (deuda.monto + deuda.interes)|number_format(2, ',', '.') }}</strong>
                                                                         </div>
                                                                     </div>
                                                                 </div>
