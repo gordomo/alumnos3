@@ -244,7 +244,7 @@ class AlumnosPagosController extends AbstractController
         );
 
         // Calcular estadísticas por período
-        $fechaActual = new \DateTime();
+        $fechaActual = $this->institutoTimezoneService->getNowForInstituto($instituto);
         $hoy = clone $fechaActual;
         $hoy->setTime(0, 0, 0);
         
@@ -449,8 +449,9 @@ class AlumnosPagosController extends AbstractController
      */
     private function calcularMonto(Alumno $alumno, Curso $curso, $vencimientos, array $mesesAdeudados, array $descuentosPromocionalesSeleccionados = [], ?string $metodoPago = null): array
     {
-        // Obtener fecha actual
-        $fechaActual = new \DateTime();
+        // Obtener fecha actual en la zona horaria del instituto
+        $instituto = $alumno->getInstituto();
+        $fechaActual = $this->institutoTimezoneService->getNowForInstituto($instituto);
         $mesActual = (int)$fechaActual->format('n');
         $anoActual = (int)$fechaActual->format('Y');
         $diaActual = (int)$fechaActual->format('d');
@@ -666,7 +667,7 @@ class AlumnosPagosController extends AbstractController
         // Se calculan por curso activo: desde el primer mes pendiente hasta la fecha fin del curso
         // (o hasta 12 meses adelante si el curso no tiene fecha fin definida)
         // Esto asegura que se muestren todos los meses, incluso los intermedios que no tienen deuda pendiente
-        $fechaActual = new \DateTime();
+        $fechaActual = $this->institutoTimezoneService->getNowForInstituto($instituto);
         $mesActual = (int)$fechaActual->format('n');
         $anoActual = (int)$fechaActual->format('Y');
         
@@ -936,7 +937,7 @@ class AlumnosPagosController extends AbstractController
                     
                     // Calcular el monto total separando meses vencidos de no vencidos
                     // El interés solo se aplica sobre meses vencidos
-                    $fechaActual = new \DateTime();
+                    $fechaActual = $this->institutoTimezoneService->getNowForInstituto($instituto);
                     $mesActual = (int)$fechaActual->format('n');
                     $anoActual = (int)$fechaActual->format('Y');
                     $diaActual = (int)$fechaActual->format('d');
@@ -1116,7 +1117,7 @@ class AlumnosPagosController extends AbstractController
                     }
                     
                     // Validar que no se paguen meses futuros sin pagar los anteriores
-                    $fechaActual = new \DateTime();
+                    $fechaActual = $this->institutoTimezoneService->getNowForInstituto($instituto);
                     $mesActual = (int)$fechaActual->format('n');
                     $anoActual = (int)$fechaActual->format('Y');
                     
@@ -1472,7 +1473,7 @@ class AlumnosPagosController extends AbstractController
             }
             
             // Separar meses vencidos de no vencidos para aplicar interés solo sobre vencidos
-            $fechaActual = new \DateTime();
+            $fechaActual = $this->institutoTimezoneService->getNowForInstituto($instituto);
             $mesActual = (int)$fechaActual->format('n');
             $anoActual = (int)$fechaActual->format('Y');
             $diaActual = (int)$fechaActual->format('d');
