@@ -223,7 +223,8 @@ class AlumnoController extends AbstractController
                         $historico = $this->historialCursosService->crearHistorialConDeudasHastaFinDeAno(
                             $alumno,
                             $curso,
-                            $comenzarDeudaProximoMes
+                            $comenzarDeudaProximoMes,
+                            $modoGeneracionDeuda
                         );
                         
                         // Asegurarnos de generar las deudas hasta fin de año
@@ -460,7 +461,8 @@ class AlumnoController extends AbstractController
                             $historico = $this->historialCursosService->crearHistorialConDeudasHastaFinDeAno(
                                 $alumno,
                                 $curso,
-                                $comenzarDeudaProximoMes
+                                $comenzarDeudaProximoMes,
+                                $modoGeneracionDeuda
                             );
                             // Generar deudas hasta fin de año con DeudaService
                             $fechaActual = new \DateTime();
@@ -720,7 +722,8 @@ class AlumnoController extends AbstractController
                 $historico = $historialCursosService->crearHistorialConDeudasHastaFinDeAno(
                     $alumno,
                     $curso,
-                    $comenzarDeudaProximoMes
+                    $comenzarDeudaProximoMes,
+                    $modoGeneracionDeuda
                 );
                 
                 // IMPORTANTE: Generar deudas solo hasta el mes actual, no hasta fin de año

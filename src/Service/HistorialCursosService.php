@@ -626,7 +626,8 @@ class HistorialCursosService
     public function crearHistorialConDeudasHastaFinDeAno(
         Alumno $alumno,
         Curso $curso,
-        bool $comenzarDeudaProximoMes = false
+        bool $comenzarDeudaProximoMes = false,
+        string $modoGeneracionDeuda = 'inscripcion'
     ): AlumnoCursoHistorico
     {
         // Verificar si ya existe un histórico activo
@@ -638,7 +639,7 @@ class HistorialCursosService
         
         // Crear historial básico con fecha actual
         $fechaAlta = new \DateTime();
-        $historico = $this->inscribirAlumnoEnCurso($alumno, $curso, $fechaAlta, $comenzarDeudaProximoMes);
+        $historico = $this->inscribirAlumnoEnCurso($alumno, $curso, $fechaAlta, $comenzarDeudaProximoMes, $modoGeneracionDeuda);
         
         return $historico;
     }
