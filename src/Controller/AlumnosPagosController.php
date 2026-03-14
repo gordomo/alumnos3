@@ -696,6 +696,10 @@ class AlumnosPagosController extends AbstractController
             // Determinar desde dónde empezar a generar meses
             // No generar meses anteriores a la fecha de alta del alumno en el curso
             $fechaAltaHistorico = $historico->getFechaAlta();
+            if (!$fechaAltaHistorico) {
+                // Si no hay fecha de alta, usar la fecha de inicio del curso o la fecha actual
+                $fechaAltaHistorico = $fechaInicioCurso ?: $fechaActual;
+            }
             $fechaMinimaInicio = clone $fechaAltaHistorico;
             $fechaMinimaInicio->modify('first day of this month');
             
