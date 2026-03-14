@@ -500,7 +500,7 @@ class AlumnosPagosController extends AbstractController
             // Mes actual o solo meses futuros: determinar escalón según el día de pago
             $vencimientoAplicado = null;
             foreach ($vencimientosOrdenados as $vencimiento) {
-                if ($diaActual > $vencimiento->getDiaVencimiento()) {
+                if ($diaActual >= $vencimiento->getDiaVencimiento()) {
                     $vencimientoAplicado = $vencimiento;
                 } else {
                     break;
@@ -508,7 +508,7 @@ class AlumnosPagosController extends AbstractController
             }
             if ($vencimientoAplicado) {
                 $porcentajeInteres = $vencimientoAplicado->getPorcentajeInteres();
-                $motivoInteres = "Interés del " . $porcentajeInteres . "% por pago después del día " . $vencimientoAplicado->getDiaVencimiento();
+                $motivoInteres = "Interés del " . $porcentajeInteres . "% por pago en/después del día " . $vencimientoAplicado->getDiaVencimiento();
             }
         }
 
