@@ -156,7 +156,8 @@ class DeudaService
     public function registrarPago(DeudaAlumno $deuda, float $monto, \DateTime $fecha = null): AlumnosPagos
     {
         if ($fecha === null) {
-            $fecha = new \DateTime();
+            $instituto = $deuda->getAlumno()->getInstituto();
+            $fecha = $this->institutoTimezoneService->getNowForInstituto($instituto);
         }
         
         $pago = new AlumnosPagos();
@@ -182,7 +183,7 @@ class DeudaService
         
         // Usar PagoService para aplicar el pago
         if ($this->pagoService === null) {
-            $this->pagoService = new \App\Service\PagoService($this->entityManager, $this);
+            $this->pagoService = new \App\Service\PagoService($this->entityManager, $this->institutoTimezoneService);
         }
         
         $resultado = $this->pagoService->registrarPago($pago, [$deuda->getId()], false);

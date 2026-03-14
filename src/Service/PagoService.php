@@ -11,11 +11,14 @@ use Doctrine\ORM\EntityManagerInterface;
 class PagoService
 {
     private EntityManagerInterface $entityManager;
+    private InstitutoTimezoneService $institutoTimezoneService;
 
     public function __construct(
-        EntityManagerInterface $entityManager
+        EntityManagerInterface $entityManager,
+        InstitutoTimezoneService $institutoTimezoneService
     ) {
         $this->entityManager = $entityManager;
+        $this->institutoTimezoneService = $institutoTimezoneService;
     }
 
     /**
@@ -163,7 +166,8 @@ class PagoService
         $aplicacion->setPago($pago);
         $aplicacion->setDeuda($deuda);
         $aplicacion->setMontoAplicado($montoAplicar);
-        $aplicacion->setFechaAplicacion(new \DateTime());
+        $instituto = $pago->getAlumno()->getInstituto();
+        $aplicacion->setFechaAplicacion($this->institutoTimezoneService->getNowForInstituto($instituto));
 
         // Política: si se paga menos que lo pendiente, ajustamos el total de la deuda al monto efectivamente pagado
         // para que quede cancelada (no permitimos dejar deudas parcialmente pagadas).
@@ -203,7 +207,8 @@ class PagoService
         $ano = $pago->getAno();
 
         // Validar que no sea más de 12 meses adelante
-        $fechaActual = new \DateTime();
+        $instituto = $alumno->getInstituto();
+        $fechaActual = $this->institutoTimezoneService->getNowForInstituto($instituto);
         $fechaPago = new \DateTime(sprintf('%d-%02d-01', $ano, $mes));
         $diferencia = $fechaPago->diff($fechaActual);
         $mesesAdelante = ($diferencia->y * 12) + $diferencia->m;

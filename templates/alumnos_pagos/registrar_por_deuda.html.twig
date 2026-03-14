@@ -129,6 +129,21 @@
                                         </div>
                                         
                                         <div class="mb-4">
+                                            <label for="fechaPago" class="form-label fw-bold">Fecha de Pago</label>
+                                            <input 
+                                                type="date" 
+                                                id="fechaPago" 
+                                                name="fechaPago" 
+                                                class="form-control form-control-lg" 
+                                                value="{{ fechaActualInstituto }}"
+                                                required
+                                            >
+                                            <div class="form-text">
+                                                <i class="bi bi-info-circle"></i> Fecha según la zona horaria del instituto
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mb-4">
                                             <label for="metodoPago" class="form-label fw-bold">Método de Pago</label>
                                             <select id="metodoPago" name="metodoPago" class="form-select form-select-lg" required>
                                                 <option value="">Seleccionar método...</option>
@@ -196,6 +211,13 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             alert('El monto debe ser mayor a $0.00');
             montoInput.focus();
+            return false;
+        }
+
+        if (!document.getElementById('fechaPago').value) {
+            e.preventDefault();
+            alert('Por favor ingrese la fecha de pago');
+            document.getElementById('fechaPago').focus();
             return false;
         }
 

@@ -148,7 +148,7 @@ class ProfesorPagoController extends AbstractController
                 $pago->setMonto((float)$monto);
                 $pago->setMetodoPago($metodoPago);
                 $pago->setObservacion($observacion);
-                $pago->setFechaPago($fechaPago ? new \DateTime($fechaPago) : new \DateTime());
+                $pago->setFechaPago($fechaPago ? new \DateTime($fechaPago) : $this->institutoTimezoneService->getNowForInstituto($instituto));
                 $pago->setDetalleCalculo(json_encode($liquidacion['detalle_calculo']));
 
                 $entityManager->persist($pago);

@@ -1962,6 +1962,7 @@ class AlumnosPagosController extends AbstractController
             $monto = $request->request->get('monto');
             $metodoPago = $request->request->get('metodoPago');
             $observacion = $request->request->get('observacion');
+            $fechaPagoStr = $request->request->get('fechaPago');
             
             $montoPendiente = $deuda->getMontoPendiente();
             
@@ -1991,6 +1992,17 @@ class AlumnosPagosController extends AbstractController
             }
             
             try {
+                // Parsear la fecha del formulario o usar la fecha actual del instituto
+                if ($fechaPagoStr) {
+                    try {
+                        $fechaPago = new \DateTime($fechaPagoStr);
+                    } catch (\Exception $e) {
+                        $fechaPago = $this->institutoTimezoneService->getNowForInstituto($instituto);
+                    }
+                } else {
+                    $fechaPago = $this->institutoTimezoneService->getNowForInstituto($instituto);
+                }
+                
                 // Crear el pago
                 $pago = new AlumnosPagos();
                 $pago->setAlumno($deuda->getAlumno());
@@ -1998,7 +2010,7 @@ class AlumnosPagosController extends AbstractController
                 $pago->setMes($deuda->getMes());
                 $pago->setAno($deuda->getAno());
                 $pago->setMonto((float)$monto);
-                $pago->setFecha(new \DateTime());
+                $pago->setFecha($fechaPago);
                 $pago->setMetodoPago($metodoPago);
                 $pago->setObservacion($observacion);
                 
@@ -2091,7 +2103,8 @@ class AlumnosPagosController extends AbstractController
             'montoTotal' => $montoTotal,
             'montoPendiente' => $montoPendiente,
             'montoPagado' => $montoPagado,
-            'metodosPago' => $metodosPago
+            'metodosPago' => $metodosPago,
+            'fechaActualInstituto' => $this->institutoTimezoneService->getNowForInstituto($instituto)->format('Y-m-d')
         ]);
     }
 }

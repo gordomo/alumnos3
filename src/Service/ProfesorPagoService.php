@@ -197,7 +197,7 @@ class ProfesorPagoService
         foreach ($cursos as $curso) {
             // Contar alumnos activos en el curso para el mes/año
             $alumnosActivos = $this->alumnoRepository->createQueryBuilder('a')
-                ->innerJoin('a.cursos', 'c')
+                ->innerJoin('a.curso', 'c')
                 ->andWhere('c.id = :curso')
                 ->andWhere('a.instituto = :instituto')
                 ->setParameter('curso', $curso->getId())
@@ -209,11 +209,11 @@ class ProfesorPagoService
             $alumnosActivosEnMes = [];
             foreach ($alumnosActivos as $alumno) {
                 // Verificar si el alumno tenía el curso activo en ese mes/año
-                $historial = $alumno->getHistorialCursos();
+                $historial = $alumno->getCursosHistoricos();
                 foreach ($historial as $hc) {
                     if ($hc->getCurso()->getId() === $curso->getId()) {
-                        $fechaInicio = $hc->getFechaInicio();
-                        $fechaFin = $hc->getFechaFin();
+                        $fechaInicio = $hc->getFechaAlta();
+                        $fechaFin = $hc->getFechaBaja();
                         
                         // Crear fecha del mes/año a verificar
                         $fechaMes = new \DateTime("$ano-$mes-01");
