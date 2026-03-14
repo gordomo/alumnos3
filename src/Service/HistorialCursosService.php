@@ -15,10 +15,15 @@ class HistorialCursosService
 {
     private $entityManager;
     private $deudaService;
+    private $institutoTimezoneService;
 
-    public function __construct(EntityManagerInterface $entityManager, DeudaService $deudaService = null)
-    {
+    public function __construct(
+        EntityManagerInterface $entityManager, 
+        InstitutoTimezoneService $institutoTimezoneService,
+        DeudaService $deudaService = null
+    ) {
         $this->entityManager = $entityManager;
+        $this->institutoTimezoneService = $institutoTimezoneService;
         $this->deudaService = $deudaService;
     }
 
@@ -437,8 +442,9 @@ class HistorialCursosService
             9 => 'Septiembre', 10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre'
         ];
 
-        // Obtener fecha actual
-        $fechaActual = new \DateTime();
+        // Obtener fecha actual en la zona horaria del instituto
+        $instituto = $alumno->getInstituto();
+        $fechaActual = $this->institutoTimezoneService->getNowForInstituto($instituto);
         $mesActual = (int)$fechaActual->format('n');
         $anoActual = (int)$fechaActual->format('Y');
         $diaActual = (int)$fechaActual->format('d');
@@ -524,8 +530,9 @@ class HistorialCursosService
             9 => 'Septiembre', 10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre'
         ];
 
-        // Obtener fecha actual
-        $fechaActual = new \DateTime();
+        // Obtener fecha actual en la zona horaria del instituto
+        $instituto = $alumno->getInstituto();
+        $fechaActual = $this->institutoTimezoneService->getNowForInstituto($instituto);
         $mesActual = (int)$fechaActual->format('n');
         $anoActual = (int)$fechaActual->format('Y');
         $diaActual = (int)$fechaActual->format('d');

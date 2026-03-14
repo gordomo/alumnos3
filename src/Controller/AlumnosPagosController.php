@@ -694,6 +694,11 @@ class AlumnosPagosController extends AbstractController
             }
             
             // Determinar desde dónde empezar a generar meses
+            // No generar meses anteriores a la fecha de alta del alumno en el curso
+            $fechaAltaHistorico = $historico->getFechaAlta();
+            $fechaMinimaInicio = clone $fechaAltaHistorico;
+            $fechaMinimaInicio->modify('first day of this month');
+            
             // Si hay meses pendientes, empezar desde el primero
             // Si no hay meses pendientes, empezar desde el mes siguiente al actual o desde el inicio del curso
             $fechaInicio = clone $fechaActual;
@@ -702,8 +707,12 @@ class AlumnosPagosController extends AbstractController
             
             if ($primerMesPendiente) {
                 // Si hay meses pendientes, empezar desde el primero para llenar todos los huecos
+                // PERO nunca antes de la fecha de alta del alumno en el curso
                 if ($primerMesPendiente < $fechaInicio) {
                     $fechaInicio = clone $primerMesPendiente;
+                }
+                if ($fechaInicio < $fechaMinimaInicio) {
+                    $fechaInicio = clone $fechaMinimaInicio;
                 }
             } elseif ($fechaInicioCurso) {
                 // Si no hay meses pendientes pero hay fecha inicio del curso, empezar desde ahí
@@ -711,6 +720,10 @@ class AlumnosPagosController extends AbstractController
                 $fechaInicioCursoPrimerDia->modify('first day of this month');
                 if ($fechaInicioCursoPrimerDia < $fechaInicio) {
                     $fechaInicio = $fechaInicioCursoPrimerDia;
+                }
+                // Pero nunca antes de la fecha de alta
+                if ($fechaInicio < $fechaMinimaInicio) {
+                    $fechaInicio = clone $fechaMinimaInicio;
                 }
             }
             
@@ -754,6 +767,12 @@ class AlumnosPagosController extends AbstractController
                 
                 // Si no está en la lista, verificar si existe una deuda para este mes
                 if (!$yaEnLista) {
+                    // No generar meses anteriores a la fecha de alta del alumno en el curso
+                    if ($fechaVerificacion < $fechaMinimaInicio) {
+                        $fechaVerificacion->modify('+1 month');
+                        continue;
+                    }
+                    
                     // Verificar si existe una deuda para este mes (puede estar pagada o no haber vencido aún)
                     $deudaExistente = $this->entityManager->getRepository(\App\Entity\DeudaAlumno::class)
                         ->findOneBy([
