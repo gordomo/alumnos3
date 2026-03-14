@@ -913,7 +913,13 @@ class AlumnosPagosController extends AbstractController
         // Calcular el monto sugerido si hay un curso seleccionado
         $calculoMonto = null;
         if ($cursoSeleccionado) {
-            $mesesAdeudadosCurso = $this->historialCursosService->verificarMesesAdeudadosPorCurso($alumno, $cursoSeleccionado);
+            // Usar solo los meses que realmente se muestran en el formulario (ya filtrados)
+            $mesesAdeudadosCurso = [];
+            foreach ($mesesAdeudados as $mesData) {
+                if ($mesData['curso_obj']->getId() === $cursoSeleccionado->getId()) {
+                    $mesesAdeudadosCurso[] = $mesData;
+                }
+            }
             $calculoMonto = $this->calcularMonto($alumno, $cursoSeleccionado, $vencimientos, $mesesAdeudadosCurso, $descuentosPromocionalesSeleccionados);
             $alumnosPago->setMonto($calculoMonto['monto']);
         }
