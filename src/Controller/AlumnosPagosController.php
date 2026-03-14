@@ -686,7 +686,7 @@ class AlumnosPagosController extends AbstractController
             $primerMesPendiente = null;
             foreach ($mesesAdeudados as $mesData) {
                 if ($mesData['curso_obj']->getId() === $curso->getId()) {
-                    $fechaMes = new \DateTime($mesData['ano'] . '-' . str_pad($mesData['mes'], 2, '0', STR_PAD_LEFT) . '-01');
+                    $fechaMes = \DateTime::createFromFormat('Y-m-d', $mesData['ano'] . '-' . str_pad($mesData['mes'], 2, '0', STR_PAD_LEFT) . '-01');
                     if ($primerMesPendiente === null || $fechaMes < $primerMesPendiente) {
                         $primerMesPendiente = $fechaMes;
                     }
@@ -700,8 +700,17 @@ class AlumnosPagosController extends AbstractController
                 // Si no hay fecha de alta, usar la fecha de inicio del curso o la fecha actual
                 $fechaAltaHistorico = $fechaInicioCurso ?: $fechaActual;
             }
+            
+            // Determinar el mes mínimo según la configuración de generación de deudas
+            $modoGeneracionDeuda = $historico->getModoGeneracionDeuda();
             $fechaMinimaInicio = clone $fechaAltaHistorico;
             $fechaMinimaInicio->modify('first day of this month');
+            
+            if ($modoGeneracionDeuda === 'proximo_mes') {
+                // Si está configurado para empezar desde el próximo mes, agregar 1 mes
+                $fechaMinimaInicio->modify('+1 month');
+            }
+            // Si es 'inscripcion' (default), usar el mes de inscripción tal cual
             
             // Si hay meses pendientes, empezar desde el primero
             // Si no hay meses pendientes, empezar desde el mes siguiente al actual o desde el inicio del curso
@@ -773,7 +782,8 @@ class AlumnosPagosController extends AbstractController
                 if (!$yaEnLista) {
                     // No generar meses anteriores a la fecha de alta del alumno en el curso
                     if ($fechaVerificacion < $fechaMinimaInicio) {
-                        $fechaVerificacion->modify('+1 month');
+                        // No agregar este mes, continuar al siguiente
+                        // (el modify('+1 month') al final del loop se encargará de avanzar)
                         continue;
                     }
                     
