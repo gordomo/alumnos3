@@ -652,6 +652,38 @@ class AlumnosPagosController extends AbstractController
         
         foreach ($deudasParaPago as $deuda) {
             $curso = $deuda->getCurso();
+            
+            // Verificar si esta deuda es anterior al mes mínimo de generación según la configuración del historial
+            $historico = null;
+            foreach ($alumno->getCursosHistoricos() as $h) {
+                if ($h->getCurso()->getId() === $curso->getId() && $h->isActivo()) {
+                    $historico = $h;
+                    break;
+                }
+            }
+            
+            if ($historico) {
+                $fechaAltaHistorico = $historico->getFechaAlta();
+                if ($fechaAltaHistorico) {
+                    $fechaMinimaDeuda = clone $fechaAltaHistorico;
+                    $fechaMinimaDeuda->modify('first day of this month');
+                    
+                    // Si está configurado para empezar desde el próximo mes, agregar 1 mes
+                    $modoGeneracionDeuda = $historico->getModoGeneracionDeuda();
+                    if ($modoGeneracionDeuda === 'proximo_mes') {
+                        $fechaMinimaDeuda->modify('+1 month');
+                    }
+                    
+                    // Crear fecha de la deuda para comparar
+                    $fechaDeuda = \DateTime::createFromFormat('Y-m-d', $deuda->getAno() . '-' . str_pad($deuda->getMes(), 2, '0', STR_PAD_LEFT) . '-01');
+                    
+                    // Si la deuda es anterior al mes mínimo, no agregarla
+                    if ($fechaDeuda < $fechaMinimaDeuda) {
+                        continue;
+                    }
+                }
+            }
+            
             $mesesAdeudados[] = [
                 'mes' => $deuda->getMes(),
                 'ano' => $deuda->getAno(),
