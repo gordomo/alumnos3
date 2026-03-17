@@ -1262,6 +1262,18 @@
                     }
                 });
             }
+            
+            // Calcular monto inicial si hay meses disponibles
+            {% if alumno and mesesAdeudados is defined and mesesAdeudados|length > 0 %}
+            // Esperar a que el DOM esté completamente cargado
+            setTimeout(function() {
+                // Verificar si hay algún mes seleccionado por defecto
+                const mesesCheckboxes = document.querySelectorAll('.mes-adeudado-checkbox:checked');
+                if (mesesCheckboxes.length > 0 && typeof actualizarResumenMeses === 'function') {
+                    actualizarResumenMeses();
+                }
+            }, 100);
+            {% endif %}
         });
     </script>
 {% endblock %}

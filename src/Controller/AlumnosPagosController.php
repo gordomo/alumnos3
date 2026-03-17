@@ -456,7 +456,10 @@ class AlumnosPagosController extends AbstractController
         $anoActual = (int)$fechaActual->format('Y');
         $diaActual = (int)$fechaActual->format('d');
 
-        $montoBase = $curso->getPrecio();
+        // Calcular el monto base multiplicando el precio mensual por la cantidad de meses
+        $precioMensual = $curso->getPrecio();
+        $cantidadMeses = count($mesesAdeudados);
+        $montoBase = $precioMensual * $cantidadMeses;
         $montoFinal = $montoBase;
         $porcentajeInteres = 0;
         $motivoInteres = "Sin interés aplicado";
@@ -887,18 +890,10 @@ class AlumnosPagosController extends AbstractController
         $configuracion = $alumno->getInstituto()->getConfiguracion();
         $descuentosPromocionales = $descuentoPromocionalRepository->findActivosByConfiguracion($configuracion);
 
-        // Si hay meses adeudados y no hay curso seleccionado, establecer valores por defecto
-        if (!empty($mesesAdeudados) && !$cursoSeleccionado) {
-            $primerMesAdeudado = $mesesAdeudados[0];
-            $alumnosPago->setMes($primerMesAdeudado['mes']);
-            $alumnosPago->setAno($primerMesAdeudado['ano']);
-            
-            $alumnosPago->setCurso($primerMesAdeudado['curso_obj']);
-            $cursoSeleccionado = $primerMesAdeudado['curso_obj'];
-        } elseif ($cursoSeleccionado) {
-            // Si hay un curso seleccionado, establecerlo
+        // Si hay un curso seleccionado explícitamente en la URL, establecerlo
+        if ($cursoSeleccionado) {
             $alumnosPago->setCurso($cursoSeleccionado);
-        }   
+        }
 
         // Obtener descuentos promocionales seleccionados del request
         $descuentosPromocionalesSeleccionados = [];
@@ -914,7 +909,8 @@ class AlumnosPagosController extends AbstractController
             }
         }   
 
-        // Calcular el monto sugerido si hay un curso seleccionado
+        // Calcular el monto sugerido solo si hay un curso seleccionado explícitamente
+        // Si no hay curso seleccionado, el cálculo se hará dinámicamente vía AJAX cuando el usuario seleccione meses
         $calculoMonto = null;
         if ($cursoSeleccionado) {
             // Usar solo los meses que realmente se muestran en el formulario (ya filtrados)
