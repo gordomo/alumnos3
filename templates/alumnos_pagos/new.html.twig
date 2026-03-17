@@ -96,8 +96,6 @@
                                 </h5>
                                 <p class="text-muted mb-3">
                                     Seleccione los meses que desea pagar (puede seleccionar múltiples).  
-                                    <strong>Pago adelantado:</strong> Seleccione meses futuros (hasta 12 meses adelante). 
-                                    Si ingresa un monto menor al total, la deuda se cancela igual.
                                 </p>
                                 {% set cursos = {} %}
                                 {% for mes in mesesAdeudados %}
@@ -318,8 +316,8 @@
                 {% endif %}
 
                         {# Descuentos Promocionales Disponibles #}
-                        {% if descuentosPromocionales is defined and descuentosPromocionales|length > 0 %}
-                            <div class="mb-3" style="border-left: 4px solid #0dcaf0; background-color: #cff4fc; padding: 1rem; border-radius: 4px;">
+                        {% if descuentosPromocionales is defined and descuentosPromocionales|length > 0 and puedeRecibirDescuentos is defined and puedeRecibirDescuentos %}
+                            <div class="mb-3" id="descuentos-promocionales-container" style="border-left: 4px solid #0dcaf0; background-color: #cff4fc; padding: 1rem; border-radius: 4px;">
                                 <h6 class="mb-2 text-dark">
                                     <i class="bi bi-tag" style="color: #0dcaf0;"></i> Descuentos Promocionales Disponibles
                                 </h6>
@@ -799,8 +797,8 @@
                     formData.append('descuentos_promocionales[]', id);
                 });
                 const metodoPagoSelect = document.querySelector('.metodo-pago-select') || document.querySelector('select[name="alumnos_pagos[metodoPago]"]');
-                if (metodoPagoSelect && metodoPagoSelect.value) {
-                    formData.append('metodo_pago', metodoPagoSelect.value);
+                if (metodoPagoSelect) {
+                    formData.append('metodo_pago', metodoPagoSelect.value || 'efectivo');
                 }
                 
                 // Llamar al endpoint AJAX
@@ -899,6 +897,21 @@
                                     descuentosContainer.style.display = 'block';
                                 } else {
                                     descuentosContainer.style.display = 'none';
+                                }
+                            }
+                            
+                            // Actualizar visibilidad de descuentos promocionales según puedeRecibirDescuentos
+                            const descuentosPromocionalesContainer = document.getElementById('descuentos-promocionales-container');
+                            if (descuentosPromocionalesContainer) {
+                                if (data.puedeRecibirDescuentos !== undefined && !data.puedeRecibirDescuentos) {
+                                    descuentosPromocionalesContainer.style.display = 'none';
+                                    // Desmarcar todos los checkboxes de descuentos promocionales
+                                    const checkboxesDescuentos = document.querySelectorAll('.descuento-promocional-checkbox');
+                                    checkboxesDescuentos.forEach(function(cb) {
+                                        cb.checked = false;
+                                    });
+                                } else if (data.puedeRecibirDescuentos !== undefined && data.puedeRecibirDescuentos) {
+                                    descuentosPromocionalesContainer.style.display = 'block';
                                 }
                             }
                         });
@@ -1068,13 +1081,10 @@
             const descuentosPromocionalesCheckboxes = document.querySelectorAll('.descuento-promocional-checkbox');
             descuentosPromocionalesCheckboxes.forEach(function(checkbox) {
                 checkbox.addEventListener('change', function(e) {
-                    // Prevenir que otros listeners procesen este evento en modo múltiple
                     if (modoMultipleActivo) {
-                        e.stopImmediatePropagation();
-                        e.preventDefault();
                         actualizarResumenMeses();
                     }
-                }, true); // Usar capture phase para ejecutarse antes que otros listeners
+                });
             });
             
             // Event listener para el select múltiple de meses

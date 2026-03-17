@@ -532,7 +532,7 @@ class AlumnosPagosController extends AbstractController
         // Calcular porcentajes de descuento (sin aplicar aún)
         if ($puedeRecibirDescuentos && $configuracion) {
             // Aplicar descuento por pago en efectivo solo si el método de pago es efectivo (o no se especificó, p. ej. render inicial)
-            $aplicarDescuentoEfectivo = ($metodoPago === null || $metodoPago === 'efectivo');
+            $aplicarDescuentoEfectivo = ($metodoPago === null || strtolower($metodoPago) === 'efectivo');
             if ($aplicarDescuentoEfectivo && $configuracion->getDescuentoEfectivo() && $configuracion->getDescuentoEfectivo() > 0) {
                 $porcentajeDescuentoEfectivo = (float)$configuracion->getDescuentoEfectivo();
                 $porcentajeDescuentoTotal += $porcentajeDescuentoEfectivo;
@@ -606,7 +606,8 @@ class AlumnosPagosController extends AbstractController
             'motivoInteres' => $motivoInteres,
             'mesesAdeudados' => array_values($mesesAdeudados),
             'descuentosAplicados' => $descuentosAplicados,
-            'porcentajeDescuentoTotal' => $porcentajeDescuentoTotal
+            'porcentajeDescuentoTotal' => $porcentajeDescuentoTotal,
+            'puedeRecibirDescuentos' => $puedeRecibirDescuentos
         ];
     }
 
@@ -635,7 +636,7 @@ class AlumnosPagosController extends AbstractController
         $alumnosPago = new AlumnosPagos();
         $alumnosPago->setAlumno($alumno);
         $alumnosPago->setFecha($this->institutoTimezoneService->getNowForInstituto($instituto));
-        $alumnosPago->setMetodoPago('Efectivo');
+        $alumnosPago->setMetodoPago('efectivo');
 
         $mesesAdeudados = [];
         $ordenCalculo = 'interes_primero';
@@ -773,19 +774,17 @@ class AlumnosPagosController extends AbstractController
             }
             
             // Determinar hasta dónde generar meses futuros
-            // Si el curso tiene fecha fin, usar esa fecha (o 12 meses adelante, lo que sea menor)
-            // Si no tiene fecha fin, usar 12 meses adelante
-            $fechaFin = clone $fechaActual;
-            $fechaFin->modify('first day of this month');
-            $fechaFin->modify('+13 months'); // Por defecto, hasta 12 meses adelante desde el mes actual
-            
+            // Si el curso tiene fecha fin, usar esa fecha (permitir pagar todo el curso)
+            // Si no tiene fecha fin, usar 12 meses adelante como límite
             if ($fechaFinCurso) {
-                // Si el curso tiene fecha fin, usar la menor entre fecha fin del curso y 12 meses adelante
-                $fechaFinCursoPrimerDia = clone $fechaFinCurso;
-                $fechaFinCursoPrimerDia->modify('first day of this month');
-                if ($fechaFinCursoPrimerDia < $fechaFin) {
-                    $fechaFin = $fechaFinCursoPrimerDia;
-                }
+                // Si el curso tiene fecha fin, permitir pagar hasta el fin del curso completo
+                $fechaFin = clone $fechaFinCurso;
+                $fechaFin->modify('first day of this month');
+            } else {
+                // Si no tiene fecha fin, limitar a 12 meses adelante
+                $fechaFin = clone $fechaActual;
+                $fechaFin->modify('first day of this month');
+                $fechaFin->modify('+13 months');
             }
             
             $fechaVerificacion = clone $fechaInicio;
@@ -1477,7 +1476,8 @@ class AlumnosPagosController extends AbstractController
             'descuentosPromocionalesSeleccionados' => $descuentosPromocionalesSeleccionados,
             'calculoMonto' => $calculoMonto,
             'ordenCalculo' => $ordenCalculo,
-            'fechaActualInstituto' => $this->institutoTimezoneService->getNowForInstituto($instituto)->format('Y-m-d')
+            'fechaActualInstituto' => $this->institutoTimezoneService->getNowForInstituto($instituto)->format('Y-m-d'),
+            'puedeRecibirDescuentos' => isset($calculoMonto) ? $calculoMonto['puedeRecibirDescuentos'] : true
         ]);
     }
 
@@ -1522,7 +1522,8 @@ class AlumnosPagosController extends AbstractController
                 }
             }
             
-            $vencimientos = $alumno->getInstituto()->getVencimientos()->toArray();
+            $instituto = $alumno->getInstituto();
+            $vencimientos = $instituto->getVencimientos()->toArray();
         
         // Si hay múltiples meses seleccionados, calcular el total
         if (!empty($mesesSeleccionados) && is_array($mesesSeleccionados)) {
@@ -1683,12 +1684,13 @@ class AlumnosPagosController extends AbstractController
             $porcentajeDescuentoTotal = 0;
             $descuentosAplicados = [];
             $puedeRecibirDescuentos = true;
+            
             if ($configuracion && $configuracion->getDeshabilitarDescuentosEnDeuda() && $alumno->tieneDeudasVencidas()) {
                 $puedeRecibirDescuentos = false;
                 $descuentosAplicados[] = "No se aplican descuentos porque el alumno tiene deudas vencidas";
             }
             $metodoPago = $request->request->get('metodo_pago');
-            $aplicarDescuentoEfectivo = ($metodoPago === null || $metodoPago === 'efectivo');
+            $aplicarDescuentoEfectivo = ($metodoPago === null || strtolower($metodoPago) === 'efectivo');
             if ($puedeRecibirDescuentos && $configuracion) {
                 if ($aplicarDescuentoEfectivo && $configuracion->getDescuentoEfectivo() && $configuracion->getDescuentoEfectivo() > 0) {
                     $porcentajeEfectivo = (float)$configuracion->getDescuentoEfectivo();
@@ -1703,11 +1705,12 @@ class AlumnosPagosController extends AbstractController
                         $descuentosAplicados[] = "Descuento del " . $porcentajeHermanos . "% por tener " . count($hermanos) . " hermano(s) en el instituto";
                     }
                 }
-            }
-            foreach ($descuentosPromocionalesSeleccionados as $descuentoPromocional) {
-                $porcentajeDescuentoPromocional = (float)$descuentoPromocional->getPorcentaje();
-                $porcentajeDescuentoTotal += $porcentajeDescuentoPromocional;
-                $descuentosAplicados[] = "Descuento promocional: " . $descuentoPromocional->getNombre() . " (" . $porcentajeDescuentoPromocional . "%)";
+                
+                foreach ($descuentosPromocionalesSeleccionados as $descuentoPromocional) {
+                    $porcentajeDescuentoPromocional = (float)$descuentoPromocional->getPorcentaje();
+                    $porcentajeDescuentoTotal += $porcentajeDescuentoPromocional;
+                    $descuentosAplicados[] = "Descuento promocional: " . $descuentoPromocional->getNombre() . " (" . $porcentajeDescuentoPromocional . "%)";
+                }
             }
             
             // Aplicar intereses solo sobre meses vencidos, luego aplicar descuentos sobre el total
@@ -1788,7 +1791,8 @@ class AlumnosPagosController extends AbstractController
                 'porcentajeDescuentoTotal' => $porcentajeDescuentoTotal,
                 'ordenCalculo' => $ordenCalculo,
                 'ordenCalculoTexto' => $ordenTexto[$ordenCalculo] ?? 'Interés primero, luego descuentos',
-                'ordenCalculoDescripcion' => $ordenDescripcion[$ordenCalculo] ?? 'Se aplica el interés sobre el monto base, luego los descuentos sobre el resultado.'
+                'ordenCalculoDescripcion' => $ordenDescripcion[$ordenCalculo] ?? 'Se aplica el interés sobre el monto base, luego los descuentos sobre el resultado.',
+                'puedeRecibirDescuentos' => $puedeRecibirDescuentos
             ]);
         }
         

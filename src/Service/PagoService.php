@@ -12,13 +12,16 @@ class PagoService
 {
     private EntityManagerInterface $entityManager;
     private InstitutoTimezoneService $institutoTimezoneService;
+    private HistorialCursosService $historialCursosService;
 
     public function __construct(
         EntityManagerInterface $entityManager,
-        InstitutoTimezoneService $institutoTimezoneService
+        InstitutoTimezoneService $institutoTimezoneService,
+        HistorialCursosService $historialCursosService
     ) {
         $this->entityManager = $entityManager;
         $this->institutoTimezoneService = $institutoTimezoneService;
+        $this->historialCursosService = $historialCursosService;
     }
 
     /**
@@ -206,17 +209,6 @@ class PagoService
         $mes = $pago->getMes();
         $ano = $pago->getAno();
 
-        // Validar que no sea más de 12 meses adelante
-        $instituto = $alumno->getInstituto();
-        $fechaActual = $this->institutoTimezoneService->getNowForInstituto($instituto);
-        $fechaPago = new \DateTime(sprintf('%d-%02d-01', $ano, $mes));
-        $diferencia = $fechaPago->diff($fechaActual);
-        $mesesAdelante = ($diferencia->y * 12) + $diferencia->m;
-        
-        if ($mesesAdelante > 12) {
-            throw new \InvalidArgumentException('No se pueden registrar pagos más de 12 meses adelante.');
-        }
-
         // Buscar el historial del curso
         $historico = $this->entityManager->getRepository(\App\Entity\AlumnoCursoHistorico::class)
             ->findOneBy([
@@ -226,8 +218,30 @@ class PagoService
             ]);
 
         if (!$historico) {
-            // Si no hay historial, no podemos crear la deuda
             return null;
+        }
+
+        // Validar límite de meses adelantados según si el curso tiene fecha fin
+        $instituto = $alumno->getInstituto();
+        $fechaActual = $this->institutoTimezoneService->getNowForInstituto($instituto);
+        $fechaPago = new \DateTime(sprintf('%d-%02d-01', $ano, $mes));
+        
+        $fechaFinCurso = $curso->getFechaFin();
+        if ($fechaFinCurso) {
+            // Si el curso tiene fecha fin, validar que no sea posterior al fin del curso
+            $fechaFinCursoPrimerDia = clone $fechaFinCurso;
+            $fechaFinCursoPrimerDia->modify('first day of this month');
+            if ($fechaPago > $fechaFinCursoPrimerDia) {
+                throw new \InvalidArgumentException('No se pueden registrar pagos posteriores a la fecha de fin del curso (' . $fechaFinCurso->format('d/m/Y') . ').');
+            }
+        } else {
+            // Si no tiene fecha fin, limitar a 12 meses adelante
+            $diferencia = $fechaPago->diff($fechaActual);
+            $mesesAdelante = ($diferencia->y * 12) + $diferencia->m;
+            
+            if ($mesesAdelante > 12) {
+                throw new \InvalidArgumentException('No se pueden registrar pagos más de 12 meses adelante para cursos sin fecha de fin definida.');
+            }
         }
 
         // Crear la deuda
@@ -343,8 +357,7 @@ class PagoService
         
         if (!$historico) {
             // Si no existe, crear uno nuevo usando HistorialCursosService
-            $historialService = new \App\Service\HistorialCursosService($this->entityManager);
-            $historico = $historialService->inscribirAlumnoEnCurso($alumno, $curso);
+            $historico = $this->historialCursosService->inscribirAlumnoEnCurso($alumno, $curso);
             
             // Si aún no se pudo crear el historial, lanzar excepción
             if (!$historico) {

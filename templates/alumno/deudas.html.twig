@@ -79,7 +79,7 @@
                                     <li>
                                         <strong>{{ loop.index }}º vencimiento:</strong> Día {{ vencimiento.diaVencimiento }} de cada mes
                                         {% if vencimiento.porcentajeInteres > 0 %}
-                                            (recargo del {{ vencimiento.porcentajeInteres }}% después de esta fecha)
+                                            (recargo del {{ vencimiento.porcentajeInteres }}% desde esta fecha)
                                         {% endif %}
                                     </li>
                                 {% endfor %}
