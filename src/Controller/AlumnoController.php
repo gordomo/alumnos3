@@ -789,8 +789,20 @@ class AlumnoController extends AbstractController
             return $this->redirectToRoute('app_alumno_index');
         }
         
-        // Calcular deudas on-demand desde el historial (sin usar tabla deuda_alumno)
+        // Calcular deudas on-demand desde el historial (cursos activos)
         $deudasCalculadas = $deudaCalculator->calcularDeudasAlumno($alumno);
+        
+        // Obtener todas las entidades DeudaAlumno para poder cancelarlas
+        $todasLasDeudas = $this->entityManager->getRepository(\App\Entity\DeudaAlumno::class)->findBy([
+            'alumno' => $alumno
+        ]);
+        
+        // Crear un mapa de deudas por curso/mes/año para acceso rápido
+        $mapaDeudas = [];
+        foreach ($todasLasDeudas as $deudaEntity) {
+            $key = $deudaEntity->getCurso()->getId() . '_' . $deudaEntity->getMes() . '_' . $deudaEntity->getAno();
+            $mapaDeudas[$key] = $deudaEntity;
+        }
         
         // Agrupar las deudas por curso
         $deudasPorCurso = [];
@@ -800,10 +812,57 @@ class AlumnoController extends AbstractController
                 $deudasPorCurso[$cursoId] = [
                     'curso' => $deuda['curso'],
                     'historico' => $deuda['cursoHistorico'],
-                    'deudas' => []
+                    'deudas' => [],
+                    'cursoActivo' => true
                 ];
             }
+            
+            // Buscar la entidad DeudaAlumno correspondiente
+            $key = $cursoId . '_' . $deuda['mes'] . '_' . $deuda['ano'];
+            $deudaEntity = $mapaDeudas[$key] ?? null;
+            $deuda['deudaEntity'] = $deudaEntity;
+            
             $deudasPorCurso[$cursoId]['deudas'][] = $deuda;
+        }
+        
+        // Agregar deudas de la tabla deuda_alumno que no están en cursos activos (deudas huérfanas)
+        // Estas son deudas de cursos donde el alumno ya no está inscrito pero aún debe pagar
+        $deudasHuerfanas = $this->entityManager->getRepository(\App\Entity\DeudaAlumno::class)->findBy([
+            'alumno' => $alumno
+        ]);
+        
+        // Filtrar solo las que tienen saldo pendiente
+        $deudasHuerfanas = array_filter($deudasHuerfanas, function($deuda) {
+            return $deuda->getMontoPendiente() > 0;
+        });
+        
+        foreach ($deudasHuerfanas as $deudaEntity) {
+            $cursoId = $deudaEntity->getCurso()->getId();
+            
+            // Si el curso ya está en deudasPorCurso (curso activo), skip
+            if (isset($deudasPorCurso[$cursoId])) {
+                continue;
+            }
+            
+            // Agregar la deuda huérfana
+            if (!isset($deudasPorCurso[$cursoId])) {
+                $deudasPorCurso[$cursoId] = [
+                    'curso' => $deudaEntity->getCurso(),
+                    'historico' => $deudaEntity->getCursoHistorico(),
+                    'deudas' => [],
+                    'cursoActivo' => false
+                ];
+            }
+            
+            $deudasPorCurso[$cursoId]['deudas'][] = [
+                'mes' => $deudaEntity->getMes(),
+                'ano' => $deudaEntity->getAno(),
+                'monto' => $deudaEntity->getMonto(),
+                'interes' => $deudaEntity->getInteres() ?? 0,
+                'curso' => $deudaEntity->getCurso(),
+                'cursoHistorico' => $deudaEntity->getCursoHistorico(),
+                'deudaEntity' => $deudaEntity
+            ];
         }
         
         return $this->render('alumno/deudas.html.twig', [

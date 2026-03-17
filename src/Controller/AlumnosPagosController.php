@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\AlumnosPagos;
 use App\Entity\Alumno;
 use App\Entity\Curso;
+use App\Entity\DeudaAlumno;
 use App\Form\AlumnosPagosType;
 use App\Repository\AlumnosPagosRepository;
 use App\Repository\VencimientoRepository;
@@ -456,10 +457,18 @@ class AlumnosPagosController extends AbstractController
         $anoActual = (int)$fechaActual->format('Y');
         $diaActual = (int)$fechaActual->format('d');
 
-        // Calcular el monto base multiplicando el precio mensual por la cantidad de meses
-        $precioMensual = $curso->getPrecio();
-        $cantidadMeses = count($mesesAdeudados);
-        $montoBase = $precioMensual * $cantidadMeses;
+        // Calcular el monto base sumando los montos de cada mes adeudado
+        // Esto respeta el precio histórico de cada deuda (importante para cursos con cambios de precio)
+        $montoBase = 0;
+        foreach ($mesesAdeudados as $mesData) {
+            // Si el mes tiene un monto específico (deuda existente), usarlo
+            // Si no, usar el precio actual del curso (para meses futuros sin deuda creada aún)
+            if (isset($mesData['monto']) && $mesData['monto'] > 0) {
+                $montoBase += $mesData['monto'];
+            } else {
+                $montoBase += $curso->getPrecio();
+            }
+        }
         $montoFinal = $montoBase;
         $porcentajeInteres = 0;
         $motivoInteres = "Sin interés aplicado";
@@ -662,37 +671,8 @@ class AlumnosPagosController extends AbstractController
         foreach ($deudasParaPago as $deuda) {
             $curso = $deuda->getCurso();
             
-            // Verificar si esta deuda es anterior al mes mínimo de generación según la configuración del historial
-            $historico = null;
-            foreach ($alumno->getCursosHistoricos() as $h) {
-                if ($h->getCurso()->getId() === $curso->getId() && $h->isActivo()) {
-                    $historico = $h;
-                    break;
-                }
-            }
-            
-            if ($historico) {
-                $fechaAltaHistorico = $historico->getFechaAlta();
-                if ($fechaAltaHistorico) {
-                    $fechaMinimaDeuda = clone $fechaAltaHistorico;
-                    $fechaMinimaDeuda->modify('first day of this month');
-                    
-                    // Si está configurado para empezar desde el próximo mes, agregar 1 mes
-                    $modoGeneracionDeuda = $historico->getModoGeneracionDeuda();
-                    if ($modoGeneracionDeuda === 'proximo_mes') {
-                        $fechaMinimaDeuda->modify('+1 month');
-                    }
-                    
-                    // Crear fecha de la deuda para comparar
-                    $fechaDeuda = \DateTime::createFromFormat('Y-m-d', $deuda->getAno() . '-' . str_pad($deuda->getMes(), 2, '0', STR_PAD_LEFT) . '-01');
-                    
-                    // Si la deuda es anterior al mes mínimo, no agregarla
-                    if ($fechaDeuda < $fechaMinimaDeuda) {
-                        continue;
-                    }
-                }
-            }
-            
+            // Agregar todas las deudas pendientes, incluso si el curso ya no está activo
+            // Esto permite pagar deudas de cursos donde el alumno ya no está inscrito
             $mesesAdeudados[] = [
                 'mes' => $deuda->getMes(),
                 'ano' => $deuda->getAno(),
@@ -1565,17 +1545,34 @@ class AlumnosPagosController extends AbstractController
             $maxInteres = 0;
             $motivoInteres = "Sin interés aplicado";
             
+            // Obtener todas las deudas del alumno de una sola vez para optimizar
+            $todasLasDeudas = $this->entityManager->getRepository(DeudaAlumno::class)->findBy([
+                'alumno' => $alumno
+            ]);
+            
+            // Crear un mapa de deudas por curso/mes/año para acceso rápido
+            $mapaDeudas = [];
+            foreach ($todasLasDeudas as $deuda) {
+                $key = $deuda->getCurso()->getId() . '_' . $deuda->getMes() . '_' . $deuda->getAno();
+                $mapaDeudas[$key] = $deuda;
+            }
+            
             // Primero, separar meses vencidos de no vencidos y calcular montos base
             foreach ($mesesPorCurso as $cursoId => $meses) {
                 $curso = $this->entityManager->getRepository(Curso::class)->find($cursoId);
                 if (!$curso) continue;
                 
-                $montoBaseCurso = $curso->getPrecio();
-                
                 // Separar meses vencidos de no vencidos
                 foreach ($meses as $mesData) {
                     $mes = (int)$mesData['mes'];
                     $ano = (int)$mesData['ano'];
+                    
+                    // Buscar si existe una deuda para este mes/año/curso en el mapa
+                    $key = $cursoId . '_' . $mes . '_' . $ano;
+                    $deudaExistente = $mapaDeudas[$key] ?? null;
+                    
+                    // Usar el monto de la deuda si existe, sino el precio actual del curso
+                    $montoBaseMes = $deudaExistente ? $deudaExistente->getMonto() : $curso->getPrecio();
                     
                     // Determinar si el mes está vencido
                     $esVencido = false;
@@ -1588,9 +1585,9 @@ class AlumnosPagosController extends AbstractController
                     }
                     
                     if ($esVencido) {
-                        $montoTotalBaseVencidos += $montoBaseCurso;
+                        $montoTotalBaseVencidos += $montoBaseMes;
                     } else {
-                        $montoTotalBaseNoVencidos += $montoBaseCurso;
+                        $montoTotalBaseNoVencidos += $montoBaseMes;
                     }
                 }
             }
