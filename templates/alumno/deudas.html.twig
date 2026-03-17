@@ -44,18 +44,18 @@
                                             {% if modo == 'inicio_curso' %}
                                                 <span class="badge bg-primary">Desde el inicio del curso</span>
                                                 <br><small class="text-muted">
-                                                    Primera deuda: {{ historico.fechaInicioPeriodo|date('F Y') }}
+                                                    Primera deuda: {{ historico.fechaInicioPeriodo|mes_es }}
                                                     {% if historico.fechaAlta > historico.fechaInicioPeriodo %}
                                                         <br><em>Nota: El alumno se inscribió el {{ historico.fechaAlta|date('d/m/Y') }}, pero se le generan deudas desde el inicio del curso ({{ historico.fechaInicioPeriodo|date('d/m/Y') }}).</em>
                                                     {% endif %}
                                                 </small>
                                             {% elseif modo == 'proximo_mes' %}
                                                 <span class="badge bg-warning text-dark">Desde el mes siguiente a la inscripción</span>
-                                                <br><small class="text-muted">Primera deuda: {{ historico.fechaAlta|date_modify('+1 month')|date('F Y') }}</small>
+                                                <br><small class="text-muted">Primera deuda: {{ historico.fechaAlta|date_modify('+1 month')|mes_es }}</small>
                                             {% else %}
                                                 <span class="badge bg-info">Desde el mes de inscripción</span>
                                                 <br><small class="text-muted">
-                                                    Primera deuda: {{ historico.fechaAlta|date('F Y') }}
+                                                    Primera deuda: {{ historico.fechaAlta|mes_es }}
                                                     {% if historico.fechaAlta > historico.fechaInicioPeriodo %}
                                                         <br><em>Nota: El alumno se inscribió después del inicio del curso ({{ historico.fechaInicioPeriodo|date('d/m/Y') }}), por lo que las deudas comienzan desde su fecha de inscripción.</em>
                                                     {% endif %}

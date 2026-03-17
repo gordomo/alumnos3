@@ -205,7 +205,7 @@
                             {% elseif tipoInforme == 'semana' %}
                                 - Semana del {{ fechaInicio|date(app_date_format|default('d/m/Y')) }} al {{ fechaFin|date(app_date_format|default('d/m/Y')) }}
                             {% elseif tipoInforme == 'mes' %}
-                                - {{ fechaInicio|date('F Y')|capitalize }}
+                                - {{ fechaInicio|mes_es }}
                             {% endif %}
                         </h5>
                         <div class="asistencia-informe-export">

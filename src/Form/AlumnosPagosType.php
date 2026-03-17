@@ -68,6 +68,9 @@ class AlumnosPagosType extends AbstractType
                 'required' => true,
                 'disabled' => $modoEdicion,
                 'attr' => ['class' => 'form-control'],
+                'input' => 'datetime_immutable',
+                'model_timezone' => 'UTC',
+                'view_timezone' => 'UTC',
                 'constraints' => [
                     new NotBlank(['message' => 'La fecha es obligatoria'])
                 ]

@@ -635,7 +635,12 @@ class AlumnosPagosController extends AbstractController
         $instituto = $this->getUser()->getInstituto();
         $alumnosPago = new AlumnosPagos();
         $alumnosPago->setAlumno($alumno);
-        $alumnosPago->setFecha($this->institutoTimezoneService->getNowForInstituto($instituto));
+        
+        // Obtener la fecha actual en la zona horaria del instituto y convertirla a medianoche UTC
+        // Esto evita problemas de conversión de timezone en el navegador con input type="date"
+        $fechaInstituto = $this->institutoTimezoneService->getNowForInstituto($instituto);
+        $fechaSoloFecha = \DateTimeImmutable::createFromFormat('Y-m-d H:i:s', $fechaInstituto->format('Y-m-d') . ' 00:00:00', new \DateTimeZone('UTC'));
+        $alumnosPago->setFecha($fechaSoloFecha);
         $alumnosPago->setMetodoPago('efectivo');
 
         $mesesAdeudados = [];
