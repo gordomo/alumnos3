@@ -295,7 +295,7 @@
                     <div class="card-body">
                         <span class="metric-label"><i class="bi bi-calendar-check"></i> Cobrado Mensual</span>
                         <h2 class="metric-value">${{ montoCobradoMensual|number_format(0, ',', '.') }}</h2>
-                        <p class="metric-note">{{ 'now'|date('U')|date('Y-m-d')|date_create|mes_es }}</p>
+                        <p class="metric-note">{{ 'now'|mes_es }}</p>
                     </div>
                 </div>
             </div>

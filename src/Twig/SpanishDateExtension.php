@@ -29,8 +29,11 @@ class SpanishDateExtension extends AbstractExtension
         ];
     }
 
-    public function formatMesEspanol(\DateTimeInterface $date): string
+    public function formatMesEspanol(\DateTimeInterface|string $date): string
     {
+        if (is_string($date)) {
+            $date = new \DateTime($date);
+        }
         $mes = (int) $date->format('n');
         $anio = $date->format('Y');
         return self::MESES[$mes] . ' ' . $anio;
