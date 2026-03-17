@@ -119,12 +119,9 @@ class AlumnosPagosType extends AbstractType
                 'placeholder' => 'Seleccione un curso',
                 'label' => 'Curso', 
                 'label_attr' => ['class' => 'form-label'],
-                'required' => true,
+                'required' => false,
                 'disabled' => $modoEdicion,
-                'attr' => ['class' => 'form-control chosen-select'],
-                'constraints' => [
-                    new NotBlank(['message' => 'El curso es obligatorio'])
-                ]
+                'attr' => ['class' => 'form-control chosen-select']
             ])
             ->add('monto', NumberType::class, [
                 'label' => 'Monto',

@@ -1014,7 +1014,16 @@ class AlumnosPagosController extends AbstractController
                             continue;
                         }
                         
-                        $montoBaseCurso = $curso->getPrecio();
+                        // Buscar si existe una deuda para este mes/año/curso
+                        $deudaExistente = $this->entityManager->getRepository(DeudaAlumno::class)->findOneBy([
+                            'alumno' => $alumno,
+                            'curso' => $curso,
+                            'mes' => $mes,
+                            'ano' => $ano
+                        ]);
+                        
+                        // Usar el monto de la deuda si existe, sino el precio actual del curso
+                        $montoBaseCurso = $deudaExistente ? $deudaExistente->getMonto() : $curso->getPrecio();
                         
                         // Determinar si el mes está vencido
                         $esVencido = false;
