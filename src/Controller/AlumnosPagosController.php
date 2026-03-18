@@ -6,6 +6,7 @@ use App\Entity\AlumnosPagos;
 use App\Entity\Alumno;
 use App\Entity\Curso;
 use App\Entity\DeudaAlumno;
+use App\Entity\MetodoPago;
 use App\Form\AlumnosPagosType;
 use App\Repository\AlumnosPagosRepository;
 use App\Repository\VencimientoRepository;
@@ -222,20 +223,13 @@ class AlumnosPagosController extends AbstractController
         // Obtener todos los cursos para el filtro
         $cursos = $cursoRepository->findBy(['instituto' => $instituto]);
 
-        // Definir métodos de pago disponibles
-        $metodosPagoBase = ['Efectivo', 'Transferencia', 'Débito', 'Crédito', 'Mercado Pago'];
+        // Obtener métodos de pago del instituto
+        $metodosPagoEntities = $this->entityManager->getRepository(MetodoPago::class)
+            ->findBy(['instituto' => $instituto, 'activo' => true], ['orden' => 'ASC']);
         
-        // Obtener métodos de pago únicos ya usados en el instituto
-        $metodosPagoUsados = $alumnosPagosRepository->createQueryBuilder('p')
-            ->select('DISTINCT p.metodoPago')
-            ->andWhere('p.alumno IN (SELECT a2 FROM App\Entity\Alumno a2 WHERE a2.instituto = :instituto)')
-            ->setParameter('instituto', $instituto)
-            ->getQuery()
-            ->getSingleColumnResult();
-        
-        // Combinar métodos base con los usados y eliminar duplicados
-        $metodosPago = array_unique(array_merge($metodosPagoBase, $metodosPagoUsados));
-        sort($metodosPago);
+        $metodosPago = array_map(function($metodo) {
+            return $metodo->getNombre();
+        }, $metodosPagoEntities);
 
         // Paginar resultados
         $pagination = $paginator->paginate(
@@ -1545,10 +1539,6 @@ class AlumnosPagosController extends AbstractController
             $montoTotalConInteres = 0;
             $montoTotalBase = 0;
             
-            file_put_contents('/tmp/debug_calculo.log', "=== CALCULO AJAX ===\n", FILE_APPEND);
-            file_put_contents('/tmp/debug_calculo.log', "Meses seleccionados: " . print_r($mesesSeleccionados, true) . "\n", FILE_APPEND);
-            file_put_contents('/tmp/debug_calculo.log', "Meses por curso: " . print_r($mesesPorCurso, true) . "\n", FILE_APPEND);
-            
             foreach ($mesesPorCurso as $cursoId => $meses) {
                 $curso = $this->entityManager->getRepository(Curso::class)->find($cursoId);
                 if (!$curso) continue;
@@ -1565,20 +1555,16 @@ class AlumnosPagosController extends AbstractController
                         // Usar el monto total de la deuda (ya incluye interés)
                         $montoTotal = $deudaExistente->getMontoTotal();
                         $montoBase = $deudaExistente->getMonto();
-                        file_put_contents('/tmp/debug_calculo.log', "Deuda existente: Curso $cursoId, Mes $mes/$ano, Base: $montoBase, Total: $montoTotal\n", FILE_APPEND);
                         $montoTotalConInteres += $montoTotal;
                         $montoTotalBase += $montoBase;
                     } else {
                         // Mes futuro sin deuda: usar precio del curso
                         $precio = $curso->getPrecio();
-                        file_put_contents('/tmp/debug_calculo.log', "Mes futuro: Curso $cursoId, Mes $mes/$ano, Precio: $precio\n", FILE_APPEND);
                         $montoTotalConInteres += $precio;
                         $montoTotalBase += $precio;
                     }
                 }
             }
-            
-            file_put_contents('/tmp/debug_calculo.log', "TOTALES - Base: $montoTotalBase, Con interés: $montoTotalConInteres\n", FILE_APPEND);
             
             // Calcular el detalle de intereses aplicados
             $porcentajeInteres = 0;
@@ -1659,8 +1645,6 @@ class AlumnosPagosController extends AbstractController
             if ($porcentajeDescuentoTotal > 0) {
                 $montoTotalFinal = $montoTotalConInteres * (1 - ($porcentajeDescuentoTotal / 100));
             }
-            
-            file_put_contents('/tmp/debug_calculo.log', "Descuentos: $porcentajeDescuentoTotal%, Monto final: $montoTotalFinal\n", FILE_APPEND);
             
             return new JsonResponse([
                 'monto' => $montoTotalFinal,

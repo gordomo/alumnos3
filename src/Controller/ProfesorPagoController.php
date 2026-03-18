@@ -167,6 +167,10 @@ class ProfesorPagoController extends AbstractController
 
         $fechaActualInstituto = $this->institutoTimezoneService->getTodayForInstituto($instituto);
         $app_date_format = $this->institutoTimezoneService->getDateFormatForInstituto($instituto);
+        
+        // Obtener métodos de pago del instituto
+        $metodosPago = $entityManager->getRepository(\App\Entity\MetodoPago::class)
+            ->findBy(['instituto' => $instituto, 'activo' => true], ['orden' => 'ASC']);
 
         return $this->render('profesor_pago/registrar.html.twig', [
             'profesor' => $profesor,
@@ -174,7 +178,8 @@ class ProfesorPagoController extends AbstractController
             'mes' => $mes,
             'ano' => $ano,
             'fecha_actual_instituto' => $fechaActualInstituto,
-            'app_date_format' => $app_date_format
+            'app_date_format' => $app_date_format,
+            'metodos_pago' => $metodosPago
         ]);
     }
 
