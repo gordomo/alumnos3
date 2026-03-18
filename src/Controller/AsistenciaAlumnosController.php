@@ -298,7 +298,13 @@ class AsistenciaAlumnosController extends AbstractController
         
         // Verificar si el día de la semana de la fecha está en los días configurados
         if (!in_array($diaSemanaFecha, $diasCursoNumeros)) {
-            $diasTexto = implode(', ', $diasCurso);
+            // Ordenar los días según el orden de la semana (Lunes primero)
+            $ordenDias = ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado', 'Domingo'];
+            $diasCursoOrdenados = array_filter($ordenDias, function($dia) use ($diasCurso) {
+                return in_array($dia, $diasCurso);
+            });
+            
+            $diasTexto = implode(', ', $diasCursoOrdenados);
             return [
                 'valida' => false,
                 'mensaje' => sprintf(
