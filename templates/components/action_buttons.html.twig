@@ -11,7 +11,7 @@
 {% endif %}
 {% if custom_buttons is defined %}
     {% for button in custom_buttons %}
-    <a href="{{ button.url }}" class="btn btn-sm {{ button.class|default('btn-outline-info') }} btn-action-icon" title="{{ button.title }}" data-toggle="tooltip" data-placement="top">
+    <a href="{{ button.url }}" class="btn btn-sm {{ button.class|default('btn-outline-info') }} btn-action-icon" title="{{ button.title }}" data-toggle="tooltip" data-placement="top" target="{{ button.target|default('_self') }}">
         <i class="bi {{ button.icon }}"></i>
     </a>
     {% endfor %}

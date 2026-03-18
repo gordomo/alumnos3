@@ -79,6 +79,12 @@ class Instituto
      */
     private $admins;
 
+    /**
+     * @ORM\OneToMany(targetEntity=MetodoPago::class, mappedBy="instituto", cascade={"persist", "remove"}, orphanRemoval=true)
+     * @ORM\OrderBy({"orden" = "ASC"})
+     */
+    private $metodosPago;
+
 
     // Métodos de inicialización y getters/setters
 
@@ -90,6 +96,7 @@ class Instituto
         $this->profesores = new ArrayCollection();
         $this->alumnos = new ArrayCollection();
         $this->admins = new ArrayCollection();
+        $this->metodosPago = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -314,6 +321,33 @@ class Instituto
         if ($this->admins->removeElement($admin)) {
             if ($admin->getInstituto() === $this) {
                 $admin->setInstituto(null);
+            }
+        }
+        return $this;
+    }
+
+    /**
+     * @return Collection|MetodoPago[]
+     */
+    public function getMetodosPago(): Collection
+    {
+        return $this->metodosPago;
+    }
+
+    public function addMetodoPago(MetodoPago $metodoPago): self
+    {
+        if (!$this->metodosPago->contains($metodoPago)) {
+            $this->metodosPago[] = $metodoPago;
+            $metodoPago->setInstituto($this);
+        }
+        return $this;
+    }
+
+    public function removeMetodoPago(MetodoPago $metodoPago): self
+    {
+        if ($this->metodosPago->removeElement($metodoPago)) {
+            if ($metodoPago->getInstituto() === $this) {
+                $metodoPago->setInstituto(null);
             }
         }
         return $this;

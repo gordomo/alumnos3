@@ -932,6 +932,7 @@ class AlumnosPagosController extends AbstractController
             'cursos' => array_values($cursos),
             'vencimientos' => $vencimientos,
             'current_year' => $currentYear,
+            'instituto' => $instituto,
         ]);
 
         $form->handleRequest($request);
@@ -1768,8 +1769,8 @@ class AlumnosPagosController extends AbstractController
                 $descuentosAplicados[] = "No se aplican descuentos porque el alumno tiene deudas vencidas";
             }
             
-            $metodoPago = $request->request->get('metodo_pago');
-            $aplicarDescuentoEfectivo = ($metodoPago === null || strtolower($metodoPago) === 'efectivo');
+            $metodoPagoNombre = $request->request->get('metodo_pago');
+            $aplicarDescuentoEfectivo = ($metodoPagoNombre === null || strtolower($metodoPagoNombre) === 'efectivo');
             
             if ($puedeRecibirDescuentos && $configuracion) {
                 if ($aplicarDescuentoEfectivo && $configuracion->getDescuentoEfectivo() && $configuracion->getDescuentoEfectivo() > 0) {
@@ -1862,6 +1863,7 @@ class AlumnosPagosController extends AbstractController
             'bloquear_monto_en_edicion' => false,
             'mes_multiple' => false,
             'current_year' => $currentYear,
+            'instituto' => $instituto,
         ]);
         // mes tiene mapped => false; cargar valor de la entidad para mostrarlo (solo lectura)
         $form->get('mes')->setData($pago->getMes());

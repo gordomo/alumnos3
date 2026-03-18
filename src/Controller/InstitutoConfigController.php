@@ -5,9 +5,11 @@ namespace App\Controller;
 use App\Entity\Instituto;
 use App\Entity\Vencimiento;
 use App\Entity\DescuentoPromocional;
+use App\Entity\MetodoPago;
 use App\Repository\VencimientoRepository;
 use App\Repository\InstitutoConfiguracionRepository;
 use App\Repository\DescuentoPromocionalRepository;
+use App\Repository\MetodoPagoRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -36,18 +38,21 @@ class InstitutoConfigController extends AbstractController
     /**
      * @Route("/", name="instituto_config_index", methods={"GET"})
      */
-    public function index(VencimientoRepository $vencimientoRepository, InstitutoConfiguracionRepository $configuracionRepository, DescuentoPromocionalRepository $descuentoPromocionalRepository): Response
+    public function index(VencimientoRepository $vencimientoRepository, InstitutoConfiguracionRepository $configuracionRepository, DescuentoPromocionalRepository $descuentoPromocionalRepository, MetodoPagoRepository $metodoPagoRepository): Response
     {
         $instituto = $this->getUser()->getInstituto();
         $vencimientos = $vencimientoRepository->findByInstitutoOrdered($instituto);
         $configuracion = $configuracionRepository->findOrCreateByInstituto($instituto);
         $descuentosPromocionales = $descuentoPromocionalRepository->findByConfiguracion($configuracion);
         usort($descuentosPromocionales, fn($a, $b) => (float) $a->getPorcentaje() <=> (float) $b->getPorcentaje());
+        
+        $metodosPago = $metodoPagoRepository->findBy(['instituto' => $instituto], ['orden' => 'ASC']);
 
         return $this->render('instituto_config/index.html.twig', [
             'instituto' => $instituto,
             'vencimientos' => $vencimientos,
             'configuracion' => $configuracion,
+            'metodos_pago' => $metodosPago,
             'descuentosPromocionales' => $descuentosPromocionales,
         ]);
     }
@@ -62,13 +67,15 @@ class InstitutoConfigController extends AbstractController
         ValidatorInterface $validator, 
         InstitutoConfiguracionRepository $configuracionRepository,
         VencimientoRepository $vencimientoRepository,
-        DescuentoPromocionalRepository $descuentoPromocionalRepository
+        DescuentoPromocionalRepository $descuentoPromocionalRepository,
+        MetodoPagoRepository $metodoPagoRepository
     ): Response {
         $instituto = $this->getUser()->getInstituto();
         $configuracion = $configuracionRepository->findOrCreateByInstituto($instituto);
         $vencimientos = $vencimientoRepository->findByInstitutoOrdered($instituto);
         $descuentosPromocionales = $descuentoPromocionalRepository->findByConfiguracion($configuracion);
         usort($descuentosPromocionales, fn($a, $b) => (float) $a->getPorcentaje() <=> (float) $b->getPorcentaje());
+        $metodosPago = $metodoPagoRepository->findBy(['instituto' => $instituto], ['orden' => 'ASC']);
 
         if ($request->isMethod('POST')) {
             $section = $request->request->get('section', 'general');
@@ -207,7 +214,8 @@ class InstitutoConfigController extends AbstractController
             'instituto' => $instituto,
             'configuracion' => $configuracion,
             'vencimientos' => $vencimientos,
-            'descuentosPromocionales' => $descuentosPromocionales
+            'descuentosPromocionales' => $descuentosPromocionales,
+            'metodos_pago' => $metodosPago
         ]);
     }
 
@@ -441,5 +449,79 @@ class InstitutoConfigController extends AbstractController
         }
 
         return $this->redirectToRoute('instituto_config_index', ['tab' => 'descuentos']);
+    }
+
+    /**
+     * @Route("/metodo-pago/new", name="instituto_config_metodo_pago_new", methods={"POST"})
+     */
+    public function newMetodoPago(Request $request, EntityManagerInterface $entityManager): Response
+    {
+        $instituto = $this->getUser()->getInstituto();
+        
+        $metodoPago = new MetodoPago();
+        $metodoPago->setInstituto($instituto);
+        $metodoPago->setNombre($request->request->get('nombre', ''));
+        $metodoPago->setActivo(true);
+        
+        // Obtener el máximo orden actual y sumar 1
+        $maxOrden = $entityManager->getRepository(MetodoPago::class)
+            ->createQueryBuilder('m')
+            ->select('MAX(m.orden)')
+            ->where('m.instituto = :instituto')
+            ->setParameter('instituto', $instituto)
+            ->getQuery()
+            ->getSingleScalarResult();
+        
+        $metodoPago->setOrden(($maxOrden ?? 0) + 1);
+        
+        $entityManager->persist($metodoPago);
+        $entityManager->flush();
+        
+        $this->addFlash('success', 'Método de pago agregado correctamente.');
+        return $this->redirectToRoute('instituto_config_index', ['tab' => 'metodos-pago']);
+    }
+
+    /**
+     * @Route("/metodo-pago/{id}/edit", name="instituto_config_metodo_pago_edit", methods={"POST"})
+     */
+    public function editMetodoPago(MetodoPago $metodoPago, Request $request, EntityManagerInterface $entityManager): Response
+    {
+        $instituto = $this->getUser()->getInstituto();
+        
+        if ($metodoPago->getInstituto() !== $instituto) {
+            throw $this->createAccessDeniedException();
+        }
+        
+        $metodoPago->setNombre($request->request->get('nombre', $metodoPago->getNombre()));
+        $metodoPago->setActivo($request->request->get('activo', '0') === '1');
+        
+        $entityManager->flush();
+        
+        $this->addFlash('success', 'Método de pago actualizado correctamente.');
+        return $this->redirectToRoute('instituto_config_index', ['tab' => 'metodos-pago']);
+    }
+
+    /**
+     * @Route("/metodo-pago/{id}/delete", name="instituto_config_metodo_pago_delete", methods={"POST"})
+     */
+    public function deleteMetodoPago(MetodoPago $metodoPago, EntityManagerInterface $entityManager): Response
+    {
+        $instituto = $this->getUser()->getInstituto();
+        
+        if ($metodoPago->getInstituto() !== $instituto) {
+            throw $this->createAccessDeniedException();
+        }
+        
+        // No permitir eliminar "Efectivo" porque es necesario para el descuento
+        if (strtolower($metodoPago->getNombre()) === 'efectivo') {
+            $this->addFlash('error', 'No se puede eliminar el método de pago "Efectivo" porque es necesario para el sistema de descuentos.');
+            return $this->redirectToRoute('instituto_config_index', ['tab' => 'metodos-pago']);
+        }
+        
+        $entityManager->remove($metodoPago);
+        $entityManager->flush();
+        
+        $this->addFlash('success', 'Método de pago eliminado correctamente.');
+        return $this->redirectToRoute('instituto_config_index', ['tab' => 'metodos-pago']);
     }
 } 

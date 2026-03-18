@@ -151,6 +151,11 @@
                             </button>
                         </li>
                         <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="edit-metodos-pago-tab" data-bs-toggle="tab" data-bs-target="#edit-metodos-pago" type="button" role="tab" aria-controls="edit-metodos-pago" aria-selected="false">
+                                <i class="bi bi-credit-card"></i> Métodos de Pago
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
                             <button class="nav-link" id="edit-notificaciones-tab" data-bs-toggle="tab" data-bs-target="#edit-notificaciones" type="button" role="tab" aria-controls="edit-notificaciones" aria-selected="false">
                                 <i class="bi bi-envelope"></i> Notificaciones
                             </button>
@@ -516,6 +521,142 @@
                     </form>
                         </div>
 
+                        <!-- Pestaña: Métodos de Pago -->
+                        <div class="tab-pane fade" id="edit-metodos-pago" role="tabpanel" aria-labelledby="edit-metodos-pago-tab">
+                            <div class="card mb-4">
+                                <div class="card-header bg-info">
+                                    <h4 class="card-title mb-0">
+                                        <i class="bi bi-credit-card"></i> Métodos de Pago
+                                    </h4>
+                                </div>
+                                <div class="card-body">
+                                    <div class="alert alert-info mb-4">
+                                        <i class="bi bi-info-circle"></i> Configure los métodos de pago disponibles para su instituto. El método "Efectivo" aplicará automáticamente el descuento configurado en la sección de Pagos.
+                                    </div>
+
+                                    <!-- Formulario para agregar nuevo método -->
+                                    <div class="card mb-4" style="border: 2px dashed #0dcaf0; background-color: #f0f9ff;">
+                                        <div class="card-body">
+                                            <h5 class="card-title mb-3">
+                                                <i class="bi bi-plus-circle"></i> Agregar Nuevo Método de Pago
+                                            </h5>
+                                            <form method="post" action="{{ path('instituto_config_metodo_pago_new') }}">
+                                                <div class="row g-3">
+                                                    <div class="col-md-9">
+                                                        <label class="form-label">Nombre del Método</label>
+                                                        <input type="text" name="nombre" class="form-control" placeholder="Ej: Transferencia, Mercado Pago" required>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <label class="form-label">&nbsp;</label>
+                                                        <button type="submit" class="btn btn-primary w-100">
+                                                            <i class="bi bi-plus-lg"></i> Agregar
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+
+                                    <!-- Lista de métodos de pago -->
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>Orden</th>
+                                                    <th>Nombre</th>
+                                                    <th>Estado</th>
+                                                    <th>Acciones</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for metodo in metodos_pago %}
+                                                <tr>
+                                                    <td>{{ metodo.orden }}</td>
+                                                    <td>
+                                                        <strong>{{ metodo.nombre }}</strong>
+                                                    </td>
+                                                    <td>
+                                                        {% if metodo.activo %}
+                                                            <span class="badge bg-success">Activo</span>
+                                                        {% else %}
+                                                            <span class="badge bg-secondary">Inactivo</span>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editMetodoModal{{ metodo.id }}">
+                                                            <i class="bi bi-pencil"></i> Editar
+                                                        </button>
+                                                        {% if metodo.nombre|lower != 'efectivo' %}
+                                                        <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteMetodoModal{{ metodo.id }}">
+                                                            <i class="bi bi-trash"></i> Eliminar
+                                                        </button>
+                                                        {% else %}
+                                                        <span class="badge bg-warning text-dark">Requerido</span>
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                                
+                                                <!-- Modal Editar -->
+                                                <div class="modal fade" id="editMetodoModal{{ metodo.id }}" tabindex="-1">
+                                                    <div class="modal-dialog">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title">Editar Método de Pago</h5>
+                                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                            </div>
+                                                            <form method="post" action="{{ path('instituto_config_metodo_pago_edit', {'id': metodo.id}) }}">
+                                                                <div class="modal-body">
+                                                                    <div class="mb-3">
+                                                                        <label class="form-label">Nombre</label>
+                                                                        <input type="text" name="nombre" class="form-control" value="{{ metodo.nombre }}" required {% if metodo.nombre|lower == 'efectivo' %}readonly{% endif %}>
+                                                                        {% if metodo.nombre|lower == 'efectivo' %}
+                                                                        <small class="text-muted">El método "Efectivo" no puede ser renombrado porque es necesario para el sistema de descuentos.</small>
+                                                                        {% endif %}
+                                                                    </div>
+                                                                    <div class="mb-3 form-check">
+                                                                        <input type="checkbox" name="activo" value="1" class="form-check-input" id="edit-activo-{{ metodo.id }}" {% if metodo.activo %}checked{% endif %}>
+                                                                        <label class="form-check-label" for="edit-activo-{{ metodo.id }}">
+                                                                            Activo
+                                                                        </label>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="modal-footer">
+                                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                                                                </div>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- Modal Eliminar -->
+                                                <div class="modal fade" id="deleteMetodoModal{{ metodo.id }}" tabindex="-1">
+                                                    <div class="modal-dialog">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title">Confirmar Eliminación</h5>
+                                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                ¿Está seguro que desea eliminar el método de pago <strong>{{ metodo.nombre }}</strong>?
+                                                            </div>
+                                                            <form method="post" action="{{ path('instituto_config_metodo_pago_delete', {'id': metodo.id}) }}">
+                                                                <div class="modal-footer">
+                                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                                                                </div>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Pestaña: Notificaciones -->
                         <div class="tab-pane fade" id="edit-notificaciones" role="tabpanel" aria-labelledby="edit-notificaciones-tab">
                             <form method="post" action="{{ path('instituto_config_edit') }}">
@@ -742,7 +883,13 @@
         const tabParam = params.get('tab');
         if (tabParam) {
             // ?tab=descuentos -> edit-descuentos-tab
-            const tabIdMap = { general: 'edit-general', pagos: 'edit-pagos', descuentos: 'edit-descuentos', notificaciones: 'edit-notificaciones' };
+            const tabIdMap = { 
+                general: 'edit-general', 
+                pagos: 'edit-pagos', 
+                descuentos: 'edit-descuentos', 
+                'metodos-pago': 'edit-metodos-pago',
+                notificaciones: 'edit-notificaciones' 
+            };
             const tabId = tabIdMap[tabParam] || 'edit-general';
             tabElement = document.getElementById(tabId + '-tab');
         }

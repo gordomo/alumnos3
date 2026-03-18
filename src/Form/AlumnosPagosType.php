@@ -40,6 +40,7 @@ class AlumnosPagosType extends AbstractType
         $modoEdicion = $options['modo_edicion'];
         $bloquearMontoEnEdicion = $options['bloquear_monto_en_edicion'];
         $mesMultiple = $options['mes_multiple'];
+        $instituto = $options['instituto'];
 
         
             $builder->add('alumno', EntityType::class, [
@@ -135,13 +136,7 @@ class AlumnosPagosType extends AbstractType
                 ]
             ])
             ->add('metodoPago', ChoiceType::class, [
-                'choices' => [
-                    'Efectivo' => 'efectivo',
-                    'Transferencia' => 'transferencia',
-                    'Tarjeta de Crédito' => 'tarjeta_credito',
-                    'Tarjeta de Débito' => 'tarjeta_debito',
-                    'Otro' => 'otro'
-                ],
+                'choices' => $this->getMetodosPagoChoices($instituto),
                 'label' => 'Método de Pago',
                 'label_attr' => ['class' => 'form-label'],
                 'required' => true,
@@ -172,6 +167,7 @@ class AlumnosPagosType extends AbstractType
             'bloquear_monto_en_edicion' => true,
             'mes_multiple' => true,
             'current_year' => null,
+            'instituto' => null,
         ]);
     }
 
@@ -203,6 +199,32 @@ class AlumnosPagosType extends AbstractType
         foreach ($alumnos as $alumno) {
             $choices[$alumno->getNombre() . ' ' . $alumno->getApellido()] = $alumno->getId();
         }
+        return $choices;
+    }
+
+    private function getMetodosPagoChoices($instituto): array
+    {
+        $choices = [];
+        if ($instituto) {
+            $metodosPago = $instituto->getMetodosPago()->filter(function($metodo) {
+                return $metodo->getActivo();
+            });
+            
+            foreach ($metodosPago as $metodo) {
+                $choices[$metodo->getNombre()] = strtolower(str_replace(' ', '_', $metodo->getNombre()));
+            }
+        }
+        
+        // Si no hay métodos configurados, usar los por defecto
+        if (empty($choices)) {
+            $choices = [
+                'Efectivo' => 'efectivo',
+                'Transferencia' => 'transferencia',
+                'Tarjeta de Crédito' => 'tarjeta_de_crédito',
+                'Tarjeta de Débito' => 'tarjeta_de_débito'
+            ];
+        }
+        
         return $choices;
     }
 }
