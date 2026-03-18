@@ -273,8 +273,6 @@
         setTimeout(function() {
             const campoMonto = encontrarCampoMonto();
             if (campoMonto) {
-                console.log('Campo de monto encontrado, agregando event listeners:', campoMonto.id || campoMonto.name);
-                
                 // Verificar si estamos en modo múltiple antes de agregar listeners
                 const modoPagoMultipleHidden = document.getElementById('modo-pago-multiple-hidden');
                 const modoMultipleActivo = modoPagoMultipleHidden && modoPagoMultipleHidden.value === '1';
@@ -289,9 +287,6 @@
                 // Intentar nuevamente después de un delay
                 setTimeout(function() {
                     const campoMontoRetry = encontrarCampoMonto();
-                    if (campoMontoRetry) {
-                        console.log('Campo de monto encontrado en retry');
-                    }
                 }, 500);
             }
         }, 100);

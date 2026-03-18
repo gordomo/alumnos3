@@ -143,6 +143,7 @@
                                                                            data-curso-id="{{ mes.curso_obj.id }}"
                                                                            data-curso-nombre="{{ mes.curso }}"
                                                                            data-monto-base="{{ mes.monto }}"
+                                                                           data-monto-total="{{ mes.montoConInteres|default(mes.monto) }}"
                                                                            data-es-adelantado="{{ esAdelantado ? 'true' : 'false' }}"
                                                                            {% if estaPagado %}disabled{% endif %}
                                                                            form="alumnos_pagos">
@@ -157,7 +158,7 @@
                                                                                 {% endif %}
                                                                             </strong>
                                                                             <small class="text-muted">
-                                                                                ${{ mes.monto | number_format(2, ',', '.') }}
+                                                                                ${{ mes.montoConInteres|default(mes.monto) | number_format(2, ',', '.') }}
                                                                             </small>
                                                                         </div>
                                                                         <div class="mes-check-icon" style="width: 24px; height: 24px; border: 2px solid {% if estaPagado %}#28a745{% else %}#dee2e6{% endif %}; border-radius: 4px; display: flex; align-items: center; justify-content: center; background-color: {% if estaPagado %}#28a745{% else %}white{% endif %}; transition: all 0.2s ease;">
@@ -310,7 +311,7 @@
                                 </p>
                             </div>
                         {% else %}
-                            <div class="mb-3" style="border-left: 4px solid #198754; background-color: #d1e7dd; padding: 0.75rem 1rem; border-radius: 4px;">
+                            <div id="interes-info-container" class="mb-3" style="border-left: 4px solid #198754; background-color: #d1e7dd; padding: 0.75rem 1rem; border-radius: 4px;">
                                 <i class="bi bi-check-circle" style="color: #198754;"></i> <span class="text-muted">Sin interés aplicado</span>
                     </div>
                 {% endif %}
@@ -400,6 +401,13 @@
     </div>
 
     <script>
+        // Variables globales del alumno
+        {% if alumno %}
+        const ALUMNO_ID = {{ alumno.id }};
+        {% else %}
+        const ALUMNO_ID = null;
+        {% endif %}
+        
         document.addEventListener('DOMContentLoaded', function() {
             const modoPagoMultiple = document.getElementById('modo-pago-multiple');
             const mesesCheckboxes = document.querySelectorAll('.mes-adeudado-checkbox');
@@ -747,18 +755,21 @@
                 
                 mesesCheckboxes.forEach(function(checkbox) {
                     if (checkbox.checked) {
-                        const montoBase = parseFloat(checkbox.dataset.montoBase) || 0;
-                        total += montoBase;
+                        // Usar monto total (con interés ya calculado) en lugar de monto base
+                        const montoTotal = parseFloat(checkbox.dataset.montoTotal) || parseFloat(checkbox.dataset.montoBase) || 0;
+                        total += montoTotal;
                         mesesSeleccionados.push({
                             mes: checkbox.dataset.mes,
                             ano: checkbox.dataset.ano,
                             cursoId: checkbox.dataset.cursoId,
                             cursoNombre: checkbox.dataset.cursoNombre,
-                            monto: montoBase
+                            monto: montoTotal
                         });
+                        // console.log('Mes seleccionado:', checkbox.dataset.mes, checkbox.dataset.ano, checkbox.dataset.cursoNombre, 'Monto:', montoTotal);
                     }
                 });
                 
+                // console.log('Total calculado localmente:', total, 'Meses:', mesesSeleccionados.length);
                 return { total, mesesSeleccionados };
             }
             
@@ -771,7 +782,11 @@
                 const { total, mesesSeleccionados } = calcularTotalMesesSeleccionados();
                 
                 if (mesesSeleccionados.length === 0) {
-                    return Promise.resolve({ monto: 0, montoBase: 0 });
+                    return Promise.resolve({ 
+                        monto: 0, 
+                        montoBase: 0,
+                        motivoInteres: 'Sin interés aplicado'
+                    });
                 }
                 
                 // Si ya hay un cálculo en curso, esperar a que termine y devolver ese resultado
@@ -782,27 +797,56 @@
                 // Marcar que estamos calculando
                 calculandoMonto = true;
                 
+                // Calcular intereses localmente
+                const interesesDetalle = [];
+                let montoBase = 0;
+                let montoConInteres = 0;
+                
+                mesesSeleccionados.forEach(mes => {
+                    const checkbox = document.querySelector(`input[type="checkbox"][data-mes="${mes.mes}"][data-ano="${mes.ano}"][data-curso-id="${mes.cursoId}"]`);
+                    if (checkbox) {
+                        const montoTotal = parseFloat(checkbox.dataset.montoTotal) || parseFloat(checkbox.dataset.montoBase) || 0;
+                        const montoBaseItem = parseFloat(checkbox.dataset.montoBase) || 0;
+                        const interes = montoTotal - montoBaseItem;
+                        
+                        montoBase += montoBaseItem;
+                        montoConInteres += montoTotal;
+                        
+                        if (interes > 0 && montoBaseItem > 0) {
+                            const porcentajeInteres = ((interes / montoBaseItem) * 100).toFixed(2);
+                            const cursoNombre = checkbox.dataset.cursoNombre || '';
+                            const nombresMeses = ['', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+                            const nombreMes = nombresMeses[parseInt(mes.mes)] + ' ' + mes.ano;
+                            interesesDetalle.push(`${porcentajeInteres}% por vencimiento ${cursoNombre} - ${nombreMes}`);
+                        }
+                    }
+                });
+                
+                const motivoInteres = interesesDetalle.length > 0 
+                    ? interesesDetalle.join(' + ') 
+                    : 'Sin interés aplicado';
+                
                 // Obtener descuentos promocionales seleccionados
                 const checkboxesMarcados = document.querySelectorAll('.descuento-promocional-checkbox:checked');
-                const descuentosIds = Array.from(checkboxesMarcados)
-                    .map(cb => cb.value);
+                const descuentosIds = Array.from(checkboxesMarcados).map(cb => cb.value);
                 
-                // Preparar datos para enviar
+                // Preparar datos para enviar solo lo necesario para descuentos
                 const formData = new URLSearchParams();
-                formData.append('alumno_id', document.getElementById('alumnos_pagos_alumno')?.value || '');
-                mesesSeleccionados.forEach(function(mes) {
-                    formData.append('meses_seleccionados[]', mes.mes + '_' + mes.ano + '_' + mes.cursoId);
-                });
+                formData.append('alumno_id', ALUMNO_ID || '');
+                formData.append('monto_total', montoConInteres);
+                formData.append('monto_base', montoBase);
+                
                 descuentosIds.forEach(id => {
                     formData.append('descuentos_promocionales[]', id);
                 });
+                
                 const metodoPagoSelect = document.querySelector('.metodo-pago-select') || document.querySelector('select[name="alumnos_pagos[metodoPago]"]');
                 if (metodoPagoSelect) {
                     formData.append('metodo_pago', metodoPagoSelect.value || 'efectivo');
                 }
                 
-                // Llamar al endpoint AJAX
-                ultimoCalculoPromise = fetch('{{ path("app_alumnos_pagos_calcular_monto") }}', {
+                // Llamar al endpoint AJAX solo para calcular descuentos
+                ultimoCalculoPromise = fetch('{{ path("app_alumnos_pagos_calcular_descuentos") }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
@@ -814,17 +858,75 @@
                     calculandoMonto = false;
                     if (data.error) {
                         console.error('Error:', data.error);
-                        return { monto: total, montoBase: total };
+                        return { 
+                            monto: montoConInteres, 
+                            montoBase: montoBase,
+                            motivoInteres: motivoInteres
+                        };
                     }
+                    // Agregar el motivo de interés calculado localmente
+                    data.motivoInteres = motivoInteres;
                     return data;
                 })
                 .catch(error => {
                     calculandoMonto = false;
-                    console.error('Error al calcular monto:', error);
-                    return { monto: total, montoBase: total };
+                    console.error('Error al calcular descuentos:', error);
+                    return { 
+                        monto: montoConInteres, 
+                        montoBase: montoBase,
+                        motivoInteres: motivoInteres
+                    };
                 });
                 
                 return ultimoCalculoPromise;
+            }
+            
+            // Función para actualizar el mensaje de interés
+            function actualizarMensajeInteres(motivoInteres) {
+                const interesDiv = document.getElementById('interes-info-container');
+                if (interesDiv) {
+                    const hayInteres = motivoInteres !== 'Sin interés aplicado';
+                    if (hayInteres) {
+                        // Cambiar a estilo de advertencia (amarillo)
+                        interesDiv.style.borderLeftColor = '#ffc107';
+                        interesDiv.style.backgroundColor = '#fff3cd';
+                        interesDiv.innerHTML = '<i class="bi bi-exclamation-triangle" style="color: #ffc107;"></i> <span class="text-dark">' + motivoInteres + '</span>';
+                    } else {
+                        // Mantener estilo de éxito (verde)
+                        interesDiv.style.borderLeftColor = '#198754';
+                        interesDiv.style.backgroundColor = '#d1e7dd';
+                        interesDiv.innerHTML = '<i class="bi bi-check-circle" style="color: #198754;"></i> <span class="text-muted">Sin interés aplicado</span>';
+                    }
+                }
+            }
+            
+            // Función para calcular y mostrar el interés inicial de los meses seleccionados
+            function calcularInteresInicial() {
+                const checkboxes = document.querySelectorAll('.mes-adeudado-checkbox:checked');
+                if (checkboxes.length === 0) return;
+                
+                const interesesDetalle = [];
+                checkboxes.forEach(checkbox => {
+                    const montoTotal = parseFloat(checkbox.dataset.montoTotal) || parseFloat(checkbox.dataset.montoBase) || 0;
+                    const montoBaseItem = parseFloat(checkbox.dataset.montoBase) || 0;
+                    const interes = montoTotal - montoBaseItem;
+                    
+                    if (interes > 0 && montoBaseItem > 0) {
+                        const porcentajeInteres = ((interes / montoBaseItem) * 100).toFixed(2);
+                        const cursoNombre = checkbox.dataset.cursoNombre || '';
+                        const mes = parseInt(checkbox.dataset.mes);
+                        const ano = parseInt(checkbox.dataset.ano);
+                        const nombresMeses = ['', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+                        const nombreMes = nombresMeses[mes] + ' ' + ano;
+                        interesesDetalle.push(`${porcentajeInteres}% por vencimiento ${cursoNombre} - ${nombreMes}`);
+                    }
+                });
+                
+                const motivoInteres = interesesDetalle.length > 0 
+                    ? interesesDetalle.join(' + ') 
+                    : 'Sin interés aplicado';
+                    
+                actualizarMensajeInteres(motivoInteres);
             }
             
             // Función para actualizar el resumen de meses seleccionados
@@ -874,15 +976,8 @@
                             }
                             
                             // Actualizar información de interés si viene en la respuesta
-                            if (data.motivoInteres && data.porcentajeInteres !== undefined) {
-                                // Buscar el contenedor de interés y actualizarlo
-                                const interesContainer = document.querySelector('[id*="interes"], [class*="interes"]');
-                                if (interesContainer && data.porcentajeInteres > 0) {
-                                    const motivoElement = interesContainer.querySelector('p.mb-1, .text-muted');
-                                    const porcentajeElement = interesContainer.querySelector('strong');
-                                    if (motivoElement) motivoElement.textContent = data.motivoInteres;
-                                    if (porcentajeElement) porcentajeElement.textContent = 'Interés aplicado: ' + data.porcentajeInteres + '%';
-                                }
+                            if (data.motivoInteres) {
+                                actualizarMensajeInteres(data.motivoInteres);
                             }
                             // Actualizar bloque Descuentos Aplicados: ocultar si no hay descuentos (p. ej. método no es efectivo)
                             const descuentosContainer = document.getElementById('descuentos-aplicados-container');
@@ -1267,6 +1362,11 @@
             {% if alumno and mesesAdeudados is defined and mesesAdeudados|length > 0 %}
             // Esperar a que el DOM esté completamente cargado
             setTimeout(function() {
+                // Calcular y mostrar el interés inicial
+                if (typeof calcularInteresInicial === 'function') {
+                    calcularInteresInicial();
+                }
+                
                 // Verificar si hay algún mes seleccionado por defecto
                 const mesesCheckboxes = document.querySelectorAll('.mes-adeudado-checkbox:checked');
                 if (mesesCheckboxes.length > 0 && typeof actualizarResumenMeses === 'function') {

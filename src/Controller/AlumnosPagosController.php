@@ -651,7 +651,7 @@ class AlumnosPagosController extends AbstractController
         // Obtener la fecha actual en la zona horaria del instituto y convertirla a medianoche UTC
         // Esto evita problemas de conversión de timezone en el navegador con input type="date"
         $fechaInstituto = $this->institutoTimezoneService->getNowForInstituto($instituto);
-        $fechaSoloFecha = \DateTimeImmutable::createFromFormat('Y-m-d H:i:s', $fechaInstituto->format('Y-m-d') . ' 00:00:00', new \DateTimeZone('UTC'));
+        $fechaSoloFecha = \DateTime::createFromFormat('Y-m-d H:i:s', $fechaInstituto->format('Y-m-d') . ' 00:00:00', new \DateTimeZone('UTC'));
         $alumnosPago->setFecha($fechaSoloFecha);
         $alumnosPago->setMetodoPago('efectivo');
 
@@ -679,7 +679,8 @@ class AlumnosPagosController extends AbstractController
                 'nombre' => $nombresMeses[$deuda->getMes()] . ' ' . $deuda->getAno(),
                 'curso' => $curso->getNombre(),
                 'curso_obj' => $curso,
-                'monto' => $deuda->getMontoTotal(),
+                'monto' => $deuda->getMonto(),
+                'montoConInteres' => $deuda->getMontoTotal(),
                 'esPendiente' => true
             ];
         }
@@ -1517,14 +1518,7 @@ class AlumnosPagosController extends AbstractController
         
         // Si hay múltiples meses seleccionados, calcular el total
         if (!empty($mesesSeleccionados) && is_array($mesesSeleccionados)) {
-            $montoTotalBase = 0;
-            $montoTotalConInteres = 0;
-            $porcentajeInteres = 0;
-            $motivoInteres = "Sin interés aplicado";
-            $descuentosAplicados = [];
-            $porcentajeDescuentoTotal = 0;
-            
-            // Agrupar meses por curso para calcular intereses correctamente
+            // Agrupar meses por curso
             $mesesPorCurso = [];
             foreach ($mesesSeleccionados as $mesData) {
                 list($mes, $ano, $cursoId) = explode('_', $mesData);
@@ -1534,27 +1528,7 @@ class AlumnosPagosController extends AbstractController
                 $mesesPorCurso[$cursoId][] = ['mes' => $mes, 'ano' => $ano];
             }
             
-            // Separar meses vencidos de no vencidos para aplicar interés solo sobre vencidos
-            $fechaActual = $this->institutoTimezoneService->getNowForInstituto($instituto);
-            $mesActual = (int)$fechaActual->format('n');
-            $anoActual = (int)$fechaActual->format('Y');
-            $diaActual = (int)$fechaActual->format('d');
-            
-            // Obtener el día de vencimiento para determinar si el mes actual ya venció
-            $institutoId = $alumno->getInstituto()->getId();
-            try {
-                $primerDiaVencimiento = $alumno->getPrimerDiaVencimiento($institutoId);
-            } catch (\Exception $e) {
-                error_log('ERROR obteniendo primerDiaVencimiento: ' . $e->getMessage());
-                $primerDiaVencimiento = 5; // Valor por defecto
-            }
-            
-            $montoTotalBaseVencidos = 0;
-            $montoTotalBaseNoVencidos = 0;
-            $maxInteres = 0;
-            $motivoInteres = "Sin interés aplicado";
-            
-            // Obtener todas las deudas del alumno de una sola vez para optimizar
+            // Obtener todas las deudas del alumno de una sola vez
             $todasLasDeudas = $this->entityManager->getRepository(DeudaAlumno::class)->findBy([
                 'alumno' => $alumno
             ]);
@@ -1566,122 +1540,81 @@ class AlumnosPagosController extends AbstractController
                 $mapaDeudas[$key] = $deuda;
             }
             
-            // Primero, separar meses vencidos de no vencidos y calcular montos base
+            // Sumar los montos totales de cada deuda (ya incluyen interés)
+            $montoTotalConInteres = 0;
+            $montoTotalBase = 0;
+            
+            file_put_contents('/tmp/debug_calculo.log', "=== CALCULO AJAX ===\n", FILE_APPEND);
+            file_put_contents('/tmp/debug_calculo.log', "Meses seleccionados: " . print_r($mesesSeleccionados, true) . "\n", FILE_APPEND);
+            file_put_contents('/tmp/debug_calculo.log', "Meses por curso: " . print_r($mesesPorCurso, true) . "\n", FILE_APPEND);
+            
             foreach ($mesesPorCurso as $cursoId => $meses) {
                 $curso = $this->entityManager->getRepository(Curso::class)->find($cursoId);
                 if (!$curso) continue;
                 
-                // Separar meses vencidos de no vencidos
                 foreach ($meses as $mesData) {
                     $mes = (int)$mesData['mes'];
                     $ano = (int)$mesData['ano'];
                     
-                    // Buscar si existe una deuda para este mes/año/curso en el mapa
+                    // Buscar la deuda en el mapa
                     $key = $cursoId . '_' . $mes . '_' . $ano;
                     $deudaExistente = $mapaDeudas[$key] ?? null;
                     
-                    // Usar el monto de la deuda si existe, sino el precio actual del curso
-                    $montoBaseMes = $deudaExistente ? $deudaExistente->getMonto() : $curso->getPrecio();
-                    
-                    // Determinar si el mes está vencido
-                    $esVencido = false;
-                    if ($ano < $anoActual || ($ano == $anoActual && $mes < $mesActual)) {
-                        // Mes pasado, siempre vencido
-                        $esVencido = true;
-                    } elseif ($ano == $anoActual && $mes == $mesActual && $diaActual > $primerDiaVencimiento) {
-                        // Mes actual pero ya venció
-                        $esVencido = true;
-                    }
-                    
-                    if ($esVencido) {
-                        $montoTotalBaseVencidos += $montoBaseMes;
+                    if ($deudaExistente) {
+                        // Usar el monto total de la deuda (ya incluye interés)
+                        $montoTotal = $deudaExistente->getMontoTotal();
+                        $montoBase = $deudaExistente->getMonto();
+                        file_put_contents('/tmp/debug_calculo.log', "Deuda existente: Curso $cursoId, Mes $mes/$ano, Base: $montoBase, Total: $montoTotal\n", FILE_APPEND);
+                        $montoTotalConInteres += $montoTotal;
+                        $montoTotalBase += $montoBase;
                     } else {
-                        $montoTotalBaseNoVencidos += $montoBaseMes;
+                        // Mes futuro sin deuda: usar precio del curso
+                        $precio = $curso->getPrecio();
+                        file_put_contents('/tmp/debug_calculo.log', "Mes futuro: Curso $cursoId, Mes $mes/$ano, Precio: $precio\n", FILE_APPEND);
+                        $montoTotalConInteres += $precio;
+                        $montoTotalBase += $precio;
                     }
                 }
             }
             
-            // Ahora calcular interés basándose en los meses vencidos seleccionados
-            // Agrupar meses vencidos por curso
-            $mesesVencidosPorCurso = [];
+            file_put_contents('/tmp/debug_calculo.log', "TOTALES - Base: $montoTotalBase, Con interés: $montoTotalConInteres\n", FILE_APPEND);
+            
+            // Calcular el detalle de intereses aplicados
+            $porcentajeInteres = 0;
+            $motivoInteres = "";
+            $interesesDetalle = [];
+            $totalInteres = 0;
+            
             foreach ($mesesPorCurso as $cursoId => $meses) {
                 $curso = $this->entityManager->getRepository(Curso::class)->find($cursoId);
                 if (!$curso) continue;
                 
-                $mesesVencidosCurso = [];
                 foreach ($meses as $mesData) {
                     $mes = (int)$mesData['mes'];
                     $ano = (int)$mesData['ano'];
+                    $key = $cursoId . '_' . $mes . '_' . $ano;
+                    $deudaExistente = $mapaDeudas[$key] ?? null;
                     
-                    // Determinar si el mes está vencido (misma lógica que arriba)
-                    $esVencido = false;
-                    if ($ano < $anoActual || ($ano == $anoActual && $mes < $mesActual)) {
-                        $esVencido = true;
-                    } elseif ($ano == $anoActual && $mes == $mesActual && $diaActual > $primerDiaVencimiento) {
-                        $esVencido = true;
-                    }
-                    
-                    if ($esVencido) {
-                        $mesesVencidosCurso[] = [
-                            'mes' => $mes,
-                            'ano' => $ano,
-                            'curso' => $curso->getNombre(),
-                            'curso_obj' => $curso
-                        ];
-                    }
-                }
-                
-                if (!empty($mesesVencidosCurso)) {
-                    if (!isset($mesesVencidosPorCurso[$cursoId])) {
-                        $mesesVencidosPorCurso[$cursoId] = [
-                            'curso' => $curso,
-                            'meses' => []
-                        ];
-                    }
-                    $mesesVencidosPorCurso[$cursoId]['meses'] = $mesesVencidosCurso;
-                }
-            }
-            
-            // Calcular interés para cada curso que tiene meses vencidos
-            foreach ($mesesVencidosPorCurso as $cursoId => $datosCurso) {
-                if (!empty($datosCurso['meses'])) {
-                    try {
-                        $calculoTemporal = $this->calcularMonto($alumno, $datosCurso['curso'], $vencimientos, $datosCurso['meses'], []);
-                        if ($calculoTemporal['porcentajeInteres'] > $maxInteres) {
-                            $maxInteres = $calculoTemporal['porcentajeInteres'];
-                            $motivoInteres = $calculoTemporal['motivoInteres'];
-                        }
-                    } catch (\Exception $e) {
-                        error_log('ERROR calcularMonto en calcularMontoAjax: ' . $e->getMessage());
-                        error_log('Stack trace: ' . $e->getTraceAsString());
+                    if ($deudaExistente && $deudaExistente->getInteres() > 0) {
+                        $nombresMeses = ['', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+                        $porcentajeInteresDeuda = ($deudaExistente->getMonto() > 0) 
+                            ? round(($deudaExistente->getInteres() / $deudaExistente->getMonto()) * 100, 2) 
+                            : 0;
+                        $interesesDetalle[] = $porcentajeInteresDeuda . "% por vencimiento " . $nombresMeses[$mes] . " " . $ano;
+                        $totalInteres += $deudaExistente->getInteres();
                     }
                 }
             }
             
-            // Si hay meses vencidos pero no se calculó interés, forzar el cálculo del máximo interés
-            if ($montoTotalBaseVencidos > 0 && $maxInteres == 0) {
-                // Obtener el máximo interés configurado
-                $vencimientosOrdenados = [];
-                foreach ($vencimientos as $vencimiento) {
-                    $vencimientosOrdenados[] = $vencimiento;
+            if (!empty($interesesDetalle)) {
+                $motivoInteres = implode(" + ", $interesesDetalle);
+                // Calcular el porcentaje promedio de interés sobre el total base
+                if ($montoTotalBase > 0) {
+                    $porcentajeInteres = round(($totalInteres / $montoTotalBase) * 100, 2);
                 }
-                usort($vencimientosOrdenados, function($a, $b) {
-                    return $a->getDiaVencimiento() <=> $b->getDiaVencimiento();
-                });
-                
-                foreach ($vencimientosOrdenados as $vencimiento) {
-                    if ($vencimiento->getPorcentajeInteres() > $maxInteres) {
-                        $maxInteres = $vencimiento->getPorcentajeInteres();
-                    }
-                }
-                
-                if ($maxInteres > 0) {
-                    $motivoInteres = "Máximo interés aplicado por meses vencidos seleccionados";
-                }
+            } else {
+                $motivoInteres = "Sin interés aplicado";
             }
-            
-            $montoTotalBase = $montoTotalBaseVencidos + $montoTotalBaseNoVencidos;
-            $porcentajeInteres = $maxInteres;
             
             // Obtener configuración del orden de cálculo
             $configuracion = $alumno->getInstituto()->getConfiguracion();
@@ -1720,73 +1653,13 @@ class AlumnosPagosController extends AbstractController
                 }
             }
             
-            // Aplicar intereses solo sobre meses vencidos, luego aplicar descuentos sobre el total
-            // El interés solo se aplica sobre $montoTotalBaseVencidos
-            $montoVencidosConInteres = $montoTotalBaseVencidos;
-            if ($porcentajeInteres > 0 && $montoTotalBaseVencidos > 0) {
-                $montoVencidosConInteres = $montoTotalBaseVencidos * (1 + ($porcentajeInteres / 100));
+            // Aplicar descuentos sobre el monto total con interés ya incluido
+            $montoTotalFinal = $montoTotalConInteres;
+            if ($porcentajeDescuentoTotal > 0) {
+                $montoTotalFinal = $montoTotalConInteres * (1 - ($porcentajeDescuentoTotal / 100));
             }
             
-            // Monto total antes de descuentos = meses vencidos con interés + meses no vencidos sin interés
-            $montoTotalConInteres = $montoVencidosConInteres + $montoTotalBaseNoVencidos;
-            
-            // Aplicar descuentos sobre el total según el orden configurado
-            switch ($ordenCalculo) {
-                case 'descuento_primero':
-                    // Descuentos primero sobre el total, luego interés (ya aplicado solo a vencidos)
-                    $montoTotalFinal = $montoTotalBase;
-                    if ($porcentajeDescuentoTotal > 0) {
-                        $montoTotalFinal = $montoTotalBase * (1 - ($porcentajeDescuentoTotal / 100));
-                    }
-                    // Aplicar interés solo sobre la parte vencida después del descuento
-                    if ($porcentajeInteres > 0 && $montoTotalBaseVencidos > 0) {
-                        $montoVencidosConDescuento = $montoTotalBaseVencidos * (1 - ($porcentajeDescuentoTotal / 100));
-                        $montoVencidosConInteresYDescuento = $montoVencidosConDescuento * (1 + ($porcentajeInteres / 100));
-                        $montoTotalFinal = $montoVencidosConInteresYDescuento + ($montoTotalBaseNoVencidos * (1 - ($porcentajeDescuentoTotal / 100)));
-                    }
-                    break;
-                    
-                case 'neto':
-                    // Ambos sobre base, diferencia neta
-                    $montoInteres = $porcentajeInteres > 0 ? $montoTotalBaseVencidos * ($porcentajeInteres / 100) : 0;
-                    $montoDescuento = $porcentajeDescuentoTotal > 0 ? $montoTotalBase * ($porcentajeDescuentoTotal / 100) : 0;
-                    $montoTotalFinal = $montoTotalBase + $montoInteres - $montoDescuento;
-                    break;
-                    
-                case 'descuentos_solo_base':
-                    // Descuentos sobre base total, interés solo sobre base vencida original
-                    $montoTotalFinal = $montoTotalBase;
-                    if ($porcentajeDescuentoTotal > 0) {
-                        $montoTotalFinal = $montoTotalBase * (1 - ($porcentajeDescuentoTotal / 100));
-                    }
-                    if ($porcentajeInteres > 0 && $montoTotalBaseVencidos > 0) {
-                        $montoTotalFinal = $montoTotalFinal + ($montoTotalBaseVencidos * ($porcentajeInteres / 100));
-                    }
-                    break;
-                    
-                case 'interes_primero':
-                default:
-                    // Interés primero solo sobre vencidos, luego descuentos sobre el total
-                    $montoTotalFinal = $montoTotalConInteres;
-                    if ($porcentajeDescuentoTotal > 0) {
-                        $montoTotalFinal = $montoTotalConInteres * (1 - ($porcentajeDescuentoTotal / 100));
-                    }
-                    break;
-            }
-            
-            // Obtener texto descriptivo del orden de cálculo
-            $ordenTexto = [
-                'interes_primero' => 'Interés primero, luego descuentos',
-                'descuento_primero' => 'Descuentos primero, luego interés',
-                'neto' => 'Neto (diferencia entre intereses y descuentos)',
-                'descuentos_solo_base' => 'Descuentos sobre base, interés sobre base original'
-            ];
-            $ordenDescripcion = [
-                'interes_primero' => 'Se aplica el interés sobre el monto base, luego los descuentos sobre el resultado.',
-                'descuento_primero' => 'Se aplican los descuentos sobre el monto base, luego el interés sobre el resultado.',
-                'neto' => 'Ambos se calculan sobre la base y se hace la diferencia.',
-                'descuentos_solo_base' => 'Los descuentos se aplican sobre la base, el interés se suma sobre la base original.'
-            ];
+            file_put_contents('/tmp/debug_calculo.log', "Descuentos: $porcentajeDescuentoTotal%, Monto final: $montoTotalFinal\n", FILE_APPEND);
             
             return new JsonResponse([
                 'monto' => $montoTotalFinal,
@@ -1797,8 +1670,8 @@ class AlumnosPagosController extends AbstractController
                 'descuentosAplicados' => $descuentosAplicados,
                 'porcentajeDescuentoTotal' => $porcentajeDescuentoTotal,
                 'ordenCalculo' => $ordenCalculo,
-                'ordenCalculoTexto' => $ordenTexto[$ordenCalculo] ?? 'Interés primero, luego descuentos',
-                'ordenCalculoDescripcion' => $ordenDescripcion[$ordenCalculo] ?? 'Se aplica el interés sobre el monto base, luego los descuentos sobre el resultado.',
+                'ordenCalculoTexto' => 'Suma de montos individuales con descuentos aplicados',
+                'ordenCalculoDescripcion' => 'Cada deuda ya tiene su interés calculado. Los descuentos se aplican sobre el total.',
                 'puedeRecibirDescuentos' => $puedeRecibirDescuentos
             ]);
         }
@@ -1843,6 +1716,104 @@ class AlumnosPagosController extends AbstractController
         }
     }
 
+    /**
+     * @Route("/calcular-descuentos", name="app_alumnos_pagos_calcular_descuentos", methods={"POST"})
+     */
+    public function calcularDescuentos(
+        Request $request,
+        AlumnoRepository $alumnoRepository,
+        DescuentoPromocionalRepository $descuentoPromocionalRepository
+    ): JsonResponse {
+        try {
+            $alumnoId = $request->request->get('alumno_id');
+            $montoTotal = (float)$request->request->get('monto_total', 0);
+            $montoBase = (float)$request->request->get('monto_base', 0);
+            $descuentosPromocionalesIds = $request->request->get('descuentos_promocionales', []);
+            
+            if (!$alumnoId) {
+                return new JsonResponse(['error' => 'Falta el ID del alumno'], 400);
+            }
+            
+            $alumno = $alumnoRepository->find($alumnoId);
+            if (!$alumno) {
+                return new JsonResponse(['error' => 'Alumno no encontrado'], 404);
+            }
+            
+            // Verificar que el usuario tiene acceso al instituto
+            $institutoUsuario = $this->getUser()->getInstituto();
+            if ($alumno->getInstituto() !== $institutoUsuario) {
+                return new JsonResponse(['error' => 'No tiene acceso a este instituto'], 403);
+            }
+            
+            // Obtener descuentos promocionales seleccionados
+            $descuentosPromocionalesSeleccionados = [];
+            if (is_array($descuentosPromocionalesIds)) {
+                foreach ($descuentosPromocionalesIds as $id) {
+                    $descuento = $descuentoPromocionalRepository->find($id);
+                    if ($descuento && $descuento->getActivo() && $descuento->getConfiguracion()->getInstituto() === $alumno->getInstituto()) {
+                        $descuentosPromocionalesSeleccionados[] = $descuento;
+                    }
+                }
+            }
+            
+            $configuracion = $alumno->getInstituto()->getConfiguracion();
+            
+            // Calcular porcentajes de descuento
+            $porcentajeDescuentoTotal = 0;
+            $descuentosAplicados = [];
+            $puedeRecibirDescuentos = true;
+            
+            if ($configuracion && $configuracion->getDeshabilitarDescuentosEnDeuda() && $alumno->tieneDeudasVencidas()) {
+                $puedeRecibirDescuentos = false;
+                $descuentosAplicados[] = "No se aplican descuentos porque el alumno tiene deudas vencidas";
+            }
+            
+            $metodoPago = $request->request->get('metodo_pago');
+            $aplicarDescuentoEfectivo = ($metodoPago === null || strtolower($metodoPago) === 'efectivo');
+            
+            if ($puedeRecibirDescuentos && $configuracion) {
+                if ($aplicarDescuentoEfectivo && $configuracion->getDescuentoEfectivo() && $configuracion->getDescuentoEfectivo() > 0) {
+                    $porcentajeEfectivo = (float)$configuracion->getDescuentoEfectivo();
+                    $porcentajeDescuentoTotal += $porcentajeEfectivo;
+                    $descuentosAplicados[] = "Descuento del " . $porcentajeEfectivo . "% por pago en efectivo";
+                }
+                if ($configuracion->getDescuentoHermanos() && $configuracion->getDescuentoHermanos() > 0) {
+                    $hermanos = $alumno->getHermanos();
+                    if (!empty($hermanos)) {
+                        $porcentajeHermanos = (float)$configuracion->getDescuentoHermanos();
+                        $porcentajeDescuentoTotal += $porcentajeHermanos;
+                        $descuentosAplicados[] = "Descuento del " . $porcentajeHermanos . "% por tener " . count($hermanos) . " hermano(s) en el instituto";
+                    }
+                }
+                
+                foreach ($descuentosPromocionalesSeleccionados as $descuentoPromocional) {
+                    $porcentajeDescuentoPromocional = (float)$descuentoPromocional->getPorcentaje();
+                    $porcentajeDescuentoTotal += $porcentajeDescuentoPromocional;
+                    $descuentosAplicados[] = "Descuento promocional: " . $descuentoPromocional->getNombre() . " (" . $porcentajeDescuentoPromocional . "%)";
+                }
+            }
+            
+            // Aplicar descuentos sobre el monto total
+            $montoFinal = $montoTotal;
+            if ($porcentajeDescuentoTotal > 0) {
+                $montoFinal = $montoTotal * (1 - ($porcentajeDescuentoTotal / 100));
+            }
+            
+            return new JsonResponse([
+                'monto' => $montoFinal,
+                'montoBase' => $montoBase,
+                'montoConInteres' => $montoTotal,
+                'descuentosAplicados' => $descuentosAplicados,
+                'porcentajeDescuentoTotal' => $porcentajeDescuentoTotal,
+                'puedeRecibirDescuentos' => $puedeRecibirDescuentos
+            ]);
+        } catch (\Exception $e) {
+            error_log('ERROR en calcularDescuentos: ' . $e->getMessage());
+            return new JsonResponse([
+                'error' => 'Error al calcular descuentos: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 
     /**
      * @Route("/{id}", name="app_alumnos_pagos_show", methods={"GET"})
