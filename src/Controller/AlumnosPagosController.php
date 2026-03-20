@@ -79,10 +79,10 @@ class AlumnosPagosController extends AbstractController
         $sort = $request->get('sort', 'fecha');
         $order = $request->get('order', 'desc');
 
+        $instituto = $this->getUser()->getInstituto();
+        $nowInstituto = $this->institutoTimezoneService->getNowForInstituto($instituto);
         // Por defecto: año completo si no hay fechas en la petición (en zona horaria del instituto)
         if (empty($fechaDesde) && empty($fechaHasta)) {
-            $instituto = $this->getUser()->getInstituto();
-            $nowInstituto = $this->institutoTimezoneService->getNowForInstituto($instituto);
             $anio = $nowInstituto->format('Y');
             $fechaDesde = $anio . '-01-01';
             $fechaHasta = $anio . '-12-31';
@@ -129,7 +129,7 @@ class AlumnosPagosController extends AbstractController
             $alumno = $alumnoRepository->findWithDeudasAndAplicaciones($alumnoId);
             $nombreAlumno = $alumno->getNombre() . ' ' . $alumno->getApellido();
             // Usar el nuevo método getDeudasParaPago() en lugar de verificarMesesAdeudados()
-            $deudasParaPago = $alumno->getDeudasParaPago();
+            $deudasParaPago = $alumno->getDeudasParaPago($nowInstituto);
             $mesesAdeudados = [];
             $nombresMeses = [
                 1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril',
@@ -642,11 +642,8 @@ class AlumnosPagosController extends AbstractController
         $alumnosPago = new AlumnosPagos();
         $alumnosPago->setAlumno($alumno);
         
-        // Obtener la fecha actual en la zona horaria del instituto y convertirla a medianoche UTC
-        // Esto evita problemas de conversión de timezone en el navegador con input type="date"
-        $fechaInstituto = $this->institutoTimezoneService->getNowForInstituto($instituto);
-        $fechaSoloFecha = \DateTime::createFromFormat('Y-m-d H:i:s', $fechaInstituto->format('Y-m-d') . ' 00:00:00', new \DateTimeZone('UTC'));
-        $alumnosPago->setFecha($fechaSoloFecha);
+        // Usar fecha civil del instituto, sin hora, para evitar corrimientos de día.
+        $alumnosPago->setFecha($this->institutoTimezoneService->getCurrentDateForInstituto($instituto));
         $alumnosPago->setMetodoPago('efectivo');
 
         $mesesAdeudados = [];
@@ -654,7 +651,7 @@ class AlumnosPagosController extends AbstractController
 
         if ($alumno) {
             // Obtener los meses adeudados para el componente (ya cargados con eager loading)
-            $deudasParaPago = $alumno->getDeudasParaPago();
+            $deudasParaPago = $alumno->getDeudasParaPago($this->institutoTimezoneService->getNowForInstituto($instituto));
         $mesesAdeudados = [];
         $nombresMeses = [
             1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril',
@@ -767,7 +764,7 @@ class AlumnosPagosController extends AbstractController
                 // Si no tiene fecha fin, limitar a 12 meses adelante
                 $fechaFin = clone $fechaActual;
                 $fechaFin->modify('first day of this month');
-                $fechaFin->modify('+13 months');
+                $fechaFin->modify('+12 months');
             }
             
             $fechaVerificacion = clone $fechaInicio;
@@ -796,11 +793,14 @@ class AlumnosPagosController extends AbstractController
                 if (!$yaEnLista) {
                     // No generar meses anteriores a la fecha de alta del alumno en el curso
                     if ($fechaVerificacion < $fechaMinimaInicio) {
-                        // No agregar este mes, continuar al siguiente
-                        // (el modify('+1 month') al final del loop se encargará de avanzar)
+                        $fechaVerificacion->modify('+1 month');
                         continue;
                     }
-                    
+
+                    // Un mes es "adelantado" si es posterior al mes actual del instituto
+                    $esMesFuturo = ($anoVerificar > $anoActual)
+                        || ($anoVerificar == $anoActual && $mesVerificar > $mesActual);
+
                     // Verificar si existe una deuda para este mes (puede estar pagada o no haber vencido aún)
                     $deudaExistente = $this->entityManager->getRepository(\App\Entity\DeudaAlumno::class)
                         ->findOneBy([
@@ -809,9 +809,9 @@ class AlumnosPagosController extends AbstractController
                             'mes' => $mesVerificar,
                             'ano' => $anoVerificar
                         ]);
-                    
-                    // Si existe deuda NO pagada, agregarla como pendiente (aunque no haya vencido aún)
+
                     if ($deudaExistente && !$deudaExistente->isPagado()) {
+                        // Deuda registrada: pendiente si es el mes actual o anterior, adelantado si es futuro
                         $mesesAdeudados[] = [
                             'mes' => $mesVerificar,
                             'ano' => $anoVerificar,
@@ -819,13 +819,11 @@ class AlumnosPagosController extends AbstractController
                             'curso' => $curso->getNombre(),
                             'curso_obj' => $curso,
                             'monto' => $deudaExistente->getMontoTotal(),
-                            'esPendiente' => true,
-                            'esAdelantado' => false
+                            'esPendiente' => !$esMesFuturo,
+                            'esAdelantado' => $esMesFuturo
                         ];
-                    }
-                    // Si no existe deuda, agregarla como mes adelantado
-                    // Si la deuda existe pero está pagada, NO agregarla (ya está saldada)
-                    elseif (!$deudaExistente) {
+                    } elseif (!$deudaExistente) {
+                        // Sin deuda registrada: siempre adelantado
                         $mesesAdeudados[] = [
                             'mes' => $mesVerificar,
                             'ano' => $anoVerificar,
@@ -930,6 +928,10 @@ class AlumnosPagosController extends AbstractController
         ]);
 
         $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $alumnosPago->getFecha() !== null) {
+            $alumnosPago->setFecha($this->institutoTimezoneService->normalizeDateOnly($alumnosPago->getFecha()));
+        }
 
         if ($form->isSubmitted()) {
             // Verificar si está en modo pago múltiple
@@ -2035,12 +2037,12 @@ class AlumnosPagosController extends AbstractController
                 // Parsear la fecha del formulario o usar la fecha actual del instituto
                 if ($fechaPagoStr) {
                     try {
-                        $fechaPago = new \DateTime($fechaPagoStr);
+                        $fechaPago = $this->institutoTimezoneService->normalizeDateOnly(new \DateTime($fechaPagoStr));
                     } catch (\Exception $e) {
-                        $fechaPago = $this->institutoTimezoneService->getNowForInstituto($instituto);
+                        $fechaPago = $this->institutoTimezoneService->getCurrentDateForInstituto($instituto);
                     }
                 } else {
-                    $fechaPago = $this->institutoTimezoneService->getNowForInstituto($instituto);
+                    $fechaPago = $this->institutoTimezoneService->getCurrentDateForInstituto($instituto);
                 }
                 
                 // Crear el pago

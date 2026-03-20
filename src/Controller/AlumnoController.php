@@ -29,21 +29,24 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 class AlumnoController extends AbstractController
 {
     private EntityManagerInterface $entityManager;
-    private $historialCursosService;
-    private $deudaService;
-    private $passwordHasher;
-    private $deudaCalculator;
+    private HistorialCursosService $historialCursosService;
+    private DeudaService $deudaService;
+    private InstitutoTimezoneService $institutoTimezoneService;
+    private UserPasswordHasherInterface $passwordHasher;
+    private \App\Service\DeudaCalculatorService $deudaCalculator;
 
     public function __construct(
         EntityManagerInterface $entityManager,
         HistorialCursosService $historialCursosService,
         DeudaService $deudaService,
+        InstitutoTimezoneService $institutoTimezoneService,
         UserPasswordHasherInterface $passwordHasher,
         \App\Service\DeudaCalculatorService $deudaCalculator
     ) {
         $this->entityManager = $entityManager;
         $this->historialCursosService = $historialCursosService;
         $this->deudaService = $deudaService;
+        $this->institutoTimezoneService = $institutoTimezoneService;
         $this->passwordHasher = $passwordHasher;
         $this->deudaCalculator = $deudaCalculator;
     }
@@ -228,8 +231,7 @@ class AlumnoController extends AbstractController
                         );
                         
                         // Asegurarnos de generar las deudas hasta fin de año
-                        $fechaActual = new \DateTime();
-                        $finDeAno = new \DateTime($fechaActual->format('Y') . '-12-31');
+                        $finDeAno = $this->getFinDeAnoInstituto($instituto);
                         $fechaInicioDeuda = $this->resolverFechaInicioDeuda($curso, $comenzarDeudaProximoMes);
                         $deudaService->generarDeudasParaPeriodo(
                             $alumno,
@@ -437,10 +439,11 @@ class AlumnoController extends AbstractController
                     foreach ($cursosActuales as $curso) {
                         if (!in_array($curso, $cursosNuevos)) {
                             // Marcar el historial como inactivo
-                            $historico = $this->historialCursosService->buscarHistorial($alumno, $curso, new \DateTime());
+                            $fechaActualInstituto = $this->institutoTimezoneService->getCurrentDateForInstituto($instituto);
+                            $historico = $this->historialCursosService->buscarHistorial($alumno, $curso, $fechaActualInstituto);
                             if ($historico) {
                                 $historico->setActivo(false);
-                                $historico->setFechaBaja(new \DateTime());
+                                $historico->setFechaBaja(clone $fechaActualInstituto);
                             }
                             
                             // Cancelar deudas pendientes (mes actual y futuras)
@@ -465,8 +468,7 @@ class AlumnoController extends AbstractController
                                 $modoGeneracionDeuda
                             );
                             // Generar deudas hasta fin de año con DeudaService
-                            $fechaActual = new \DateTime();
-                            $finDeAno = new \DateTime($fechaActual->format('Y') . '-12-31');
+                            $finDeAno = $this->getFinDeAnoInstituto($instituto);
                             $fechaInicioDeuda = $this->resolverFechaInicioDeuda($curso, $comenzarDeudaProximoMes);
                             
                             // Si el curso tiene fecha de finalización, usarla como límite
@@ -698,10 +700,11 @@ class AlumnoController extends AbstractController
         foreach ($cursosActuales as $curso) {
             if (!in_array($curso, $cursosSeleccionados)) {
                 // Marcar el historial como inactivo
-                $historico = $historialCursosService->buscarHistorial($alumno, $curso, new \DateTime());
+                $fechaActualInstituto = $this->institutoTimezoneService->getCurrentDateForInstituto($instituto);
+                $historico = $historialCursosService->buscarHistorial($alumno, $curso, $fechaActualInstituto);
                 if ($historico) {
                     $historico->setActivo(false);
-                    $historico->setFechaBaja(new \DateTime());
+                    $historico->setFechaBaja(clone $fechaActualInstituto);
                 }
                 
                 // Cancelar deudas pendientes (mes actual y futuras)
@@ -728,7 +731,7 @@ class AlumnoController extends AbstractController
                 
                 // IMPORTANTE: Generar deudas solo hasta el mes actual, no hasta fin de año
                 // Las deudas futuras se generarán automáticamente mediante el comando cron mensual
-                $fechaActual = new \DateTime();
+                $fechaActual = $this->institutoTimezoneService->getCurrentDateForInstituto($instituto);
                 $fechaInicioDeuda = $this->resolverFechaInicioDeuda($curso, $comenzarDeudaProximoMes);
                 
                 // Determinar fecha límite: mes actual o fin del curso (lo que sea menor)
@@ -1009,7 +1012,7 @@ class AlumnoController extends AbstractController
      */
     private function resolverFechaInicioDeuda(\App\Entity\Curso $curso, bool $comenzarDeudaProximoMes): \DateTime
     {
-        $inicio = new \DateTime();
+        $inicio = $this->institutoTimezoneService->getCurrentDateForInstituto($curso->getInstituto());
         $inicio->modify('first day of this month');
 
         if ($comenzarDeudaProximoMes) {
@@ -1026,6 +1029,15 @@ class AlumnoController extends AbstractController
         }
 
         return $inicio;
+    }
+
+    private function getFinDeAnoInstituto(\App\Entity\Instituto $instituto): \DateTime
+    {
+        $ahoraInstituto = $this->institutoTimezoneService->getNowForInstituto($instituto);
+
+        return $this->institutoTimezoneService->normalizeDateOnly(
+            $ahoraInstituto->setDate((int) $ahoraInstituto->format('Y'), 12, 31)
+        );
     }
 
     /**

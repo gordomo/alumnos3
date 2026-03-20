@@ -78,7 +78,7 @@ class DeudaCalculatorService
         }
         
         // Fecha de alta del alumno en el curso
-        $fechaAlta = $historico->getFechaAlta() ?: new \DateTime();
+        $fechaAlta = $historico->getFechaAlta() ?: $this->institutoTimezoneService->getCurrentDateForInstituto($instituto);
         
         // Determinar fecha de inicio de deuda según el modo configurado
         $modoGeneracion = $historico->getModoGeneracionDeuda();
