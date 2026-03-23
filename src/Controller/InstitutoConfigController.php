@@ -493,7 +493,13 @@ class InstitutoConfigController extends AbstractController
         }
         
         $metodoPago->setNombre($request->request->get('nombre', $metodoPago->getNombre()));
-        $metodoPago->setActivo($request->request->get('activo', '0') === '1');
+        $activo = $request->request->get('activo', '0') === '1';
+
+        // "Efectivo" debe permanecer activo para asegurar descuentos y flujo de cobro.
+        if (strtolower(trim($metodoPago->getNombre())) === 'efectivo') {
+            $activo = true;
+        }
+        $metodoPago->setActivo($activo);
         
         $entityManager->flush();
         

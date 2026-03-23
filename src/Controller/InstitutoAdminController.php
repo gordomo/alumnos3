@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Instituto;
 use App\Entity\InstitutoAdmin;
 use App\Entity\InstitutoConfiguracion;
+use App\Entity\MetodoPago;
 use App\Entity\User;
 use App\Form\InstitutoType;
 use App\Repository\AlumnoRepository;
@@ -145,6 +146,17 @@ class InstitutoAdminController extends AbstractController
             $configuracion->setTimezone($timezone !== '' && $timezone !== null ? $timezone : null);
             $configuracion->setDateFormat('d/m/Y'); // formato por defecto al crear instituto
             $em->persist($configuracion);
+
+            // Métodos de pago base del instituto. "Efectivo" debe existir siempre.
+            $metodosBase = ['Efectivo', 'Transferencia', 'Tarjeta de Debito', 'Tarjeta de Credito'];
+            foreach ($metodosBase as $index => $nombreMetodo) {
+                $metodoPago = new MetodoPago();
+                $metodoPago->setInstituto($instituto);
+                $metodoPago->setNombre($nombreMetodo);
+                $metodoPago->setActivo(true);
+                $metodoPago->setOrden($index + 1);
+                $em->persist($metodoPago);
+            }
 
             // Crear registro en InstitutoAdmin para asignar el creador
             $institutoAdmin = new InstitutoAdmin();

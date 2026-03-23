@@ -2122,16 +2122,17 @@ class AlumnosPagosController extends AbstractController
             }
         }
         
-        // Obtener los métodos de pago disponibles
-        $metodosPago = $this->entityManager->getRepository(AlumnosPagos::class)
-            ->createQueryBuilder('p')
-            ->select('DISTINCT p.metodoPago')
-            ->getQuery()
-            ->getSingleColumnResult();
-        
-        // Si no hay métodos registrados, definir los métodos predeterminados
+        // Obtener los métodos de pago configurados para este instituto
+        $metodosPagoEntities = $this->entityManager->getRepository(MetodoPago::class)
+            ->findBy(['instituto' => $instituto, 'activo' => true], ['orden' => 'ASC']);
+
+        $metodosPago = array_map(function (MetodoPago $metodo) {
+            return $metodo->getNombre();
+        }, $metodosPagoEntities);
+
+        // Fallback defensivo si no hubiera configuración
         if (empty($metodosPago)) {
-            $metodosPago = ['Efectivo', 'Transferencia', 'Débito', 'Crédito'];
+            $metodosPago = ['Efectivo'];
         }
         
         // Calcular el monto total (incluyendo intereses si aplica)

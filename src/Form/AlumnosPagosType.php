@@ -211,17 +211,17 @@ class AlumnosPagosType extends AbstractType
             });
             
             foreach ($metodosPago as $metodo) {
-                $choices[$metodo->getNombre()] = strtolower(str_replace(' ', '_', $metodo->getNombre()));
+                $choices[$metodo->getNombre()] = $metodo->getNombre();
             }
         }
         
         // Si no hay métodos configurados, usar los por defecto
         if (empty($choices)) {
             $choices = [
-                'Efectivo' => 'efectivo',
-                'Transferencia' => 'transferencia',
-                'Tarjeta de Crédito' => 'tarjeta_de_crédito',
-                'Tarjeta de Débito' => 'tarjeta_de_débito'
+                'Efectivo' => 'Efectivo',
+                'Transferencia' => 'Transferencia',
+                'Tarjeta de Credito' => 'Tarjeta de Credito',
+                'Tarjeta de Debito' => 'Tarjeta de Debito'
             ];
         }
         
