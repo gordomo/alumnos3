@@ -868,10 +868,29 @@ class AlumnoController extends AbstractController
             ];
         }
         
+        $fechaActualInstituto = $this->institutoTimezoneService->getNowForInstituto($instituto);
+        $diaActualInstituto = (int) $fechaActualInstituto->format('j');
+        $mesActualInstituto = (int) $fechaActualInstituto->format('n');
+        $anoActualInstituto = (int) $fechaActualInstituto->format('Y');
+
+        $primerDiaVencimiento = 5;
+        $vencimientos = $instituto->getVencimientos();
+        if (count($vencimientos) > 0) {
+            $vencimientosArray = $vencimientos->toArray();
+            usort($vencimientosArray, function($a, $b) {
+                return $a->getDiaVencimiento() <=> $b->getDiaVencimiento();
+            });
+            $primerDiaVencimiento = (int) $vencimientosArray[0]->getDiaVencimiento();
+        }
+
         return $this->render('alumno/deudas.html.twig', [
             'alumno' => $alumno,
             'deudasPorCurso' => $deudasPorCurso,
-            'cursos' => $cursoRepository->findBy(['instituto' => $instituto])
+            'cursos' => $cursoRepository->findBy(['instituto' => $instituto]),
+            'diaActualInstituto' => $diaActualInstituto,
+            'mesActualInstituto' => $mesActualInstituto,
+            'anoActualInstituto' => $anoActualInstituto,
+            'primerDiaVencimiento' => $primerDiaVencimiento,
         ]);
     }
 
