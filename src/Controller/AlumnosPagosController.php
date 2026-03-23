@@ -293,14 +293,34 @@ class AlumnosPagosController extends AbstractController
             ->setParameter('instituto', $instituto)
             ->setParameter('activo', true);
 
-        // Mostrar solo deudas del mes actual o anteriores (ocultar deudas futuras)
-        $fechaReferencia = new \DateTime();
+        // Mostrar deudas vencidas según la fecha del instituto.
+        // Meses anteriores: siempre visibles. Mes actual: solo desde el primer vencimiento.
+        $fechaReferencia = $this->institutoTimezoneService->getNowForInstituto($instituto);
+        $diaActualDeuda = (int) $fechaReferencia->format('j');
         $mesActualDeuda = (int) $fechaReferencia->format('n');
         $anoActualDeuda = (int) $fechaReferencia->format('Y');
-        $qbDeudas
-            ->andWhere('(d.ano < :anoActualDeuda OR (d.ano = :anoActualDeuda AND d.mes <= :mesActualDeuda))')
-            ->setParameter('anoActualDeuda', $anoActualDeuda)
-            ->setParameter('mesActualDeuda', $mesActualDeuda);
+
+        $primerDiaVencimiento = 5;
+        $vencimientos = $instituto->getVencimientos();
+        if (count($vencimientos) > 0) {
+            $vencimientosArray = $vencimientos->toArray();
+            usort($vencimientosArray, function($a, $b) {
+                return $a->getDiaVencimiento() <=> $b->getDiaVencimiento();
+            });
+            $primerDiaVencimiento = (int) $vencimientosArray[0]->getDiaVencimiento();
+        }
+
+        if ($diaActualDeuda >= $primerDiaVencimiento) {
+            $qbDeudas
+                ->andWhere('(d.ano < :anoActualDeuda OR (d.ano = :anoActualDeuda AND d.mes <= :mesActualDeuda))')
+                ->setParameter('anoActualDeuda', $anoActualDeuda)
+                ->setParameter('mesActualDeuda', $mesActualDeuda);
+        } else {
+            $qbDeudas
+                ->andWhere('(d.ano < :anoActualDeuda OR (d.ano = :anoActualDeuda AND d.mes < :mesActualDeuda))')
+                ->setParameter('anoActualDeuda', $anoActualDeuda)
+                ->setParameter('mesActualDeuda', $mesActualDeuda);
+        }
         
         // Aplicar filtros de búsqueda
         if ($busqueda) {
@@ -529,7 +549,7 @@ class AlumnosPagosController extends AbstractController
         // Si está configurado para deshabilitar descuentos en deuda
         if ($configuracion && $configuracion->getDeshabilitarDescuentosEnDeuda()) {
             // Verificar si el alumno tiene deudas vencidas
-            if ($alumno->tieneDeudasVencidas()) {
+            if ($alumno->tieneDeudasVencidas($fechaActual)) {
                 $puedeRecibirDescuentos = false;
                 $descuentosAplicados[] = "No se aplican descuentos porque el alumno tiene deudas vencidas";
             }
@@ -1614,7 +1634,7 @@ class AlumnosPagosController extends AbstractController
             $descuentosAplicados = [];
             $puedeRecibirDescuentos = true;
             
-            if ($configuracion && $configuracion->getDeshabilitarDescuentosEnDeuda() && $alumno->tieneDeudasVencidas()) {
+            if ($configuracion && $configuracion->getDeshabilitarDescuentosEnDeuda() && $alumno->tieneDeudasVencidas($this->institutoTimezoneService->getNowForInstituto($instituto))) {
                 $puedeRecibirDescuentos = false;
                 $descuentosAplicados[] = "No se aplican descuentos porque el alumno tiene deudas vencidas";
             }
@@ -1750,7 +1770,7 @@ class AlumnosPagosController extends AbstractController
             $descuentosAplicados = [];
             $puedeRecibirDescuentos = true;
             
-            if ($configuracion && $configuracion->getDeshabilitarDescuentosEnDeuda() && $alumno->tieneDeudasVencidas()) {
+            if ($configuracion && $configuracion->getDeshabilitarDescuentosEnDeuda() && $alumno->tieneDeudasVencidas($this->institutoTimezoneService->getNowForInstituto($alumno->getInstituto()))) {
                 $puedeRecibirDescuentos = false;
                 $descuentosAplicados[] = "No se aplican descuentos porque el alumno tiene deudas vencidas";
             }

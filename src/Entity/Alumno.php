@@ -730,14 +730,16 @@ class Alumno
      * Verifica si el alumno tiene deudas vencidas según los vencimientos del instituto
      * Una deuda se considera vencida cuando la fecha actual supera la fecha de vencimiento del mes
      */
-    public function tieneDeudasVencidas(): bool
+    public function tieneDeudasVencidas(?\DateTimeInterface $fechaActual = null): bool
     {
         if (!$this->activo) {
             return false;
         }
 
         // Obtener la fecha actual
-        $fechaActual = new \DateTime();
+        if ($fechaActual === null) {
+            $fechaActual = new \DateTime();
+        }
         $diaActual = (int)$fechaActual->format('d');
         $mesActual = (int)$fechaActual->format('n');
         $anoActual = (int)$fechaActual->format('Y');
