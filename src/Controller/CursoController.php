@@ -953,7 +953,6 @@ class CursoController extends AbstractController
         // Crear nuevo curso duplicado
         $cursoNuevo = new Curso();
         $cursoNuevo->setNombre($cursoOriginal->getNombre() . ' (Copia)');
-        $cursoNuevo->setDescripcion($cursoOriginal->getDescripcion());
         $cursoNuevo->setPrecio($cursoOriginal->getPrecio());
         $cursoNuevo->setInstituto($instituto);
         $cursoNuevo->setDisabled(false);

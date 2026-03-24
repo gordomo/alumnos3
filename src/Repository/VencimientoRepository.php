@@ -39,7 +39,20 @@ class VencimientoRepository extends ServiceEntityRepository
      */
     public function findNextVencimiento($instituto): ?Vencimiento
     {
-        $hoy = new \DateTime();
+        $timezone = null;
+        if ($instituto && method_exists($instituto, 'getConfiguracion') && $instituto->getConfiguracion()) {
+            $timezone = $instituto->getConfiguracion()->getTimezone();
+        }
+
+        if (!empty($timezone)) {
+            try {
+                $hoy = new \DateTimeImmutable('now', new \DateTimeZone($timezone));
+            } catch (\Exception $e) {
+                $hoy = new \DateTimeImmutable();
+            }
+        } else {
+            $hoy = new \DateTimeImmutable();
+        }
         $diaActual = (int)$hoy->format('d');
 
         return $this->createQueryBuilder('v')

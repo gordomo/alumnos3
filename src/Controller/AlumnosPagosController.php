@@ -76,6 +76,7 @@ class AlumnosPagosController extends AbstractController
         $metodoSelected = $request->get('metodoPago', '');
         $fechaDesde = $request->get('fechaDesde', '');
         $fechaHasta = $request->get('fechaHasta', '');
+        $fechaFiltroProvista = $request->query->has('fechaDesde') || $request->query->has('fechaHasta');
         $sort = $request->get('sort', 'fecha');
         $order = $request->get('order', 'desc');
 
@@ -293,34 +294,8 @@ class AlumnosPagosController extends AbstractController
             ->setParameter('instituto', $instituto)
             ->setParameter('activo', true);
 
-        // Mostrar deudas vencidas según la fecha del instituto.
-        // Meses anteriores: siempre visibles. Mes actual: solo desde el primer vencimiento.
-        $fechaReferencia = $this->institutoTimezoneService->getNowForInstituto($instituto);
-        $diaActualDeuda = (int) $fechaReferencia->format('j');
-        $mesActualDeuda = (int) $fechaReferencia->format('n');
-        $anoActualDeuda = (int) $fechaReferencia->format('Y');
-
-        $primerDiaVencimiento = 5;
-        $vencimientos = $instituto->getVencimientos();
-        if (count($vencimientos) > 0) {
-            $vencimientosArray = $vencimientos->toArray();
-            usort($vencimientosArray, function($a, $b) {
-                return $a->getDiaVencimiento() <=> $b->getDiaVencimiento();
-            });
-            $primerDiaVencimiento = (int) $vencimientosArray[0]->getDiaVencimiento();
-        }
-
-        if ($diaActualDeuda >= $primerDiaVencimiento) {
-            $qbDeudas
-                ->andWhere('(d.ano < :anoActualDeuda OR (d.ano = :anoActualDeuda AND d.mes <= :mesActualDeuda))')
-                ->setParameter('anoActualDeuda', $anoActualDeuda)
-                ->setParameter('mesActualDeuda', $mesActualDeuda);
-        } else {
-            $qbDeudas
-                ->andWhere('(d.ano < :anoActualDeuda OR (d.ano = :anoActualDeuda AND d.mes < :mesActualDeuda))')
-                ->setParameter('anoActualDeuda', $anoActualDeuda)
-                ->setParameter('mesActualDeuda', $mesActualDeuda);
-        }
+        // Mostrar todas las deudas con saldo pendiente (incluye futuras).
+        // Esto permite gestionarlas/cancelarlas desde esta pantalla.
         
         // Aplicar filtros de búsqueda
         if ($busqueda) {
@@ -340,7 +315,7 @@ class AlumnosPagosController extends AbstractController
         }
 
         // Filtro por período: deudas cuyo mes/año caen dentro del rango Desde-Hasta
-        if ($fechaDesde && $fechaHasta) {
+        if ($fechaFiltroProvista && $fechaDesde && $fechaHasta) {
             try {
                 $fechaDesdeObj = new \DateTime($fechaDesde);
                 $fechaHastaObj = new \DateTime($fechaHasta);

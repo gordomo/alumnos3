@@ -280,7 +280,7 @@
                 startDate: startDate,
                 endDate: endDate,
                 maxSpan: { days: maxDays },
-                locale: { format: fmt }
+                locale: window.getDateRangePickerLocale ? window.getDateRangePickerLocale(fmt) : { format: fmt }
             }, function(start, end) {
                 if (end.diff(start, 'days') > maxDays) {
                     end = start.clone().add(maxDays, 'days');

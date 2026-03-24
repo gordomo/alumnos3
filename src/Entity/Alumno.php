@@ -547,7 +547,7 @@ class Alumno
 
         // Si no se especifican mes y año, usar la fecha actual
         if ($mes === null || $ano === null) {
-            $fecha = new \DateTime();
+            $fecha = $this->getFechaActualInstituto();
             $mes = (int)$fecha->format('n');
             $ano = (int)$fecha->format('Y');
         }
@@ -603,7 +603,7 @@ class Alumno
             return 0;
         }
 
-        $hoy = new \DateTime();
+        $hoy = $this->getFechaActualInstituto();
         $diaActual = (int)$hoy->format('d');
 
         // Encontrar el vencimiento aplicable
@@ -738,7 +738,7 @@ class Alumno
 
         // Obtener la fecha actual
         if ($fechaActual === null) {
-            $fechaActual = new \DateTime();
+            $fechaActual = $this->getFechaActualInstituto();
         }
         $diaActual = (int)$fechaActual->format('d');
         $mesActual = (int)$fechaActual->format('n');
@@ -817,7 +817,7 @@ class Alumno
         }
 
         if ($fechaActual === null) {
-            $fechaActual = new \DateTime();
+            $fechaActual = $this->getFechaActualInstituto();
         }
 
         $deudasParaMostrar = [];
@@ -838,6 +838,24 @@ class Alumno
         }
 
         return $deudasParaMostrar;
+    }
+
+    private function getFechaActualInstituto(): \DateTimeImmutable
+    {
+        $timezone = null;
+        if ($this->instituto && $this->instituto->getConfiguracion()) {
+            $timezone = $this->instituto->getConfiguracion()->getTimezone();
+        }
+
+        if (!empty($timezone)) {
+            try {
+                return new \DateTimeImmutable('now', new \DateTimeZone($timezone));
+            } catch (\Exception $e) {
+                // Fallback a timezone por defecto de la aplicación/servidor.
+            }
+        }
+
+        return new \DateTimeImmutable();
     }
 
     public function getUser(): ?User

@@ -372,7 +372,7 @@
                 $(inputFecha).daterangepicker({
                     singleDatePicker: true,
                     startDate: startDate,
-                    locale: { format: fmt }
+                    locale: window.getDateRangePickerLocale ? window.getDateRangePickerLocale(fmt) : { format: fmt }
                 });
             }
         });

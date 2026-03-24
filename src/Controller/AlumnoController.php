@@ -828,8 +828,8 @@ class AlumnoController extends AbstractController
             $deudasPorCurso[$cursoId]['deudas'][] = $deuda;
         }
         
-        // Agregar deudas de la tabla deuda_alumno que no están en cursos activos (deudas huérfanas)
-        // Estas son deudas de cursos donde el alumno ya no está inscrito pero aún debe pagar
+        // Agregar deudas pendientes de la tabla deuda_alumno que no estén ya en el listado.
+        // Incluye deudas futuras y deudas de cursos inactivos para permitir su gestión/cancelación.
         $deudasHuerfanas = $this->entityManager->getRepository(\App\Entity\DeudaAlumno::class)->findBy([
             'alumno' => $alumno
         ]);
@@ -841,13 +841,8 @@ class AlumnoController extends AbstractController
         
         foreach ($deudasHuerfanas as $deudaEntity) {
             $cursoId = $deudaEntity->getCurso()->getId();
-            
-            // Si el curso ya está en deudasPorCurso (curso activo), skip
-            if (isset($deudasPorCurso[$cursoId])) {
-                continue;
-            }
-            
-            // Agregar la deuda huérfana
+
+            // Si el curso no existe aún en el agrupado, crearlo.
             if (!isset($deudasPorCurso[$cursoId])) {
                 $deudasPorCurso[$cursoId] = [
                     'curso' => $deudaEntity->getCurso(),
@@ -856,7 +851,21 @@ class AlumnoController extends AbstractController
                     'cursoActivo' => false
                 ];
             }
-            
+
+            // Evitar duplicados (mismo curso/mes/año) entre deudas calculadas y de tabla.
+            $yaExiste = false;
+            foreach ($deudasPorCurso[$cursoId]['deudas'] as $deudaExistente) {
+                if ((int) $deudaExistente['mes'] === (int) $deudaEntity->getMes()
+                    && (int) $deudaExistente['ano'] === (int) $deudaEntity->getAno()) {
+                    $yaExiste = true;
+                    break;
+                }
+            }
+
+            if ($yaExiste) {
+                continue;
+            }
+
             $deudasPorCurso[$cursoId]['deudas'][] = [
                 'mes' => $deudaEntity->getMes(),
                 'ano' => $deudaEntity->getAno(),

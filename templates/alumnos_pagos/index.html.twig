@@ -684,9 +684,17 @@
                                                 </td>
                                                 <td class="text-center">
                                                     {% if montoPendiente > 0 %}
-                                                        <a href="{{ path('app_alumnos_pagos_new', {'id': deuda.alumno.id}) }}" class="btn btn-sm btn-success" title="Registrar pago">
-                                                            <i class="bi bi-cash-coin"></i> Pagar
-                                                        </a>
+                                                        <div class="d-flex gap-1 justify-content-center">
+                                                            <a href="{{ path('app_alumnos_pagos_new', {'id': deuda.alumno.id}) }}" class="btn btn-sm btn-success" title="Registrar pago">
+                                                                <i class="bi bi-cash-coin"></i> Pagar
+                                                            </a>
+                                                            <form method="post" action="{{ path('app_alumno_cancelar_deuda', {'id': deuda.alumno.id, 'deudaId': deuda.id, 'return_url': app.request.uri}) }}" onsubmit="return confirm('¿Está seguro de cancelar esta deuda?');" style="display:inline;">
+                                                                <input type="hidden" name="_token" value="{{ csrf_token('cancelar-deuda' ~ deuda.id) }}">
+                                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Cancelar deuda">
+                                                                    <i class="bi bi-x-circle"></i>
+                                                                </button>
+                                                            </form>
+                                                        </div>
                                                     {% else %}
                                                         <span class="text-muted small">Completa</span>
                                                     {% endif %}

@@ -296,9 +296,7 @@
                 opens: 'left',
                 startDate: startDate,
                 endDate: endDate,
-                locale: {
-                    format: fmt
-                }
+                locale: window.getDateRangePickerLocale ? window.getDateRangePickerLocale(fmt) : { format: fmt }
             }, function(start, end, label) {
                 location.href = "{{ path('informes') }}?desde=" + start.format(fmt) + "&hasta=" + end.format(fmt);
             });
