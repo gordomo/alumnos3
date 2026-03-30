@@ -959,7 +959,7 @@ class CursoController extends AbstractController
         
         // Copiar profesores
         foreach ($cursoOriginal->getProfesores() as $profesor) {
-            $cursoNuevo->addProfesore($profesor);
+            $cursoNuevo->addProfesor($profesor);
         }
         
         // Copiar horarios
@@ -969,17 +969,6 @@ class CursoController extends AbstractController
             $horarioNuevo->setHorarioInicio(clone $horarioOriginal->getHorarioInicio());
             $horarioNuevo->setHorarioFin(clone $horarioOriginal->getHorarioFin());
             $cursoNuevo->addHorario($horarioNuevo);
-        }
-        
-        // Copiar configuraciones de pago de profesores
-        foreach ($cursoOriginal->getProfesorPagoConfigs() as $configOriginal) {
-            $configNueva = new \App\Entity\ProfesorPagoConfig();
-            $configNueva->setProfesor($configOriginal->getProfesor());
-            $configNueva->setTipoPago($configOriginal->getTipoPago());
-            $configNueva->setMontoPorHora($configOriginal->getMontoPorHora());
-            $configNueva->setMontoFijoMensual($configOriginal->getMontoFijoMensual());
-            $configNueva->setPorcentajeCurso($configOriginal->getPorcentajeCurso());
-            $cursoNuevo->addProfesorPagoConfig($configNueva);
         }
         
         // Sugerir fechas (3 meses después del fin del curso original)

@@ -713,6 +713,7 @@ class AlumnosPagosController extends AbstractController
             $modoGeneracionDeuda = $historico->getModoGeneracionDeuda();
             $fechaMinimaInicio = clone $fechaAltaHistorico;
             $fechaMinimaInicio->modify('first day of this month');
+            $fechaMinimaInicio->setTime(0, 0, 0);
             
             if ($modoGeneracionDeuda === 'proximo_mes') {
                 // Si está configurado para empezar desde el próximo mes, agregar 1 mes
@@ -725,6 +726,7 @@ class AlumnosPagosController extends AbstractController
             $fechaInicio = clone $fechaActual;
             $fechaInicio->modify('first day of this month');
             $fechaInicio->modify('+1 month'); // Por defecto, desde el mes siguiente al actual
+            $fechaInicio->setTime(0, 0, 0);
             
             if ($primerMesPendiente) {
                 // Si hay meses pendientes, empezar desde el primero para llenar todos los huecos
@@ -739,6 +741,7 @@ class AlumnosPagosController extends AbstractController
                 // Si no hay meses pendientes pero hay fecha inicio del curso, empezar desde ahí
                 $fechaInicioCursoPrimerDia = clone $fechaInicioCurso;
                 $fechaInicioCursoPrimerDia->modify('first day of this month');
+                $fechaInicioCursoPrimerDia->setTime(0, 0, 0);
                 if ($fechaInicioCursoPrimerDia < $fechaInicio) {
                     $fechaInicio = $fechaInicioCursoPrimerDia;
                 }
@@ -755,14 +758,17 @@ class AlumnosPagosController extends AbstractController
                 // Si el curso tiene fecha fin, permitir pagar hasta el fin del curso completo
                 $fechaFin = clone $fechaFinCurso;
                 $fechaFin->modify('first day of this month');
+                $fechaFin->setTime(0, 0, 0);
             } else {
                 // Si no tiene fecha fin, limitar a 12 meses adelante
                 $fechaFin = clone $fechaActual;
                 $fechaFin->modify('first day of this month');
                 $fechaFin->modify('+12 months');
+                $fechaFin->setTime(0, 0, 0);
             }
             
             $fechaVerificacion = clone $fechaInicio;
+            $fechaVerificacion->setTime(0, 0, 0);
             
             while ($fechaVerificacion <= $fechaFin) {
                 $mesVerificar = (int)$fechaVerificacion->format('n');
