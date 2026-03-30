@@ -521,16 +521,16 @@ class AlumnosPagosController extends AbstractController
         // Verificar si podemos aplicar descuentos
         $puedeRecibirDescuentos = true;
         
-        // Si está configurado para deshabilitar descuentos en deuda
+        // Si está configurado para deshabilitar descuentos generales en deuda
         if ($configuracion && $configuracion->getDeshabilitarDescuentosEnDeuda()) {
             // Verificar si el alumno tiene deudas vencidas
             if ($alumno->tieneDeudasVencidas($fechaActual)) {
                 $puedeRecibirDescuentos = false;
-                $descuentosAplicados[] = "No se aplican descuentos porque el alumno tiene deudas vencidas";
+                $descuentosAplicados[] = "No se aplican descuentos generales (efectivo/hermanos) porque el alumno tiene deudas vencidas";
             }
         }
         
-        // Calcular porcentajes de descuento (sin aplicar aún)
+        // Calcular porcentajes de descuento general (efectivo y hermanos)
         if ($puedeRecibirDescuentos && $configuracion) {
             // Aplicar descuento por pago en efectivo solo si el método de pago es efectivo (o no se especificó, p. ej. render inicial)
             $aplicarDescuentoEfectivo = ($metodoPago === null || strtolower($metodoPago) === 'efectivo');
@@ -550,13 +550,13 @@ class AlumnosPagosController extends AbstractController
                     $descuentosAplicados[] = "Descuento del " . $porcentajeDescuentoHermanos . "% por tener " . count($hermanos) . " hermano(s) en el instituto";
                 }
             }
-            
-            // Aplicar descuentos promocionales seleccionados
-            foreach ($descuentosPromocionalesSeleccionados as $descuentoPromocional) {
-                $porcentajeDescuentoPromocional = (float)$descuentoPromocional->getPorcentaje();
-                $porcentajeDescuentoTotal += $porcentajeDescuentoPromocional;
-                $descuentosAplicados[] = "Descuento promocional: " . $descuentoPromocional->getNombre() . " (" . $porcentajeDescuentoPromocional . "%)";
-            }
+        }
+
+        // Descuentos promocionales: siempre se aplican, independientemente de si el alumno tiene deudas
+        foreach ($descuentosPromocionalesSeleccionados as $descuentoPromocional) {
+            $porcentajeDescuentoPromocional = (float)$descuentoPromocional->getPorcentaje();
+            $porcentajeDescuentoTotal += $porcentajeDescuentoPromocional;
+            $descuentosAplicados[] = "Descuento promocional: " . $descuentoPromocional->getNombre() . " (" . $porcentajeDescuentoPromocional . "%)";
         }
         
         // Aplicar intereses y descuentos según el orden configurado
@@ -1611,7 +1611,7 @@ class AlumnosPagosController extends AbstractController
             
             if ($configuracion && $configuracion->getDeshabilitarDescuentosEnDeuda() && $alumno->tieneDeudasVencidas($this->institutoTimezoneService->getNowForInstituto($instituto))) {
                 $puedeRecibirDescuentos = false;
-                $descuentosAplicados[] = "No se aplican descuentos porque el alumno tiene deudas vencidas";
+                $descuentosAplicados[] = "No se aplican descuentos generales (efectivo/hermanos) porque el alumno tiene deudas vencidas";
             }
             $metodoPago = $request->request->get('metodo_pago');
             $aplicarDescuentoEfectivo = ($metodoPago === null || strtolower($metodoPago) === 'efectivo');
@@ -1629,12 +1629,13 @@ class AlumnosPagosController extends AbstractController
                         $descuentosAplicados[] = "Descuento del " . $porcentajeHermanos . "% por tener " . count($hermanos) . " hermano(s) en el instituto";
                     }
                 }
-                
-                foreach ($descuentosPromocionalesSeleccionados as $descuentoPromocional) {
-                    $porcentajeDescuentoPromocional = (float)$descuentoPromocional->getPorcentaje();
-                    $porcentajeDescuentoTotal += $porcentajeDescuentoPromocional;
-                    $descuentosAplicados[] = "Descuento promocional: " . $descuentoPromocional->getNombre() . " (" . $porcentajeDescuentoPromocional . "%)";
-                }
+            }
+            
+            // Descuentos promocionales: siempre se aplican, independientemente de si el alumno tiene deudas
+            foreach ($descuentosPromocionalesSeleccionados as $descuentoPromocional) {
+                $porcentajeDescuentoPromocional = (float)$descuentoPromocional->getPorcentaje();
+                $porcentajeDescuentoTotal += $porcentajeDescuentoPromocional;
+                $descuentosAplicados[] = "Descuento promocional: " . $descuentoPromocional->getNombre() . " (" . $porcentajeDescuentoPromocional . "%)";
             }
             
             // Aplicar descuentos sobre el monto total con interés ya incluido
@@ -1747,7 +1748,7 @@ class AlumnosPagosController extends AbstractController
             
             if ($configuracion && $configuracion->getDeshabilitarDescuentosEnDeuda() && $alumno->tieneDeudasVencidas($this->institutoTimezoneService->getNowForInstituto($alumno->getInstituto()))) {
                 $puedeRecibirDescuentos = false;
-                $descuentosAplicados[] = "No se aplican descuentos porque el alumno tiene deudas vencidas";
+                $descuentosAplicados[] = "No se aplican descuentos generales (efectivo/hermanos) porque el alumno tiene deudas vencidas";
             }
             
             $metodoPagoNombre = $request->request->get('metodo_pago');
@@ -1767,12 +1768,13 @@ class AlumnosPagosController extends AbstractController
                         $descuentosAplicados[] = "Descuento del " . $porcentajeHermanos . "% por tener " . count($hermanos) . " hermano(s) en el instituto";
                     }
                 }
-                
-                foreach ($descuentosPromocionalesSeleccionados as $descuentoPromocional) {
-                    $porcentajeDescuentoPromocional = (float)$descuentoPromocional->getPorcentaje();
-                    $porcentajeDescuentoTotal += $porcentajeDescuentoPromocional;
-                    $descuentosAplicados[] = "Descuento promocional: " . $descuentoPromocional->getNombre() . " (" . $porcentajeDescuentoPromocional . "%)";
-                }
+            }
+
+            // Descuentos promocionales: siempre se aplican, independientemente de si el alumno tiene deudas
+            foreach ($descuentosPromocionalesSeleccionados as $descuentoPromocional) {
+                $porcentajeDescuentoPromocional = (float)$descuentoPromocional->getPorcentaje();
+                $porcentajeDescuentoTotal += $porcentajeDescuentoPromocional;
+                $descuentosAplicados[] = "Descuento promocional: " . $descuentoPromocional->getNombre() . " (" . $porcentajeDescuentoPromocional . "%)";
             }
             
             // Aplicar descuentos sobre el monto total

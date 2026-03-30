@@ -317,7 +317,7 @@
                 {% endif %}
 
                         {# Descuentos Promocionales Disponibles #}
-                        {% if descuentosPromocionales is defined and descuentosPromocionales|length > 0 and puedeRecibirDescuentos is defined and puedeRecibirDescuentos %}
+                        {% if descuentosPromocionales is defined and descuentosPromocionales|length > 0 %}
                             <div class="mb-3" id="descuentos-promocionales-container" style="border-left: 4px solid #0dcaf0; background-color: #cff4fc; padding: 1rem; border-radius: 4px;">
                                 <h6 class="mb-2 text-dark">
                                     <i class="bi bi-tag" style="color: #0dcaf0;"></i> Descuentos Promocionales Disponibles
@@ -995,20 +995,7 @@
                                 }
                             }
                             
-                            // Actualizar visibilidad de descuentos promocionales según puedeRecibirDescuentos
-                            const descuentosPromocionalesContainer = document.getElementById('descuentos-promocionales-container');
-                            if (descuentosPromocionalesContainer) {
-                                if (data.puedeRecibirDescuentos !== undefined && !data.puedeRecibirDescuentos) {
-                                    descuentosPromocionalesContainer.style.display = 'none';
-                                    // Desmarcar todos los checkboxes de descuentos promocionales
-                                    const checkboxesDescuentos = document.querySelectorAll('.descuento-promocional-checkbox');
-                                    checkboxesDescuentos.forEach(function(cb) {
-                                        cb.checked = false;
-                                    });
-                                } else if (data.puedeRecibirDescuentos !== undefined && data.puedeRecibirDescuentos) {
-                                    descuentosPromocionalesContainer.style.display = 'block';
-                                }
-                            }
+                            // Los descuentos promocionales siempre se muestran (no se ocultan por deudas)
                         });
                     }
                 } else {

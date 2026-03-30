@@ -355,99 +355,86 @@
                         <div class="tab-pane fade" id="edit-descuentos" role="tabpanel" aria-labelledby="edit-descuentos-tab">
                             <form method="post" action="{{ path('instituto_config_edit') }}">
                                 <input type="hidden" name="section" value="descuentos">
-                                <div class="card mb-4">
-                                    <div class="card-header bg-info text-white">
-                                        <h5 class="mb-0">
+                                <div class="card config-section-card mb-4">
+                                    <div class="card-header config-section-header config-section-header--discounts">
+                                        <h4 class="card-title config-section-title mb-0">
                                             <i class="bi bi-percent"></i> Configuración de Descuentos
-                                        </h5>
+                                        </h4>
                                     </div>
                                     <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                                    <label for="descuentoEfectivo" class="form-label">
-                                                        Descuento por pago en efectivo (%)
-                                                    </label>
-                                    <input type="number" 
-                                           class="form-control" 
-                                           id="descuentoEfectivo" 
-                                           name="descuentoEfectivo" 
-                                           min="0"
-                                           max="100"
-                                           step="0.01"
-                                                           value="{{ configuracion.descuentoEfectivo }}"
-                                                           placeholder="0.00">
-                                    <small class="form-text text-muted">
-                                        Porcentaje de descuento aplicado cuando se paga en efectivo. Dejar en blanco para no aplicar descuento.
-                                    </small>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                                    <label for="descuentoHermanos" class="form-label">
-                                                        Descuento por hermanos (%)
-                                                    </label>
-                                    <input type="number" 
-                                           class="form-control" 
-                                           id="descuentoHermanos" 
-                                           name="descuentoHermanos" 
-                                           min="0"
-                                           max="100"
-                                           step="0.01"
-                                                           value="{{ configuracion.descuentoHermanos }}"
-                                                           placeholder="0.00">
-                                    <small class="form-text text-muted">
-                                        Porcentaje de descuento aplicado a alumnos con hermanos en el instituto. Dejar en blanco para no aplicar descuento.
-                                    </small>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-12">
-                                <div class="form-check mb-3">
-                                    <input type="checkbox" 
-                                           class="form-check-input" 
-                                           id="deshabilitarDescuentosEnDeuda" 
-                                           name="deshabilitarDescuentosEnDeuda"
-                                           {% if not configuracion.deshabilitarDescuentosEnDeuda %}checked{% endif %}>
-                                    <label class="form-check-label" for="deshabilitarDescuentosEnDeuda">
-                                                        <strong>Habilitar descuentos para alumnos con deudas</strong>
-                                    </label>
-                                    <div class="form-text text-muted">
-                                        Si se activa esta opción, los alumnos con deudas podrán beneficiarse de los descuentos configurados.
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-12">
-                                <div class="mb-3">
-                                                    <label for="ordenCalculoInteresesDescuentos" class="form-label">
-                                                        <strong>Orden de cálculo de intereses y descuentos</strong>
-                                                    </label>
-                                    <select class="form-select" 
-                                            id="ordenCalculoInteresesDescuentos" 
-                                            name="ordenCalculoInteresesDescuentos">
-                                        <option value="interes_primero" {% if configuracion.ordenCalculoInteresesDescuentos == 'interes_primero' %}selected{% endif %}>
-                                            Interés primero, luego descuentos (recomendado)
-                                        </option>
-                                        <option value="descuento_primero" {% if configuracion.ordenCalculoInteresesDescuentos == 'descuento_primero' %}selected{% endif %}>
-                                            Descuentos primero, luego interés
-                                        </option>
-                                        <option value="neto" {% if configuracion.ordenCalculoInteresesDescuentos == 'neto' %}selected{% endif %}>
-                                            Neto (diferencia entre intereses y descuentos)
-                                        </option>
-                                        <option value="descuentos_solo_base" {% if configuracion.ordenCalculoInteresesDescuentos == 'descuentos_solo_base' %}selected{% endif %}>
-                                            Descuentos sobre base, interés sobre base original
-                                        </option>
-                                    </select>
-                                                    <div class="form-text text-muted mt-2">
-                                        <strong>Interés primero:</strong> Se aplica el interés sobre el monto base, luego los descuentos sobre el resultado. Ejemplo: Base $100, Interés 10% = $110, Descuento 10% = $99.<br>
-                                        <strong>Descuento primero:</strong> Se aplican los descuentos sobre el monto base, luego el interés sobre el resultado. Ejemplo: Base $100, Descuento 10% = $90, Interés 10% = $99.<br>
-                                        <strong>Neto:</strong> Ambos se calculan sobre la base y se hace la diferencia. Ejemplo: Base $100, Interés +$10, Descuento -$10 = $100.<br>
-                                        <strong>Descuentos solo base:</strong> Los descuentos se aplican sobre la base, el interés se suma sobre la base original. Ejemplo: Base $100, Descuento 10% = $90, Interés +$10 = $100.
-                                    </div>
-                                                </div>
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <table class="table table-borderless config-data-table">
+                                                    <tr>
+                                                        <th width="40%">Descuento por pago en efectivo (%):</th>
+                                                        <td>
+                                                            <input type="number"
+                                                                   class="form-control form-control-sm"
+                                                                   id="descuentoEfectivo"
+                                                                   name="descuentoEfectivo"
+                                                                   min="0" max="100" step="0.01"
+                                                                   value="{{ configuracion.descuentoEfectivo }}"
+                                                                   placeholder="0.00">
+                                                            <small class="form-text text-muted">Porcentaje de descuento aplicado cuando se paga en efectivo. Dejar en blanco para no aplicar descuento.</small>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th>Descuento por hermanos (%):</th>
+                                                        <td>
+                                                            <input type="number"
+                                                                   class="form-control form-control-sm"
+                                                                   id="descuentoHermanos"
+                                                                   name="descuentoHermanos"
+                                                                   min="0" max="100" step="0.01"
+                                                                   value="{{ configuracion.descuentoHermanos }}"
+                                                                   placeholder="0.00">
+                                                            <small class="form-text text-muted">Porcentaje de descuento aplicado a alumnos con hermanos en el instituto. Dejar en blanco para no aplicar descuento.</small>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th>Habilitar descuentos en deuda:</th>
+                                                        <td>
+                                                            <div class="form-check">
+                                                                <input type="checkbox"
+                                                                       class="form-check-input"
+                                                                       id="deshabilitarDescuentosEnDeuda"
+                                                                       name="deshabilitarDescuentosEnDeuda"
+                                                                       {% if not configuracion.deshabilitarDescuentosEnDeuda %}checked{% endif %}>
+                                                                <label class="form-check-label" for="deshabilitarDescuentosEnDeuda">
+                                                                    <strong>Habilitar descuentos para alumnos con deudas</strong>
+                                                                </label>
+                                                            </div>
+                                                            <small class="form-text text-muted">Si se activa esta opción, los alumnos con deudas podrán beneficiarse de los descuentos configurados.</small>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th>Orden de cálculo:</th>
+                                                        <td>
+                                                            <select class="form-select form-select-sm"
+                                                                    id="ordenCalculoInteresesDescuentos"
+                                                                    name="ordenCalculoInteresesDescuentos">
+                                                                <option value="interes_primero" {% if configuracion.ordenCalculoInteresesDescuentos == 'interes_primero' %}selected{% endif %}>
+                                                                    Interés primero, luego descuentos (recomendado)
+                                                                </option>
+                                                                <option value="descuento_primero" {% if configuracion.ordenCalculoInteresesDescuentos == 'descuento_primero' %}selected{% endif %}>
+                                                                    Descuentos primero, luego interés
+                                                                </option>
+                                                                <option value="neto" {% if configuracion.ordenCalculoInteresesDescuentos == 'neto' %}selected{% endif %}>
+                                                                    Neto (diferencia entre intereses y descuentos)
+                                                                </option>
+                                                                <option value="descuentos_solo_base" {% if configuracion.ordenCalculoInteresesDescuentos == 'descuentos_solo_base' %}selected{% endif %}>
+                                                                    Descuentos sobre base, interés sobre base original
+                                                                </option>
+                                                            </select>
+                                                            <div class="form-text text-muted mt-2">
+                                                                <strong>Interés primero:</strong> Se aplica el interés sobre el monto base, luego los descuentos sobre el resultado. Ejemplo: Base $100, Interés 10% = $110, Descuento 10% = $99.<br>
+                                                                <strong>Descuento primero:</strong> Se aplican los descuentos sobre el monto base, luego el interés sobre el resultado. Ejemplo: Base $100, Descuento 10% = $90, Interés 10% = $99.<br>
+                                                                <strong>Neto:</strong> Ambos se calculan sobre la base y se hace la diferencia. Ejemplo: Base $100, Interés +$10, Descuento -$10 = $100.<br>
+                                                                <strong>Descuentos solo base:</strong> Los descuentos se aplican sobre la base, el interés se suma sobre la base original. Ejemplo: Base $100, Descuento 10% = $90, Interés +$10 = $100.
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                </table>
                                             </div>
                                         </div>
                                     </div>
