@@ -775,6 +775,24 @@ class AlumnosPagosController extends AbstractController
         // Se calculan por curso activo: desde el primer mes pendiente hasta la fecha fin del curso
         // (o hasta 12 meses adelante si el curso no tiene fecha fin definida)
         // Esto asegura que se muestren todos los meses, incluso los intermedios que no tienen deuda pendiente
+
+        // Obtener meses ya completamente pagados para excluirlos del listado
+        $qbPagados = $this->entityManager->createQueryBuilder();
+        $qbPagados->select('IDENTITY(d.curso) AS cursoId, d.mes, d.ano, d.monto AS montoDeuda, COALESCE(SUM(pa.montoAplicado), 0) AS totalPagado')
+            ->from(\App\Entity\DeudaAlumno::class, 'd')
+            ->leftJoin('d.aplicaciones', 'pa')
+            ->where('d.alumno = :alumno')
+            ->setParameter('alumno', $alumno)
+            ->groupBy('d.id');
+        $pagosData = $qbPagados->getQuery()->getResult();
+        $mesesPagados = [];
+        foreach ($pagosData as $row) {
+            if ((float)$row['totalPagado'] >= (float)$row['montoDeuda'] - 0.01) {
+                $key = $row['cursoId'] . '_' . $row['mes'] . '_' . $row['ano'];
+                $mesesPagados[$key] = true;
+            }
+        }
+
         // Obtener cursos activos del alumno para generar meses futuros
         $cursosHistoricos = $alumno->getCursosHistoricos();
         foreach ($cursosHistoricos as $historico) {
@@ -927,7 +945,12 @@ class AlumnosPagosController extends AbstractController
                             'enMora' => $enMoraCalc
                         ];
                     } else {
-                        // Sin deuda calculada: mes adelantado
+                        // Sin deuda calculada: verificar si ya está pagado antes de agregar como adelantado
+                        $keyPagado = $curso->getId() . '_' . $mesVerificar . '_' . $anoVerificar;
+                        if (isset($mesesPagados[$keyPagado])) {
+                            $fechaVerificacion->modify('+1 month');
+                            continue;
+                        }
                         $mesesAdeudados[] = [
                             'mes' => $mesVerificar,
                             'ano' => $anoVerificar,
