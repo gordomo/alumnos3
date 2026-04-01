@@ -121,17 +121,20 @@
                                                         {% for mes in meses %}
                                                             {% set esAdelantado = mes.esAdelantado is defined ? mes.esAdelantado : false %}
                                                             {% set estaPagado = mes.estaPagado is defined ? mes.estaPagado : false %}
+                                                            {% set enMora = mes.enMora is defined ? mes.enMora : false %}
                                                             {% set fechaActual = date() %}
-                                                            {% set mesActual = fechaActual|date('n')|number_format %}
-                                                            {% set anoActual = fechaActual|date('Y')|number_format %}
+                                                            {% set mesActual = fechaActual|date('n') + 0 %}
+                                                            {% set anoActual = fechaActual|date('Y') + 0 %}
                                                             {% set esMesFuturo = (mes.ano > anoActual) or (mes.ano == anoActual and mes.mes > mesActual) %}
+                                                            {% set esMesActual = (mes.ano == anoActual and mes.mes == mesActual) %}
                                                             <div class="col-md-3 mb-2">
                                                                 <div class="mes-adeudado-checkbox-container position-relative" 
-                                                                     style="background-color: {% if estaPagado %}#d4edda{% elseif esAdelantado %}#e7f3ff{% else %}#f8f9fa{% endif %}; border: 2px solid {% if estaPagado %}#28a745{% elseif esAdelantado %}#0d6efd{% else %}#dee2e6{% endif %}; border-radius: 8px; padding: 1rem; cursor: {% if estaPagado %}default{% else %}pointer{% endif %}; transition: all 0.2s ease; user-select: none; opacity: {% if estaPagado %}0.7{% else %}1{% endif %};"
+                                                                     style="background-color: {% if estaPagado %}#d4edda{% elseif enMora %}#fff0f0{% elseif esMesActual and not esAdelantado %}#f0fff0{% elseif esAdelantado %}#e7f3ff{% else %}#f8f9fa{% endif %}; border: 2px solid {% if estaPagado %}#28a745{% elseif enMora %}#dc3545{% elseif esMesActual and not esAdelantado %}#28a745{% elseif esAdelantado %}#0d6efd{% else %}#dee2e6{% endif %}; border-radius: 8px; padding: 1rem; cursor: {% if estaPagado %}default{% else %}pointer{% endif %}; transition: all 0.2s ease; user-select: none; opacity: {% if estaPagado %}0.7{% else %}1{% endif %};"
                                                                      data-mes-checkbox-id="mes_{{ mes.mes }}_{{ mes.ano }}_{{ mes.curso_obj.id }}"
                                                                      data-es-adelantado="{{ esAdelantado ? 'true' : 'false' }}"
                                                                      data-es-mes-futuro="{{ esMesFuturo ? 'true' : 'false' }}"
-                                                                     data-esta-pagado="{{ estaPagado ? 'true' : 'false' }}">
+                                                                     data-esta-pagado="{{ estaPagado ? 'true' : 'false' }}"
+                                                                     data-en-mora="{{ enMora ? 'true' : 'false' }}">
                                                                     <input type="checkbox" 
                                                                            class="mes-adeudado-checkbox position-absolute" 
                                                                            style="opacity: 0; position: absolute; pointer-events: none;"
@@ -153,6 +156,10 @@
                                                                                 {{ mes.nombre }}
                                                                                 {% if estaPagado %}
                                                                                     <span class="badge bg-success ms-1" style="font-size: 0.7rem;">PAGADA</span>
+                                                                                {% elseif enMora %}
+                                                                                    <span class="badge bg-danger ms-1" style="font-size: 0.7rem;">Vencido</span>
+                                                                                {% elseif esMesActual and not esAdelantado %}
+                                                                                    <span class="badge bg-success ms-1" style="font-size: 0.7rem;">Corriente</span>
                                                                                 {% elseif esAdelantado %}
                                                                                     <span class="badge bg-info ms-1" style="font-size: 0.7rem;">Adelantado</span>
                                                                                 {% endif %}

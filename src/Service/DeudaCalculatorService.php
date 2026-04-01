@@ -257,55 +257,12 @@ class DeudaCalculatorService
     }
 
     /**
-     * Sincroniza las deudas calculadas con la tabla deuda_alumno
-     * Crea o actualiza registros en la tabla para que el sistema de pagos funcione
-     * 
-     * @return array Array de entidades DeudaAlumno sincronizadas
+     * @deprecated No usar: el sistema ahora es 100% on-demand. Las deudas en tabla
+     * se crean solo al momento de registrar un pago (ver PagoService).
      */
     public function sincronizarDeudasConTabla(Alumno $alumno): array
     {
-        $deudasCalculadas = $this->calcularDeudasAlumno($alumno);
-        $deudasEntidades = [];
-        
-        foreach ($deudasCalculadas as $deudaCalc) {
-            // Buscar si ya existe una deuda en la tabla para este mes/año/curso
-            $deudaExistente = $this->entityManager->getRepository(\App\Entity\DeudaAlumno::class)
-                ->findOneBy([
-                    'alumno' => $alumno,
-                    'curso' => $deudaCalc['curso'],
-                    'mes' => $deudaCalc['mes'],
-                    'ano' => $deudaCalc['ano']
-                ]);
-            
-            if ($deudaExistente) {
-                // Actualizar monto e interés si cambió
-                if ($deudaExistente->getMonto() != $deudaCalc['monto']) {
-                    $deudaExistente->setMonto($deudaCalc['monto']);
-                }
-                if ($deudaExistente->getInteres() != $deudaCalc['interes']) {
-                    $deudaExistente->setInteres($deudaCalc['interes']);
-                }
-                $deudasEntidades[] = $deudaExistente;
-            } else {
-                // Crear nueva deuda en la tabla
-                $nuevaDeuda = new \App\Entity\DeudaAlumno();
-                $nuevaDeuda->setAlumno($alumno);
-                $nuevaDeuda->setCurso($deudaCalc['curso']);
-                $nuevaDeuda->setCursoHistorico($deudaCalc['cursoHistorico']);
-                $nuevaDeuda->setMes($deudaCalc['mes']);
-                $nuevaDeuda->setAno($deudaCalc['ano']);
-                $nuevaDeuda->setMonto($deudaCalc['monto']);
-                $nuevaDeuda->setInteres($deudaCalc['interes']);
-                $nuevaDeuda->setInstituto($deudaCalc['instituto']);
-                
-                $this->entityManager->persist($nuevaDeuda);
-                $deudasEntidades[] = $nuevaDeuda;
-            }
-        }
-        
-        $this->entityManager->flush();
-        
-        return $deudasEntidades;
+        return [];
     }
 
 

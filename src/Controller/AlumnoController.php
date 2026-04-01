@@ -882,6 +882,22 @@ class AlumnoController extends AbstractController
         $mesActualInstituto = (int) $fechaActualInstituto->format('n');
         $anoActualInstituto = (int) $fechaActualInstituto->format('Y');
 
+        // Agregar cursos activos que no tengan deudas pendientes
+        foreach ($alumno->getCursosHistoricos() as $historico) {
+            if (!$historico->isActivo()) {
+                continue;
+            }
+            $cursoId = $historico->getCurso()->getId();
+            if (!isset($deudasPorCurso[$cursoId])) {
+                $deudasPorCurso[$cursoId] = [
+                    'curso' => $historico->getCurso(),
+                    'historico' => $historico,
+                    'deudas' => [],
+                    'cursoActivo' => true
+                ];
+            }
+        }
+
         $primerDiaVencimiento = 5;
         $vencimientos = $instituto->getVencimientos();
         if (count($vencimientos) > 0) {

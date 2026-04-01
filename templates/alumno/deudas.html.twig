@@ -55,7 +55,7 @@
                                                     {% endif %}
                                                 </small>
                                             {% elseif modo == 'proximo_mes' %}
-                                                <span class="badge bg-warning text-dark">Desde el mes siguiente a la inscripción</span>
+                                                <span class="badge bg-success text-white">Desde el mes siguiente a la inscripción</span>
                                                 <br><small class="text-muted">Primera deuda: {{ historico.fechaAlta|date_modify('+1 month')|mes_es }}</small>
                                             {% else %}
                                                 <span class="badge bg-info">Desde el mes de inscripción</span>
@@ -103,7 +103,12 @@
                                 <div class="accordion-item">
                                     <h2 class="accordion-header" id="heading{{ cursoId }}">
                                         <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ cursoId }}" aria-expanded="true" aria-controls="collapse{{ cursoId }}">
-                                            <strong>{{ datos.curso.nombre }}</strong> - {{ datos.deudas|length }} deudas pendientes
+                                            <strong>{{ datos.curso.nombre }}</strong> - 
+                                            {% if datos.deudas|length > 0 %}
+                                                {{ datos.deudas|length }} deudas pendientes
+                                            {% else %}
+                                                <span class="text-success">Al día</span>
+                                            {% endif %}
                                             {% if not datos.cursoActivo|default(true) %}
                                                 <span class="badge bg-secondary ms-2">Curso inactivo</span>
                                             {% endif %}
@@ -111,6 +116,11 @@
                                     </h2>
                                     <div id="collapse{{ cursoId }}" class="accordion-collapse collapse show" aria-labelledby="heading{{ cursoId }}" data-bs-parent="#accordionDeudas">
                                         <div class="accordion-body">
+                                            {% if datos.deudas|length == 0 %}
+                                                <div class="alert alert-success mb-0">
+                                                    <i class="bi bi-check-circle-fill"></i> El alumno está al día con este curso. No tiene deudas pendientes.
+                                                </div>
+                                            {% else %}
                                             <div class="d-flex justify-content-between align-items-center mb-3">
                                                 <div>
                                                     {% if not datos.cursoActivo|default(true) %}
@@ -191,6 +201,7 @@
                                                     {% endfor %}
                                                 </tbody>
                                             </table>
+                                            {% endif %}
                                         </div>
                                     </div>
                                 </div>

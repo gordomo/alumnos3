@@ -244,14 +244,16 @@ class PagoService
             }
         }
 
-        // Crear la deuda
+        // Crear la deuda con precio del histórico (no del curso actual)
+        $precioMensual = $historico->getPrecioMensual() ?? $curso->getPrecio();
+
         $deuda = new DeudaAlumno();
         $deuda->setAlumno($alumno);
         $deuda->setCurso($curso);
         $deuda->setCursoHistorico($historico);
         $deuda->setMes($mes);
         $deuda->setAno($ano);
-        $deuda->setMonto($curso->getPrecio());
+        $deuda->setMonto($precioMensual);
         $deuda->setInstituto($alumno->getInstituto());
 
         $this->entityManager->persist($deuda);
