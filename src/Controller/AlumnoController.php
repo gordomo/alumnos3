@@ -908,6 +908,17 @@ class AlumnoController extends AbstractController
             $primerDiaVencimiento = (int) $vencimientosArray[0]->getDiaVencimiento();
         }
 
+        // Filtrar deudas futuras: solo mostrar deudas vencidas y del mes actual
+        foreach ($deudasPorCurso as $cursoId => &$datos) {
+            $datos['deudas'] = array_values(array_filter($datos['deudas'], function($deuda) use ($mesActualInstituto, $anoActualInstituto) {
+                $mes = (int) $deuda['mes'];
+                $ano = (int) $deuda['ano'];
+                // Mantener solo deudas del mes actual o anteriores
+                return $ano < $anoActualInstituto || ($ano === $anoActualInstituto && $mes <= $mesActualInstituto);
+            }));
+        }
+        unset($datos);
+
         return $this->render('alumno/deudas.html.twig', [
             'alumno' => $alumno,
             'deudasPorCurso' => $deudasPorCurso,
