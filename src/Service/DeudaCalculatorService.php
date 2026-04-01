@@ -125,6 +125,20 @@ class DeudaCalculatorService
             $mes = (int)$fechaIteracion->format('n');
             $ano = (int)$fechaIteracion->format('Y');
             
+            // Verificar si ya existe un pago registrado para este mes/año/curso
+            $pagoExistente = $this->entityManager->getRepository(\App\Entity\AlumnosPagos::class)->findOneBy([
+                'alumno' => $alumno,
+                'curso' => $curso,
+                'mes' => $mes,
+                'ano' => $ano,
+            ]);
+            
+            if ($pagoExistente) {
+                // Ya hay un pago para este mes, no generar deuda on-demand
+                $fechaIteracion->modify('first day of next month');
+                continue;
+            }
+            
             // Calcular cuánto se ha pagado para este mes/año/curso
             $montoPagado = $this->calcularMontoPagadoParaMes($alumno, $curso, $mes, $ano);
             
