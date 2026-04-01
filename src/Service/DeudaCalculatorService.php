@@ -6,7 +6,6 @@ use App\Entity\Alumno;
 use App\Entity\AlumnoCursoHistorico;
 use App\Entity\AlumnosPagos;
 use App\Entity\Instituto;
-use App\Entity\PagoAplicacion;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
@@ -125,40 +124,23 @@ class DeudaCalculatorService
             $mes = (int)$fechaIteracion->format('n');
             $ano = (int)$fechaIteracion->format('Y');
             
-            // Verificar si ya existe un pago registrado para este mes/año/curso
-            $pagoExistente = $this->entityManager->getRepository(\App\Entity\AlumnosPagos::class)->findOneBy([
-                'alumno' => $alumno,
-                'curso' => $curso,
-                'mes' => $mes,
-                'ano' => $ano,
-            ]);
+            // Si existe algún pago para este mes/año/curso, la cuota se considera pagada
+            $tienePago = $this->existePagoParaMes($alumno, $curso, $mes, $ano);
             
-            if ($pagoExistente) {
-                // Ya hay un pago para este mes, no generar deuda on-demand
-                $fechaIteracion->modify('first day of next month');
-                continue;
-            }
-            
-            // Calcular cuánto se ha pagado para este mes/año/curso
-            $montoPagado = $this->calcularMontoPagadoParaMes($alumno, $curso, $mes, $ano);
-            
-            // Solo crear deuda si hay saldo pendiente
-            $saldoPendiente = $precioMensual - $montoPagado;
-            
-            if ($saldoPendiente > 0.01) { // Tolerancia para errores de redondeo
+            if (!$tienePago) {
                 // Calcular interés basado en vencimientos
                 $interes = $this->calcularInteres($instituto, $precioMensual, $mes, $ano, $fechaActual);
                 
                 $deudas[] = [
-                    'id' => null, // No hay ID porque es calculado on-demand
+                    'id' => null,
                     'alumno' => $alumno,
                     'curso' => $curso,
                     'cursoHistorico' => $historico,
                     'mes' => $mes,
                     'ano' => $ano,
-                    'monto' => $saldoPendiente,
+                    'monto' => $precioMensual,
                     'interes' => $interes,
-                    'montoPagado' => $montoPagado,
+                    'montoPagado' => 0,
                     'fechaCreacion' => $fechaIteracion,
                     'instituto' => $instituto,
                 ];
@@ -174,26 +156,25 @@ class DeudaCalculatorService
     /**
      * Calcula cuánto se ha pagado para un mes/año/curso específico
      */
-    private function calcularMontoPagadoParaMes(Alumno $alumno, $curso, int $mes, int $ano): float
+    /**
+     * Verifica si existe algún pago registrado para un mes/año/curso específico
+     */
+    private function existePagoParaMes(Alumno $alumno, $curso, int $mes, int $ano): bool
     {
         $qb = $this->entityManager->createQueryBuilder();
         
-        // Buscar todas las aplicaciones de pago para este alumno/curso/mes/año
-        // PagoAplicacion -> DeudaAlumno -> Curso
-        $qb->select('COALESCE(SUM(pa.montoAplicado), 0)')
-           ->from(PagoAplicacion::class, 'pa')
-           ->join('pa.pago', 'p')
-           ->join('pa.deuda', 'd')
+        $qb->select('COUNT(p.id)')
+           ->from(\App\Entity\AlumnosPagos::class, 'p')
            ->where('p.alumno = :alumno')
-           ->andWhere('d.curso = :curso')
-           ->andWhere('d.mes = :mes')
-           ->andWhere('d.ano = :ano')
+           ->andWhere('p.curso = :curso')
+           ->andWhere('p.mes = :mes')
+           ->andWhere('p.ano = :ano')
            ->setParameter('alumno', $alumno)
            ->setParameter('curso', $curso)
            ->setParameter('mes', $mes)
            ->setParameter('ano', $ano);
         
-        return (float)$qb->getQuery()->getSingleScalarResult();
+        return (int)$qb->getQuery()->getSingleScalarResult() > 0;
     }
 
     /**

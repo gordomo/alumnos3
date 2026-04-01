@@ -186,14 +186,12 @@
                                                                 {% endif %}
                                                             </td>
                                                             <td>
-                                                                {% if deuda.deudaEntity is defined and deuda.deudaEntity %}
-                                                                    <form method="post" action="{{ path('app_alumno_cancelar_deuda', {'id': alumno.id, 'deudaId': deuda.deudaEntity.id}) }}" onsubmit="return confirm('¿Está seguro de que desea perdonar/cancelar esta deuda?');" style="display: inline;">
-                                                                        <input type="hidden" name="_token" value="{{ csrf_token('cancelar-deuda' ~ deuda.deudaEntity.id) }}">
-                                                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Perdonar/Cancelar deuda">
-                                                                            <i class="bi bi-x-circle"></i>
-                                                                        </button>
-                                                                    </form>
-                                                                {% endif %}
+                                                                <form method="post" action="{{ path('app_alumno_cancelar_deuda', {'id': alumno.id, 'cursoId': deuda.curso.id, 'mes': deuda.mes, 'ano': deuda.ano}) }}" onsubmit="return confirm('¿Está seguro de que desea perdonar/cancelar esta deuda?');" style="display: inline;">
+                                                                    <input type="hidden" name="_token" value="{{ csrf_token('cancelar-deuda' ~ deuda.curso.id ~ '-' ~ deuda.mes ~ '-' ~ deuda.ano) }}">
+                                                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Perdonar/Cancelar deuda">
+                                                                        <i class="bi bi-x-circle"></i>
+                                                                    </button>
+                                                                </form>
                                                             </td>
                                                         </tr>
                                                     {% endfor %}

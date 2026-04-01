@@ -776,19 +776,37 @@ class AlumnosPagosController extends AbstractController
         // (o hasta 12 meses adelante si el curso no tiene fecha fin definida)
         // Esto asegura que se muestren todos los meses, incluso los intermedios que no tienen deuda pendiente
 
-        // Obtener meses ya completamente pagados para excluirlos del listado
+        // Obtener meses ya pagados consultando directamente AlumnosPagos (on-demand)
         $qbPagados = $this->entityManager->createQueryBuilder();
-        $qbPagados->select('IDENTITY(d.curso) AS cursoId, d.mes, d.ano, d.monto AS montoDeuda, COALESCE(SUM(pa.montoAplicado), 0) AS totalPagado')
-            ->from(\App\Entity\DeudaAlumno::class, 'd')
-            ->leftJoin('d.aplicaciones', 'pa')
-            ->where('d.alumno = :alumno')
+        $qbPagados->select('IDENTITY(p.curso) AS cursoId, p.mes, p.ano, SUM(p.monto) AS totalPagado')
+            ->from(\App\Entity\AlumnosPagos::class, 'p')
+            ->where('p.alumno = :alumno')
             ->setParameter('alumno', $alumno)
-            ->groupBy('d.id');
+            ->groupBy('p.curso, p.mes, p.ano');
         $pagosData = $qbPagados->getQuery()->getResult();
-        $mesesPagados = [];
+        
+        // Construir mapa de pagos por curso/mes/año y mapa de precios mensuales por curso
+        $mapaPagosPorCurso = [];
         foreach ($pagosData as $row) {
-            if ((float)$row['totalPagado'] >= (float)$row['montoDeuda'] - 0.01) {
-                $key = $row['cursoId'] . '_' . $row['mes'] . '_' . $row['ano'];
+            $key = $row['cursoId'] . '_' . $row['mes'] . '_' . $row['ano'];
+            $mapaPagosPorCurso[$key] = (float) $row['totalPagado'];
+        }
+        
+        // Construir mapa de precios mensuales por curso activo
+        $preciosPorCurso = [];
+        foreach ($alumno->getCursosHistoricos() as $hist) {
+            if ($hist->isActivo()) {
+                $preciosPorCurso[$hist->getCurso()->getId()] = (float) ($hist->getPrecioMensual() ?? $hist->getCurso()->getPrecio());
+            }
+        }
+        
+        $mesesPagados = [];
+        foreach ($mapaPagosPorCurso as $key => $totalPagado) {
+            // Extraer cursoId del key
+            $parts = explode('_', $key);
+            $cId = (int) $parts[0];
+            $precio = $preciosPorCurso[$cId] ?? 0;
+            if ($precio > 0 && $totalPagado >= $precio - 0.01) {
                 $mesesPagados[$key] = true;
             }
         }

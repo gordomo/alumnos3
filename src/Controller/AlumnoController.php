@@ -795,18 +795,6 @@ class AlumnoController extends AbstractController
         // Calcular deudas on-demand desde el historial (cursos activos)
         $deudasCalculadas = $deudaCalculator->calcularDeudasAlumno($alumno);
         
-        // Obtener todas las entidades DeudaAlumno para poder cancelarlas
-        $todasLasDeudas = $this->entityManager->getRepository(\App\Entity\DeudaAlumno::class)->findBy([
-            'alumno' => $alumno
-        ]);
-        
-        // Crear un mapa de deudas por curso/mes/año para acceso rápido
-        $mapaDeudas = [];
-        foreach ($todasLasDeudas as $deudaEntity) {
-            $key = $deudaEntity->getCurso()->getId() . '_' . $deudaEntity->getMes() . '_' . $deudaEntity->getAno();
-            $mapaDeudas[$key] = $deudaEntity;
-        }
-        
         // Agrupar las deudas por curso
         $deudasPorCurso = [];
         foreach ($deudasCalculadas as $deuda) {
@@ -820,61 +808,7 @@ class AlumnoController extends AbstractController
                 ];
             }
             
-            // Buscar la entidad DeudaAlumno correspondiente
-            $key = $cursoId . '_' . $deuda['mes'] . '_' . $deuda['ano'];
-            $deudaEntity = $mapaDeudas[$key] ?? null;
-            $deuda['deudaEntity'] = $deudaEntity;
-            
             $deudasPorCurso[$cursoId]['deudas'][] = $deuda;
-        }
-        
-        // Agregar deudas pendientes de la tabla deuda_alumno que no estén ya en el listado.
-        // Incluye deudas futuras y deudas de cursos inactivos para permitir su gestión/cancelación.
-        $deudasHuerfanas = $this->entityManager->getRepository(\App\Entity\DeudaAlumno::class)->findBy([
-            'alumno' => $alumno
-        ]);
-        
-        // Filtrar solo las que tienen saldo pendiente
-        $deudasHuerfanas = array_filter($deudasHuerfanas, function($deuda) {
-            return $deuda->getMontoPendiente() > 0;
-        });
-        
-        foreach ($deudasHuerfanas as $deudaEntity) {
-            $cursoId = $deudaEntity->getCurso()->getId();
-
-            // Si el curso no existe aún en el agrupado, crearlo.
-            if (!isset($deudasPorCurso[$cursoId])) {
-                $deudasPorCurso[$cursoId] = [
-                    'curso' => $deudaEntity->getCurso(),
-                    'historico' => $deudaEntity->getCursoHistorico(),
-                    'deudas' => [],
-                    'cursoActivo' => false
-                ];
-            }
-
-            // Evitar duplicados (mismo curso/mes/año) entre deudas calculadas y de tabla.
-            $yaExiste = false;
-            foreach ($deudasPorCurso[$cursoId]['deudas'] as $deudaExistente) {
-                if ((int) $deudaExistente['mes'] === (int) $deudaEntity->getMes()
-                    && (int) $deudaExistente['ano'] === (int) $deudaEntity->getAno()) {
-                    $yaExiste = true;
-                    break;
-                }
-            }
-
-            if ($yaExiste) {
-                continue;
-            }
-
-            $deudasPorCurso[$cursoId]['deudas'][] = [
-                'mes' => $deudaEntity->getMes(),
-                'ano' => $deudaEntity->getAno(),
-                'monto' => $deudaEntity->getMonto(),
-                'interes' => $deudaEntity->getInteres() ?? 0,
-                'curso' => $deudaEntity->getCurso(),
-                'cursoHistorico' => $deudaEntity->getCursoHistorico(),
-                'deudaEntity' => $deudaEntity
-            ];
         }
         
         $fechaActualInstituto = $this->institutoTimezoneService->getNowForInstituto($instituto);
@@ -931,15 +865,16 @@ class AlumnoController extends AbstractController
     }
 
     /**
-     * @Route("/{id}/cancelar-deuda/{deudaId}", name="app_alumno_cancelar_deuda", methods={"POST"})
+     * @Route("/{id}/cancelar-deuda/{cursoId}/{mes}/{ano}", name="app_alumno_cancelar_deuda", methods={"POST"})
      */
-    public function cancelarDeuda(Alumno $alumno, int $deudaId, Request $request): Response
+    public function cancelarDeuda(Alumno $alumno, int $cursoId, int $mes, int $ano, Request $request): Response
     {
         // Capturar return_url si existe
         $returnUrl = $request->query->get('return_url');
         
         // Verificar token CSRF
-        if (!$this->isCsrfTokenValid('cancelar-deuda'.$deudaId, $request->request->get('_token'))) {
+        $tokenId = 'cancelar-deuda' . $cursoId . '-' . $mes . '-' . $ano;
+        if (!$this->isCsrfTokenValid($tokenId, $request->request->get('_token'))) {
             $this->addFlash('danger', 'Token CSRF inválido.');
             return $this->redirectToRoute('app_alumno_deudas', [
                 'id' => $alumno->getId(),
@@ -954,21 +889,10 @@ class AlumnoController extends AbstractController
             return $this->redirectToRoute('app_alumno_index');
         }
         
-        // Obtener la deuda
-        $deuda = $this->entityManager->getRepository('App\Entity\DeudaAlumno')->find($deudaId);
-        
-        // Verificar que la deuda existe y pertenece al alumno
-        if (!$deuda || $deuda->getAlumno() !== $alumno) {
-            $this->addFlash('danger', 'La deuda no existe o no pertenece a este alumno.');
-            return $this->redirectToRoute('app_alumno_deudas', [
-                'id' => $alumno->getId(),
-                'return_url' => $returnUrl
-            ]);
-        }
-        
-        // Verificar que la deuda no está pagada
-        if ($deuda->isPagado()) {
-            $this->addFlash('danger', 'Esta deuda ya está pagada.');
+        // Obtener el curso
+        $curso = $this->entityManager->getRepository('App\Entity\Curso')->find($cursoId);
+        if (!$curso || $curso->getInstituto() !== $instituto) {
+            $this->addFlash('danger', 'El curso no existe o no pertenece a este instituto.');
             return $this->redirectToRoute('app_alumno_deudas', [
                 'id' => $alumno->getId(),
                 'return_url' => $returnUrl
@@ -976,16 +900,72 @@ class AlumnoController extends AbstractController
         }
         
         try {
-            // Eliminar la deuda
-            $this->entityManager->remove($deuda);
+            // Obtener el precio mensual del historial activo para este curso
+            $precioMensual = 0;
+            foreach ($alumno->getCursosHistoricos() as $historico) {
+                if ($historico->getCurso()->getId() === $cursoId && $historico->isActivo()) {
+                    $precioMensual = (float) ($historico->getPrecioMensual() ?? $curso->getPrecio());
+                    break;
+                }
+            }
+            
+            if ($precioMensual <= 0) {
+                $precioMensual = (float) $curso->getPrecio();
+            }
+            
+            // Calcular cuánto ya se pagó para este mes
+            $pagosExistentes = $this->entityManager->createQueryBuilder()
+                ->select('COALESCE(SUM(p.monto), 0)')
+                ->from(\App\Entity\AlumnosPagos::class, 'p')
+                ->where('p.alumno = :alumno')
+                ->andWhere('p.curso = :curso')
+                ->andWhere('p.mes = :mes')
+                ->andWhere('p.ano = :ano')
+                ->setParameter('alumno', $alumno)
+                ->setParameter('curso', $curso)
+                ->setParameter('mes', $mes)
+                ->setParameter('ano', $ano)
+                ->getQuery()
+                ->getSingleScalarResult();
+            
+            $saldoPendiente = $precioMensual - (float) $pagosExistentes;
+            
+            if ($saldoPendiente <= 0.01) {
+                $this->addFlash('info', 'Esta deuda ya está pagada.');
+                return $this->redirectToRoute('app_alumno_deudas', [
+                    'id' => $alumno->getId(),
+                    'return_url' => $returnUrl
+                ]);
+            }
+            
+            // Registrar un pago de condonación por el saldo pendiente
+            $pago = new \App\Entity\AlumnosPagos();
+            $pago->setAlumno($alumno);
+            $pago->setCurso($curso);
+            $pago->setMes($mes);
+            $pago->setAno($ano);
+            $pago->setMonto($saldoPendiente);
+            $pago->setMetodoPago('condonacion');
+            $pago->setFecha($this->institutoTimezoneService->getCurrentDateForInstituto($instituto));
+            $pago->setObservacion('Deuda condonada/cancelada manualmente');
+            
+            // Asociar historial del curso
+            foreach ($alumno->getCursosHistoricos() as $historico) {
+                if ($historico->getCurso()->getId() === $cursoId) {
+                    $pago->setCursoHistorico($historico);
+                    break;
+                }
+            }
+            
+            $this->entityManager->persist($pago);
             $this->entityManager->flush();
             
             $this->addFlash('success', sprintf(
-                'Se ha cancelado la deuda de %s para el curso %s, periodo %s %s.', 
+                'Se ha condonado la deuda de %s para el curso %s, periodo %s %s.', 
                 $alumno->getNombreApellido(),
-                $deuda->getCurso()->getNombre(),
-                $this->getNombreMes($deuda->getMes()),
-                $deuda->getAno()
+                $curso->getNombre(),
+                $this->getNombreMes($mes),
+                $ano
             ));
         } catch (\Exception $e) {
             $this->addFlash('danger', 'Ocurrió un error al cancelar la deuda: ' . $e->getMessage());
