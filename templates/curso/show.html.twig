@@ -62,7 +62,12 @@
                             <tr>
                                 <th>Estado</th>
                                 <td>
-                                    {% if curso.disabled %}
+                                    {% if curso.cerrado %}
+                                        <span class="badge bg-dark">Cerrado</span>
+                                        {% if curso.fechaCierre %}
+                                            <small class="text-muted ms-1">({{ curso.fechaCierre|date(app_date_format|default('d/m/Y')) }})</small>
+                                        {% endif %}
+                                    {% elseif curso.disabled %}
                                         <span class="badge bg-danger">Deshabilitado</span>
                                     {% else %}
                                         <span class="badge bg-success">Activo</span>
@@ -171,6 +176,11 @@
                 {% else %}
                     <a href="{{ path('app_curso_habilitar', {'id': curso.id}) }}" class="btn btn-success">
                         <i class="bi bi-check-circle"></i> Habilitar
+                    </a>
+                {% endif %}
+                {% if not curso.cerrado and not curso.disabled %}
+                    <a href="{{ path('app_curso_cerrar_preview', {'id': curso.id}) }}" class="btn btn-warning">
+                        <i class="bi bi-lock"></i> Cerrar Curso
                     </a>
                 {% endif %}
             </div>

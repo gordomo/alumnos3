@@ -104,6 +104,19 @@ class InstitutoConfiguracion
      */
     private $dateFormat;
 
+    /**
+     * Porcentaje mínimo de asistencia requerido para aprobar un curso.
+     * Si es null, no se verifica asistencia al finalizar el curso.
+     *
+     * @ORM\Column(type="decimal", precision=5, scale=2, nullable=true)
+     * @Assert\Range(
+     *      min = 0,
+     *      max = 100,
+     *      notInRangeMessage = "El porcentaje debe estar entre {{ min }} y {{ max }}"
+     * )
+     */
+    private $porcentajeAsistenciaAprobacion;
+
     public function __construct()
     {
         $this->vencimientos = new ArrayCollection();
@@ -291,6 +304,17 @@ class InstitutoConfiguracion
     public function setDateFormat(?string $dateFormat): self
     {
         $this->dateFormat = $dateFormat;
+        return $this;
+    }
+
+    public function getPorcentajeAsistenciaAprobacion(): ?float
+    {
+        return $this->porcentajeAsistenciaAprobacion;
+    }
+
+    public function setPorcentajeAsistenciaAprobacion(?float $porcentajeAsistenciaAprobacion): self
+    {
+        $this->porcentajeAsistenciaAprobacion = $porcentajeAsistenciaAprobacion;
         return $this;
     }
 } 

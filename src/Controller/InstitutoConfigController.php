@@ -102,6 +102,12 @@ class InstitutoConfigController extends AbstractController
             $dateFormat = $request->request->get('date_format');
             $configuracion->setDateFormat($dateFormat !== '' ? $dateFormat : null);
 
+            // Porcentaje mínimo de asistencia para aprobación
+            $porcentajeAsistencia = $request->request->get('porcentaje_asistencia_aprobacion');
+            $configuracion->setPorcentajeAsistenciaAprobacion(
+                $porcentajeAsistencia !== '' && $porcentajeAsistencia !== null ? (float) $porcentajeAsistencia : null
+            );
+
             // Manejo del logo
             if ($request->files->has('logo')) {
                 $logoFile = $request->files->get('logo');

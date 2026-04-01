@@ -47,6 +47,17 @@ class AlumnoCursoHistorico
     private $activo = true;
 
     /**
+     * Motivo de baja del curso:
+     * - 'baja_administrativa': el instituto quitó al alumno del curso
+     * - 'finalizado': el alumno completó el curso satisfactoriamente
+     * - 'no_finalizado': el alumno no cumplió los requisitos de aprobación
+     * - null: aún activo
+     * 
+     * @ORM\Column(type="string", length=30, nullable=true)
+     */
+    private $motivoBaja;
+
+    /**
      * @ORM\OneToMany(targetEntity=AlumnosPagos::class, mappedBy="cursoHistorico")
      */
     private $pagos;
@@ -266,4 +277,36 @@ class AlumnoCursoHistorico
         $this->modoGeneracionDeuda = $modoGeneracionDeuda;
         return $this;
     }
-} 
+
+    public function getMotivoBaja(): ?string
+    {
+        return $this->motivoBaja;
+    }
+
+    public function setMotivoBaja(?string $motivoBaja): self
+    {
+        $this->motivoBaja = $motivoBaja;
+        return $this;
+    }
+
+    /**
+     * Devuelve una etiqueta legible para el estado del historial
+     */
+    public function getEstadoLabel(): string
+    {
+        if ($this->activo) {
+            return 'Cursando';
+        }
+
+        switch ($this->motivoBaja) {
+            case 'baja_administrativa':
+                return 'Baja administrativa';
+            case 'finalizado':
+                return 'Finalizado';
+            case 'no_finalizado':
+                return 'No finalizado';
+            default:
+                return 'Inactivo';
+        }
+    }
+}

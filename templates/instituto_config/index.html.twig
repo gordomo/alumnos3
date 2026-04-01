@@ -282,6 +282,31 @@
                                 </div>
                                     </div>
                                 </div>
+
+                                <!-- Configuración Académica -->
+                                <div class="card config-section-card mt-4">
+                                    <div class="card-header config-section-header config-section-header--general">
+                                        <h4 class="card-title config-section-title mb-0">
+                                            <i class="bi bi-mortarboard"></i> Configuración Académica
+                                        </h4>
+                                    </div>
+                                    <div class="card-body">
+                                        <table class="table table-borderless config-data-table">
+                                            <tr>
+                                                <th width="40%">% mínimo de asistencia para aprobar:</th>
+                                                <td>
+                                                    {% if configuracion.porcentajeAsistenciaAprobacion is not null %}
+                                                        <span class="badge bg-primary">{{ configuracion.porcentajeAsistenciaAprobacion }}%</span>
+                                                        <small class="text-muted d-block">Al finalizar un curso, se verificará que el alumno cumpla este porcentaje de asistencia</small>
+                                                    {% else %}
+                                                        <span class="badge bg-secondary">No configurado</span>
+                                                        <small class="text-muted d-block">No se verifica asistencia al finalizar un curso. Todos los alumnos se marcan como "Finalizado".</small>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
                             </div>
 
                             <!-- Pestaña: Pagos y Vencimientos -->

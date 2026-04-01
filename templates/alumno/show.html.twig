@@ -255,9 +255,15 @@
                                     </td>
                                     <td>
                                         {% if historico.activo %}
-                                            <span class="badge bg-success">Activo</span>
+                                            <span class="badge bg-success">Cursando</span>
+                                        {% elseif historico.motivoBaja == 'baja_administrativa' %}
+                                            <span class="badge bg-warning text-dark">Baja administrativa</span>
+                                        {% elseif historico.motivoBaja == 'finalizado' %}
+                                            <span class="badge bg-primary">Finalizado</span>
+                                        {% elseif historico.motivoBaja == 'no_finalizado' %}
+                                            <span class="badge bg-danger">No finalizado</span>
                                         {% else %}
-                                            <span class="badge bg-secondary">Finalizado</span>
+                                            <span class="badge bg-secondary">Inactivo</span>
                                         {% endif %}
                                     </td>
                                 </tr>

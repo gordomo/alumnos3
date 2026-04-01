@@ -444,6 +444,7 @@ class AlumnoController extends AbstractController
                             if ($historico) {
                                 $historico->setActivo(false);
                                 $historico->setFechaBaja(clone $fechaActualInstituto);
+                                $historico->setMotivoBaja('baja_administrativa');
                             }
                             
                             // Cancelar deudas pendientes (mes actual y futuras)
@@ -705,6 +706,7 @@ class AlumnoController extends AbstractController
                 if ($historico) {
                     $historico->setActivo(false);
                     $historico->setFechaBaja(clone $fechaActualInstituto);
+                    $historico->setMotivoBaja('baja_administrativa');
                 }
                 
                 // Cancelar deudas pendientes (mes actual y futuras)

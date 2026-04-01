@@ -373,6 +373,7 @@
                                 {{ include('components/action_buttons.html.twig', {
                                     'show_url': path('app_curso_show', {'id': curso.id}),
                                     'edit_url': path('app_curso_edit', {'id': curso.id}),
+                                    'app_curso_cerrar_preview': path('app_curso_cerrar_preview', {'id': curso.id}),
                                     'custom_buttons': [
                                         {
                                             'url': path('app_curso_duplicar', {'id': curso.id}),
