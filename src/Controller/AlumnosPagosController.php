@@ -466,7 +466,7 @@ class AlumnosPagosController extends AbstractController
      */
     private function tieneDeudasVencidasOnDemand(Alumno $alumno, \DateTimeInterface $fechaActual): bool
     {
-        if (!$alumno->isActivo()) {
+        if (!$alumno->getActivo()) {
             return false;
         }
 
