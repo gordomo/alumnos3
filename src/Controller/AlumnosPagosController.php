@@ -792,23 +792,12 @@ class AlumnosPagosController extends AbstractController
             $mapaPagosPorCurso[$key] = (float) $row['totalPagado'];
         }
         
-        // Construir mapa de precios mensuales por curso activo
-        $preciosPorCurso = [];
-        foreach ($alumno->getCursosHistoricos() as $hist) {
-            if ($hist->isActivo()) {
-                $preciosPorCurso[$hist->getCurso()->getId()] = (float) ($hist->getPrecioMensual() ?? $hist->getCurso()->getPrecio());
-            }
-        }
-        
+        // Un mes se considera pagado si existe cualquier pago registrado,
+        // independientemente del monto (descuentos pueden hacer que totalPagado < precio del curso).
+        // Consistente con DeudaCalculatorService::existePagoParaMes().
         $mesesPagados = [];
         foreach ($mapaPagosPorCurso as $key => $totalPagado) {
-            // Extraer cursoId del key
-            $parts = explode('_', $key);
-            $cId = (int) $parts[0];
-            $precio = $preciosPorCurso[$cId] ?? 0;
-            if ($precio > 0 && $totalPagado >= $precio - 0.01) {
-                $mesesPagados[$key] = true;
-            }
+            $mesesPagados[$key] = true;
         }
 
         // Obtener cursos activos del alumno para generar meses futuros
