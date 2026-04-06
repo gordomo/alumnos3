@@ -78,10 +78,8 @@ class HistorialCursosService
             return $historico;
         }
         
-        // Generar deudas usando DeudaService (centralizado)
-        if ($this->deudaService) {
-            $this->deudaService->generarDeudasParaHistorico($historico, $comenzarDeudaProximoMes);
-        }
+        // Las deudas se calculan on-demand (DeudaCalculatorService) y se crean en tabla
+        // solo al momento de registrar un pago (PagoService). No es necesario pre-generarlas.
         
         return $historico;
     }
