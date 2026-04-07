@@ -22,7 +22,6 @@ use App\Repository\CursoRepository;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use App\Service\HistorialCursosService;
 use Knp\Component\Pager\PaginatorInterface;
-use App\Service\DeudaService;
 use App\Service\NotificationService;
 use App\Service\TokenService;
 use App\Service\PagoService;
@@ -34,7 +33,6 @@ class AlumnosPagosController extends AbstractController
 {
     private $entityManager;
     private $historialCursosService;
-    private $deudaService;
     private $notificationService;
     private $tokenService;
     private $pagoService;
@@ -44,7 +42,6 @@ class AlumnosPagosController extends AbstractController
     public function __construct(
         EntityManagerInterface $entityManager,
         HistorialCursosService $historialCursosService,
-        DeudaService $deudaService,
         NotificationService $notificationService,
         TokenService $tokenService,
         PagoService $pagoService,
@@ -54,7 +51,6 @@ class AlumnosPagosController extends AbstractController
         $this->entityManager = $entityManager;
         $this->deudaCalculator = $deudaCalculator;
         $this->historialCursosService = $historialCursosService;
-        $this->deudaService = $deudaService;
         $this->notificationService = $notificationService;
         $this->tokenService = $tokenService;
         $this->pagoService = $pagoService;
@@ -983,6 +979,36 @@ class AlumnosPagosController extends AbstractController
             return $fechaA <=> $fechaB;
         });
         
+        // Determinar qué cursos tienen todas las cuotas pagadas (hasta el mes actual)
+        // Un curso tiene "pago completo" si no tiene meses pendientes (no adelantados) sin pagar
+        $cursosPagoCompleto = [];
+        foreach ($cursosHistoricos as $historico) {
+            if (!$historico->isActivo()) {
+                continue;
+            }
+            $cursoId = $historico->getCurso()->getId();
+            $tieneMesPendiente = false;
+            foreach ($mesesAdeudados as $mesData) {
+                if ($mesData['curso_obj']->getId() === $cursoId
+                    && ($mesData['esPendiente'] ?? false)
+                    && !($mesData['estaPagado'] ?? false)) {
+                    $tieneMesPendiente = true;
+                    break;
+                }
+            }
+            // Verificar que al menos un mes haya sido pagado para este curso
+            $tieneAlgunPago = false;
+            foreach ($mesesPagados as $key => $val) {
+                if (str_starts_with($key, $cursoId . '_')) {
+                    $tieneAlgunPago = true;
+                    break;
+                }
+            }
+            if (!$tieneMesPendiente && $tieneAlgunPago) {
+                $cursosPagoCompleto[$cursoId] = true;
+            }
+        }
+
         // Obtener el curso seleccionado si existe
         $cursoSeleccionado = null;
         if ($request->query->has('curso')) {
@@ -1566,7 +1592,8 @@ class AlumnosPagosController extends AbstractController
             'calculoMonto' => $calculoMonto,
             'ordenCalculo' => $ordenCalculo,
             'fechaActualInstituto' => $this->institutoTimezoneService->getNowForInstituto($instituto)->format('Y-m-d'),
-            'puedeRecibirDescuentos' => isset($calculoMonto) ? $calculoMonto['puedeRecibirDescuentos'] : true
+            'puedeRecibirDescuentos' => isset($calculoMonto) ? $calculoMonto['puedeRecibirDescuentos'] : true,
+            'cursosPagoCompleto' => $cursosPagoCompleto ?? [],
         ]);
     }
 
@@ -2069,7 +2096,6 @@ class AlumnosPagosController extends AbstractController
     public function registrarPagoPorDeuda(
         Request $request, 
         \App\Entity\DeudaAlumno $deuda, 
-        \App\Service\DeudaService $deudaService,
         ValidatorInterface $validator
     ): Response {
         // Verificar que la deuda tenga monto pendiente

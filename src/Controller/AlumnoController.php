@@ -14,9 +14,9 @@ use Symfony\Component\Routing\Annotation\Route;
 use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use App\Service\HistorialCursosService;
+use App\Service\DeudaService;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Repository\AsistenciaAlumnosRepository;
-use App\Service\DeudaService;
 use App\Service\InstitutoTimezoneService;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use App\Entity\User;
@@ -30,7 +30,6 @@ class AlumnoController extends AbstractController
 {
     private EntityManagerInterface $entityManager;
     private HistorialCursosService $historialCursosService;
-    private DeudaService $deudaService;
     private InstitutoTimezoneService $institutoTimezoneService;
     private UserPasswordHasherInterface $passwordHasher;
     private \App\Service\DeudaCalculatorService $deudaCalculator;
@@ -38,14 +37,12 @@ class AlumnoController extends AbstractController
     public function __construct(
         EntityManagerInterface $entityManager,
         HistorialCursosService $historialCursosService,
-        DeudaService $deudaService,
         InstitutoTimezoneService $institutoTimezoneService,
         UserPasswordHasherInterface $passwordHasher,
         \App\Service\DeudaCalculatorService $deudaCalculator
     ) {
         $this->entityManager = $entityManager;
         $this->historialCursosService = $historialCursosService;
-        $this->deudaService = $deudaService;
         $this->institutoTimezoneService = $institutoTimezoneService;
         $this->passwordHasher = $passwordHasher;
         $this->deudaCalculator = $deudaCalculator;
@@ -81,24 +78,8 @@ class AlumnoController extends AbstractController
             $limit
         );
 
-        // Sincronizar deudas calculadas on-demand con la tabla para cada alumno de esta página
-        // Esto asegura que la campanita y otros indicadores funcionen correctamente
-        foreach ($alumnos as $alumno) {
-            if ($alumno->getActivo()) {
-                $this->deudaCalculator->sincronizarDeudasConTabla($alumno);
-            }
-        }
-        
-        // Refrescar entity manager para cargar las deudas sincronizadas
-        $this->entityManager->clear();
-        
-        // Recargar alumnos con las deudas sincronizadas
-        $alumnosQuery = $this->createQuery($alumnoRepository, $instituto, $sort, $order, $busqueda, $activo, $cursoSelected);
-        $alumnos = $paginator->paginate(
-            $alumnosQuery, 
-            $currentPage, 
-            $limit
-        );
+        // La campanita de deudas vencidas se calcula on-demand en el Twig extension (DeudaExtension)
+        // No es necesario sincronizar con la tabla deuda_alumno
 
         return $this->render('alumno/index.html.twig', [
             'alumnos' => $alumnos,
@@ -129,10 +110,6 @@ class AlumnoController extends AbstractController
         $qb = $alumnoRepository->createQueryBuilder('a')
             ->distinct()
             ->leftJoin('a.curso', 'c')
-            ->leftJoin('a.deudas', 'd')
-            ->addSelect('d')
-            ->leftJoin('d.aplicaciones', 'ap')
-            ->addSelect('ap')
             ->where('a.instituto = :instituto')
             ->setParameter('instituto', $instituto);
 
@@ -785,7 +762,7 @@ class AlumnoController extends AbstractController
     /**
      * @Route("/{id}/deudas", name="app_alumno_deudas", methods={"GET"})
      */
-    public function verDeudas(Alumno $alumno, CursoRepository $cursoRepository, \App\Service\DeudaCalculatorService $deudaCalculator): Response
+    public function verDeudas(Alumno $alumno, CursoRepository $cursoRepository, \App\Service\DeudaCalculatorService $deudaCalculator, \App\Repository\DeudaAlumnoRepository $deudaAlumnoRepository, \App\Repository\SaldoFavorRepository $saldoFavorRepository): Response
     {
         // Verificar que el alumno pertenece al instituto del usuario actual
         $instituto = $this->getUser()->getInstituto();
@@ -855,6 +832,21 @@ class AlumnoController extends AbstractController
         }
         unset($datos);
 
+        // Determinar qué cursos tienen todas las cuotas pagadas
+        $cursosPagoCompleto = [];
+        foreach ($alumno->getCursosHistoricos() as $historico) {
+            if (!$historico->isActivo()) {
+                continue;
+            }
+            $cursoObj = $historico->getCurso();
+            $cId = $cursoObj->getId();
+            $deudasPendientesCurso = $deudaAlumnoRepository->findDeudaByAlumnoAndCurso($alumno, $cursoObj);
+            $totalDeudasCurso = $deudaAlumnoRepository->findBy(['alumno' => $alumno, 'curso' => $cursoObj]);
+            if (empty($deudasPendientesCurso) && !empty($totalDeudasCurso)) {
+                $cursosPagoCompleto[$cId] = true;
+            }
+        }
+
         return $this->render('alumno/deudas.html.twig', [
             'alumno' => $alumno,
             'deudasPorCurso' => $deudasPorCurso,
@@ -863,6 +855,8 @@ class AlumnoController extends AbstractController
             'mesActualInstituto' => $mesActualInstituto,
             'anoActualInstituto' => $anoActualInstituto,
             'primerDiaVencimiento' => $primerDiaVencimiento,
+            'cursosPagoCompleto' => $cursosPagoCompleto,
+            'saldoFavorTotal' => $saldoFavorRepository->getSaldoDisponibleTotal($alumno),
         ]);
     }
 
@@ -982,7 +976,7 @@ class AlumnoController extends AbstractController
     /**
      * @Route("/{id}/cancelar-deudas-curso/{cursoId}", name="app_alumno_cancelar_deudas_curso", methods={"POST"})
      */
-    public function cancelarDeudasCurso(Alumno $alumno, int $cursoId, Request $request): Response
+    public function cancelarDeudasCurso(Alumno $alumno, int $cursoId, Request $request, DeudaService $deudaService): Response
     {
         // Capturar return_url si existe
         $returnUrl = $request->query->get('return_url');
@@ -1018,7 +1012,7 @@ class AlumnoController extends AbstractController
         try {
             // Cancelar todas las deudas pendientes del alumno para este curso
             $soloFuturas = $request->request->get('solo_futuras', false);
-            $deudasCanceladas = $this->deudaService->cancelarDeudasPendientesAlumnoCurso($alumno, $curso, $soloFuturas);
+            $deudasCanceladas = $deudaService->cancelarDeudasPendientesAlumnoCurso($alumno, $curso, $soloFuturas);
             
             if ($deudasCanceladas > 0) {
                 $this->addFlash('success', sprintf(

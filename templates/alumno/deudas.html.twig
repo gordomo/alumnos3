@@ -26,6 +26,25 @@
                         <div class="alert alert-info">
                             <p><i class="bi bi-info-circle"></i> Las deudas se calculan automáticamente basándose en los cursos activos del alumno y los pagos realizados. Para cancelar una deuda, registre un pago que la cubra completamente.</p>
                         </div>
+
+                        {% if saldoFavorTotal is defined and saldoFavorTotal > 0 %}
+                            <div class="alert alert-success d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="bi bi-wallet2" style="font-size: 1.3rem;"></i>
+                                    <strong>Saldo a favor disponible: ${{ saldoFavorTotal|number_format(2, ',', '.') }}</strong>
+                                    <br><small class="text-muted">Este saldo puede ser aplicado a deudas pendientes.</small>
+                                </div>
+                                <a href="{{ path('app_saldo_favor_index', {'id': alumno.id}) }}" class="btn btn-success btn-sm">
+                                    <i class="bi bi-arrow-right-circle"></i> Gestionar Saldos a Favor
+                                </a>
+                            </div>
+                        {% else %}
+                            <div class="d-flex justify-content-end mb-2">
+                                <a href="{{ path('app_saldo_favor_index', {'id': alumno.id}) }}" class="btn btn-outline-secondary btn-sm">
+                                    <i class="bi bi-wallet2"></i> Saldos a Favor
+                                </a>
+                            </div>
+                        {% endif %}
                         
                         <div class="alert alert-secondary">
                             <h5><i class="bi bi-book"></i> Cursos del alumno</h5>
@@ -104,7 +123,9 @@
                                     <h2 class="accordion-header" id="heading{{ cursoId }}">
                                         <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ cursoId }}" aria-expanded="true" aria-controls="collapse{{ cursoId }}">
                                             <strong>{{ datos.curso.nombre }}</strong> - 
-                                            {% if datos.deudas|length > 0 %}
+                                            {% if cursosPagoCompleto[cursoId] is defined and cursosPagoCompleto[cursoId] %}
+                                                <span class="badge bg-success ms-2"><i class="bi bi-check-circle-fill"></i> Curso pagado completo</span>
+                                            {% elseif datos.deudas|length > 0 %}
                                                 {{ datos.deudas|length }} deudas pendientes
                                             {% else %}
                                                 <span class="text-success">Al día</span>
@@ -118,7 +139,12 @@
                                         <div class="accordion-body">
                                             {% if datos.deudas|length == 0 %}
                                                 <div class="alert alert-success mb-0">
-                                                    <i class="bi bi-check-circle-fill"></i> El alumno está al día con este curso. No tiene deudas pendientes.
+                                                    <i class="bi bi-check-circle-fill"></i>
+                                                    {% if cursosPagoCompleto[cursoId] is defined and cursosPagoCompleto[cursoId] %}
+                                                        <strong>Curso pagado completo.</strong> El alumno tiene todas las cuotas de este curso pagadas.
+                                                    {% else %}
+                                                        El alumno está al día con este curso. No tiene deudas pendientes.
+                                                    {% endif %}
                                                 </div>
                                             {% else %}
                                             <div class="d-flex justify-content-between align-items-center mb-3">

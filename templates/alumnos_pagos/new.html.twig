@@ -50,6 +50,25 @@
                         </h4>
                     </div>
                     <div class="card-body">
+                        {# Cursos con pago completo #}
+                        {% if cursosPagoCompleto is defined and cursosPagoCompleto|length > 0 %}
+                            <div class="mb-4" style="border-left: 4px solid #28a745; background-color: #d4edda; padding: 1rem; border-radius: 4px;">
+                                <h5 class="mb-2 text-dark">
+                                    <i class="bi bi-check-circle-fill" style="color: #28a745;"></i> Cursos Pagados Completo
+                                </h5>
+                                {% for cursoObj in cursos %}
+                                    {% if cursosPagoCompleto[cursoObj.id] is defined and cursosPagoCompleto[cursoObj.id] %}
+                                        <div class="d-flex align-items-center mb-1">
+                                            <span class="badge bg-success me-2" style="font-size: 0.85rem;">
+                                                <i class="bi bi-check-circle-fill"></i> {{ cursoObj.nombre }}
+                                            </span>
+                                            <small class="text-muted">Todas las cuotas de este curso están pagadas</small>
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+
                         {# Selector de curso si hay múltiples cursos #}
                         {% set cursosUnicos = [] %}
                         {% set cursosIdsVistos = [] %}
@@ -113,6 +132,11 @@
                                                 <div class="card-body">
                                                     <h6 class="card-title text-dark mb-3">
                                                         <strong>{{ curso }}</strong>
+                                                        {% if cursosPagoCompleto[cursoId] is defined and cursosPagoCompleto[cursoId] %}
+                                                            <span class="badge bg-success ms-2">
+                                                                <i class="bi bi-check-circle-fill"></i> Curso pagado completo
+                                                            </span>
+                                                        {% endif %}
                                                         <button type="button" class="btn btn-sm btn-outline-primary ms-2 seleccionar-todos-btn" data-curso="{{ curso }}">
                                                             Seleccionar todos
                                                         </button>
@@ -213,10 +237,15 @@
                             <div class="row">
                                 {% for cursoObj in cursosUnicosArray %}
                                     <div class="col-md-{% if cursosUnicosArray|length > 1 %}6{% else %}12{% endif %} mb-3">
-                                        <div class="card border-0" style="background-color: #f8f9fa; border-left: 3px solid #0d6efd !important;">
+                                        <div class="card border-0" style="background-color: {% if cursosPagoCompleto[cursoObj.id] is defined and cursosPagoCompleto[cursoObj.id] %}#d4edda{% else %}#f8f9fa{% endif %}; border-left: 3px solid {% if cursosPagoCompleto[cursoObj.id] is defined and cursosPagoCompleto[cursoObj.id] %}#28a745{% else %}#0d6efd{% endif %} !important;">
                                             <div class="card-body">
                                                 <h6 class="card-title text-dark mb-2">
                                                     <strong>{{ cursoObj.nombre }}</strong>
+                                                    {% if cursosPagoCompleto[cursoObj.id] is defined and cursosPagoCompleto[cursoObj.id] %}
+                                                        <span class="badge bg-success ms-2">
+                                                            <i class="bi bi-check-circle-fill"></i> Curso pagado completo
+                                                        </span>
+                                                    {% endif %}
                                                 </h6>
                                                 <p class="mb-1 text-muted small">
                                                     <strong>Precio base:</strong> <span class="text-dark">${{ cursoObj.precio | number_format(2, ',', '.')}}</span>

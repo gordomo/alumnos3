@@ -108,6 +108,9 @@ class InstitutoConfigController extends AbstractController
                 $porcentajeAsistencia !== '' && $porcentajeAsistencia !== null ? (float) $porcentajeAsistencia : null
             );
 
+            // Pago total del curso requerido para aprobar
+            $configuracion->setRequierePagoTotalParaAprobar($request->request->has('requiere_pago_total_para_aprobar'));
+
             // Manejo del logo
             if ($request->files->has('logo')) {
                 $logoFile = $request->files->get('logo');

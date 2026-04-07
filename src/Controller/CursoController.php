@@ -1027,7 +1027,8 @@ class CursoController extends AbstractController
     public function previewCierreCurso(
         Curso $curso,
         \App\Repository\AlumnoCursoHistoricoRepository $historicoRepository,
-        \App\Repository\AsistenciaAlumnosRepository $asistenciaRepository
+        \App\Repository\AsistenciaAlumnosRepository $asistenciaRepository,
+        \App\Repository\DeudaAlumnoRepository $deudaAlumnoRepository
     ): Response {
         $instituto = $this->getUser()->getInstituto();
         if ($curso->getInstituto() !== $instituto) {
@@ -1042,6 +1043,7 @@ class CursoController extends AbstractController
 
         $config = $instituto->getConfiguracion();
         $porcentajeRequerido = $config ? $config->getPorcentajeAsistenciaAprobacion() : null;
+        $requierePagoTotal = $config ? $config->getRequierePagoTotalParaAprobar() : false;
 
         // Get all historicos for this course (active ones = enrolled students)
         $historicos = $historicoRepository->findByCurso($curso);
@@ -1080,11 +1082,21 @@ class CursoController extends AbstractController
                 ? round(($datos['presentes'] / $datos['total']) * 100, 1)
                 : 0;
 
+            // Check payment status for this student in this course
+            $tienePagoCompleto = true;
+            if ($requierePagoTotal) {
+                $deudasCurso = $deudaAlumnoRepository->findDeudaByAlumnoAndCurso($alumno, $curso);
+                $tienePagoCompleto = empty($deudasCurso);
+            }
+
             // Determine predicted status
-            if ($porcentajeRequerido !== null && $porcentaje >= $porcentajeRequerido) {
-                $estadoPrediccion = 'finalizado';
-            } elseif ($porcentajeRequerido !== null) {
+            $fallaAsistencia = ($porcentajeRequerido !== null && $porcentaje < $porcentajeRequerido);
+            $fallaPago = ($requierePagoTotal && !$tienePagoCompleto);
+
+            if ($fallaAsistencia || $fallaPago) {
                 $estadoPrediccion = 'no_finalizado';
+            } elseif ($porcentajeRequerido !== null || $requierePagoTotal) {
+                $estadoPrediccion = 'finalizado';
             } else {
                 // No configured threshold: all finalized
                 $estadoPrediccion = 'finalizado';
@@ -1097,6 +1109,7 @@ class CursoController extends AbstractController
                 'clasesPresentes' => $datos['presentes'],
                 'porcentajeAsistencia' => $porcentaje,
                 'estadoPrediccion' => $estadoPrediccion,
+                'tienePagoCompleto' => $tienePagoCompleto,
             ];
         }
 
@@ -1104,6 +1117,7 @@ class CursoController extends AbstractController
             'curso' => $curso,
             'preview' => $preview,
             'porcentajeRequerido' => $porcentajeRequerido,
+            'requierePagoTotal' => $requierePagoTotal,
         ]);
     }
 
@@ -1115,6 +1129,7 @@ class CursoController extends AbstractController
         Curso $curso,
         \App\Repository\AlumnoCursoHistoricoRepository $historicoRepository,
         \App\Repository\AsistenciaAlumnosRepository $asistenciaRepository,
+        \App\Repository\DeudaAlumnoRepository $deudaAlumnoRepository,
         EntityManagerInterface $entityManager
     ): Response {
         $instituto = $this->getUser()->getInstituto();
@@ -1135,6 +1150,7 @@ class CursoController extends AbstractController
 
         $config = $instituto->getConfiguracion();
         $porcentajeRequerido = $config ? $config->getPorcentajeAsistenciaAprobacion() : null;
+        $requierePagoTotal = $config ? $config->getRequierePagoTotalParaAprobar() : false;
 
         $historicos = $historicoRepository->findByCurso($curso);
 
@@ -1163,18 +1179,29 @@ class CursoController extends AbstractController
                 continue;
             }
 
-            $alumnoId = $historico->getAlumno()->getId();
+            $alumno = $historico->getAlumno();
+            $alumnoId = $alumno->getId();
             $datos = $asistenciaPorAlumno[$alumnoId] ?? ['total' => 0, 'presentes' => 0];
             $porcentaje = $datos['total'] > 0
                 ? round(($datos['presentes'] / $datos['total']) * 100, 1)
                 : 0;
 
-            if ($porcentajeRequerido !== null && $porcentaje >= $porcentajeRequerido) {
-                $historico->setMotivoBaja('finalizado');
-                $finalizados++;
-            } elseif ($porcentajeRequerido !== null) {
+            // Check payment status
+            $tienePagoCompleto = true;
+            if ($requierePagoTotal) {
+                $deudasCurso = $deudaAlumnoRepository->findDeudaByAlumnoAndCurso($alumno, $curso);
+                $tienePagoCompleto = empty($deudasCurso);
+            }
+
+            $fallaAsistencia = ($porcentajeRequerido !== null && $porcentaje < $porcentajeRequerido);
+            $fallaPago = ($requierePagoTotal && !$tienePagoCompleto);
+
+            if ($fallaAsistencia || $fallaPago) {
                 $historico->setMotivoBaja('no_finalizado');
                 $noFinalizados++;
+            } elseif ($porcentajeRequerido !== null || $requierePagoTotal) {
+                $historico->setMotivoBaja('finalizado');
+                $finalizados++;
             } else {
                 $historico->setMotivoBaja('finalizado');
                 $finalizados++;

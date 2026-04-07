@@ -304,6 +304,18 @@
                                                     {% endif %}
                                                 </td>
                                             </tr>
+                                            <tr>
+                                                <th>Pago total del curso requerido para aprobar:</th>
+                                                <td>
+                                                    {% if configuracion.requierePagoTotalParaAprobar %}
+                                                        <span class="badge bg-success"><i class="bi bi-check-circle"></i> Activado</span>
+                                                        <small class="text-muted d-block">El alumno debe tener todas las cuotas del curso pagadas para aprobar</small>
+                                                    {% else %}
+                                                        <span class="badge bg-secondary">Desactivado</span>
+                                                        <small class="text-muted d-block">No se verifica el pago de cuotas al finalizar un curso</small>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
                                         </table>
                                     </div>
                                 </div>

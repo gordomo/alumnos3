@@ -1,0 +1,79 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Nueva Nota de Crédito - {{ alumno.nombre }} {{ alumno.apellido }}{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ path('app_alumno_index') }}">Alumnos</a></li>
+                    <li class="breadcrumb-item"><a href="{{ path('app_alumno_show', {'id': alumno.id}) }}">{{ alumno.nombre }} {{ alumno.apellido }}</a></li>
+                    <li class="breadcrumb-item"><a href="{{ path('app_saldo_favor_index', {'id': alumno.id}) }}">Saldos a Favor</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Nueva Nota de Crédito</li>
+                </ol>
+            </nav>
+
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0"><i class="bi bi-plus-circle"></i> Nueva Nota de Crédito</h4>
+                    <a href="{{ path('app_saldo_favor_index', {'id': alumno.id}) }}" class="btn btn-light">
+                        <i class="bi bi-arrow-left"></i> Volver
+                    </a>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{{ path('app_saldo_favor_new', {'id': alumno.id}) }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('saldo-favor-new') }}">
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="tipo" class="form-label">Tipo <span class="text-danger">*</span></label>
+                                <select name="tipo" id="tipo" class="form-select" required>
+                                    <option value="nota_credito" selected>Nota de Crédito</option>
+                                    <option value="sobrepago">Sobrepago</option>
+                                    <option value="cancelacion_deuda">Cancelación de Deuda</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="monto" class="form-label">Monto <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" name="monto" id="monto" class="form-control" min="0.01" step="0.01" required placeholder="0.00">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="curso_id" class="form-label">Curso relacionado <small class="text-muted">(opcional)</small></label>
+                            <select name="curso_id" id="curso_id" class="form-select">
+                                <option value="">— Sin curso específico —</option>
+                                {% for curso in cursosActivos %}
+                                    <option value="{{ curso.id }}">{{ curso.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="descripcion" class="form-label">Descripción / Motivo</label>
+                            <textarea name="descripcion" id="descripcion" class="form-control" rows="3" placeholder="Detalle el motivo de la nota de crédito..."></textarea>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> 
+                            El saldo a favor quedará disponible para ser aplicado manualmente a deudas pendientes del alumno.
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{{ path('app_saldo_favor_index', {'id': alumno.id}) }}" class="btn btn-outline-secondary">Cancelar</a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-plus-circle"></i> Crear Nota de Crédito
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

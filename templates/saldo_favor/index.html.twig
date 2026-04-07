@@ -1,0 +1,128 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Saldos a Favor - {{ alumno.nombre }} {{ alumno.apellido }}{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ path('app_alumno_index') }}">Alumnos</a></li>
+                    <li class="breadcrumb-item"><a href="{{ path('app_alumno_show', {'id': alumno.id}) }}">{{ alumno.nombre }} {{ alumno.apellido }}</a></li>
+                    <li class="breadcrumb-item"><a href="{{ path('app_alumno_deudas', {'id': alumno.id}) }}">Gestión de Deudas</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Saldos a Favor</li>
+                </ol>
+            </nav>
+
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0"><i class="bi bi-wallet2"></i> Saldos a Favor - {{ alumno.nombre }} {{ alumno.apellido }}</h4>
+                    <div>
+                        <a href="{{ path('app_saldo_favor_new', {'id': alumno.id}) }}" class="btn btn-success me-2">
+                            <i class="bi bi-plus-circle"></i> Nueva Nota de Crédito
+                        </a>
+                        <a href="{{ path('app_alumno_deudas', {'id': alumno.id}) }}" class="btn btn-light">
+                            <i class="bi bi-arrow-left"></i> Volver a Deudas
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if saldoTotal > 0 %}
+                        <div class="alert alert-success d-flex align-items-center" role="alert">
+                            <i class="bi bi-wallet2 me-2" style="font-size: 1.5rem;"></i>
+                            <div>
+                                <strong>Saldo disponible total: ${{ saldoTotal|number_format(2, ',', '.') }}</strong>
+                                <br><small class="text-muted">Este saldo puede ser aplicado manualmente a deudas pendientes del alumno.</small>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info" role="alert">
+                            <i class="bi bi-info-circle"></i> El alumno no tiene saldo a favor disponible. Puede crear una nota de crédito manualmente.
+                        </div>
+                    {% endif %}
+
+                    {% if saldos|length > 0 %}
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Tipo</th>
+                                        <th>Curso</th>
+                                        <th>Descripción</th>
+                                        <th class="text-end">Monto Original</th>
+                                        <th class="text-end">Disponible</th>
+                                        <th>Estado</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for saldo in saldos %}
+                                        <tr>
+                                            <td>{{ saldo.fecha|date('d/m/Y H:i') }}</td>
+                                            <td>
+                                                {% if saldo.tipo == 'nota_credito' %}
+                                                    <span class="badge bg-primary">Nota de Crédito</span>
+                                                {% elseif saldo.tipo == 'sobrepago' %}
+                                                    <span class="badge bg-info">Sobrepago</span>
+                                                {% elseif saldo.tipo == 'cancelacion_deuda' %}
+                                                    <span class="badge bg-warning text-dark">Cancelación</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ saldo.curso ? saldo.curso.nombre : '—' }}</td>
+                                            <td>{{ saldo.descripcion|default('—') }}</td>
+                                            <td class="text-end">${{ saldo.monto|number_format(2, ',', '.') }}</td>
+                                            <td class="text-end">
+                                                {% if saldo.montoDisponible > 0 %}
+                                                    <strong class="text-success">${{ saldo.montoDisponible|number_format(2, ',', '.') }}</strong>
+                                                {% else %}
+                                                    <span class="text-muted">$0,00</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if saldo.montoDisponible > 0 %}
+                                                    <span class="badge bg-success">Disponible</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">Agotado</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if saldo.montoDisponible > 0 %}
+                                                    <a href="{{ path('app_saldo_favor_aplicar', {'id': saldo.id}) }}" class="btn btn-sm btn-outline-success" title="Aplicar a deuda">
+                                                        <i class="bi bi-arrow-right-circle"></i> Aplicar
+                                                    </a>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% if saldo.aplicaciones|length > 0 %}
+                                            <tr>
+                                                <td colspan="8" class="p-0">
+                                                    <div class="px-4 py-2 bg-light">
+                                                        <small class="text-muted"><strong>Aplicaciones realizadas:</strong></small>
+                                                        <ul class="mb-0 small">
+                                                            {% for app in saldo.aplicaciones %}
+                                                                <li>
+                                                                    {{ app.fechaAplicacion|date('d/m/Y') }} — 
+                                                                    ${{ app.montoAplicado|number_format(2, ',', '.') }} aplicado a 
+                                                                    {{ app.deuda.periodo }} ({{ app.deuda.curso.nombre }})
+                                                                </li>
+                                                            {% endfor %}
+                                                        </ul>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        {% endif %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted mt-3">No hay registros de saldos a favor para este alumno.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

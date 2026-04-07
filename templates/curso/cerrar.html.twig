@@ -24,6 +24,10 @@
                     No se configuró un porcentaje de asistencia mínimo. Todos los alumnos serán marcados como <span class="badge bg-primary">Finalizado</span>.
                     <br><small>Podés configurar el porcentaje en <strong>Configuración del Instituto → Configuración Académica</strong>.</small>
                 {% endif %}
+                {% if requierePagoTotal %}
+                    <br><i class="bi bi-cash-stack"></i> Se requiere el <strong>pago total del curso</strong> para aprobar.
+                    Los alumnos con cuotas pendientes serán marcados como <span class="badge bg-danger">No finalizado</span>.
+                {% endif %}
             </div>
 
             {% if preview|length > 0 %}
@@ -35,6 +39,9 @@
                                 <th class="text-center">Clases Totales</th>
                                 <th class="text-center">Presentes</th>
                                 <th class="text-center">% Asistencia</th>
+                                {% if requierePagoTotal %}
+                                    <th class="text-center">Pago Completo</th>
+                                {% endif %}
                                 <th class="text-center">Estado Resultante</th>
                             </tr>
                         </thead>
@@ -53,6 +60,15 @@
                                             <span class="text-muted">Sin datos</span>
                                         {% endif %}
                                     </td>
+                                    {% if requierePagoTotal %}
+                                        <td class="text-center">
+                                            {% if item.tienePagoCompleto %}
+                                                <span class="badge bg-success"><i class="bi bi-check-circle"></i> Sí</span>
+                                            {% else %}
+                                                <span class="badge bg-danger"><i class="bi bi-x-circle"></i> No</span>
+                                            {% endif %}
+                                        </td>
+                                    {% endif %}
                                     <td class="text-center">
                                         {% if item.estadoPrediccion == 'finalizado' %}
                                             <span class="badge bg-primary">Finalizado</span>

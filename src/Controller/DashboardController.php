@@ -14,23 +14,19 @@ use Symfony\Component\Routing\Annotation\Route;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\Alumno;
 use App\Service\HistorialCursosService;
-use App\Service\DeudaService;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[IsGranted('ROLE_ADMIN_INSTITUTO')]
 class DashboardController extends AbstractController
 {
     private $historialCursosService;
-    private $deudaService;
     private $deudaCalculator;
 
     public function __construct(
         HistorialCursosService $historialCursosService,
-        DeudaService $deudaService,
         \App\Service\DeudaCalculatorService $deudaCalculator
     ) {
         $this->historialCursosService = $historialCursosService;
-        $this->deudaService = $deudaService;
         $this->deudaCalculator = $deudaCalculator;
     }
 

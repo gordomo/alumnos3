@@ -117,6 +117,13 @@ class InstitutoConfiguracion
      */
     private $porcentajeAsistenciaAprobacion;
 
+    /**
+     * Si es true, el alumno debe tener todas las cuotas del curso pagadas para aprobar.
+     *
+     * @ORM\Column(type="boolean", options={"default": false})
+     */
+    private $requierePagoTotalParaAprobar = false;
+
     public function __construct()
     {
         $this->vencimientos = new ArrayCollection();
@@ -315,6 +322,17 @@ class InstitutoConfiguracion
     public function setPorcentajeAsistenciaAprobacion(?float $porcentajeAsistenciaAprobacion): self
     {
         $this->porcentajeAsistenciaAprobacion = $porcentajeAsistenciaAprobacion;
+        return $this;
+    }
+
+    public function getRequierePagoTotalParaAprobar(): bool
+    {
+        return $this->requierePagoTotalParaAprobar;
+    }
+
+    public function setRequierePagoTotalParaAprobar(bool $requierePagoTotalParaAprobar): self
+    {
+        $this->requierePagoTotalParaAprobar = $requierePagoTotalParaAprobar;
         return $this;
     }
 } 
