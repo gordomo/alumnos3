@@ -196,10 +196,15 @@ class AsistenciaAlumnosController extends AbstractController
         }
 
         // Obtener la fecha actual si no se proporciona una
+        $instituto = $curso->getInstituto();
         if (!$fecha) {
-            $fecha = new \DateTime();
+            $fecha = $this->institutoTimezoneService->getCurrentDateForInstituto($instituto);
         } else {
-            $fecha = new \DateTime($fecha);
+            $dateFormat = $this->institutoTimezoneService->getDateFormatForInstituto($instituto);
+            $fecha = $this->institutoTimezoneService->parseDateString($fecha, $dateFormat);
+            if (!$fecha) {
+                $fecha = $this->institutoTimezoneService->getCurrentDateForInstituto($instituto);
+            }
         }
 
         // Eliminar asistencias existentes para este curso y fecha
@@ -246,7 +251,9 @@ class AsistenciaAlumnosController extends AbstractController
      */
     private function validarFechaCurso($curso, string $fecha): array
     {
-        $fechaObj = new \DateTime($fecha);
+        $instituto = $curso->getInstituto();
+        $timezone = new \DateTimeZone($this->institutoTimezoneService->getTimezoneForInstituto($instituto));
+        $fechaObj = new \DateTime($fecha, $timezone);
         
         // Verificar si el curso tiene configuración de fechas
         if (!$curso->getFechaInicio() || !$curso->getFechaFin()) {

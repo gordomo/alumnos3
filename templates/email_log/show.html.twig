@@ -76,7 +76,7 @@
                 <i class="bi bi-calendar3"></i> Fecha y Hora de Envío:
             </div>
             <div class="detail-value">
-                {{ email.fechaEnvio|date('d/m/Y H:i:s') }}
+                {{ email.fechaEnvio|date(app_date_format|default('d/m/Y') ~ ' H:i:s', app_timezone|default('UTC')) }}
             </div>
         </div>
 

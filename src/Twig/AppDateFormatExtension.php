@@ -22,15 +22,19 @@ class AppDateFormatExtension extends AbstractExtension implements GlobalsInterfa
     public function getGlobals(): array
     {
         $format = 'd/m/Y';
+        $timezone = date_default_timezone_get();
+        
         $user = $this->security?->getUser();
         if ($user !== null && method_exists($user, 'getInstituto')) {
             $instituto = $user->getInstituto();
             if ($instituto !== null) {
                 $format = $this->institutoTimezoneService->getDateFormatForInstituto($instituto);
+                $timezone = $this->institutoTimezoneService->getTimezoneForInstituto($instituto);
             }
         }
         return [
             'app_date_format' => $format,
+            'app_timezone' => $timezone,
         ];
     }
 }

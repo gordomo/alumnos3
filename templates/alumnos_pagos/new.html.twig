@@ -50,11 +50,11 @@
                         </h4>
                     </div>
                     <div class="card-body">
-                        {# Cursos con pago completo #}
+                        {# Cursos al día (sin deudas pendientes) #}
                         {% if cursosPagoCompleto is defined and cursosPagoCompleto|length > 0 %}
                             <div class="mb-4" style="border-left: 4px solid #28a745; background-color: #d4edda; padding: 1rem; border-radius: 4px;">
                                 <h5 class="mb-2 text-dark">
-                                    <i class="bi bi-check-circle-fill" style="color: #28a745;"></i> Cursos Pagados Completo
+                                    <i class="bi bi-check-circle-fill" style="color: #28a745;"></i> Cursos al Día
                                 </h5>
                                 {% for cursoObj in cursos %}
                                     {% if cursosPagoCompleto[cursoObj.id] is defined and cursosPagoCompleto[cursoObj.id] %}
@@ -62,7 +62,7 @@
                                             <span class="badge bg-success me-2" style="font-size: 0.85rem;">
                                                 <i class="bi bi-check-circle-fill"></i> {{ cursoObj.nombre }}
                                             </span>
-                                            <small class="text-muted">Todas las cuotas de este curso están pagadas</small>
+                                            <small class="text-muted">No tiene cuotas pendientes hasta la fecha</small>
                                         </div>
                                     {% endif %}
                                 {% endfor %}

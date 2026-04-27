@@ -180,7 +180,7 @@
                 {% for email in emails %}
                     <tr>
                         <td>
-                            <small>{{ email.fechaEnvio|date('d/m/Y H:i') }}</small>
+                            <small>{{ email.fechaEnvio|date(app_date_format|default('d/m/Y') ~ ' H:i', app_timezone|default('UTC')) }}</small>
                         </td>
                         <td>
                             <span class="badge-tipo badge-{{ email.tipo }}">

@@ -9,6 +9,7 @@ use App\Repository\EmailLogRepository;
 use App\Repository\AlumnoRepository;
 use App\Repository\DeudaAlumnoRepository;
 use App\Service\NotificationService;
+use App\Service\InstitutoTimezoneService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -117,7 +118,8 @@ class EmailLogController extends AbstractController
         EmailLogRepository $emailLogRepository,
         Request $request,
         \App\Service\DeudaCalculatorService $deudaCalculator,
-        \Doctrine\ORM\EntityManagerInterface $entityManager
+        \Doctrine\ORM\EntityManagerInterface $entityManager,
+        InstitutoTimezoneService $institutoTimezoneService
     ): Response {
         $instituto = $this->getUser()->getInstituto();
         
@@ -134,12 +136,14 @@ class EmailLogController extends AbstractController
         // Verificar si se puede enviar (no se envió en las últimas 48 horas)
         if (!$emailLogRepository->puedeEnviarRecordatorio($alumno, 48)) {
             $ultimoRecordatorio = $emailLogRepository->findUltimoRecordatorio($alumno);
-            $ahora = new \DateTime();
-            $diferencia = $ahora->diff($ultimoRecordatorio->getFechaEnvio());
+            $ahora = $institutoTimezoneService->getNowForInstituto($instituto);
+            $fechaEnvio = $ultimoRecordatorio->getFechaEnvio();
+            $diferencia = $ahora->diff($fechaEnvio);
             $horasDesdeUltimo = ($diferencia->days * 24) + $diferencia->h;
             $horasRestantes = 48 - $horasDesdeUltimo;
             
-            $this->addFlash('warning', "Debes esperar {$horasRestantes} horas más para enviar otro recordatorio a este alumno. Último envío: " . $ultimoRecordatorio->getFechaEnvio()->format('d/m/Y H:i'));
+            $dateFormat = $institutoTimezoneService->getDateFormatForInstituto($instituto);
+            $this->addFlash('warning', "Debes esperar {$horasRestantes} horas más para enviar otro recordatorio a este alumno. Último envío: " . $fechaEnvio->format($dateFormat . ' H:i'));
             return $this->redirectToRoute('app_alumno_show', ['id' => $alumno->getId()]);
         }
         

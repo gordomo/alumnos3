@@ -262,8 +262,17 @@ class AlumnoController extends AbstractController
         $fechaHoy = $institutoTimezoneService->getTodayForInstituto($instituto);
 
         // Obtener fecha del formulario o usar la fecha actual (zona horaria del instituto)
-        $fecha = $request->get('fecha', $fechaHoy);
+        $fechaStr = $request->get('fecha', $fechaHoy);
         $cursoId = $request->get('curso');
+        
+        // Parsear la fecha usando el formato y timezone del instituto
+        $dateFormat = $institutoTimezoneService->getDateFormatForInstituto($instituto);
+        $fechaObj = $institutoTimezoneService->parseDateString($fechaStr, $dateFormat);
+        if (!$fechaObj) {
+            // Si no se puede parsear, usar la fecha actual del instituto
+            $fechaObj = $institutoTimezoneService->getCurrentDateForInstituto($instituto);
+            $fechaStr = $fechaHoy;
+        }
 
         // Obtener todos los cursos del instituto
         $cursos = $cursoRepository->findByInstitutoSoloActivos($instituto);
@@ -277,7 +286,7 @@ class AlumnoController extends AbstractController
                 throw $this->createAccessDeniedException('No tiene acceso a este curso.');
             }
             
-            $asistencias = $asistenciaRepository->findByCursoAndDate($curso, new \DateTime($fecha));
+            $asistencias = $asistenciaRepository->findByCursoAndDate($curso, $fechaObj);
             
             // Obtener todos los alumnos del curso
             $alumnos = $curso->getAlumnos();
@@ -288,7 +297,7 @@ class AlumnoController extends AbstractController
                 $asistencia = $asistenciaRepository->findOneBy([
                     'alumno' => $alumno,
                     'curso' => $curso,
-                    'fecha' => new \DateTime($fecha)
+                    'fecha' => $fechaObj
                 ]);
                 
                 $asistenciasPorAlumno[] = [
@@ -300,7 +309,7 @@ class AlumnoController extends AbstractController
             
             return $this->render('asistencia_instituto/index.html.twig', [
                 'asistenciasPorAlumno' => $asistenciasPorAlumno,
-                'fecha' => $fecha,
+                'fecha' => $fechaStr,
                 'fechaHoy' => $fechaHoy,
                 'cursos' => $cursos,
                 'cursoSeleccionado' => $curso
@@ -309,7 +318,7 @@ class AlumnoController extends AbstractController
 
         // Si no se seleccionó un curso, mostrar la lista de cursos
         return $this->render('asistencia_instituto/index.html.twig', [
-            'fecha' => $fecha,
+            'fecha' => $fechaStr,
             'fechaHoy' => $fechaHoy,
             'cursos' => $cursos,
             'cursoSeleccionado' => null

@@ -46,8 +46,8 @@ class AsistenciaInstitutoController extends AbstractController
         if (!$fechaObj) {
             $fechaObj = $nowInstituto;
         }
-        $fechaSoloDia = new \DateTime($fechaObj->format('Y-m-d'));
-        $fechaSoloDia->setTime(0, 0, 0);
+        // Normalizar a solo fecha (medianoche) preservando la fecha civil
+        $fechaSoloDia = $this->institutoTimezoneService->normalizeDateOnly($fechaObj);
         $fecha = $fechaObj->format($dateFormat);
         $fechaYmd = $fechaObj->format('Y-m-d');
         $cursoId = $request->get('curso');
@@ -306,25 +306,26 @@ class AsistenciaInstitutoController extends AbstractController
             }
             
             // Calcular fechas según tipo de informe (normalizadas a 00:00:00 para consultas)
+            $timezone = new \DateTimeZone($this->institutoTimezoneService->getTimezoneForInstituto($instituto));
             switch ($tipoInforme) {
                 case 'semana':
                     $diaSemana = $fechaObj->format('N');
                     $diasAtras = $diaSemana - 1;
-                    $fechaInicio = new \DateTime($fechaObj->format('Y-m-d'));
+                    $fechaInicio = new \DateTime($fechaObj->format('Y-m-d'), $timezone);
                     $fechaInicio->modify("-$diasAtras days")->setTime(0, 0, 0);
                     $fechaFin = clone $fechaInicio;
                     $fechaFin->modify('+6 days')->setTime(23, 59, 59);
                     break;
                     
                 case 'mes':
-                    $fechaInicio = new \DateTime($fechaObj->format('Y-m-01'));
+                    $fechaInicio = new \DateTime($fechaObj->format('Y-m-01'), $timezone);
                     $fechaInicio->setTime(0, 0, 0);
-                    $fechaFin = new \DateTime($fechaObj->format('Y-m-t'));
+                    $fechaFin = new \DateTime($fechaObj->format('Y-m-t'), $timezone);
                     $fechaFin->setTime(23, 59, 59);
                     break;
                     
                 default: // 'dia'
-                    $fechaInicio = new \DateTime($fechaObj->format('Y-m-d'));
+                    $fechaInicio = new \DateTime($fechaObj->format('Y-m-d'), $timezone);
                     $fechaInicio->setTime(0, 0, 0);
                     $fechaFin = clone $fechaInicio;
             }
@@ -341,7 +342,7 @@ class AsistenciaInstitutoController extends AbstractController
             
             // Preparar estructura para mostrar el informe según el tipo
             if ($tipoInforme === 'dia') {
-                $fechaConsulta = new \DateTime($fechaObj->format('Y-m-d'));
+                $fechaConsulta = new \DateTime($fechaObj->format('Y-m-d'), $timezone);
                 $fechaConsulta->setTime(0, 0, 0);
                 foreach ($alumnos as $alumno) {
                     $asistencia = $asistenciaRepository->findOneBy([
@@ -467,7 +468,9 @@ class AsistenciaInstitutoController extends AbstractController
      */
     private function validarFechaCurso($curso, string $fecha): array
     {
-        $fechaObj = new \DateTime($fecha);
+        $instituto = $curso->getInstituto();
+        $timezone = new \DateTimeZone($this->institutoTimezoneService->getTimezoneForInstituto($instituto));
+        $fechaObj = new \DateTime($fecha, $timezone);
         
         // Verificar si el curso tiene configuración de fechas
         if (!$curso->getFechaInicio() || !$curso->getFechaFin()) {
