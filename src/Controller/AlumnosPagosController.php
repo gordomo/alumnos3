@@ -179,13 +179,23 @@ class AlumnosPagosController extends AbstractController
         }
 
         if ($fechaDesde) {
-            $qb->andWhere('p.fecha >= :fechaDesde')
-               ->setParameter('fechaDesde', new \DateTime($fechaDesde));
+            // Parsear fecha usando el formato del instituto
+            $dateFormat = $this->institutoTimezoneService->getDateFormatForInstituto($instituto);
+            $fechaDesdeParsed = $this->institutoTimezoneService->parseDateString($fechaDesde, $dateFormat);
+            if ($fechaDesdeParsed) {
+                $qb->andWhere('p.fecha >= :fechaDesde')
+                   ->setParameter('fechaDesde', $fechaDesdeParsed);
+            }
         }
 
         if ($fechaHasta) {
-            $qb->andWhere('p.fecha <= :fechaHasta')
-               ->setParameter('fechaHasta', new \DateTime($fechaHasta));
+            // Parsear fecha usando el formato del instituto
+            $dateFormat = $this->institutoTimezoneService->getDateFormatForInstituto($instituto);
+            $fechaHastaParsed = $this->institutoTimezoneService->parseDateString($fechaHasta, $dateFormat);
+            if ($fechaHastaParsed) {
+                $qb->andWhere('p.fecha <= :fechaHasta')
+                   ->setParameter('fechaHasta', $fechaHastaParsed);
+            }
         }
 
         // Aplicar ordenamiento
@@ -312,8 +322,14 @@ class AlumnosPagosController extends AbstractController
         // Filtro por período: deudas cuyo mes/año caen dentro del rango Desde-Hasta
         if ($fechaFiltroProvista && $fechaDesde && $fechaHasta) {
             try {
-                $fechaDesdeObj = new \DateTime($fechaDesde);
-                $fechaHastaObj = new \DateTime($fechaHasta);
+                $dateFormat = $this->institutoTimezoneService->getDateFormatForInstituto($instituto);
+                $fechaDesdeObj = $this->institutoTimezoneService->parseDateString($fechaDesde, $dateFormat);
+                $fechaHastaObj = $this->institutoTimezoneService->parseDateString($fechaHasta, $dateFormat);
+                
+                if (!$fechaDesdeObj || !$fechaHastaObj) {
+                    throw new \Exception('Formato de fecha inválido');
+                }
+                
                 $mesDesde = (int) $fechaDesdeObj->format('n');
                 $anoDesde = (int) $fechaDesdeObj->format('Y');
                 $mesHasta = (int) $fechaHastaObj->format('n');

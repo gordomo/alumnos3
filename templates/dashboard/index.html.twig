@@ -295,7 +295,7 @@
                     <div class="card-body">
                         <span class="metric-label"><i class="bi bi-calendar-check"></i> Cobrado Mensual</span>
                         <h2 class="metric-value">${{ montoCobradoMensual|number_format(0, ',', '.') }}</h2>
-                        <p class="metric-note">{{ 'now'|mes_es }}</p>
+                        <p class="metric-note">{{ fechaActualInstituto|mes_es }}</p>
                     </div>
                 </div>
             </div>
@@ -304,7 +304,7 @@
                     <div class="card-body">
                         <span class="metric-label"><i class="bi bi-graph-up-arrow"></i> Cobrado Anual</span>
                         <h2 class="metric-value">${{ montoCobradoAnual|number_format(0, ',', '.') }}</h2>
-                        <p class="metric-note">Año {{ 'now'|date('Y') }}</p>
+                        <p class="metric-note">Año {{ anoActual }}</p>
                     </div>
                 </div>
             </div>

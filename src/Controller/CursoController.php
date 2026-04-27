@@ -487,7 +487,9 @@ class CursoController extends AbstractController
                 $profesoresCambiados = count(array_diff($profesoresOriginales, $profesoresNuevos)) > 0 || 
                                       count(array_diff($profesoresNuevos, $profesoresOriginales)) > 0;
                 
-                $cursoComenzado = $curso->getFechaInicio() <= new \DateTime();
+                $instituto = $this->getUser()->getInstituto();
+                $fechaActual = $this->institutoTimezoneService->getCurrentDateForInstituto($instituto);
+                $cursoComenzado = $curso->getFechaInicio() <= $fechaActual;
                 
                 // Si hay cambios en los profesores y el curso ya comenzó, verificar si hay asistencias registradas
                 if ($profesoresCambiados && $cursoComenzado) {
@@ -762,7 +764,8 @@ class CursoController extends AbstractController
                 $historico = new AlumnoCursoHistorico();
                 $historico->setAlumno($alumno);
                 $historico->setCurso($curso);
-                $historico->setFechaAlta(new \DateTime());
+                $instituto = $this->getUser()->getInstituto();
+                $historico->setFechaAlta($this->institutoTimezoneService->getCurrentDateForInstituto($instituto));
                 $historico->setActivo(true);
                 
                 // Guardar snapshot del curso
@@ -810,8 +813,9 @@ class CursoController extends AbstractController
         // Deshabilitar el curso (usando el método remove que en realidad lo marca como deshabilitado)
         $cursoRepository->remove($curso);
         
-        // Calcular fecha actual para cancelar solo deudas futuras
-        $fechaActual = new \DateTime();
+        // Calcular fecha actual para cancelar solo deudas futuras (usando la zona horaria del instituto)
+        $instituto = $this->getUser()->getInstituto();
+        $fechaActual = $this->institutoTimezoneService->getCurrentDateForInstituto($instituto);
         
         // Actualizar las deudas por finalización del curso
         $deudasCanceladas = $deudaService->actualizarDeudasPorFinalizacionCurso($curso, $fechaActual);
@@ -835,8 +839,11 @@ class CursoController extends AbstractController
 
         $diaSemana = $this->getDiaSemana($dia);
         
-        // Obtener la fecha del próximo día de la semana
-        $fecha = new \DateTime();
+        // Obtener la fecha del próximo día de la semana usando la zona horaria del instituto
+        $instituto = $this->getUser()->getInstituto();
+        $fechaActual = $this->institutoTimezoneService->getNowForInstituto($instituto);
+        $timezone = new \DateTimeZone($this->institutoTimezoneService->getTimezoneForInstituto($instituto));
+        $fecha = new \DateTime($fechaActual->format('Y-m-d H:i:s'), $timezone);
         
         $fecha->modify('next ' . $diaSemana);
         
@@ -858,8 +865,11 @@ class CursoController extends AbstractController
 
         $diaSemana = $this->getDiaSemana($dia);
         
-        // Obtener la fecha del próximo día de la semana
-        $fecha = new \DateTime();
+        // Obtener la fecha del próximo día de la semana usando la zona horaria del instituto
+        $instituto = $this->getUser()->getInstituto();
+        $fechaActual = $this->institutoTimezoneService->getNowForInstituto($instituto);
+        $timezone = new \DateTimeZone($this->institutoTimezoneService->getTimezoneForInstituto($instituto));
+        $fecha = new \DateTime($fechaActual->format('Y-m-d H:i:s'), $timezone);
         $fecha->modify('next ' . $diaSemana);
         
         // Combinar la fecha con la hora de fin
@@ -1050,7 +1060,7 @@ class CursoController extends AbstractController
 
         // Get attendance records for the course date range
         $fechaInicio = $curso->getFechaInicio();
-        $fechaFin = $curso->getFechaFin() ?? new \DateTime();
+        $fechaFin = $curso->getFechaFin() ?? $this->institutoTimezoneService->getCurrentDateForInstituto($instituto);
         $asistencias = $asistenciaRepository->findByDateRange($curso, $fechaInicio, $fechaFin);
 
         // Index attendance by alumno_id
@@ -1155,7 +1165,7 @@ class CursoController extends AbstractController
         $historicos = $historicoRepository->findByCurso($curso);
 
         $fechaInicio = $curso->getFechaInicio();
-        $fechaFin = $curso->getFechaFin() ?? new \DateTime();
+        $fechaFin = $curso->getFechaFin() ?? $this->institutoTimezoneService->getCurrentDateForInstituto($instituto);
         $asistencias = $asistenciaRepository->findByDateRange($curso, $fechaInicio, $fechaFin);
 
         $asistenciaPorAlumno = [];
@@ -1208,11 +1218,14 @@ class CursoController extends AbstractController
             }
 
             $historico->setActivo(false);
-            $historico->setFechaBaja(new \DateTime());
+            $instituto = $this->getUser()->getInstituto();
+            $fechaActual = $this->institutoTimezoneService->getCurrentDateForInstituto($instituto);
+            $historico->setFechaBaja($fechaActual);
         }
 
         $curso->setCerrado(true);
-        $curso->setFechaCierre(new \DateTime());
+        $instituto = $this->getUser()->getInstituto();
+        $curso->setFechaCierre($this->institutoTimezoneService->getCurrentDateForInstituto($instituto));
 
         $entityManager->flush();
 

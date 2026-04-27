@@ -685,7 +685,13 @@ class DeudaService
      */
     public function generarDeudasMesActual(?Instituto $instituto = null, bool $dryRun = false): array
     {
-        $fechaActual = new \DateTimeImmutable();
+        // Si no se especifica instituto, no podemos determinar la fecha actual correctamente
+        // Este método debería siempre recibir un instituto
+        if ($instituto === null) {
+            throw new \InvalidArgumentException('Se requiere un instituto para generar deudas mensuales');
+        }
+        
+        $fechaActual = $this->institutoTimezoneService->getNowForInstituto($instituto);
         
         $estadisticas = [
             'alumnosProcesados' => 0,

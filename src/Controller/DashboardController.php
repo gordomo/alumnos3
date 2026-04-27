@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Repository\AlumnosPagosRepository;
 use App\Repository\AlumnoRepository;
 use App\Repository\CursoRepository;
+use App\Service\InstitutoTimezoneService;
 use DateTime;
 use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -21,13 +22,16 @@ class DashboardController extends AbstractController
 {
     private $historialCursosService;
     private $deudaCalculator;
+    private $timezoneService;
 
     public function __construct(
         HistorialCursosService $historialCursosService,
-        \App\Service\DeudaCalculatorService $deudaCalculator
+        \App\Service\DeudaCalculatorService $deudaCalculator,
+        InstitutoTimezoneService $timezoneService
     ) {
         $this->historialCursosService = $historialCursosService;
         $this->deudaCalculator = $deudaCalculator;
+        $this->timezoneService = $timezoneService;
     }
 
     /**
@@ -128,18 +132,19 @@ class DashboardController extends AbstractController
         }
         $promedioMesesAdeudados = $totalDeudores > 0 ? $totalMesesAdeudados / $totalDeudores : 0;
 
-        // Calcular montos cobrados (mensual y anual)
-        $fechaActual = new \DateTime();
+        // Calcular montos cobrados (mensual y anual) usando la zona horaria del instituto
+        $fechaActual = $this->timezoneService->getNowForInstituto($instituto);
         $mesActual = (int)$fechaActual->format('n');
         $anoActual = (int)$fechaActual->format('Y');
 
-        // Calcular inicio y fin del mes actual
-        $inicioMes = new \DateTime('first day of this month 00:00:00');
-        $finMes = new \DateTime('last day of this month 23:59:59');
+        // Calcular inicio y fin del mes actual en la zona horaria del instituto
+        $timezone = new \DateTimeZone($this->timezoneService->getTimezoneForInstituto($instituto));
+        $inicioMes = new \DateTime('first day of this month 00:00:00', $timezone);
+        $finMes = new \DateTime('last day of this month 23:59:59', $timezone);
 
-        // Calcular inicio y fin del año actual
-        $inicioAno = new \DateTime('first day of January ' . $anoActual . ' 00:00:00');
-        $finAno = new \DateTime('last day of December ' . $anoActual . ' 23:59:59');
+        // Calcular inicio y fin del año actual en la zona horaria del instituto
+        $inicioAno = new \DateTime('first day of January ' . $anoActual . ' 00:00:00', $timezone);
+        $finAno = new \DateTime('last day of December ' . $anoActual . ' 23:59:59', $timezone);
 
         // Monto cobrado en el mes actual
         $montoCobradoMensual = $entityManager->createQueryBuilder()
@@ -241,7 +246,10 @@ class DashboardController extends AbstractController
             'promedioMesesAdeudados' => $promedioMesesAdeudados,
             'porcentajeDeudores' => $porcentajeDeudores,
             'montoPromedioAdeudado' => $montoPromedioAdeudado,
-            'deudasPorCurso' => $deudasPorCurso
+            'deudasPorCurso' => $deudasPorCurso,
+            'fechaActualInstituto' => $fechaActual,
+            'mesActual' => $mesActual,
+            'anoActual' => $anoActual
         ]);
     }
 }
