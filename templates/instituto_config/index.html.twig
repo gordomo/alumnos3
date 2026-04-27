@@ -454,47 +454,71 @@
                                                 </tr>
                                             {% else %}
                                                 <tr>
-                                                            <td colspan="3" class="text-center text-muted py-4">
-                                                                <i class="bi bi-inbox"></i> No se encontraron descuentos promocionales configurados
-                                                            </td>
+                                                    <td colspan="3" class="text-center text-muted py-4">
+                                                        <i class="bi bi-inbox"></i> No se encontraron descuentos promocionales configurados
+                                                    </td>
                                                 </tr>
                                             {% endfor %}
                                         </tbody>
-                  <div class="card-body">
-                                        <div class="alert alert-info mb-4">
-                                            <i class="bi bi-info-circle"></i> Métodos de pago disponibles en su instituto. El método "Efectivo" aplicará automáticamente el descuento configurado en la sección de Pagos.
-                                        </div>
-
-                                        <!-- Lista de métodos de pago (solo lectura) -->
-                                        <div class="table-responsive">
-                                            <table class="table table-hover">
-                                                <thead>
-                                                    <tr>
-                                                                       <th>Nombre</th>
-                                                        <th>Estado</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {% for metodo in metodos_pago %}
-                                                    <tr>
-                                                        <td>
-                                                            <strong>{{ metodo.nombre }}</strong>
-                                                        </td>
-                                                        <td>
-                                                            {% if metodo.activo %}
-                                                                <span class="badge bg-success">Activo</span>
-                                                            {% else %}
-                                                                <span class="badge bg-secondary">Inactivo</span>
-                                                            {% endif %}
-                                                        </td>
-                                                    </tr>
-                                                    {% endfor %}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
+                                    </table>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Pestaña: Métodos de Pago -->
+                    <div class="tab-pane fade" id="metodos-pago" role="tabpanel" aria-labelledby="metodos-pago-tab">
+                        <div class="card config-section-card">
+                            <div class="card-header config-section-header config-section-header--payments">
+                                <h4 class="card-title config-section-title mb-0">
+                                    <i class="bi bi-credit-card"></i> Métodos de Pago
+                                </h4>
+                            </div>
+                            <div class="card-body">
+                                <div class="alert alert-info mb-4">
+                                    <i class="bi bi-info-circle"></i> Métodos de pago disponibles en su instituto. El método "Efectivo" aplicará automáticamente el descuento configurado en la sección de Pagos.
+                                </div>
+
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-striped table-hover config-grid-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Orden</th>
+                                                <th>Nombre</th>
+                                                <th>Estado</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for metodo in metodos_pago %}
+                                            <tr>
+                                                <td>{{ metodo.orden }}</td>
+                                                <td>
+                                                    <strong>{{ metodo.nombre }}</strong>
+                                                    {% if metodo.nombre|lower == 'efectivo' %}
+                                                        <span class="badge bg-info ms-2">Aplica descuento</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    {% if metodo.activo %}
+                                                        <span class="badge bg-success">Activo</span>
+                                                    {% else %}
+                                                        <span class="badge bg-secondary">Inactivo</span>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                            {% else %}
+                                            <tr>
+                                                <td colspan="3" class="text-center text-muted py-4">
+                                                    <i class="bi bi-inbox"></i> No se encontraron métodos de pago configurados
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
                             <!-- Pestaña: Notificaciones -->
                             <div class="tab-pane fade" id="notificaciones" role="tabpanel" aria-labelledby="notificaciones-tab">
