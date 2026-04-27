@@ -14,6 +14,32 @@
                     </a>
                 </div>
                 <div class="card-body px-4 pt-0 pb-2">
+                    {% if cursosPagoCompleto|length > 0 %}
+                        <div class="alert alert-success d-flex align-items-center mt-3 mb-3" role="alert">
+                            <i class="bi bi-check-circle-fill me-2" style="font-size: 1.2rem;"></i>
+                            <div>
+                                {% for curso in cursos %}
+                                    {% if cursosPagoCompleto[curso.id] is defined and cursosPagoCompleto[curso.id] %}
+                                        <span class="badge bg-success me-1">
+                                            <i class="bi bi-check-circle-fill"></i> {{ curso.nombre }} — Curso pagado completo
+                                        </span>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    {% if saldoFavorTotal is defined and saldoFavorTotal > 0 %}
+                        <div class="alert alert-success d-flex justify-content-between align-items-center mt-3 mb-3">
+                            <div>
+                                <i class="bi bi-wallet2" style="font-size: 1.3rem;"></i>
+                                <strong>Saldo a favor disponible: ${{ saldoFavorTotal|number_format(2, ',', '.') }}</strong>
+                            </div>
+                            <a href="{{ path('app_saldo_favor_index', {'id': alumno.id}) }}" class="btn btn-success btn-sm">
+                                <i class="bi bi-arrow-right-circle"></i> Gestionar Saldos
+                            </a>
+                        </div>
+                    {% endif %}
                     <!-- Filtros -->
                     <div class="row mb-3">
                         <div class="col-md-12">

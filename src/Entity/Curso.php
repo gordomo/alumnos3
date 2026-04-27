@@ -61,6 +61,20 @@ class Curso
     private $disabled = false;
 
     /**
+     * Indica si el curso fue cerrado formalmente (alumnos evaluados y estados asignados).
+     * 
+     * @ORM\Column(type="boolean", options={"default": false})
+     */
+    private $cerrado = false;
+
+    /**
+     * Fecha en que se cerró formalmente el curso.
+     * 
+     * @ORM\Column(type="datetime", nullable=true)
+     */
+    private $fechaCierre;
+
+    /**
      * @ORM\ManyToOne(targetEntity=Instituto::class, inversedBy="cursos")
      * @ORM\JoinColumn(nullable=false)
      */
@@ -435,6 +449,28 @@ class Curso
     public function setDisabled(bool $disabled): self   
     {
         $this->disabled = $disabled;
+        return $this;
+    }
+
+    public function getCerrado(): bool
+    {
+        return $this->cerrado;
+    }
+
+    public function setCerrado(bool $cerrado): self
+    {
+        $this->cerrado = $cerrado;
+        return $this;
+    }
+
+    public function getFechaCierre(): ?\DateTimeInterface
+    {
+        return $this->fechaCierre;
+    }
+
+    public function setFechaCierre(?\DateTimeInterface $fechaCierre): self
+    {
+        $this->fechaCierre = $fechaCierre;
         return $this;
     }
 }

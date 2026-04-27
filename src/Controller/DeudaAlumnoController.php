@@ -35,7 +35,8 @@ class DeudaAlumnoController extends AbstractController
         DeudaAlumnoRepository $deudaRepository,
         CursoRepository $cursoRepository,
         PaginatorInterface $paginator,
-        \App\Service\DeudaCalculatorService $deudaCalculator
+        \App\Service\DeudaCalculatorService $deudaCalculator,
+        \App\Repository\SaldoFavorRepository $saldoFavorRepository
     ): Response {
         // Verificar acceso
         $instituto = $this->getUser()->getInstituto();
@@ -44,9 +45,7 @@ class DeudaAlumnoController extends AbstractController
             return $this->redirectToRoute('app_alumno_index');
         }
         
-        // Sincronizar deudas calculadas on-demand con la tabla
-        $deudaCalculator->sincronizarDeudasConTabla($alumno);
-        $this->entityManager->refresh($alumno);
+        // Las deudas se calculan on-demand; la tabla solo tiene registros creados al momento de pagar
         
         // Obtener parámetros de filtrado
         $cursoId = $request->query->get('curso');
@@ -100,6 +99,17 @@ class DeudaAlumnoController extends AbstractController
         // Obtener cursos del alumno para el filtro
         $cursos = $alumno->getCurso();
         
+        // Determinar qué cursos tienen todas las cuotas pagadas
+        $cursosPagoCompleto = [];
+        foreach ($cursos as $cursoAlumno) {
+            $deudasPendientesCurso = $deudaRepository->findDeudaByAlumnoAndCurso($alumno, $cursoAlumno);
+            // Verificar que al menos un pago exista para el curso
+            $totalDeudasCurso = $deudaRepository->findBy(['alumno' => $alumno, 'curso' => $cursoAlumno]);
+            if (empty($deudasPendientesCurso) && !empty($totalDeudasCurso)) {
+                $cursosPagoCompleto[$cursoAlumno->getId()] = true;
+            }
+        }
+        
         // Paginar resultados
         $pagination = $paginator->paginate(
             $qb->getQuery(),
@@ -114,7 +124,9 @@ class DeudaAlumnoController extends AbstractController
             'cursoId' => $cursoId,
             'estadoDeuda' => $estadoDeuda,
             'sort' => $sort,
-            'order' => $order
+            'order' => $order,
+            'cursosPagoCompleto' => $cursosPagoCompleto,
+            'saldoFavorTotal' => $saldoFavorRepository->getSaldoDisponibleTotal($alumno),
         ]);
     }
     

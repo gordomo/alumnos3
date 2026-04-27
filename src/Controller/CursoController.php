@@ -953,14 +953,13 @@ class CursoController extends AbstractController
         // Crear nuevo curso duplicado
         $cursoNuevo = new Curso();
         $cursoNuevo->setNombre($cursoOriginal->getNombre() . ' (Copia)');
-        $cursoNuevo->setDescripcion($cursoOriginal->getDescripcion());
         $cursoNuevo->setPrecio($cursoOriginal->getPrecio());
         $cursoNuevo->setInstituto($instituto);
         $cursoNuevo->setDisabled(false);
         
         // Copiar profesores
         foreach ($cursoOriginal->getProfesores() as $profesor) {
-            $cursoNuevo->addProfesore($profesor);
+            $cursoNuevo->addProfesor($profesor);
         }
         
         // Copiar horarios
@@ -970,17 +969,6 @@ class CursoController extends AbstractController
             $horarioNuevo->setHorarioInicio(clone $horarioOriginal->getHorarioInicio());
             $horarioNuevo->setHorarioFin(clone $horarioOriginal->getHorarioFin());
             $cursoNuevo->addHorario($horarioNuevo);
-        }
-        
-        // Copiar configuraciones de pago de profesores
-        foreach ($cursoOriginal->getProfesorPagoConfigs() as $configOriginal) {
-            $configNueva = new \App\Entity\ProfesorPagoConfig();
-            $configNueva->setProfesor($configOriginal->getProfesor());
-            $configNueva->setTipoPago($configOriginal->getTipoPago());
-            $configNueva->setMontoPorHora($configOriginal->getMontoPorHora());
-            $configNueva->setMontoFijoMensual($configOriginal->getMontoFijoMensual());
-            $configNueva->setPorcentajeCurso($configOriginal->getPorcentajeCurso());
-            $cursoNuevo->addProfesorPagoConfig($configNueva);
         }
         
         // Sugerir fechas (3 meses después del fin del curso original)
@@ -1031,6 +1019,210 @@ class CursoController extends AbstractController
             'form' => $form,
             'date_format' => $dateFormat,
         ]);
+    }
+
+    /**
+     * @Route("/{id}/cerrar/preview", name="app_curso_cerrar_preview", methods={"GET"})
+     */
+    public function previewCierreCurso(
+        Curso $curso,
+        \App\Repository\AlumnoCursoHistoricoRepository $historicoRepository,
+        \App\Repository\AsistenciaAlumnosRepository $asistenciaRepository,
+        \App\Repository\DeudaAlumnoRepository $deudaAlumnoRepository
+    ): Response {
+        $instituto = $this->getUser()->getInstituto();
+        if ($curso->getInstituto() !== $instituto) {
+            $this->addFlash('danger', 'El curso no pertenece al instituto del usuario.');
+            return $this->redirectToRoute('app_curso_index');
+        }
+
+        if ($curso->getCerrado()) {
+            $this->addFlash('warning', 'Este curso ya fue cerrado.');
+            return $this->redirectToRoute('app_curso_show', ['id' => $curso->getId()]);
+        }
+
+        $config = $instituto->getConfiguracion();
+        $porcentajeRequerido = $config ? $config->getPorcentajeAsistenciaAprobacion() : null;
+        $requierePagoTotal = $config ? $config->getRequierePagoTotalParaAprobar() : false;
+
+        // Get all historicos for this course (active ones = enrolled students)
+        $historicos = $historicoRepository->findByCurso($curso);
+
+        // Get attendance records for the course date range
+        $fechaInicio = $curso->getFechaInicio();
+        $fechaFin = $curso->getFechaFin() ?? new \DateTime();
+        $asistencias = $asistenciaRepository->findByDateRange($curso, $fechaInicio, $fechaFin);
+
+        // Index attendance by alumno_id
+        $asistenciaPorAlumno = [];
+        foreach ($asistencias as $a) {
+            $alumnoId = $a->getAlumno()->getId();
+            if (!isset($asistenciaPorAlumno[$alumnoId])) {
+                $asistenciaPorAlumno[$alumnoId] = ['total' => 0, 'presentes' => 0];
+            }
+            $asistenciaPorAlumno[$alumnoId]['total']++;
+            if ($a->getPresente()) {
+                $asistenciaPorAlumno[$alumnoId]['presentes']++;
+            }
+        }
+
+        // Build preview data for each student
+        $preview = [];
+        foreach ($historicos as $historico) {
+            $alumno = $historico->getAlumno();
+            $alumnoId = $alumno->getId();
+
+            // Skip already closed (baja_administrativa or already finalized)
+            if ($historico->getMotivoBaja() === 'baja_administrativa') {
+                continue;
+            }
+
+            $datos = $asistenciaPorAlumno[$alumnoId] ?? ['total' => 0, 'presentes' => 0];
+            $porcentaje = $datos['total'] > 0
+                ? round(($datos['presentes'] / $datos['total']) * 100, 1)
+                : 0;
+
+            // Check payment status for this student in this course
+            $tienePagoCompleto = true;
+            if ($requierePagoTotal) {
+                $deudasCurso = $deudaAlumnoRepository->findDeudaByAlumnoAndCurso($alumno, $curso);
+                $tienePagoCompleto = empty($deudasCurso);
+            }
+
+            // Determine predicted status
+            $fallaAsistencia = ($porcentajeRequerido !== null && $porcentaje < $porcentajeRequerido);
+            $fallaPago = ($requierePagoTotal && !$tienePagoCompleto);
+
+            if ($fallaAsistencia || $fallaPago) {
+                $estadoPrediccion = 'no_finalizado';
+            } elseif ($porcentajeRequerido !== null || $requierePagoTotal) {
+                $estadoPrediccion = 'finalizado';
+            } else {
+                // No configured threshold: all finalized
+                $estadoPrediccion = 'finalizado';
+            }
+
+            $preview[] = [
+                'historico' => $historico,
+                'alumno' => $alumno,
+                'clasesTotales' => $datos['total'],
+                'clasesPresentes' => $datos['presentes'],
+                'porcentajeAsistencia' => $porcentaje,
+                'estadoPrediccion' => $estadoPrediccion,
+                'tienePagoCompleto' => $tienePagoCompleto,
+            ];
+        }
+
+        return $this->render('curso/cerrar.html.twig', [
+            'curso' => $curso,
+            'preview' => $preview,
+            'porcentajeRequerido' => $porcentajeRequerido,
+            'requierePagoTotal' => $requierePagoTotal,
+        ]);
+    }
+
+    /**
+     * @Route("/{id}/cerrar", name="app_curso_cerrar", methods={"POST"})
+     */
+    public function cerrarCurso(
+        Request $request,
+        Curso $curso,
+        \App\Repository\AlumnoCursoHistoricoRepository $historicoRepository,
+        \App\Repository\AsistenciaAlumnosRepository $asistenciaRepository,
+        \App\Repository\DeudaAlumnoRepository $deudaAlumnoRepository,
+        EntityManagerInterface $entityManager
+    ): Response {
+        $instituto = $this->getUser()->getInstituto();
+        if ($curso->getInstituto() !== $instituto) {
+            $this->addFlash('danger', 'El curso no pertenece al instituto del usuario.');
+            return $this->redirectToRoute('app_curso_index');
+        }
+
+        if ($curso->getCerrado()) {
+            $this->addFlash('warning', 'Este curso ya fue cerrado.');
+            return $this->redirectToRoute('app_curso_show', ['id' => $curso->getId()]);
+        }
+
+        if (!$this->isCsrfTokenValid('cerrar_curso_' . $curso->getId(), $request->request->get('_token'))) {
+            $this->addFlash('danger', 'Token CSRF inválido.');
+            return $this->redirectToRoute('app_curso_show', ['id' => $curso->getId()]);
+        }
+
+        $config = $instituto->getConfiguracion();
+        $porcentajeRequerido = $config ? $config->getPorcentajeAsistenciaAprobacion() : null;
+        $requierePagoTotal = $config ? $config->getRequierePagoTotalParaAprobar() : false;
+
+        $historicos = $historicoRepository->findByCurso($curso);
+
+        $fechaInicio = $curso->getFechaInicio();
+        $fechaFin = $curso->getFechaFin() ?? new \DateTime();
+        $asistencias = $asistenciaRepository->findByDateRange($curso, $fechaInicio, $fechaFin);
+
+        $asistenciaPorAlumno = [];
+        foreach ($asistencias as $a) {
+            $alumnoId = $a->getAlumno()->getId();
+            if (!isset($asistenciaPorAlumno[$alumnoId])) {
+                $asistenciaPorAlumno[$alumnoId] = ['total' => 0, 'presentes' => 0];
+            }
+            $asistenciaPorAlumno[$alumnoId]['total']++;
+            if ($a->getPresente()) {
+                $asistenciaPorAlumno[$alumnoId]['presentes']++;
+            }
+        }
+
+        $finalizados = 0;
+        $noFinalizados = 0;
+
+        foreach ($historicos as $historico) {
+            // Skip already closed (baja_administrativa)
+            if ($historico->getMotivoBaja() === 'baja_administrativa') {
+                continue;
+            }
+
+            $alumno = $historico->getAlumno();
+            $alumnoId = $alumno->getId();
+            $datos = $asistenciaPorAlumno[$alumnoId] ?? ['total' => 0, 'presentes' => 0];
+            $porcentaje = $datos['total'] > 0
+                ? round(($datos['presentes'] / $datos['total']) * 100, 1)
+                : 0;
+
+            // Check payment status
+            $tienePagoCompleto = true;
+            if ($requierePagoTotal) {
+                $deudasCurso = $deudaAlumnoRepository->findDeudaByAlumnoAndCurso($alumno, $curso);
+                $tienePagoCompleto = empty($deudasCurso);
+            }
+
+            $fallaAsistencia = ($porcentajeRequerido !== null && $porcentaje < $porcentajeRequerido);
+            $fallaPago = ($requierePagoTotal && !$tienePagoCompleto);
+
+            if ($fallaAsistencia || $fallaPago) {
+                $historico->setMotivoBaja('no_finalizado');
+                $noFinalizados++;
+            } elseif ($porcentajeRequerido !== null || $requierePagoTotal) {
+                $historico->setMotivoBaja('finalizado');
+                $finalizados++;
+            } else {
+                $historico->setMotivoBaja('finalizado');
+                $finalizados++;
+            }
+
+            $historico->setActivo(false);
+            $historico->setFechaBaja(new \DateTime());
+        }
+
+        $curso->setCerrado(true);
+        $curso->setFechaCierre(new \DateTime());
+
+        $entityManager->flush();
+
+        $this->addFlash('success', sprintf(
+            'Curso cerrado exitosamente. %d alumno(s) finalizado(s), %d no finalizado(s).',
+            $finalizados,
+            $noFinalizados
+        ));
+
+        return $this->redirectToRoute('app_curso_show', ['id' => $curso->getId()]);
     }
 
 }

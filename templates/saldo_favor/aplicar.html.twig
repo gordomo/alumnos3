@@ -1,0 +1,122 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Aplicar Saldo a Favor - {{ alumno.nombre }} {{ alumno.apellido }}{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ path('app_alumno_index') }}">Alumnos</a></li>
+                    <li class="breadcrumb-item"><a href="{{ path('app_alumno_show', {'id': alumno.id}) }}">{{ alumno.nombre }} {{ alumno.apellido }}</a></li>
+                    <li class="breadcrumb-item"><a href="{{ path('app_saldo_favor_index', {'id': alumno.id}) }}">Saldos a Favor</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Aplicar Saldo</li>
+                </ol>
+            </nav>
+
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0"><i class="bi bi-arrow-right-circle"></i> Aplicar Saldo a Favor a Deuda</h4>
+                    <a href="{{ path('app_saldo_favor_index', {'id': alumno.id}) }}" class="btn btn-light">
+                        <i class="bi bi-arrow-left"></i> Volver
+                    </a>
+                </div>
+                <div class="card-body">
+                    {# Info del saldo a favor #}
+                    <div class="alert alert-success d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong><i class="bi bi-wallet2"></i> Saldo a Favor #{{ saldoFavor.id }}</strong>
+                            <br>
+                            <small>
+                                Tipo: {{ saldoFavor.tipoLabel }} | 
+                                Fecha: {{ saldoFavor.fecha|date('d/m/Y') }}
+                                {% if saldoFavor.curso %} | Curso: {{ saldoFavor.curso.nombre }}{% endif %}
+                                {% if saldoFavor.descripcion %}<br>{{ saldoFavor.descripcion }}{% endif %}
+                            </small>
+                        </div>
+                        <div class="text-end">
+                            <div class="text-muted small">Monto original: ${{ saldoFavor.monto|number_format(2, ',', '.') }}</div>
+                            <div class="fs-5"><strong class="text-success">${{ saldoFavor.montoDisponible|number_format(2, ',', '.') }}</strong> disponible</div>
+                        </div>
+                    </div>
+
+                    {% if deudasPendientes|length > 0 %}
+                        <h6 class="mt-4 mb-3">Seleccione la deuda a la que desea aplicar el saldo:</h6>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Curso</th>
+                                        <th>Período</th>
+                                        <th class="text-end">Monto Deuda</th>
+                                        <th class="text-end">Ya Pagado</th>
+                                        <th class="text-end">Pendiente</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for deuda in deudasPendientes %}
+                                        {% set pendiente = deuda.montoPendiente %}
+                                        {% set maxAplicar = min(saldoFavor.montoDisponible, pendiente) %}
+                                        <tr>
+                                            <td>{{ deuda.curso.nombre }}</td>
+                                            <td>{{ deuda.periodo }}</td>
+                                            <td class="text-end">${{ deuda.montoTotal|number_format(2, ',', '.') }}</td>
+                                            <td class="text-end">${{ deuda.montoPagado|number_format(2, ',', '.') }}</td>
+                                            <td class="text-end"><strong class="text-danger">${{ pendiente|number_format(2, ',', '.') }}</strong></td>
+                                            <td>
+                                                <form method="post" action="{{ path('app_saldo_favor_aplicar', {'id': saldoFavor.id}) }}" class="d-inline-flex align-items-center gap-2" onsubmit="return confirm('¿Aplicar $' + this.monto_aplicar.value + ' del saldo a favor a la deuda de {{ deuda.periodo }} ({{ deuda.curso.nombre }})?');">
+                                                    <input type="hidden" name="_token" value="{{ csrf_token('saldo-favor-aplicar' ~ saldoFavor.id) }}">
+                                                    <input type="hidden" name="deuda_id" value="{{ deuda.id }}">
+                                                    <div class="input-group input-group-sm" style="width: 150px;">
+                                                        <span class="input-group-text">$</span>
+                                                        <input type="number" name="monto_aplicar" class="form-control form-control-sm" min="0.01" step="0.01" max="{{ maxAplicar }}" value="{{ maxAplicar|number_format(2, '.', '') }}" required>
+                                                    </div>
+                                                    <button type="submit" class="btn btn-sm btn-success">
+                                                        <i class="bi bi-arrow-right-circle"></i> Aplicar
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info mt-3">
+                            <i class="bi bi-info-circle"></i> El alumno no tiene deudas pendientes a las que aplicar este saldo.
+                        </div>
+                    {% endif %}
+
+                    {% if saldoFavor.aplicaciones|length > 0 %}
+                        <hr>
+                        <h6 class="mb-3">Historial de aplicaciones de este saldo:</h6>
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Deuda</th>
+                                    <th>Curso</th>
+                                    <th class="text-end">Monto Aplicado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for app in saldoFavor.aplicaciones %}
+                                    <tr>
+                                        <td>{{ app.fechaAplicacion|date('d/m/Y H:i') }}</td>
+                                        <td>{{ app.deuda.periodo }}</td>
+                                        <td>{{ app.deuda.curso.nombre }}</td>
+                                        <td class="text-end">${{ app.montoAplicado|number_format(2, ',', '.') }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

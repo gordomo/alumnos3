@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="es-AR">
 <head>
     <meta charset="UTF-8">
     <title>{% block title %}Welcome!{% endblock %}</title>
@@ -168,6 +168,35 @@
     <script src="{{ asset('js/alumno-cursos.js') }}"></script>
 
     <script>
+        // Locale global para unificar los calendarios en español.
+        if (typeof moment !== 'undefined') {
+            moment.locale('es');
+        }
+
+        window.getDateRangePickerLocale = function(fmt) {
+            return {
+                format: fmt,
+                applyLabel: 'Aplicar',
+                cancelLabel: 'Cancelar',
+                fromLabel: 'Desde',
+                toLabel: 'Hasta',
+                customRangeLabel: 'Personalizado',
+                weekLabel: 'S',
+                daysOfWeek: ['Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa'],
+                monthNames: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
+                firstDay: 1
+            };
+        };
+
+        // Forzar locale en español en date inputs nativos.
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('input[type="date"]').forEach(function(input) {
+                if (!input.getAttribute('lang')) {
+                    input.setAttribute('lang', 'es-AR');
+                }
+            });
+        });
+
         document.addEventListener('DOMContentLoaded', (event) => {
             const toastMessages = document.querySelectorAll('.toast-custom');
 

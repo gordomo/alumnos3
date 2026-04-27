@@ -282,6 +282,43 @@
                                 </div>
                                     </div>
                                 </div>
+
+                                <!-- Configuración Académica -->
+                                <div class="card config-section-card mt-4">
+                                    <div class="card-header config-section-header config-section-header--general">
+                                        <h4 class="card-title config-section-title mb-0">
+                                            <i class="bi bi-mortarboard"></i> Configuración Académica
+                                        </h4>
+                                    </div>
+                                    <div class="card-body">
+                                        <table class="table table-borderless config-data-table">
+                                            <tr>
+                                                <th width="40%">% mínimo de asistencia para aprobar:</th>
+                                                <td>
+                                                    {% if configuracion.porcentajeAsistenciaAprobacion is not null %}
+                                                        <span class="badge bg-primary">{{ configuracion.porcentajeAsistenciaAprobacion }}%</span>
+                                                        <small class="text-muted d-block">Al finalizar un curso, se verificará que el alumno cumpla este porcentaje de asistencia</small>
+                                                    {% else %}
+                                                        <span class="badge bg-secondary">No configurado</span>
+                                                        <small class="text-muted d-block">No se verifica asistencia al finalizar un curso. Todos los alumnos se marcan como "Finalizado".</small>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <th>Pago total del curso requerido para aprobar:</th>
+                                                <td>
+                                                    {% if configuracion.requierePagoTotalParaAprobar %}
+                                                        <span class="badge bg-success"><i class="bi bi-check-circle"></i> Activado</span>
+                                                        <small class="text-muted d-block">El alumno debe tener todas las cuotas del curso pagadas para aprobar</small>
+                                                    {% else %}
+                                                        <span class="badge bg-secondary">Desactivado</span>
+                                                        <small class="text-muted d-block">No se verifica el pago de cuotas al finalizar un curso</small>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
                             </div>
 
                             <!-- Pestaña: Pagos y Vencimientos -->
@@ -423,21 +460,7 @@
                                                 </tr>
                                             {% endfor %}
                                         </tbody>
-                                    </table>
-                                        </div>
-                                </div>
-                            </div>
-                        </div>
-
-                            <!-- Pestaña: Métodos de Pago -->
-                            <div class="tab-pane fade" id="metodos-pago" role="tabpanel" aria-labelledby="metodos-pago-tab">
-                                <div class="card config-section-card mb-4">
-                                    <div class="card-header config-section-header config-section-header--descuentos">
-                                        <h4 class="card-title config-section-title mb-0">
-                                            <i class="bi bi-credit-card"></i> Métodos de Pago
-                                        </h4>
-                                    </div>
-                                    <div class="card-body">
+                  <div class="card-body">
                                         <div class="alert alert-info mb-4">
                                             <i class="bi bi-info-circle"></i> Métodos de pago disponibles en su instituto. El método "Efectivo" aplicará automáticamente el descuento configurado en la sección de Pagos.
                                         </div>
@@ -447,15 +470,13 @@
                                             <table class="table table-hover">
                                                 <thead>
                                                     <tr>
-                                                        <th>Orden</th>
-                                                        <th>Nombre</th>
+                                                                       <th>Nombre</th>
                                                         <th>Estado</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
                                                     {% for metodo in metodos_pago %}
                                                     <tr>
-                                                        <td>{{ metodo.orden }}</td>
                                                         <td>
                                                             <strong>{{ metodo.nombre }}</strong>
                                                         </td>

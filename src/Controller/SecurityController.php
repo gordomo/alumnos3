@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Instituto;
 use App\Entity\InstitutoConfiguracion;
+use App\Entity\MetodoPago;
 use App\Entity\User;
 use App\Repository\InstitutoConfiguracionRepository;
 use App\Repository\InstitutoRepository;
@@ -214,6 +215,18 @@ class SecurityController extends AbstractController
                 $this->entityManager->persist($instituto);
                 $this->entityManager->persist($user);
                 $this->entityManager->persist($configuracion);
+
+                // Métodos de pago base del instituto. "Efectivo" debe existir siempre.
+                $metodosBase = ['Efectivo', 'Transferencia', 'Tarjeta de Debito', 'Tarjeta de Credito'];
+                foreach ($metodosBase as $index => $nombreMetodo) {
+                    $metodoPago = new MetodoPago();
+                    $metodoPago->setInstituto($instituto);
+                    $metodoPago->setNombre($nombreMetodo);
+                    $metodoPago->setActivo(true);
+                    $metodoPago->setOrden($index + 1);
+                    $this->entityManager->persist($metodoPago);
+                }
+
                 $this->entityManager->flush();
 
                 $this->addFlash('success', '¡Cuenta creada exitosamente! Ya puedes gestionar tu instituto.');

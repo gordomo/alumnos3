@@ -22,7 +22,6 @@ use App\Repository\CursoRepository;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use App\Service\HistorialCursosService;
 use Knp\Component\Pager\PaginatorInterface;
-use App\Service\DeudaService;
 use App\Service\NotificationService;
 use App\Service\TokenService;
 use App\Service\PagoService;
@@ -34,7 +33,6 @@ class AlumnosPagosController extends AbstractController
 {
     private $entityManager;
     private $historialCursosService;
-    private $deudaService;
     private $notificationService;
     private $tokenService;
     private $pagoService;
@@ -44,7 +42,6 @@ class AlumnosPagosController extends AbstractController
     public function __construct(
         EntityManagerInterface $entityManager,
         HistorialCursosService $historialCursosService,
-        DeudaService $deudaService,
         NotificationService $notificationService,
         TokenService $tokenService,
         PagoService $pagoService,
@@ -54,7 +51,6 @@ class AlumnosPagosController extends AbstractController
         $this->entityManager = $entityManager;
         $this->deudaCalculator = $deudaCalculator;
         $this->historialCursosService = $historialCursosService;
-        $this->deudaService = $deudaService;
         $this->notificationService = $notificationService;
         $this->tokenService = $tokenService;
         $this->pagoService = $pagoService;
@@ -76,13 +72,14 @@ class AlumnosPagosController extends AbstractController
         $metodoSelected = $request->get('metodoPago', '');
         $fechaDesde = $request->get('fechaDesde', '');
         $fechaHasta = $request->get('fechaHasta', '');
+        $fechaFiltroProvista = $request->query->has('fechaDesde') || $request->query->has('fechaHasta');
         $sort = $request->get('sort', 'fecha');
         $order = $request->get('order', 'desc');
 
+        $instituto = $this->getUser()->getInstituto();
+        $nowInstituto = $this->institutoTimezoneService->getNowForInstituto($instituto);
         // Por defecto: año completo si no hay fechas en la petición (en zona horaria del instituto)
         if (empty($fechaDesde) && empty($fechaHasta)) {
-            $instituto = $this->getUser()->getInstituto();
-            $nowInstituto = $this->institutoTimezoneService->getNowForInstituto($instituto);
             $anio = $nowInstituto->format('Y');
             $fechaDesde = $anio . '-01-01';
             $fechaHasta = $anio . '-12-31';
@@ -125,11 +122,10 @@ class AlumnosPagosController extends AbstractController
 
         if ($alumnoId) {
             //$pagos = $alumnosPagosRepository->findByAlumno($alumnoId);
-            // Cargar alumno con sus deudas y aplicaciones (eager loading) para evitar lazy loading
+            // Cargar alumno con relaciones necesarias
             $alumno = $alumnoRepository->findWithDeudasAndAplicaciones($alumnoId);
             $nombreAlumno = $alumno->getNombre() . ' ' . $alumno->getApellido();
-            // Usar el nuevo método getDeudasParaPago() en lugar de verificarMesesAdeudados()
-            $deudasParaPago = $alumno->getDeudasParaPago();
+            $deudasParaPago = $this->getDeudasPendientesOnDemand($alumno, $nowInstituto);
             $mesesAdeudados = [];
             $nombresMeses = [
                 1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril',
@@ -138,14 +134,14 @@ class AlumnosPagosController extends AbstractController
             ];
             
             foreach ($deudasParaPago as $deuda) {
-                $curso = $deuda->getCurso();
+                $curso = $deuda['curso'];
                 $mesesAdeudados[] = [
-                    'mes' => $deuda->getMes(),
-                    'ano' => $deuda->getAno(),
-                    'nombre' => $nombresMeses[$deuda->getMes()] . ' ' . $deuda->getAno(),
+                    'mes' => $deuda['mes'],
+                    'ano' => $deuda['ano'],
+                    'nombre' => $nombresMeses[$deuda['mes']] . ' ' . $deuda['ano'],
                     'curso' => $curso->getNombre(),
                     'curso_obj' => $curso,
-                    'monto' => $deuda->getMonto()
+                    'monto' => $deuda['monto']
                 ];
             }
         } else {
@@ -293,14 +289,8 @@ class AlumnosPagosController extends AbstractController
             ->setParameter('instituto', $instituto)
             ->setParameter('activo', true);
 
-        // Mostrar solo deudas del mes actual o anteriores (ocultar deudas futuras)
-        $fechaReferencia = new \DateTime();
-        $mesActualDeuda = (int) $fechaReferencia->format('n');
-        $anoActualDeuda = (int) $fechaReferencia->format('Y');
-        $qbDeudas
-            ->andWhere('(d.ano < :anoActualDeuda OR (d.ano = :anoActualDeuda AND d.mes <= :mesActualDeuda))')
-            ->setParameter('anoActualDeuda', $anoActualDeuda)
-            ->setParameter('mesActualDeuda', $mesActualDeuda);
+        // Mostrar todas las deudas con saldo pendiente (incluye futuras).
+        // Esto permite gestionarlas/cancelarlas desde esta pantalla.
         
         // Aplicar filtros de búsqueda
         if ($busqueda) {
@@ -320,7 +310,7 @@ class AlumnosPagosController extends AbstractController
         }
 
         // Filtro por período: deudas cuyo mes/año caen dentro del rango Desde-Hasta
-        if ($fechaDesde && $fechaHasta) {
+        if ($fechaFiltroProvista && $fechaDesde && $fechaHasta) {
             try {
                 $fechaDesdeObj = new \DateTime($fechaDesde);
                 $fechaHastaObj = new \DateTime($fechaHasta);
@@ -439,6 +429,97 @@ class AlumnosPagosController extends AbstractController
     }
 
     /**
+     * Devuelve deudas pendientes calculadas on-demand hasta la fecha actual del instituto.
+     */
+    private function getDeudasPendientesOnDemand(Alumno $alumno, \DateTimeInterface $fechaActual): array
+    {
+        $mesActual = (int)$fechaActual->format('n');
+        $anoActual = (int)$fechaActual->format('Y');
+        $deudasCalculadas = $this->deudaCalculator->calcularDeudasAlumno($alumno);
+
+        return array_values(array_filter($deudasCalculadas, function(array $deuda) use ($mesActual, $anoActual) {
+            return ($deuda['ano'] < $anoActual)
+                || ($deuda['ano'] == $anoActual && $deuda['mes'] <= $mesActual);
+        }));
+    }
+
+    /**
+     * Crea un mapa curso_mes_ano => deuda calculada on-demand para búsquedas rápidas.
+     */
+    private function getMapaDeudasOnDemand(Alumno $alumno): array
+    {
+        $mapa = [];
+        foreach ($this->deudaCalculator->calcularDeudasAlumno($alumno) as $deuda) {
+            $key = $deuda['curso']->getId() . '_' . $deuda['mes'] . '_' . $deuda['ano'];
+            $mapa[$key] = $deuda;
+        }
+
+        return $mapa;
+    }
+
+    /**
+     * Determina si el alumno tiene deudas vencidas usando cálculo on-demand.
+     */
+    private function tieneDeudasVencidasOnDemand(Alumno $alumno, \DateTimeInterface $fechaActual): bool
+    {
+        if (!$alumno->getActivo()) {
+            return false;
+        }
+
+        $mesActual = (int)$fechaActual->format('n');
+        $anoActual = (int)$fechaActual->format('Y');
+        $diaActual = (int)$fechaActual->format('d');
+        $primerDiaVencimiento = $alumno->getPrimerDiaVencimiento($alumno->getInstituto()->getId());
+
+        foreach ($this->getDeudasPendientesOnDemand($alumno, $fechaActual) as $deuda) {
+            if ($deuda['ano'] < $anoActual || ($deuda['ano'] == $anoActual && $deuda['mes'] < $mesActual)) {
+                return true;
+            }
+
+            if ($deuda['ano'] == $anoActual && $deuda['mes'] == $mesActual && $diaActual >= $primerDiaVencimiento) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Obtiene precio mensual histórico del alumno para un curso en un mes dado.
+     */
+    private function getPrecioMensualHistoricoParaMes(Alumno $alumno, Curso $curso, int $mes, int $ano): float
+    {
+        $fechaMes = new \DateTimeImmutable(sprintf('%04d-%02d-01', $ano, $mes));
+
+        foreach ($alumno->getCursosHistoricos() as $historico) {
+            if ($historico->getCurso()->getId() !== $curso->getId()) {
+                continue;
+            }
+
+            $fechaAlta = $historico->getFechaAlta();
+            $fechaBaja = $historico->getFechaBaja();
+
+            if ($fechaAlta) {
+                $inicioAlta = (new \DateTimeImmutable($fechaAlta->format('Y-m-01')));
+                if ($fechaMes < $inicioAlta) {
+                    continue;
+                }
+            }
+
+            if ($fechaBaja) {
+                $finBaja = (new \DateTimeImmutable($fechaBaja->format('Y-m-01')));
+                if ($fechaMes > $finBaja) {
+                    continue;
+                }
+            }
+
+            return (float)($historico->getPrecioMensual() ?? $curso->getPrecio());
+        }
+
+        return (float)$curso->getPrecio();
+    }
+
+    /**
      * Calcula el monto sugerido para un pago
      * @param string|null $metodoPago Si se pasa, el descuento por efectivo solo se aplica cuando es 'efectivo'
      */
@@ -526,16 +607,16 @@ class AlumnosPagosController extends AbstractController
         // Verificar si podemos aplicar descuentos
         $puedeRecibirDescuentos = true;
         
-        // Si está configurado para deshabilitar descuentos en deuda
+        // Si está configurado para deshabilitar descuentos generales en deuda
         if ($configuracion && $configuracion->getDeshabilitarDescuentosEnDeuda()) {
             // Verificar si el alumno tiene deudas vencidas
-            if ($alumno->tieneDeudasVencidas()) {
+            if ($this->tieneDeudasVencidasOnDemand($alumno, $fechaActual)) {
                 $puedeRecibirDescuentos = false;
-                $descuentosAplicados[] = "No se aplican descuentos porque el alumno tiene deudas vencidas";
+                $descuentosAplicados[] = "No se aplican descuentos generales (efectivo/hermanos) porque el alumno tiene deudas vencidas";
             }
         }
         
-        // Calcular porcentajes de descuento (sin aplicar aún)
+        // Calcular porcentajes de descuento general (efectivo y hermanos)
         if ($puedeRecibirDescuentos && $configuracion) {
             // Aplicar descuento por pago en efectivo solo si el método de pago es efectivo (o no se especificó, p. ej. render inicial)
             $aplicarDescuentoEfectivo = ($metodoPago === null || strtolower($metodoPago) === 'efectivo');
@@ -555,13 +636,13 @@ class AlumnosPagosController extends AbstractController
                     $descuentosAplicados[] = "Descuento del " . $porcentajeDescuentoHermanos . "% por tener " . count($hermanos) . " hermano(s) en el instituto";
                 }
             }
-            
-            // Aplicar descuentos promocionales seleccionados
-            foreach ($descuentosPromocionalesSeleccionados as $descuentoPromocional) {
-                $porcentajeDescuentoPromocional = (float)$descuentoPromocional->getPorcentaje();
-                $porcentajeDescuentoTotal += $porcentajeDescuentoPromocional;
-                $descuentosAplicados[] = "Descuento promocional: " . $descuentoPromocional->getNombre() . " (" . $porcentajeDescuentoPromocional . "%)";
-            }
+        }
+
+        // Descuentos promocionales: siempre se aplican, independientemente de si el alumno tiene deudas
+        foreach ($descuentosPromocionalesSeleccionados as $descuentoPromocional) {
+            $porcentajeDescuentoPromocional = (float)$descuentoPromocional->getPorcentaje();
+            $porcentajeDescuentoTotal += $porcentajeDescuentoPromocional;
+            $descuentosAplicados[] = "Descuento promocional: " . $descuentoPromocional->getNombre() . " (" . $porcentajeDescuentoPromocional . "%)";
         }
         
         // Aplicar intereses y descuentos según el orden configurado
@@ -624,16 +705,8 @@ class AlumnosPagosController extends AbstractController
     {
         $alumnoId = $request->query->get('id');
         if ($alumnoId) {
-            // Cargar alumno con sus deudas y aplicaciones (eager loading) para evitar lazy loading
+            // Cargar alumno con relaciones necesarias; las deudas se calculan on-demand
             $alumno = $alumnoRepository->findWithDeudasAndAplicaciones($alumnoId);
-            
-            // IMPORTANTE: Sincronizar deudas calculadas on-demand con la tabla deuda_alumno
-            // Esto asegura que el sistema de pagos funcione correctamente
-            if ($alumno) {
-                $this->deudaCalculator->sincronizarDeudasConTabla($alumno);
-                // Refrescar el alumno para cargar las deudas recién sincronizadas
-                $this->entityManager->refresh($alumno);
-            }
         } else {
             // Sin id en URL: no preseleccionar alumno; el usuario debe seleccionar manualmente
             $alumno = null;
@@ -642,40 +715,55 @@ class AlumnosPagosController extends AbstractController
         $alumnosPago = new AlumnosPagos();
         $alumnosPago->setAlumno($alumno);
         
-        // Obtener la fecha actual en la zona horaria del instituto y convertirla a medianoche UTC
-        // Esto evita problemas de conversión de timezone en el navegador con input type="date"
-        $fechaInstituto = $this->institutoTimezoneService->getNowForInstituto($instituto);
-        $fechaSoloFecha = \DateTime::createFromFormat('Y-m-d H:i:s', $fechaInstituto->format('Y-m-d') . ' 00:00:00', new \DateTimeZone('UTC'));
-        $alumnosPago->setFecha($fechaSoloFecha);
+        // Usar fecha civil del instituto, sin hora, para evitar corrimientos de día.
+        $alumnosPago->setFecha($this->institutoTimezoneService->getCurrentDateForInstituto($instituto));
         $alumnosPago->setMetodoPago('efectivo');
 
         $mesesAdeudados = [];
         $ordenCalculo = 'interes_primero';
 
         if ($alumno) {
-            // Obtener los meses adeudados para el componente (ya cargados con eager loading)
-            $deudasParaPago = $alumno->getDeudasParaPago();
+            // Obtener deudas pendientes calculadas on-demand
+            $fechaActual = $this->institutoTimezoneService->getNowForInstituto($instituto);
+            $deudasParaPago = $this->getDeudasPendientesOnDemand($alumno, $fechaActual);
+            $mapaDeudasOnDemand = $this->getMapaDeudasOnDemand($alumno);
         $mesesAdeudados = [];
         $nombresMeses = [
             1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril',
             5 => 'Mayo', 6 => 'Junio', 7 => 'Julio', 8 => 'Agosto',
             9 => 'Septiembre', 10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre'
         ];
+        $mesActual = (int)$fechaActual->format('n');
+        $anoActual = (int)$fechaActual->format('Y');
+        $diaActual = (int)$fechaActual->format('d');
+        $primerDiaVencimiento = $alumno->getPrimerDiaVencimiento($alumno->getInstituto()->getId());
         
         foreach ($deudasParaPago as $deuda) {
-            $curso = $deuda->getCurso();
+            $curso = $deuda['curso'];
+            $esMesFuturo = ($deuda['ano'] > $anoActual)
+                || ($deuda['ano'] == $anoActual && $deuda['mes'] > $mesActual);
             
-            // Agregar todas las deudas pendientes, incluso si el curso ya no está activo
-            // Esto permite pagar deudas de cursos donde el alumno ya no está inscrito
+            // Determinar si el mes está en mora según vencimientos del instituto
+            $enMora = false;
+            if (!$esMesFuturo) {
+                if ($deuda['ano'] < $anoActual || ($deuda['ano'] == $anoActual && $deuda['mes'] < $mesActual)) {
+                    $enMora = true; // Mes anterior: siempre en mora
+                } elseif ($deuda['ano'] == $anoActual && $deuda['mes'] == $mesActual && $diaActual >= $primerDiaVencimiento) {
+                    $enMora = true; // Mes actual pasado el vencimiento
+                }
+            }
+            
             $mesesAdeudados[] = [
-                'mes' => $deuda->getMes(),
-                'ano' => $deuda->getAno(),
-                'nombre' => $nombresMeses[$deuda->getMes()] . ' ' . $deuda->getAno(),
+                'mes' => $deuda['mes'],
+                'ano' => $deuda['ano'],
+                'nombre' => $nombresMeses[$deuda['mes']] . ' ' . $deuda['ano'],
                 'curso' => $curso->getNombre(),
                 'curso_obj' => $curso,
-                'monto' => $deuda->getMonto(),
-                'montoConInteres' => $deuda->getMontoTotal(),
-                'esPendiente' => true
+                'monto' => $deuda['monto'],
+                'montoConInteres' => $deuda['monto'] + $deuda['interes'],
+                'esPendiente' => !$esMesFuturo,
+                'esAdelantado' => $esMesFuturo,
+                'enMora' => $enMora
             ];
         }
         
@@ -683,10 +771,31 @@ class AlumnosPagosController extends AbstractController
         // Se calculan por curso activo: desde el primer mes pendiente hasta la fecha fin del curso
         // (o hasta 12 meses adelante si el curso no tiene fecha fin definida)
         // Esto asegura que se muestren todos los meses, incluso los intermedios que no tienen deuda pendiente
-        $fechaActual = $this->institutoTimezoneService->getNowForInstituto($instituto);
-        $mesActual = (int)$fechaActual->format('n');
-        $anoActual = (int)$fechaActual->format('Y');
+
+        // Obtener meses ya pagados consultando directamente AlumnosPagos (on-demand)
+        $qbPagados = $this->entityManager->createQueryBuilder();
+        $qbPagados->select('IDENTITY(p.curso) AS cursoId, p.mes, p.ano, SUM(p.monto) AS totalPagado')
+            ->from(\App\Entity\AlumnosPagos::class, 'p')
+            ->where('p.alumno = :alumno')
+            ->setParameter('alumno', $alumno)
+            ->groupBy('p.curso, p.mes, p.ano');
+        $pagosData = $qbPagados->getQuery()->getResult();
         
+        // Construir mapa de pagos por curso/mes/año y mapa de precios mensuales por curso
+        $mapaPagosPorCurso = [];
+        foreach ($pagosData as $row) {
+            $key = $row['cursoId'] . '_' . $row['mes'] . '_' . $row['ano'];
+            $mapaPagosPorCurso[$key] = (float) $row['totalPagado'];
+        }
+        
+        // Un mes se considera pagado si existe cualquier pago registrado,
+        // independientemente del monto (descuentos pueden hacer que totalPagado < precio del curso).
+        // Consistente con DeudaCalculatorService::existePagoParaMes().
+        $mesesPagados = [];
+        foreach ($mapaPagosPorCurso as $key => $totalPagado) {
+            $mesesPagados[$key] = true;
+        }
+
         // Obtener cursos activos del alumno para generar meses futuros
         $cursosHistoricos = $alumno->getCursosHistoricos();
         foreach ($cursosHistoricos as $historico) {
@@ -695,8 +804,9 @@ class AlumnosPagosController extends AbstractController
             }
             
             $curso = $historico->getCurso();
-            $fechaFinCurso = $curso->getFechaFin();
-            $fechaInicioCurso = $curso->getFechaInicio();
+            $fechaFinCurso = $historico->getFechaFinPeriodo();
+            $fechaInicioCurso = $historico->getFechaInicioPeriodo();
+            $precioMensualHistorico = (float)($historico->getPrecioMensual() ?? $curso->getPrecio());
             
             // Encontrar el primer mes pendiente para este curso
             $primerMesPendiente = null;
@@ -721,6 +831,7 @@ class AlumnosPagosController extends AbstractController
             $modoGeneracionDeuda = $historico->getModoGeneracionDeuda();
             $fechaMinimaInicio = clone $fechaAltaHistorico;
             $fechaMinimaInicio->modify('first day of this month');
+            $fechaMinimaInicio->setTime(0, 0, 0);
             
             if ($modoGeneracionDeuda === 'proximo_mes') {
                 // Si está configurado para empezar desde el próximo mes, agregar 1 mes
@@ -733,6 +844,7 @@ class AlumnosPagosController extends AbstractController
             $fechaInicio = clone $fechaActual;
             $fechaInicio->modify('first day of this month');
             $fechaInicio->modify('+1 month'); // Por defecto, desde el mes siguiente al actual
+            $fechaInicio->setTime(0, 0, 0);
             
             if ($primerMesPendiente) {
                 // Si hay meses pendientes, empezar desde el primero para llenar todos los huecos
@@ -747,6 +859,7 @@ class AlumnosPagosController extends AbstractController
                 // Si no hay meses pendientes pero hay fecha inicio del curso, empezar desde ahí
                 $fechaInicioCursoPrimerDia = clone $fechaInicioCurso;
                 $fechaInicioCursoPrimerDia->modify('first day of this month');
+                $fechaInicioCursoPrimerDia->setTime(0, 0, 0);
                 if ($fechaInicioCursoPrimerDia < $fechaInicio) {
                     $fechaInicio = $fechaInicioCursoPrimerDia;
                 }
@@ -763,14 +876,17 @@ class AlumnosPagosController extends AbstractController
                 // Si el curso tiene fecha fin, permitir pagar hasta el fin del curso completo
                 $fechaFin = clone $fechaFinCurso;
                 $fechaFin->modify('first day of this month');
+                $fechaFin->setTime(0, 0, 0);
             } else {
                 // Si no tiene fecha fin, limitar a 12 meses adelante
                 $fechaFin = clone $fechaActual;
                 $fechaFin->modify('first day of this month');
-                $fechaFin->modify('+13 months');
+                $fechaFin->modify('+12 months');
+                $fechaFin->setTime(0, 0, 0);
             }
             
             $fechaVerificacion = clone $fechaInicio;
+            $fechaVerificacion->setTime(0, 0, 0);
             
             while ($fechaVerificacion <= $fechaFin) {
                 $mesVerificar = (int)$fechaVerificacion->format('n');
@@ -796,48 +912,60 @@ class AlumnosPagosController extends AbstractController
                 if (!$yaEnLista) {
                     // No generar meses anteriores a la fecha de alta del alumno en el curso
                     if ($fechaVerificacion < $fechaMinimaInicio) {
-                        // No agregar este mes, continuar al siguiente
-                        // (el modify('+1 month') al final del loop se encargará de avanzar)
+                        $fechaVerificacion->modify('+1 month');
                         continue;
                     }
-                    
-                    // Verificar si existe una deuda para este mes (puede estar pagada o no haber vencido aún)
-                    $deudaExistente = $this->entityManager->getRepository(\App\Entity\DeudaAlumno::class)
-                        ->findOneBy([
-                            'alumno' => $alumno,
-                            'curso' => $curso,
-                            'mes' => $mesVerificar,
-                            'ano' => $anoVerificar
-                        ]);
-                    
-                    // Si existe deuda NO pagada, agregarla como pendiente (aunque no haya vencido aún)
-                    if ($deudaExistente && !$deudaExistente->isPagado()) {
+
+                    // Un mes es "adelantado" si es posterior al mes actual del instituto
+                    $esMesFuturo = ($anoVerificar > $anoActual)
+                        || ($anoVerificar == $anoActual && $mesVerificar > $mesActual);
+
+                    $keyDeuda = $curso->getId() . '_' . $mesVerificar . '_' . $anoVerificar;
+                    $deudaCalculada = $mapaDeudasOnDemand[$keyDeuda] ?? null;
+
+                    if ($deudaCalculada) {
+                        // Deuda on-demand: pendiente si es el mes actual o anterior, adelantado si es futuro
+                        $montoMostrar = $esMesFuturo
+                            ? $precioMensualHistorico
+                            : ($deudaCalculada['monto'] + $deudaCalculada['interes']);
+                        $enMoraCalc = false;
+                        if (!$esMesFuturo) {
+                            if ($anoVerificar < $anoActual || ($anoVerificar == $anoActual && $mesVerificar < $mesActual)) {
+                                $enMoraCalc = true;
+                            } elseif ($anoVerificar == $anoActual && $mesVerificar == $mesActual && $diaActual >= $primerDiaVencimiento) {
+                                $enMoraCalc = true;
+                            }
+                        }
                         $mesesAdeudados[] = [
                             'mes' => $mesVerificar,
                             'ano' => $anoVerificar,
                             'nombre' => $nombresMeses[$mesVerificar] . ' ' . $anoVerificar,
                             'curso' => $curso->getNombre(),
                             'curso_obj' => $curso,
-                            'monto' => $deudaExistente->getMontoTotal(),
-                            'esPendiente' => true,
-                            'esAdelantado' => false
+                            'monto' => $montoMostrar,
+                            'esPendiente' => !$esMesFuturo,
+                            'esAdelantado' => $esMesFuturo,
+                            'enMora' => $enMoraCalc
                         ];
-                    }
-                    // Si no existe deuda, agregarla como mes adelantado
-                    // Si la deuda existe pero está pagada, NO agregarla (ya está saldada)
-                    elseif (!$deudaExistente) {
+                    } else {
+                        // Sin deuda calculada: verificar si ya está pagado antes de agregar como adelantado
+                        $keyPagado = $curso->getId() . '_' . $mesVerificar . '_' . $anoVerificar;
+                        if (isset($mesesPagados[$keyPagado])) {
+                            $fechaVerificacion->modify('+1 month');
+                            continue;
+                        }
                         $mesesAdeudados[] = [
                             'mes' => $mesVerificar,
                             'ano' => $anoVerificar,
                             'nombre' => $nombresMeses[$mesVerificar] . ' ' . $anoVerificar,
                             'curso' => $curso->getNombre(),
                             'curso_obj' => $curso,
-                            'monto' => $curso->getPrecio(),
+                            'monto' => $precioMensualHistorico,
                             'esPendiente' => false,
-                            'esAdelantado' => true
+                            'esAdelantado' => true,
+                            'enMora' => false
                         ];
                     }
-                    // Si existe deuda pagada, no agregarla (saltar este mes)
                 }
                 
                 $fechaVerificacion->modify('+1 month');
@@ -851,6 +979,36 @@ class AlumnosPagosController extends AbstractController
             return $fechaA <=> $fechaB;
         });
         
+        // Determinar qué cursos tienen todas las cuotas pagadas (hasta el mes actual)
+        // Un curso tiene "pago completo" si no tiene meses pendientes (no adelantados) sin pagar
+        $cursosPagoCompleto = [];
+        foreach ($cursosHistoricos as $historico) {
+            if (!$historico->isActivo()) {
+                continue;
+            }
+            $cursoId = $historico->getCurso()->getId();
+            $tieneMesPendiente = false;
+            foreach ($mesesAdeudados as $mesData) {
+                if ($mesData['curso_obj']->getId() === $cursoId
+                    && ($mesData['esPendiente'] ?? false)
+                    && !($mesData['estaPagado'] ?? false)) {
+                    $tieneMesPendiente = true;
+                    break;
+                }
+            }
+            // Verificar que al menos un mes haya sido pagado para este curso
+            $tieneAlgunPago = false;
+            foreach ($mesesPagados as $key => $val) {
+                if (str_starts_with($key, $cursoId . '_')) {
+                    $tieneAlgunPago = true;
+                    break;
+                }
+            }
+            if (!$tieneMesPendiente && $tieneAlgunPago) {
+                $cursosPagoCompleto[$cursoId] = true;
+            }
+        }
+
         // Obtener el curso seleccionado si existe
         $cursoSeleccionado = null;
         if ($request->query->has('curso')) {
@@ -931,6 +1089,10 @@ class AlumnosPagosController extends AbstractController
 
         $form->handleRequest($request);
 
+        if ($form->isSubmitted() && $alumnosPago->getFecha() !== null) {
+            $alumnosPago->setFecha($this->institutoTimezoneService->normalizeDateOnly($alumnosPago->getFecha()));
+        }
+
         if ($form->isSubmitted()) {
             // Verificar si está en modo pago múltiple
             $modoPagoMultiple = $request->request->get('modo_pago_multiple') === '1';
@@ -992,6 +1154,7 @@ class AlumnosPagosController extends AbstractController
                     // Obtener el día de vencimiento para determinar si el mes actual ya venció
                     $institutoId = $alumno->getInstituto()->getId();
                     $primerDiaVencimiento = $alumno->getPrimerDiaVencimiento($institutoId);
+                    $mapaDeudasOnDemand = $this->getMapaDeudasOnDemand($alumno);
                     
                     $montoTotalBaseVencidos = 0;
                     $montoTotalBaseNoVencidos = 0;
@@ -1010,16 +1173,13 @@ class AlumnosPagosController extends AbstractController
                             continue;
                         }
                         
-                        // Buscar si existe una deuda para este mes/año/curso
-                        $deudaExistente = $this->entityManager->getRepository(DeudaAlumno::class)->findOneBy([
-                            'alumno' => $alumno,
-                            'curso' => $curso,
-                            'mes' => $mes,
-                            'ano' => $ano
-                        ]);
-                        
-                        // Usar el monto de la deuda si existe, sino el precio actual del curso
-                        $montoBaseCurso = $deudaExistente ? $deudaExistente->getMonto() : $curso->getPrecio();
+                        $keyDeuda = $cursoId . '_' . $mes . '_' . $ano;
+                        $deudaCalculada = $mapaDeudasOnDemand[$keyDeuda] ?? null;
+
+                        // Usar monto calculado on-demand o precio histórico para meses adelantados
+                        $montoBaseCurso = $deudaCalculada
+                            ? (float)$deudaCalculada['monto']
+                            : $this->getPrecioMensualHistoricoParaMes($alumno, $curso, $mes, $ano);
                         
                         // Determinar si el mes está vencido
                         $esVencido = false;
@@ -1219,18 +1379,13 @@ class AlumnosPagosController extends AbstractController
                                     }
                                 }
                                 
-                                // Si no está seleccionado, verificar si está pagado
+                                // Si no está seleccionado, verificar si existe deuda pendiente on-demand
                                 if (!$mesSeleccionado) {
-                                    $deudaAnterior = $this->entityManager->getRepository(\App\Entity\DeudaAlumno::class)
-                                        ->findOneBy([
-                                            'alumno' => $alumno,
-                                            'curso' => $mesesCurso[0]['curso'],
-                                            'mes' => $mesVerificar,
-                                            'ano' => $anoVerificar
-                                        ]);
-                                    
-                                    // Si existe deuda anterior con monto pendiente, rechazar el pago
-                                    if ($deudaAnterior && $deudaAnterior->getMontoPendiente() > 0.01) {
+                                    $cursoRef = $mesesCurso[0]['curso'];
+                                    $keyDeudaAnterior = $cursoRef->getId() . '_' . $mesVerificar . '_' . $anoVerificar;
+                                    $deudaAnterior = $mapaDeudasOnDemand[$keyDeudaAnterior] ?? null;
+
+                                    if ($deudaAnterior && ((float)$deudaAnterior['monto'] + (float)$deudaAnterior['interes']) > 0.01) {
                                         $nombreMes = ['', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
                                                      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][$mesVerificar];
                                         $this->addFlash('danger', "No puede pagar meses futuros sin pagar primero los meses anteriores pendientes. El mes de {$nombreMes} {$anoVerificar} está pendiente y debe ser pagado o seleccionado antes de pagar meses futuros.");
@@ -1253,15 +1408,6 @@ class AlumnosPagosController extends AbstractController
                     $errores = [];
 
                     foreach ($mesesInfo as $mesInfo) {
-                        // Buscar la deuda correspondiente a este mes/año/curso
-                        $deuda = $this->entityManager->getRepository(\App\Entity\DeudaAlumno::class)
-                            ->findOneBy([
-                                'alumno' => $alumno,
-                                'curso' => $mesInfo['curso'],
-                                'mes' => $mesInfo['mes'],
-                                'ano' => $mesInfo['ano']
-                            ]);
-
                         // Calcular monto proporcional para este mes
                         $proporcion = $mesInfo['montoBase'] / $montoTotalBase;
                         $montoMes = $montoUsuario * $proporcion;
@@ -1277,11 +1423,9 @@ class AlumnosPagosController extends AbstractController
                         $nuevoPago->setMetodoPago($alumnosPago->getMetodoPago());
                         $nuevoPago->setObservacion($alumnosPago->getObservacion());
                         
-                        // Registrar el pago usando PagoService
-                        // Si existe la deuda, aplicarla específicamente; si no, permitir adelantado
+                        // Registrar el pago usando PagoService (on-demand: busca o crea la deuda)
                         try {
-                            $deudasIds = $deuda ? [$deuda->getId()] : null;
-                            $resultado = $this->pagoService->registrarPago($nuevoPago, $deudasIds, true);
+                            $resultado = $this->pagoService->registrarPago($nuevoPago, null, true);
                             $pagoRegistrado = $resultado['pago'];
                             $pagosCreados++;
                             
@@ -1387,23 +1531,8 @@ class AlumnosPagosController extends AbstractController
                         ]);
                     }
 
-                    // Registrar el pago usando PagoService (monto menor al debido cancela la deuda igual; soporta adelantados)
-                    // Buscar deuda específica para este mes/año/curso
-                    $deudaEspecifica = $this->entityManager->getRepository(\App\Entity\DeudaAlumno::class)
-                        ->findOneBy([
-                            'alumno' => $alumnosPago->getAlumno(),
-                            'curso' => $alumnosPago->getCurso(),
-                            'mes' => $alumnosPago->getMes(),
-                            'ano' => $alumnosPago->getAno()
-                        ]);
-                    
-                    $deudasIds = null;
-                    if ($deudaEspecifica) {
-                        $deudasIds = [$deudaEspecifica->getId()];
-                    }
-                    
-                    // Permitir pagos adelantados (máximo 12 meses)
-                    $resultado = $this->pagoService->registrarPago($alumnosPago, $deudasIds, true);
+                    // Registrar el pago usando PagoService (on-demand: busca o crea la deuda)
+                    $resultado = $this->pagoService->registrarPago($alumnosPago, null, true);
                     $alumnosPago = $resultado['pago'];
                     
                     // Consumir tokens después de guardar exitosamente
@@ -1463,7 +1592,8 @@ class AlumnosPagosController extends AbstractController
             'calculoMonto' => $calculoMonto,
             'ordenCalculo' => $ordenCalculo,
             'fechaActualInstituto' => $this->institutoTimezoneService->getNowForInstituto($instituto)->format('Y-m-d'),
-            'puedeRecibirDescuentos' => isset($calculoMonto) ? $calculoMonto['puedeRecibirDescuentos'] : true
+            'puedeRecibirDescuentos' => isset($calculoMonto) ? $calculoMonto['puedeRecibirDescuentos'] : true,
+            'cursosPagoCompleto' => $cursosPagoCompleto ?? [],
         ]);
     }
 
@@ -1523,45 +1653,32 @@ class AlumnosPagosController extends AbstractController
                 $mesesPorCurso[$cursoId][] = ['mes' => $mes, 'ano' => $ano];
             }
             
-            // Obtener todas las deudas del alumno de una sola vez
-            $todasLasDeudas = $this->entityManager->getRepository(DeudaAlumno::class)->findBy([
-                'alumno' => $alumno
-            ]);
+            // Mapa de deudas calculadas on-demand para acceso rápido
+            $mapaDeudas = $this->getMapaDeudasOnDemand($alumno);
             
-            // Crear un mapa de deudas por curso/mes/año para acceso rápido
-            $mapaDeudas = [];
-            foreach ($todasLasDeudas as $deuda) {
-                $key = $deuda->getCurso()->getId() . '_' . $deuda->getMes() . '_' . $deuda->getAno();
-                $mapaDeudas[$key] = $deuda;
-            }
-            
-            // Sumar los montos totales de cada deuda (ya incluyen interés)
+            // Sumar montos por mes seleccionado usando cálculo on-demand
             $montoTotalConInteres = 0;
             $montoTotalBase = 0;
             
             foreach ($mesesPorCurso as $cursoId => $meses) {
                 $curso = $this->entityManager->getRepository(Curso::class)->find($cursoId);
-                if (!$curso) continue;
+                if (!$curso) {
+                    continue;
+                }
                 
                 foreach ($meses as $mesData) {
                     $mes = (int)$mesData['mes'];
                     $ano = (int)$mesData['ano'];
-                    
-                    // Buscar la deuda en el mapa
                     $key = $cursoId . '_' . $mes . '_' . $ano;
-                    $deudaExistente = $mapaDeudas[$key] ?? null;
+                    $deudaCalculada = $mapaDeudas[$key] ?? null;
                     
-                    if ($deudaExistente) {
-                        // Usar el monto total de la deuda (ya incluye interés)
-                        $montoTotal = $deudaExistente->getMontoTotal();
-                        $montoBase = $deudaExistente->getMonto();
-                        $montoTotalConInteres += $montoTotal;
-                        $montoTotalBase += $montoBase;
+                    if ($deudaCalculada) {
+                        $montoTotalConInteres += $deudaCalculada['monto'] + $deudaCalculada['interes'];
+                        $montoTotalBase += $deudaCalculada['monto'];
                     } else {
-                        // Mes futuro sin deuda: usar precio del curso
-                        $precio = $curso->getPrecio();
-                        $montoTotalConInteres += $precio;
-                        $montoTotalBase += $precio;
+                        $precioHistorico = $this->getPrecioMensualHistoricoParaMes($alumno, $curso, $mes, $ano);
+                        $montoTotalConInteres += $precioHistorico;
+                        $montoTotalBase += $precioHistorico;
                     }
                 }
             }
@@ -1573,22 +1690,19 @@ class AlumnosPagosController extends AbstractController
             $totalInteres = 0;
             
             foreach ($mesesPorCurso as $cursoId => $meses) {
-                $curso = $this->entityManager->getRepository(Curso::class)->find($cursoId);
-                if (!$curso) continue;
-                
                 foreach ($meses as $mesData) {
                     $mes = (int)$mesData['mes'];
                     $ano = (int)$mesData['ano'];
                     $key = $cursoId . '_' . $mes . '_' . $ano;
-                    $deudaExistente = $mapaDeudas[$key] ?? null;
+                    $deudaCalculada = $mapaDeudas[$key] ?? null;
                     
-                    if ($deudaExistente && $deudaExistente->getInteres() > 0) {
+                    if ($deudaCalculada && $deudaCalculada['interes'] > 0) {
                         $nombresMeses = ['', 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-                        $porcentajeInteresDeuda = ($deudaExistente->getMonto() > 0) 
-                            ? round(($deudaExistente->getInteres() / $deudaExistente->getMonto()) * 100, 2) 
+                        $porcentajeInteresDeuda = ($deudaCalculada['monto'] > 0)
+                            ? round(($deudaCalculada['interes'] / $deudaCalculada['monto']) * 100, 2)
                             : 0;
                         $interesesDetalle[] = $porcentajeInteresDeuda . "% por vencimiento " . $nombresMeses[$mes] . " " . $ano;
-                        $totalInteres += $deudaExistente->getInteres();
+                        $totalInteres += $deudaCalculada['interes'];
                     }
                 }
             }
@@ -1612,9 +1726,9 @@ class AlumnosPagosController extends AbstractController
             $descuentosAplicados = [];
             $puedeRecibirDescuentos = true;
             
-            if ($configuracion && $configuracion->getDeshabilitarDescuentosEnDeuda() && $alumno->tieneDeudasVencidas()) {
+            if ($configuracion && $configuracion->getDeshabilitarDescuentosEnDeuda() && $this->tieneDeudasVencidasOnDemand($alumno, $this->institutoTimezoneService->getNowForInstituto($instituto))) {
                 $puedeRecibirDescuentos = false;
-                $descuentosAplicados[] = "No se aplican descuentos porque el alumno tiene deudas vencidas";
+                $descuentosAplicados[] = "No se aplican descuentos generales (efectivo/hermanos) porque el alumno tiene deudas vencidas";
             }
             $metodoPago = $request->request->get('metodo_pago');
             $aplicarDescuentoEfectivo = ($metodoPago === null || strtolower($metodoPago) === 'efectivo');
@@ -1632,12 +1746,13 @@ class AlumnosPagosController extends AbstractController
                         $descuentosAplicados[] = "Descuento del " . $porcentajeHermanos . "% por tener " . count($hermanos) . " hermano(s) en el instituto";
                     }
                 }
-                
-                foreach ($descuentosPromocionalesSeleccionados as $descuentoPromocional) {
-                    $porcentajeDescuentoPromocional = (float)$descuentoPromocional->getPorcentaje();
-                    $porcentajeDescuentoTotal += $porcentajeDescuentoPromocional;
-                    $descuentosAplicados[] = "Descuento promocional: " . $descuentoPromocional->getNombre() . " (" . $porcentajeDescuentoPromocional . "%)";
-                }
+            }
+            
+            // Descuentos promocionales: siempre se aplican, independientemente de si el alumno tiene deudas
+            foreach ($descuentosPromocionalesSeleccionados as $descuentoPromocional) {
+                $porcentajeDescuentoPromocional = (float)$descuentoPromocional->getPorcentaje();
+                $porcentajeDescuentoTotal += $porcentajeDescuentoPromocional;
+                $descuentosAplicados[] = "Descuento promocional: " . $descuentoPromocional->getNombre() . " (" . $porcentajeDescuentoPromocional . "%)";
             }
             
             // Aplicar descuentos sobre el monto total con interés ya incluido
@@ -1748,9 +1863,9 @@ class AlumnosPagosController extends AbstractController
             $descuentosAplicados = [];
             $puedeRecibirDescuentos = true;
             
-            if ($configuracion && $configuracion->getDeshabilitarDescuentosEnDeuda() && $alumno->tieneDeudasVencidas()) {
+            if ($configuracion && $configuracion->getDeshabilitarDescuentosEnDeuda() && $this->tieneDeudasVencidasOnDemand($alumno, $this->institutoTimezoneService->getNowForInstituto($alumno->getInstituto()))) {
                 $puedeRecibirDescuentos = false;
-                $descuentosAplicados[] = "No se aplican descuentos porque el alumno tiene deudas vencidas";
+                $descuentosAplicados[] = "No se aplican descuentos generales (efectivo/hermanos) porque el alumno tiene deudas vencidas";
             }
             
             $metodoPagoNombre = $request->request->get('metodo_pago');
@@ -1770,12 +1885,13 @@ class AlumnosPagosController extends AbstractController
                         $descuentosAplicados[] = "Descuento del " . $porcentajeHermanos . "% por tener " . count($hermanos) . " hermano(s) en el instituto";
                     }
                 }
-                
-                foreach ($descuentosPromocionalesSeleccionados as $descuentoPromocional) {
-                    $porcentajeDescuentoPromocional = (float)$descuentoPromocional->getPorcentaje();
-                    $porcentajeDescuentoTotal += $porcentajeDescuentoPromocional;
-                    $descuentosAplicados[] = "Descuento promocional: " . $descuentoPromocional->getNombre() . " (" . $porcentajeDescuentoPromocional . "%)";
-                }
+            }
+
+            // Descuentos promocionales: siempre se aplican, independientemente de si el alumno tiene deudas
+            foreach ($descuentosPromocionalesSeleccionados as $descuentoPromocional) {
+                $porcentajeDescuentoPromocional = (float)$descuentoPromocional->getPorcentaje();
+                $porcentajeDescuentoTotal += $porcentajeDescuentoPromocional;
+                $descuentosAplicados[] = "Descuento promocional: " . $descuentoPromocional->getNombre() . " (" . $porcentajeDescuentoPromocional . "%)";
             }
             
             // Aplicar descuentos sobre el monto total
@@ -1980,7 +2096,6 @@ class AlumnosPagosController extends AbstractController
     public function registrarPagoPorDeuda(
         Request $request, 
         \App\Entity\DeudaAlumno $deuda, 
-        \App\Service\DeudaService $deudaService,
         ValidatorInterface $validator
     ): Response {
         // Verificar que la deuda tenga monto pendiente
@@ -2035,12 +2150,12 @@ class AlumnosPagosController extends AbstractController
                 // Parsear la fecha del formulario o usar la fecha actual del instituto
                 if ($fechaPagoStr) {
                     try {
-                        $fechaPago = new \DateTime($fechaPagoStr);
+                        $fechaPago = $this->institutoTimezoneService->normalizeDateOnly(new \DateTime($fechaPagoStr));
                     } catch (\Exception $e) {
-                        $fechaPago = $this->institutoTimezoneService->getNowForInstituto($instituto);
+                        $fechaPago = $this->institutoTimezoneService->getCurrentDateForInstituto($instituto);
                     }
                 } else {
-                    $fechaPago = $this->institutoTimezoneService->getNowForInstituto($instituto);
+                    $fechaPago = $this->institutoTimezoneService->getCurrentDateForInstituto($instituto);
                 }
                 
                 // Crear el pago
@@ -2120,16 +2235,17 @@ class AlumnosPagosController extends AbstractController
             }
         }
         
-        // Obtener los métodos de pago disponibles
-        $metodosPago = $this->entityManager->getRepository(AlumnosPagos::class)
-            ->createQueryBuilder('p')
-            ->select('DISTINCT p.metodoPago')
-            ->getQuery()
-            ->getSingleColumnResult();
-        
-        // Si no hay métodos registrados, definir los métodos predeterminados
+        // Obtener los métodos de pago configurados para este instituto
+        $metodosPagoEntities = $this->entityManager->getRepository(MetodoPago::class)
+            ->findBy(['instituto' => $instituto, 'activo' => true], ['orden' => 'ASC']);
+
+        $metodosPago = array_map(function (MetodoPago $metodo) {
+            return $metodo->getNombre();
+        }, $metodosPagoEntities);
+
+        // Fallback defensivo si no hubiera configuración
         if (empty($metodosPago)) {
-            $metodosPago = ['Efectivo', 'Transferencia', 'Débito', 'Crédito'];
+            $metodosPago = ['Efectivo'];
         }
         
         // Calcular el monto total (incluyendo intereses si aplica)

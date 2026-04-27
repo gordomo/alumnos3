@@ -46,7 +46,9 @@ class HistorialCursosService
         
         // Si no hay fecha de alta especificada, usar la fecha actual
         if (!$fechaAlta) {
-            $fechaAlta = new \DateTime();
+            $fechaAlta = $this->institutoTimezoneService->getCurrentDateForInstituto($alumno->getInstituto());
+        } else {
+            $fechaAlta = $this->institutoTimezoneService->normalizeDateOnly($fechaAlta);
         }
         
         // Crear nuevo registro histórico con snapshot del curso
@@ -76,10 +78,8 @@ class HistorialCursosService
             return $historico;
         }
         
-        // Generar deudas usando DeudaService (centralizado)
-        if ($this->deudaService) {
-            $this->deudaService->generarDeudasParaHistorico($historico, $comenzarDeudaProximoMes);
-        }
+        // Las deudas se calculan on-demand (DeudaCalculatorService) y se crean en tabla
+        // solo al momento de registrar un pago (PagoService). No es necesario pre-generarlas.
         
         return $historico;
     }
@@ -97,7 +97,9 @@ class HistorialCursosService
         
         // Si no se proporciona fecha de baja, usar la fecha actual
         if (!$fechaBaja) {
-            $fechaBaja = new \DateTime();
+            $fechaBaja = $this->institutoTimezoneService->getCurrentDateForInstituto($alumno->getInstituto());
+        } else {
+            $fechaBaja = $this->institutoTimezoneService->normalizeDateOnly($fechaBaja);
         }
         
         $historico->setFechaBaja($fechaBaja);
@@ -233,6 +235,8 @@ class HistorialCursosService
     {
         $alumno = $historico->getAlumno();
         $curso = $historico->getCurso();
+        $instituto = $curso->getInstituto();
+        $nowInstituto = $this->institutoTimezoneService->getNowForInstituto($instituto);
         
         // Verificar si el curso está activo
         if (method_exists($curso, 'getActivo') && $curso->getActivo() === false) {
@@ -243,7 +247,7 @@ class HistorialCursosService
         // Obtener fechas de inicio y fin del curso (no del histórico)
         $fechaInicioCurso = $curso->getFechaInicio();
         $fechaFinCurso = $curso->getFechaFin();
-        $fechaAlta = $historico->getFechaAlta() ?: new \DateTime();
+        $fechaAlta = $historico->getFechaAlta() ?: $this->institutoTimezoneService->getCurrentDateForInstituto($instituto);
         
         // Si no hay fecha de inicio del curso, no podemos generar deudas
         if (!$fechaInicioCurso) {
@@ -252,7 +256,9 @@ class HistorialCursosService
 
         // Si no hay fecha de fin del curso, usar el fin del año actual
         if (!$fechaFinCurso) {
-            $fechaFinCurso = new \DateTime($fechaInicioCurso->format('Y') . '-12-31');
+            $fechaFinCurso = $this->institutoTimezoneService->normalizeDateOnly(
+                $nowInstituto->setDate((int) $nowInstituto->format('Y'), 12, 31)
+            );
         }
 
         // Generar deudas desde el mayor entre inicio de curso y alta del alumno
@@ -268,7 +274,7 @@ class HistorialCursosService
 
         // IMPORTANTE: Generar deudas solo hasta el mes actual, no hasta el fin del curso
         // Las deudas futuras se generarán automáticamente mediante el comando cron mensual
-        $fechaActual = new \DateTime();
+        $fechaActual = $this->institutoTimezoneService->getCurrentDateForInstituto($instituto);
         $fechaIteracion = clone $fechaInicioEfectiva;
         $fechaIteracion->modify('first day of this month');
         
@@ -645,7 +651,7 @@ class HistorialCursosService
         }
         
         // Crear historial básico con fecha actual
-        $fechaAlta = new \DateTime();
+        $fechaAlta = $this->institutoTimezoneService->getCurrentDateForInstituto($alumno->getInstituto());
         $historico = $this->inscribirAlumnoEnCurso($alumno, $curso, $fechaAlta, $comenzarDeudaProximoMes, $modoGeneracionDeuda);
         
         return $historico;

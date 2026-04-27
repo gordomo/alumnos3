@@ -53,6 +53,34 @@ class InstitutoTimezoneService
     }
 
     /**
+     * Fecha civil actual del instituto, normalizada como fecha sin hora.
+     * Se almacena a medianoche UTC para evitar corrimientos con campos date/input type=date.
+     */
+    public function getCurrentDateForInstituto(Instituto $instituto): \DateTime
+    {
+        return $this->normalizeDateOnly($this->getNowForInstituto($instituto));
+    }
+
+    /**
+     * Normaliza una fecha a "solo fecha" preservando su día calendario.
+     * Se usa medianoche UTC para evitar desplazamientos por timezone en formularios HTML date.
+     */
+    public function normalizeDateOnly(\DateTimeInterface $date): \DateTime
+    {
+        $normalized = \DateTime::createFromFormat(
+            'Y-m-d H:i:s',
+            $date->format('Y-m-d') . ' 00:00:00',
+            new \DateTimeZone('UTC')
+        );
+
+        if ($normalized === false) {
+            return new \DateTime($date->format('Y-m-d'), new \DateTimeZone('UTC'));
+        }
+
+        return $normalized;
+    }
+
+    /**
      * Formato de fecha para mostrar en la aplicación (ej: d/m/Y, m/d/Y, Y-m-d).
      * Si el instituto no tiene formato configurado, se usa d/m/Y.
      */

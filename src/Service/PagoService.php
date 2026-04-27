@@ -6,6 +6,7 @@ use App\Entity\Alumno;
 use App\Entity\AlumnosPagos;
 use App\Entity\DeudaAlumno;
 use App\Entity\PagoAplicacion;
+use App\Entity\SaldoFavor;
 use Doctrine\ORM\EntityManagerInterface;
 
 class PagoService
@@ -127,6 +128,23 @@ class PagoService
 
         // Actualizar monto restante del pago
         $pago->setMontoRestante($montoRestante);
+
+        // Si hay sobrepago, crear automáticamente un saldo a favor
+        if ($montoRestante > 0.01) {
+            $saldoFavor = new SaldoFavor();
+            $saldoFavor->setAlumno($pago->getAlumno());
+            $saldoFavor->setInstituto($pago->getAlumno()->getInstituto());
+            $saldoFavor->setMonto(number_format($montoRestante, 2, '.', ''));
+            $saldoFavor->setMontoDisponible(number_format($montoRestante, 2, '.', ''));
+            $saldoFavor->setTipo(SaldoFavor::TIPO_SOBREPAGO);
+            $saldoFavor->setDescripcion('Saldo a favor generado automáticamente por sobrepago');
+            $saldoFavor->setPagoOrigen($pago);
+            if ($pago->getCurso()) {
+                $saldoFavor->setCurso($pago->getCurso());
+            }
+            $this->entityManager->persist($saldoFavor);
+        }
+
         $this->entityManager->flush();
 
         return [
@@ -244,14 +262,16 @@ class PagoService
             }
         }
 
-        // Crear la deuda
+        // Crear la deuda con precio del histórico (no del curso actual)
+        $precioMensual = $historico->getPrecioMensual() ?? $curso->getPrecio();
+
         $deuda = new DeudaAlumno();
         $deuda->setAlumno($alumno);
         $deuda->setCurso($curso);
         $deuda->setCursoHistorico($historico);
         $deuda->setMes($mes);
         $deuda->setAno($ano);
-        $deuda->setMonto($curso->getPrecio());
+        $deuda->setMonto($precioMensual);
         $deuda->setInstituto($alumno->getInstituto());
 
         $this->entityManager->persist($deuda);

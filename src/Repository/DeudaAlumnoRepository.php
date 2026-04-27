@@ -5,6 +5,7 @@ namespace App\Repository;
 use App\Entity\Alumno;
 use App\Entity\Curso;
 use App\Entity\DeudaAlumno;
+use App\Entity\Instituto;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -136,34 +137,71 @@ class DeudaAlumnoRepository extends ServiceEntityRepository
      */
     public function findDeudasVencidas(): array
     {
-        $fechaActual = new \DateTime();
-        $mesActual = (int)$fechaActual->format('n');
-        $anoActual = (int)$fechaActual->format('Y');
-        $diaActual = (int)$fechaActual->format('j');
-
-        $qb = $this->createQueryBuilder('d')
+        $deudasConSaldo = $this->createQueryBuilder('d')
             ->leftJoin('d.aplicaciones', 'pa')
             ->groupBy('d.id')
-            ->having('COALESCE(SUM(pa.montoAplicado), 0) < d.monto + COALESCE(d.interes, 0)');
-
-        // Deudas de meses anteriores
-        $qb->andWhere(
-            $qb->expr()->orX(
-                // Años anteriores
-                $qb->expr()->lt('d.ano', ':anoActual'),
-                // Mismo año, meses anteriores
-                $qb->expr()->andX(
-                    $qb->expr()->eq('d.ano', ':anoActual'),
-                    $qb->expr()->lt('d.mes', ':mesActual')
-                )
-            )
-        )
-        ->setParameter('anoActual', $anoActual)
-        ->setParameter('mesActual', $mesActual);
-
-        return $qb->orderBy('d.ano', 'ASC')
+            ->having('COALESCE(SUM(pa.montoAplicado), 0) < d.monto + COALESCE(d.interes, 0)')
+            ->orderBy('d.ano', 'ASC')
             ->addOrderBy('d.mes', 'ASC')
             ->getQuery()
             ->getResult();
+
+        $deudasVencidas = [];
+        foreach ($deudasConSaldo as $deuda) {
+            $instituto = $deuda->getInstituto();
+            $fechaActual = $this->getNowForInstituto($instituto);
+            $mesActual = (int) $fechaActual->format('n');
+            $anoActual = (int) $fechaActual->format('Y');
+            $diaActual = (int) $fechaActual->format('j');
+            $primerDiaVencimiento = $this->getPrimerDiaVencimiento($instituto);
+
+            $esMesAnterior = $deuda->getAno() < $anoActual
+                || ($deuda->getAno() == $anoActual && $deuda->getMes() < $mesActual);
+            $esMesActualVencido = $deuda->getAno() == $anoActual
+                && $deuda->getMes() == $mesActual
+                && $diaActual >= $primerDiaVencimiento;
+
+            if ($esMesAnterior || $esMesActualVencido) {
+                $deudasVencidas[] = $deuda;
+            }
+        }
+
+        return $deudasVencidas;
+    }
+
+    private function getNowForInstituto(?Instituto $instituto): \DateTimeImmutable
+    {
+        $timezone = null;
+        if ($instituto && $instituto->getConfiguracion()) {
+            $timezone = $instituto->getConfiguracion()->getTimezone();
+        }
+
+        if (!empty($timezone)) {
+            try {
+                return new \DateTimeImmutable('now', new \DateTimeZone($timezone));
+            } catch (\Exception $e) {
+                // fallback
+            }
+        }
+
+        return new \DateTimeImmutable();
+    }
+
+    private function getPrimerDiaVencimiento(?Instituto $instituto): int
+    {
+        if (!$instituto) {
+            return 5;
+        }
+
+        $vencimientos = $instituto->getVencimientos()->toArray();
+        if (empty($vencimientos)) {
+            return 5;
+        }
+
+        usort($vencimientos, function($a, $b) {
+            return $a->getDiaVencimiento() <=> $b->getDiaVencimiento();
+        });
+
+        return (int) $vencimientos[0]->getDiaVencimiento();
     }
 }

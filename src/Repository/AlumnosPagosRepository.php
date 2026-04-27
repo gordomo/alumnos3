@@ -79,8 +79,10 @@ class AlumnosPagosRepository extends ServiceEntityRepository
 
     public function findPagosAtiempo($instituto)
     {
+        $diaCorte = $this->getPrimerDiaVencimiento($instituto);
         $query = $this->createQueryBuilder('a');
-        $query->where('DAY(a.fecha) < 21');
+        $query->where('DAY(a.fecha) < :diaCorte')
+            ->setParameter('diaCorte', $diaCorte);
         $query->join('a.alumno', 'p')
             ->andWhere('p.instituto = :instituto')  
             ->setParameter('instituto', $instituto);
@@ -90,8 +92,10 @@ class AlumnosPagosRepository extends ServiceEntityRepository
 
     public function findPagosFueraDeTiempo($instituto)
     {
+        $diaCorte = $this->getPrimerDiaVencimiento($instituto);
         $query = $this->createQueryBuilder('a');
-        $query->where('DAY(a.fecha) >= 21');
+        $query->where('DAY(a.fecha) >= :diaCorte')
+            ->setParameter('diaCorte', $diaCorte);
         $query->join('a.alumno', 'p')
             ->andWhere('p.instituto = :instituto')  
             ->setParameter('instituto', $instituto);
@@ -128,6 +132,24 @@ class AlumnosPagosRepository extends ServiceEntityRepository
         if ($flush) {
             $this->getEntityManager()->flush();
         }
+    }
+
+    private function getPrimerDiaVencimiento($instituto): int
+    {
+        if (!$instituto || !method_exists($instituto, 'getVencimientos')) {
+            return 5;
+        }
+
+        $vencimientos = $instituto->getVencimientos()->toArray();
+        if (empty($vencimientos)) {
+            return 5;
+        }
+
+        usort($vencimientos, function($a, $b) {
+            return $a->getDiaVencimiento() <=> $b->getDiaVencimiento();
+        });
+
+        return (int) $vencimientos[0]->getDiaVencimiento();
     }
 
     /*

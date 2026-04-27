@@ -72,12 +72,12 @@ document.addEventListener('DOMContentLoaded', function() {
         if (inputInicio) {
             var startInicio = moment(inputInicio.value, fmt);
             if (!startInicio.isValid()) { startInicio = moment(); }
-            $(inputInicio).daterangepicker({ singleDatePicker: true, startDate: startInicio, locale: { format: fmt } }, function(start) { inputInicio.value = start.format(fmt); });
+            $(inputInicio).daterangepicker({ singleDatePicker: true, startDate: startInicio, locale: window.getDateRangePickerLocale ? window.getDateRangePickerLocale(fmt) : { format: fmt } }, function(start) { inputInicio.value = start.format(fmt); });
         }
         if (inputFin) {
             var startFin = moment(inputFin.value, fmt);
             if (!startFin.isValid()) { startFin = moment(); }
-            $(inputFin).daterangepicker({ singleDatePicker: true, startDate: startFin, locale: { format: fmt } }, function(start) { inputFin.value = start.format(fmt); });
+            $(inputFin).daterangepicker({ singleDatePicker: true, startDate: startFin, locale: window.getDateRangePickerLocale ? window.getDateRangePickerLocale(fmt) : { format: fmt } }, function(start) { inputFin.value = start.format(fmt); });
         }
     }
 });

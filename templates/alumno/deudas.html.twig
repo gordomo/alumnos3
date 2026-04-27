@@ -26,6 +26,25 @@
                         <div class="alert alert-info">
                             <p><i class="bi bi-info-circle"></i> Las deudas se calculan automáticamente basándose en los cursos activos del alumno y los pagos realizados. Para cancelar una deuda, registre un pago que la cubra completamente.</p>
                         </div>
+
+                        {% if saldoFavorTotal is defined and saldoFavorTotal > 0 %}
+                            <div class="alert alert-success d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="bi bi-wallet2" style="font-size: 1.3rem;"></i>
+                                    <strong>Saldo a favor disponible: ${{ saldoFavorTotal|number_format(2, ',', '.') }}</strong>
+                                    <br><small class="text-muted">Este saldo puede ser aplicado a deudas pendientes.</small>
+                                </div>
+                                <a href="{{ path('app_saldo_favor_index', {'id': alumno.id}) }}" class="btn btn-success btn-sm">
+                                    <i class="bi bi-arrow-right-circle"></i> Gestionar Saldos a Favor
+                                </a>
+                            </div>
+                        {% else %}
+                            <div class="d-flex justify-content-end mb-2">
+                                <a href="{{ path('app_saldo_favor_index', {'id': alumno.id}) }}" class="btn btn-outline-secondary btn-sm">
+                                    <i class="bi bi-wallet2"></i> Saldos a Favor
+                                </a>
+                            </div>
+                        {% endif %}
                         
                         <div class="alert alert-secondary">
                             <h5><i class="bi bi-book"></i> Cursos del alumno</h5>
@@ -55,7 +74,7 @@
                                                     {% endif %}
                                                 </small>
                                             {% elseif modo == 'proximo_mes' %}
-                                                <span class="badge bg-warning text-dark">Desde el mes siguiente a la inscripción</span>
+                                                <span class="badge bg-success text-white">Desde el mes siguiente a la inscripción</span>
                                                 <br><small class="text-muted">Primera deuda: {{ historico.fechaAlta|date_modify('+1 month')|mes_es }}</small>
                                             {% else %}
                                                 <span class="badge bg-info">Desde el mes de inscripción</span>
@@ -103,7 +122,14 @@
                                 <div class="accordion-item">
                                     <h2 class="accordion-header" id="heading{{ cursoId }}">
                                         <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ cursoId }}" aria-expanded="true" aria-controls="collapse{{ cursoId }}">
-                                            <strong>{{ datos.curso.nombre }}</strong> - {{ datos.deudas|length }} deudas pendientes
+                                            <strong>{{ datos.curso.nombre }}</strong> - 
+                                            {% if cursosPagoCompleto[cursoId] is defined and cursosPagoCompleto[cursoId] %}
+                                                <span class="badge bg-success ms-2"><i class="bi bi-check-circle-fill"></i> Curso pagado completo</span>
+                                            {% elseif datos.deudas|length > 0 %}
+                                                {{ datos.deudas|length }} deudas pendientes
+                                            {% else %}
+                                                <span class="text-success">Al día</span>
+                                            {% endif %}
                                             {% if not datos.cursoActivo|default(true) %}
                                                 <span class="badge bg-secondary ms-2">Curso inactivo</span>
                                             {% endif %}
@@ -111,6 +137,16 @@
                                     </h2>
                                     <div id="collapse{{ cursoId }}" class="accordion-collapse collapse show" aria-labelledby="heading{{ cursoId }}" data-bs-parent="#accordionDeudas">
                                         <div class="accordion-body">
+                                            {% if datos.deudas|length == 0 %}
+                                                <div class="alert alert-success mb-0">
+                                                    <i class="bi bi-check-circle-fill"></i>
+                                                    {% if cursosPagoCompleto[cursoId] is defined and cursosPagoCompleto[cursoId] %}
+                                                        <strong>Curso pagado completo.</strong> El alumno tiene todas las cuotas de este curso pagadas.
+                                                    {% else %}
+                                                        El alumno está al día con este curso. No tiene deudas pendientes.
+                                                    {% endif %}
+                                                </div>
+                                            {% else %}
                                             <div class="d-flex justify-content-between align-items-center mb-3">
                                                 <div>
                                                     {% if not datos.cursoActivo|default(true) %}
@@ -165,47 +201,29 @@
                                                                 {% endif %}
                                                             </td>
                                                             <td>
-                                                                {% set hoy = "now"|date("Y-m-d") %}
-                                                                {% set mes_actual = "now"|date("n") %}
-                                                                {% set ano_actual = "now"|date("Y") %}
-                                                                {% set dia_actual = "now"|date("d") %}
-                                                                
-                                                                {% set vencimientos = alumno.instituto.vencimientos %}
-                                                                {% set primer_vencimiento = null %}
-                                                                {% set primer_dia_vencimiento = 5 %}
-                                                                
-                                                                {% if vencimientos|length > 0 %}
-                                                                    {% set vencimientos_sorted = vencimientos|sort((a, b) => a.diaVencimiento <=> b.diaVencimiento) %}
-                                                                    {% set primer_vencimiento = vencimientos_sorted|first %}
-                                                                    {% set primer_dia_vencimiento = primer_vencimiento.diaVencimiento %}
-                                                                {% endif %}
-                                                                
-                                                                {% if deuda.mes < mes_actual and deuda.ano <= ano_actual %}
+                                                                {% if deuda.ano < anoActualInstituto or (deuda.ano == anoActualInstituto and deuda.mes < mesActualInstituto) %}
                                                                     <span class="badge bg-danger">Vencida</span>
-                                                                {% elseif deuda.mes == mes_actual and deuda.ano == ano_actual %}
-                                                                    {% if dia_actual >= primer_dia_vencimiento %}
+                                                                {% elseif deuda.ano == anoActualInstituto and deuda.mes == mesActualInstituto %}
+                                                                    {% if diaActualInstituto >= primerDiaVencimiento %}
                                                                         <span class="badge bg-danger">Vencida</span>
                                                                     {% else %}
-                                                                        <span class="badge bg-warning">Mes actual - Pendiente de pago</span>
+                                                                        <span class="badge bg-primary">Mes actual - Pendiente de pago</span>
                                                                     {% endif %}
-                                                                {% else %}
-                                                                    <span class="badge bg-info">Futura</span>
                                                                 {% endif %}
                                                             </td>
                                                             <td>
-                                                                {% if deuda.deudaEntity is defined and deuda.deudaEntity %}
-                                                                    <form method="post" action="{{ path('app_alumno_cancelar_deuda', {'id': alumno.id, 'deudaId': deuda.deudaEntity.id}) }}" onsubmit="return confirm('¿Está seguro de que desea perdonar/cancelar esta deuda?');" style="display: inline;">
-                                                                        <input type="hidden" name="_token" value="{{ csrf_token('cancelar-deuda' ~ deuda.deudaEntity.id) }}">
-                                                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Perdonar/Cancelar deuda">
-                                                                            <i class="bi bi-x-circle"></i>
-                                                                        </button>
-                                                                    </form>
-                                                                {% endif %}
+                                                                <form method="post" action="{{ path('app_alumno_cancelar_deuda', {'id': alumno.id, 'cursoId': deuda.curso.id, 'mes': deuda.mes, 'ano': deuda.ano}) }}" onsubmit="return confirm('¿Está seguro de que desea perdonar/cancelar esta deuda?');" style="display: inline;">
+                                                                    <input type="hidden" name="_token" value="{{ csrf_token('cancelar-deuda' ~ deuda.curso.id ~ '-' ~ deuda.mes ~ '-' ~ deuda.ano) }}">
+                                                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Perdonar/Cancelar deuda">
+                                                                        <i class="bi bi-x-circle"></i>
+                                                                    </button>
+                                                                </form>
                                                             </td>
                                                         </tr>
                                                     {% endfor %}
                                                 </tbody>
                                             </table>
+                                            {% endif %}
                                         </div>
                                     </div>
                                 </div>

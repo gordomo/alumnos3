@@ -547,7 +547,7 @@ class Alumno
 
         // Si no se especifican mes y año, usar la fecha actual
         if ($mes === null || $ano === null) {
-            $fecha = new \DateTime();
+            $fecha = $this->getFechaActualInstituto();
             $mes = (int)$fecha->format('n');
             $ano = (int)$fecha->format('Y');
         }
@@ -603,7 +603,7 @@ class Alumno
             return 0;
         }
 
-        $hoy = new \DateTime();
+        $hoy = $this->getFechaActualInstituto();
         $diaActual = (int)$hoy->format('d');
 
         // Encontrar el vencimiento aplicable
@@ -730,14 +730,16 @@ class Alumno
      * Verifica si el alumno tiene deudas vencidas según los vencimientos del instituto
      * Una deuda se considera vencida cuando la fecha actual supera la fecha de vencimiento del mes
      */
-    public function tieneDeudasVencidas(): bool
+    public function tieneDeudasVencidas(?\DateTimeInterface $fechaActual = null): bool
     {
         if (!$this->activo) {
             return false;
         }
 
         // Obtener la fecha actual
-        $fechaActual = new \DateTime();
+        if ($fechaActual === null) {
+            $fechaActual = $this->getFechaActualInstituto();
+        }
         $diaActual = (int)$fechaActual->format('d');
         $mesActual = (int)$fechaActual->format('n');
         $anoActual = (int)$fechaActual->format('Y');
@@ -808,42 +810,52 @@ class Alumno
      * Obtiene las deudas vencidas y la del mes actual si corresponde
      * @return array Array de deudas que deben mostrarse para pago
      */
-    public function getDeudasParaPago(): array
+    public function getDeudasParaPago(?\DateTimeInterface $fechaActual = null): array
     {
         if (!$this->activo) {
             return [];
         }
 
+        if ($fechaActual === null) {
+            $fechaActual = $this->getFechaActualInstituto();
+        }
+
         $deudasParaMostrar = [];
-        $fechaActual = new \DateTime();
         $mesActual = (int)$fechaActual->format('n');
         $anoActual = (int)$fechaActual->format('Y');
-        $diaActual = (int)$fechaActual->format('d');
-        
-        // Obtener el día de vencimiento cacheado
-        $institutoId = $this->instituto->getId();
-        $primerDiaVencimiento = $this->getPrimerDiaVencimiento($institutoId);
-        
-        // Filtrar deudas que deben mostrarse (solo las que NO están pagadas)
+
+        // Incluir deudas del mes actual y anteriores (no pagadas)
+        // Las futuras se muestran como "adelantado" en el formulario de pago
         foreach ($this->deudas as $deuda) {
-            // Solo incluir deudas NO pagadas (sin aplicaciones de pago)
             if (!$deuda->isPagado()) {
                 $mesDeuda = $deuda->getMes();
                 $anoDeuda = $deuda->getAno();
-                
-                // Incluir deudas de meses pasados (siempre vencidas)
-                if ($anoDeuda < $anoActual || ($anoDeuda == $anoActual && $mesDeuda < $mesActual)) {
+
+                if ($anoDeuda < $anoActual || ($anoDeuda == $anoActual && $mesDeuda <= $mesActual)) {
                     $deudasParaMostrar[] = $deuda;
                 }
-                // Incluir deuda del mes actual solo si ya venció
-                elseif ($anoDeuda == $anoActual && $mesDeuda == $mesActual && $diaActual > $primerDiaVencimiento) {
-                    $deudasParaMostrar[] = $deuda;
-                }
-                // No incluir deudas de meses futuros por defecto
             }
         }
-        
+
         return $deudasParaMostrar;
+    }
+
+    private function getFechaActualInstituto(): \DateTimeImmutable
+    {
+        $timezone = null;
+        if ($this->instituto && $this->instituto->getConfiguracion()) {
+            $timezone = $this->instituto->getConfiguracion()->getTimezone();
+        }
+
+        if (!empty($timezone)) {
+            try {
+                return new \DateTimeImmutable('now', new \DateTimeZone($timezone));
+            } catch (\Exception $e) {
+                // Fallback a timezone por defecto de la aplicación/servidor.
+            }
+        }
+
+        return new \DateTimeImmutable();
     }
 
     public function getUser(): ?User

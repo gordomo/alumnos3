@@ -370,7 +370,7 @@ class DeudaService
         
         // Filtrar por fecha si es necesario
         if ($soloFuturas) {
-            $fechaActual = new \DateTime();
+            $fechaActual = $this->institutoTimezoneService->getNowForInstituto($alumno->getInstituto());
             $mesActual = (int)$fechaActual->format('n');
             $anoActual = (int)$fechaActual->format('Y');
             
@@ -435,8 +435,8 @@ class DeudaService
         }
         
         // IMPORTANTE: Solo generar deudas hasta el mes actual, no hasta fin de año
-        $fechaActual = new \DateTime();
-        $fechaFinCurso = $curso->getFechaFin() ?: new \DateTime($fechaActual->format('Y') . '-12-31');
+        $fechaActual = $this->institutoTimezoneService->getNowForInstituto($alumno->getInstituto());
+        $fechaFinCurso = $curso->getFechaFin() ?: \DateTime::createFromImmutable($fechaActual->setDate((int)$fechaActual->format('Y'), 12, 31));
         
         // Generar solo hasta el mes actual o hasta que termine el curso
         $fechaFin = $fechaActual < $fechaFinCurso ? $fechaActual : $fechaFinCurso;
@@ -685,9 +685,7 @@ class DeudaService
      */
     public function generarDeudasMesActual(?Instituto $instituto = null, bool $dryRun = false): array
     {
-        $fechaActual = new \DateTime();
-        $mesActual = (int)$fechaActual->format('n');
-        $anoActual = (int)$fechaActual->format('Y');
+        $fechaActual = new \DateTimeImmutable();
         
         $estadisticas = [
             'alumnosProcesados' => 0,
@@ -714,6 +712,7 @@ class DeudaService
         
         foreach ($alumnos as $alumno) {
             $estadisticas['alumnosProcesados']++;
+            $fechaActualAlumno = $this->institutoTimezoneService->getNowForInstituto($alumno->getInstituto());
             
             // Obtener todos los cursos activos del alumno
             $historicos = $historicoRepo->findBy([
@@ -729,12 +728,12 @@ class DeudaService
                 $fechaFinCurso = $curso->getFechaFin();
                 
                 // Si el curso no ha iniciado aún, saltar
-                if ($fechaInicioCurso && $fechaInicioCurso > $fechaActual) {
+                if ($fechaInicioCurso && $fechaInicioCurso > $fechaActualAlumno) {
                     continue;
                 }
                 
                 // Si el curso ya finalizó, saltar
-                if ($fechaFinCurso && $fechaFinCurso < $fechaActual) {
+                if ($fechaFinCurso && $fechaFinCurso < $fechaActualAlumno) {
                     continue;
                 }
                 
@@ -748,13 +747,13 @@ class DeudaService
                         $fechaInicio = $fechaInicioHistorico;
                     } else {
                         // Si tampoco hay fecha de inicio del histórico, usar el mes actual
-                        $fechaInicio = new \DateTime();
+                        $fechaInicio = \DateTime::createFromImmutable($fechaActualAlumno);
                         $fechaInicio->modify('first day of this month');
                     }
                 }
                 
                 // Fin: mes actual (no generar deudas futuras)
-                $fechaFin = clone $fechaActual;
+                $fechaFin = \DateTime::createFromImmutable($fechaActualAlumno);
                 $fechaFin->modify('last day of this month');
                 
                 // Si el curso tiene fecha fin y es anterior al mes actual, usar esa fecha
@@ -852,7 +851,7 @@ class DeudaService
             return $estadisticas;
         }
         
-        $fechaActual = new \DateTime();
+        $fechaActual = $this->institutoTimezoneService->getNowForInstituto($alumno->getInstituto());
         $mesActual = (int)$fechaActual->format('n');
         $anoActual = (int)$fechaActual->format('Y');
         

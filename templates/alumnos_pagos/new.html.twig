@@ -50,6 +50,25 @@
                         </h4>
                     </div>
                     <div class="card-body">
+                        {# Cursos con pago completo #}
+                        {% if cursosPagoCompleto is defined and cursosPagoCompleto|length > 0 %}
+                            <div class="mb-4" style="border-left: 4px solid #28a745; background-color: #d4edda; padding: 1rem; border-radius: 4px;">
+                                <h5 class="mb-2 text-dark">
+                                    <i class="bi bi-check-circle-fill" style="color: #28a745;"></i> Cursos Pagados Completo
+                                </h5>
+                                {% for cursoObj in cursos %}
+                                    {% if cursosPagoCompleto[cursoObj.id] is defined and cursosPagoCompleto[cursoObj.id] %}
+                                        <div class="d-flex align-items-center mb-1">
+                                            <span class="badge bg-success me-2" style="font-size: 0.85rem;">
+                                                <i class="bi bi-check-circle-fill"></i> {{ cursoObj.nombre }}
+                                            </span>
+                                            <small class="text-muted">Todas las cuotas de este curso están pagadas</small>
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+
                         {# Selector de curso si hay múltiples cursos #}
                         {% set cursosUnicos = [] %}
                         {% set cursosIdsVistos = [] %}
@@ -113,6 +132,11 @@
                                                 <div class="card-body">
                                                     <h6 class="card-title text-dark mb-3">
                                                         <strong>{{ curso }}</strong>
+                                                        {% if cursosPagoCompleto[cursoId] is defined and cursosPagoCompleto[cursoId] %}
+                                                            <span class="badge bg-success ms-2">
+                                                                <i class="bi bi-check-circle-fill"></i> Curso pagado completo
+                                                            </span>
+                                                        {% endif %}
                                                         <button type="button" class="btn btn-sm btn-outline-primary ms-2 seleccionar-todos-btn" data-curso="{{ curso }}">
                                                             Seleccionar todos
                                                         </button>
@@ -121,17 +145,20 @@
                                                         {% for mes in meses %}
                                                             {% set esAdelantado = mes.esAdelantado is defined ? mes.esAdelantado : false %}
                                                             {% set estaPagado = mes.estaPagado is defined ? mes.estaPagado : false %}
+                                                            {% set enMora = mes.enMora is defined ? mes.enMora : false %}
                                                             {% set fechaActual = date() %}
-                                                            {% set mesActual = fechaActual|date('n')|number_format %}
-                                                            {% set anoActual = fechaActual|date('Y')|number_format %}
+                                                            {% set mesActual = fechaActual|date('n') + 0 %}
+                                                            {% set anoActual = fechaActual|date('Y') + 0 %}
                                                             {% set esMesFuturo = (mes.ano > anoActual) or (mes.ano == anoActual and mes.mes > mesActual) %}
+                                                            {% set esMesActual = (mes.ano == anoActual and mes.mes == mesActual) %}
                                                             <div class="col-md-3 mb-2">
                                                                 <div class="mes-adeudado-checkbox-container position-relative" 
-                                                                     style="background-color: {% if estaPagado %}#d4edda{% elseif esAdelantado %}#e7f3ff{% else %}#f8f9fa{% endif %}; border: 2px solid {% if estaPagado %}#28a745{% elseif esAdelantado %}#0d6efd{% else %}#dee2e6{% endif %}; border-radius: 8px; padding: 1rem; cursor: {% if estaPagado %}default{% else %}pointer{% endif %}; transition: all 0.2s ease; user-select: none; opacity: {% if estaPagado %}0.7{% else %}1{% endif %};"
+                                                                     style="background-color: {% if estaPagado %}#d4edda{% elseif enMora %}#fff0f0{% elseif esMesActual and not esAdelantado %}#f0fff0{% elseif esAdelantado %}#e7f3ff{% else %}#f8f9fa{% endif %}; border: 2px solid {% if estaPagado %}#28a745{% elseif enMora %}#dc3545{% elseif esMesActual and not esAdelantado %}#28a745{% elseif esAdelantado %}#0d6efd{% else %}#dee2e6{% endif %}; border-radius: 8px; padding: 1rem; cursor: {% if estaPagado %}default{% else %}pointer{% endif %}; transition: all 0.2s ease; user-select: none; opacity: {% if estaPagado %}0.7{% else %}1{% endif %};"
                                                                      data-mes-checkbox-id="mes_{{ mes.mes }}_{{ mes.ano }}_{{ mes.curso_obj.id }}"
                                                                      data-es-adelantado="{{ esAdelantado ? 'true' : 'false' }}"
                                                                      data-es-mes-futuro="{{ esMesFuturo ? 'true' : 'false' }}"
-                                                                     data-esta-pagado="{{ estaPagado ? 'true' : 'false' }}">
+                                                                     data-esta-pagado="{{ estaPagado ? 'true' : 'false' }}"
+                                                                     data-en-mora="{{ enMora ? 'true' : 'false' }}">
                                                                     <input type="checkbox" 
                                                                            class="mes-adeudado-checkbox position-absolute" 
                                                                            style="opacity: 0; position: absolute; pointer-events: none;"
@@ -153,6 +180,10 @@
                                                                                 {{ mes.nombre }}
                                                                                 {% if estaPagado %}
                                                                                     <span class="badge bg-success ms-1" style="font-size: 0.7rem;">PAGADA</span>
+                                                                                {% elseif enMora %}
+                                                                                    <span class="badge bg-danger ms-1" style="font-size: 0.7rem;">Vencido</span>
+                                                                                {% elseif esMesActual and not esAdelantado %}
+                                                                                    <span class="badge bg-success ms-1" style="font-size: 0.7rem;">Corriente</span>
                                                                                 {% elseif esAdelantado %}
                                                                                     <span class="badge bg-info ms-1" style="font-size: 0.7rem;">Adelantado</span>
                                                                                 {% endif %}
@@ -206,10 +237,15 @@
                             <div class="row">
                                 {% for cursoObj in cursosUnicosArray %}
                                     <div class="col-md-{% if cursosUnicosArray|length > 1 %}6{% else %}12{% endif %} mb-3">
-                                        <div class="card border-0" style="background-color: #f8f9fa; border-left: 3px solid #0d6efd !important;">
+                                        <div class="card border-0" style="background-color: {% if cursosPagoCompleto[cursoObj.id] is defined and cursosPagoCompleto[cursoObj.id] %}#d4edda{% else %}#f8f9fa{% endif %}; border-left: 3px solid {% if cursosPagoCompleto[cursoObj.id] is defined and cursosPagoCompleto[cursoObj.id] %}#28a745{% else %}#0d6efd{% endif %} !important;">
                                             <div class="card-body">
                                                 <h6 class="card-title text-dark mb-2">
                                                     <strong>{{ cursoObj.nombre }}</strong>
+                                                    {% if cursosPagoCompleto[cursoObj.id] is defined and cursosPagoCompleto[cursoObj.id] %}
+                                                        <span class="badge bg-success ms-2">
+                                                            <i class="bi bi-check-circle-fill"></i> Curso pagado completo
+                                                        </span>
+                                                    {% endif %}
                                                 </h6>
                                                 <p class="mb-1 text-muted small">
                                                     <strong>Precio base:</strong> <span class="text-dark">${{ cursoObj.precio | number_format(2, ',', '.')}}</span>
@@ -317,7 +353,7 @@
                 {% endif %}
 
                         {# Descuentos Promocionales Disponibles #}
-                        {% if descuentosPromocionales is defined and descuentosPromocionales|length > 0 and puedeRecibirDescuentos is defined and puedeRecibirDescuentos %}
+                        {% if descuentosPromocionales is defined and descuentosPromocionales|length > 0 %}
                             <div class="mb-3" id="descuentos-promocionales-container" style="border-left: 4px solid #0dcaf0; background-color: #cff4fc; padding: 1rem; border-radius: 4px;">
                                 <h6 class="mb-2 text-dark">
                                     <i class="bi bi-tag" style="color: #0dcaf0;"></i> Descuentos Promocionales Disponibles
@@ -995,20 +1031,7 @@
                                 }
                             }
                             
-                            // Actualizar visibilidad de descuentos promocionales según puedeRecibirDescuentos
-                            const descuentosPromocionalesContainer = document.getElementById('descuentos-promocionales-container');
-                            if (descuentosPromocionalesContainer) {
-                                if (data.puedeRecibirDescuentos !== undefined && !data.puedeRecibirDescuentos) {
-                                    descuentosPromocionalesContainer.style.display = 'none';
-                                    // Desmarcar todos los checkboxes de descuentos promocionales
-                                    const checkboxesDescuentos = document.querySelectorAll('.descuento-promocional-checkbox');
-                                    checkboxesDescuentos.forEach(function(cb) {
-                                        cb.checked = false;
-                                    });
-                                } else if (data.puedeRecibirDescuentos !== undefined && data.puedeRecibirDescuentos) {
-                                    descuentosPromocionalesContainer.style.display = 'block';
-                                }
-                            }
+                            // Los descuentos promocionales siempre se muestran (no se ocultan por deudas)
                         });
                     }
                 } else {

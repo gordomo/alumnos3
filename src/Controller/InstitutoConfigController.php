@@ -102,6 +102,15 @@ class InstitutoConfigController extends AbstractController
             $dateFormat = $request->request->get('date_format');
             $configuracion->setDateFormat($dateFormat !== '' ? $dateFormat : null);
 
+            // Porcentaje mínimo de asistencia para aprobación
+            $porcentajeAsistencia = $request->request->get('porcentaje_asistencia_aprobacion');
+            $configuracion->setPorcentajeAsistenciaAprobacion(
+                $porcentajeAsistencia !== '' && $porcentajeAsistencia !== null ? (float) $porcentajeAsistencia : null
+            );
+
+            // Pago total del curso requerido para aprobar
+            $configuracion->setRequierePagoTotalParaAprobar($request->request->has('requiere_pago_total_para_aprobar'));
+
             // Manejo del logo
             if ($request->files->has('logo')) {
                 $logoFile = $request->files->get('logo');
@@ -493,7 +502,13 @@ class InstitutoConfigController extends AbstractController
         }
         
         $metodoPago->setNombre($request->request->get('nombre', $metodoPago->getNombre()));
-        $metodoPago->setActivo($request->request->get('activo', '0') === '1');
+        $activo = $request->request->get('activo', '0') === '1';
+
+        // "Efectivo" debe permanecer activo para asegurar descuentos y flujo de cobro.
+        if (strtolower(trim($metodoPago->getNombre())) === 'efectivo') {
+            $activo = true;
+        }
+        $metodoPago->setActivo($activo);
         
         $entityManager->flush();
         

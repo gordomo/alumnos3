@@ -14,9 +14,9 @@ use Symfony\Component\Routing\Annotation\Route;
 use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use App\Service\HistorialCursosService;
+use App\Service\DeudaService;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Repository\AsistenciaAlumnosRepository;
-use App\Service\DeudaService;
 use App\Service\InstitutoTimezoneService;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use App\Entity\User;
@@ -29,21 +29,21 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 class AlumnoController extends AbstractController
 {
     private EntityManagerInterface $entityManager;
-    private $historialCursosService;
-    private $deudaService;
-    private $passwordHasher;
-    private $deudaCalculator;
+    private HistorialCursosService $historialCursosService;
+    private InstitutoTimezoneService $institutoTimezoneService;
+    private UserPasswordHasherInterface $passwordHasher;
+    private \App\Service\DeudaCalculatorService $deudaCalculator;
 
     public function __construct(
         EntityManagerInterface $entityManager,
         HistorialCursosService $historialCursosService,
-        DeudaService $deudaService,
+        InstitutoTimezoneService $institutoTimezoneService,
         UserPasswordHasherInterface $passwordHasher,
         \App\Service\DeudaCalculatorService $deudaCalculator
     ) {
         $this->entityManager = $entityManager;
         $this->historialCursosService = $historialCursosService;
-        $this->deudaService = $deudaService;
+        $this->institutoTimezoneService = $institutoTimezoneService;
         $this->passwordHasher = $passwordHasher;
         $this->deudaCalculator = $deudaCalculator;
     }
@@ -78,24 +78,8 @@ class AlumnoController extends AbstractController
             $limit
         );
 
-        // Sincronizar deudas calculadas on-demand con la tabla para cada alumno de esta página
-        // Esto asegura que la campanita y otros indicadores funcionen correctamente
-        foreach ($alumnos as $alumno) {
-            if ($alumno->getActivo()) {
-                $this->deudaCalculator->sincronizarDeudasConTabla($alumno);
-            }
-        }
-        
-        // Refrescar entity manager para cargar las deudas sincronizadas
-        $this->entityManager->clear();
-        
-        // Recargar alumnos con las deudas sincronizadas
-        $alumnosQuery = $this->createQuery($alumnoRepository, $instituto, $sort, $order, $busqueda, $activo, $cursoSelected);
-        $alumnos = $paginator->paginate(
-            $alumnosQuery, 
-            $currentPage, 
-            $limit
-        );
+        // La campanita de deudas vencidas se calcula on-demand en el Twig extension (DeudaExtension)
+        // No es necesario sincronizar con la tabla deuda_alumno
 
         return $this->render('alumno/index.html.twig', [
             'alumnos' => $alumnos,
@@ -126,10 +110,6 @@ class AlumnoController extends AbstractController
         $qb = $alumnoRepository->createQueryBuilder('a')
             ->distinct()
             ->leftJoin('a.curso', 'c')
-            ->leftJoin('a.deudas', 'd')
-            ->addSelect('d')
-            ->leftJoin('d.aplicaciones', 'ap')
-            ->addSelect('ap')
             ->where('a.instituto = :instituto')
             ->setParameter('instituto', $instituto);
 
@@ -228,8 +208,7 @@ class AlumnoController extends AbstractController
                         );
                         
                         // Asegurarnos de generar las deudas hasta fin de año
-                        $fechaActual = new \DateTime();
-                        $finDeAno = new \DateTime($fechaActual->format('Y') . '-12-31');
+                        $finDeAno = $this->getFinDeAnoInstituto($instituto);
                         $fechaInicioDeuda = $this->resolverFechaInicioDeuda($curso, $comenzarDeudaProximoMes);
                         $deudaService->generarDeudasParaPeriodo(
                             $alumno,
@@ -437,10 +416,12 @@ class AlumnoController extends AbstractController
                     foreach ($cursosActuales as $curso) {
                         if (!in_array($curso, $cursosNuevos)) {
                             // Marcar el historial como inactivo
-                            $historico = $this->historialCursosService->buscarHistorial($alumno, $curso, new \DateTime());
+                            $fechaActualInstituto = $this->institutoTimezoneService->getCurrentDateForInstituto($instituto);
+                            $historico = $this->historialCursosService->buscarHistorial($alumno, $curso, $fechaActualInstituto);
                             if ($historico) {
                                 $historico->setActivo(false);
-                                $historico->setFechaBaja(new \DateTime());
+                                $historico->setFechaBaja(clone $fechaActualInstituto);
+                                $historico->setMotivoBaja('baja_administrativa');
                             }
                             
                             // Cancelar deudas pendientes (mes actual y futuras)
@@ -465,8 +446,7 @@ class AlumnoController extends AbstractController
                                 $modoGeneracionDeuda
                             );
                             // Generar deudas hasta fin de año con DeudaService
-                            $fechaActual = new \DateTime();
-                            $finDeAno = new \DateTime($fechaActual->format('Y') . '-12-31');
+                            $finDeAno = $this->getFinDeAnoInstituto($instituto);
                             $fechaInicioDeuda = $this->resolverFechaInicioDeuda($curso, $comenzarDeudaProximoMes);
                             
                             // Si el curso tiene fecha de finalización, usarla como límite
@@ -698,10 +678,12 @@ class AlumnoController extends AbstractController
         foreach ($cursosActuales as $curso) {
             if (!in_array($curso, $cursosSeleccionados)) {
                 // Marcar el historial como inactivo
-                $historico = $historialCursosService->buscarHistorial($alumno, $curso, new \DateTime());
+                $fechaActualInstituto = $this->institutoTimezoneService->getCurrentDateForInstituto($instituto);
+                $historico = $historialCursosService->buscarHistorial($alumno, $curso, $fechaActualInstituto);
                 if ($historico) {
                     $historico->setActivo(false);
-                    $historico->setFechaBaja(new \DateTime());
+                    $historico->setFechaBaja(clone $fechaActualInstituto);
+                    $historico->setMotivoBaja('baja_administrativa');
                 }
                 
                 // Cancelar deudas pendientes (mes actual y futuras)
@@ -728,7 +710,7 @@ class AlumnoController extends AbstractController
                 
                 // IMPORTANTE: Generar deudas solo hasta el mes actual, no hasta fin de año
                 // Las deudas futuras se generarán automáticamente mediante el comando cron mensual
-                $fechaActual = new \DateTime();
+                $fechaActual = $this->institutoTimezoneService->getCurrentDateForInstituto($instituto);
                 $fechaInicioDeuda = $this->resolverFechaInicioDeuda($curso, $comenzarDeudaProximoMes);
                 
                 // Determinar fecha límite: mes actual o fin del curso (lo que sea menor)
@@ -780,7 +762,7 @@ class AlumnoController extends AbstractController
     /**
      * @Route("/{id}/deudas", name="app_alumno_deudas", methods={"GET"})
      */
-    public function verDeudas(Alumno $alumno, CursoRepository $cursoRepository, \App\Service\DeudaCalculatorService $deudaCalculator): Response
+    public function verDeudas(Alumno $alumno, CursoRepository $cursoRepository, \App\Service\DeudaCalculatorService $deudaCalculator, \App\Repository\DeudaAlumnoRepository $deudaAlumnoRepository, \App\Repository\SaldoFavorRepository $saldoFavorRepository): Response
     {
         // Verificar que el alumno pertenece al instituto del usuario actual
         $instituto = $this->getUser()->getInstituto();
@@ -791,18 +773,6 @@ class AlumnoController extends AbstractController
         
         // Calcular deudas on-demand desde el historial (cursos activos)
         $deudasCalculadas = $deudaCalculator->calcularDeudasAlumno($alumno);
-        
-        // Obtener todas las entidades DeudaAlumno para poder cancelarlas
-        $todasLasDeudas = $this->entityManager->getRepository(\App\Entity\DeudaAlumno::class)->findBy([
-            'alumno' => $alumno
-        ]);
-        
-        // Crear un mapa de deudas por curso/mes/año para acceso rápido
-        $mapaDeudas = [];
-        foreach ($todasLasDeudas as $deudaEntity) {
-            $key = $deudaEntity->getCurso()->getId() . '_' . $deudaEntity->getMes() . '_' . $deudaEntity->getAno();
-            $mapaDeudas[$key] = $deudaEntity;
-        }
         
         // Agrupar las deudas por curso
         $deudasPorCurso = [];
@@ -817,71 +787,90 @@ class AlumnoController extends AbstractController
                 ];
             }
             
-            // Buscar la entidad DeudaAlumno correspondiente
-            $key = $cursoId . '_' . $deuda['mes'] . '_' . $deuda['ano'];
-            $deudaEntity = $mapaDeudas[$key] ?? null;
-            $deuda['deudaEntity'] = $deudaEntity;
-            
             $deudasPorCurso[$cursoId]['deudas'][] = $deuda;
         }
         
-        // Agregar deudas de la tabla deuda_alumno que no están en cursos activos (deudas huérfanas)
-        // Estas son deudas de cursos donde el alumno ya no está inscrito pero aún debe pagar
-        $deudasHuerfanas = $this->entityManager->getRepository(\App\Entity\DeudaAlumno::class)->findBy([
-            'alumno' => $alumno
-        ]);
-        
-        // Filtrar solo las que tienen saldo pendiente
-        $deudasHuerfanas = array_filter($deudasHuerfanas, function($deuda) {
-            return $deuda->getMontoPendiente() > 0;
-        });
-        
-        foreach ($deudasHuerfanas as $deudaEntity) {
-            $cursoId = $deudaEntity->getCurso()->getId();
-            
-            // Si el curso ya está en deudasPorCurso (curso activo), skip
-            if (isset($deudasPorCurso[$cursoId])) {
+        $fechaActualInstituto = $this->institutoTimezoneService->getNowForInstituto($instituto);
+        $diaActualInstituto = (int) $fechaActualInstituto->format('j');
+        $mesActualInstituto = (int) $fechaActualInstituto->format('n');
+        $anoActualInstituto = (int) $fechaActualInstituto->format('Y');
+
+        // Agregar cursos activos que no tengan deudas pendientes
+        foreach ($alumno->getCursosHistoricos() as $historico) {
+            if (!$historico->isActivo()) {
                 continue;
             }
-            
-            // Agregar la deuda huérfana
+            $cursoId = $historico->getCurso()->getId();
             if (!isset($deudasPorCurso[$cursoId])) {
                 $deudasPorCurso[$cursoId] = [
-                    'curso' => $deudaEntity->getCurso(),
-                    'historico' => $deudaEntity->getCursoHistorico(),
+                    'curso' => $historico->getCurso(),
+                    'historico' => $historico,
                     'deudas' => [],
-                    'cursoActivo' => false
+                    'cursoActivo' => true
                 ];
             }
-            
-            $deudasPorCurso[$cursoId]['deudas'][] = [
-                'mes' => $deudaEntity->getMes(),
-                'ano' => $deudaEntity->getAno(),
-                'monto' => $deudaEntity->getMonto(),
-                'interes' => $deudaEntity->getInteres() ?? 0,
-                'curso' => $deudaEntity->getCurso(),
-                'cursoHistorico' => $deudaEntity->getCursoHistorico(),
-                'deudaEntity' => $deudaEntity
-            ];
         }
-        
+
+        $primerDiaVencimiento = 5;
+        $vencimientos = $instituto->getVencimientos();
+        if (count($vencimientos) > 0) {
+            $vencimientosArray = $vencimientos->toArray();
+            usort($vencimientosArray, function($a, $b) {
+                return $a->getDiaVencimiento() <=> $b->getDiaVencimiento();
+            });
+            $primerDiaVencimiento = (int) $vencimientosArray[0]->getDiaVencimiento();
+        }
+
+        // Filtrar deudas futuras: solo mostrar deudas vencidas y del mes actual
+        foreach ($deudasPorCurso as $cursoId => &$datos) {
+            $datos['deudas'] = array_values(array_filter($datos['deudas'], function($deuda) use ($mesActualInstituto, $anoActualInstituto) {
+                $mes = (int) $deuda['mes'];
+                $ano = (int) $deuda['ano'];
+                // Mantener solo deudas del mes actual o anteriores
+                return $ano < $anoActualInstituto || ($ano === $anoActualInstituto && $mes <= $mesActualInstituto);
+            }));
+        }
+        unset($datos);
+
+        // Determinar qué cursos tienen todas las cuotas pagadas
+        $cursosPagoCompleto = [];
+        foreach ($alumno->getCursosHistoricos() as $historico) {
+            if (!$historico->isActivo()) {
+                continue;
+            }
+            $cursoObj = $historico->getCurso();
+            $cId = $cursoObj->getId();
+            $deudasPendientesCurso = $deudaAlumnoRepository->findDeudaByAlumnoAndCurso($alumno, $cursoObj);
+            $totalDeudasCurso = $deudaAlumnoRepository->findBy(['alumno' => $alumno, 'curso' => $cursoObj]);
+            if (empty($deudasPendientesCurso) && !empty($totalDeudasCurso)) {
+                $cursosPagoCompleto[$cId] = true;
+            }
+        }
+
         return $this->render('alumno/deudas.html.twig', [
             'alumno' => $alumno,
             'deudasPorCurso' => $deudasPorCurso,
-            'cursos' => $cursoRepository->findBy(['instituto' => $instituto])
+            'cursos' => $cursoRepository->findBy(['instituto' => $instituto]),
+            'diaActualInstituto' => $diaActualInstituto,
+            'mesActualInstituto' => $mesActualInstituto,
+            'anoActualInstituto' => $anoActualInstituto,
+            'primerDiaVencimiento' => $primerDiaVencimiento,
+            'cursosPagoCompleto' => $cursosPagoCompleto,
+            'saldoFavorTotal' => $saldoFavorRepository->getSaldoDisponibleTotal($alumno),
         ]);
     }
 
     /**
-     * @Route("/{id}/cancelar-deuda/{deudaId}", name="app_alumno_cancelar_deuda", methods={"POST"})
+     * @Route("/{id}/cancelar-deuda/{cursoId}/{mes}/{ano}", name="app_alumno_cancelar_deuda", methods={"POST"})
      */
-    public function cancelarDeuda(Alumno $alumno, int $deudaId, Request $request): Response
+    public function cancelarDeuda(Alumno $alumno, int $cursoId, int $mes, int $ano, Request $request): Response
     {
         // Capturar return_url si existe
         $returnUrl = $request->query->get('return_url');
         
         // Verificar token CSRF
-        if (!$this->isCsrfTokenValid('cancelar-deuda'.$deudaId, $request->request->get('_token'))) {
+        $tokenId = 'cancelar-deuda' . $cursoId . '-' . $mes . '-' . $ano;
+        if (!$this->isCsrfTokenValid($tokenId, $request->request->get('_token'))) {
             $this->addFlash('danger', 'Token CSRF inválido.');
             return $this->redirectToRoute('app_alumno_deudas', [
                 'id' => $alumno->getId(),
@@ -896,21 +885,10 @@ class AlumnoController extends AbstractController
             return $this->redirectToRoute('app_alumno_index');
         }
         
-        // Obtener la deuda
-        $deuda = $this->entityManager->getRepository('App\Entity\DeudaAlumno')->find($deudaId);
-        
-        // Verificar que la deuda existe y pertenece al alumno
-        if (!$deuda || $deuda->getAlumno() !== $alumno) {
-            $this->addFlash('danger', 'La deuda no existe o no pertenece a este alumno.');
-            return $this->redirectToRoute('app_alumno_deudas', [
-                'id' => $alumno->getId(),
-                'return_url' => $returnUrl
-            ]);
-        }
-        
-        // Verificar que la deuda no está pagada
-        if ($deuda->isPagado()) {
-            $this->addFlash('danger', 'Esta deuda ya está pagada.');
+        // Obtener el curso
+        $curso = $this->entityManager->getRepository('App\Entity\Curso')->find($cursoId);
+        if (!$curso || $curso->getInstituto() !== $instituto) {
+            $this->addFlash('danger', 'El curso no existe o no pertenece a este instituto.');
             return $this->redirectToRoute('app_alumno_deudas', [
                 'id' => $alumno->getId(),
                 'return_url' => $returnUrl
@@ -918,16 +896,72 @@ class AlumnoController extends AbstractController
         }
         
         try {
-            // Eliminar la deuda
-            $this->entityManager->remove($deuda);
+            // Obtener el precio mensual del historial activo para este curso
+            $precioMensual = 0;
+            foreach ($alumno->getCursosHistoricos() as $historico) {
+                if ($historico->getCurso()->getId() === $cursoId && $historico->isActivo()) {
+                    $precioMensual = (float) ($historico->getPrecioMensual() ?? $curso->getPrecio());
+                    break;
+                }
+            }
+            
+            if ($precioMensual <= 0) {
+                $precioMensual = (float) $curso->getPrecio();
+            }
+            
+            // Calcular cuánto ya se pagó para este mes
+            $pagosExistentes = $this->entityManager->createQueryBuilder()
+                ->select('COALESCE(SUM(p.monto), 0)')
+                ->from(\App\Entity\AlumnosPagos::class, 'p')
+                ->where('p.alumno = :alumno')
+                ->andWhere('p.curso = :curso')
+                ->andWhere('p.mes = :mes')
+                ->andWhere('p.ano = :ano')
+                ->setParameter('alumno', $alumno)
+                ->setParameter('curso', $curso)
+                ->setParameter('mes', $mes)
+                ->setParameter('ano', $ano)
+                ->getQuery()
+                ->getSingleScalarResult();
+            
+            $saldoPendiente = $precioMensual - (float) $pagosExistentes;
+            
+            if ($saldoPendiente <= 0.01) {
+                $this->addFlash('info', 'Esta deuda ya está pagada.');
+                return $this->redirectToRoute('app_alumno_deudas', [
+                    'id' => $alumno->getId(),
+                    'return_url' => $returnUrl
+                ]);
+            }
+            
+            // Registrar un pago de condonación por el saldo pendiente
+            $pago = new \App\Entity\AlumnosPagos();
+            $pago->setAlumno($alumno);
+            $pago->setCurso($curso);
+            $pago->setMes($mes);
+            $pago->setAno($ano);
+            $pago->setMonto($saldoPendiente);
+            $pago->setMetodoPago('condonacion');
+            $pago->setFecha($this->institutoTimezoneService->getCurrentDateForInstituto($instituto));
+            $pago->setObservacion('Deuda condonada/cancelada manualmente');
+            
+            // Asociar historial del curso
+            foreach ($alumno->getCursosHistoricos() as $historico) {
+                if ($historico->getCurso()->getId() === $cursoId) {
+                    $pago->setCursoHistorico($historico);
+                    break;
+                }
+            }
+            
+            $this->entityManager->persist($pago);
             $this->entityManager->flush();
             
             $this->addFlash('success', sprintf(
-                'Se ha cancelado la deuda de %s para el curso %s, periodo %s %s.', 
+                'Se ha condonado la deuda de %s para el curso %s, periodo %s %s.', 
                 $alumno->getNombreApellido(),
-                $deuda->getCurso()->getNombre(),
-                $this->getNombreMes($deuda->getMes()),
-                $deuda->getAno()
+                $curso->getNombre(),
+                $this->getNombreMes($mes),
+                $ano
             ));
         } catch (\Exception $e) {
             $this->addFlash('danger', 'Ocurrió un error al cancelar la deuda: ' . $e->getMessage());
@@ -942,7 +976,7 @@ class AlumnoController extends AbstractController
     /**
      * @Route("/{id}/cancelar-deudas-curso/{cursoId}", name="app_alumno_cancelar_deudas_curso", methods={"POST"})
      */
-    public function cancelarDeudasCurso(Alumno $alumno, int $cursoId, Request $request): Response
+    public function cancelarDeudasCurso(Alumno $alumno, int $cursoId, Request $request, DeudaService $deudaService): Response
     {
         // Capturar return_url si existe
         $returnUrl = $request->query->get('return_url');
@@ -978,7 +1012,7 @@ class AlumnoController extends AbstractController
         try {
             // Cancelar todas las deudas pendientes del alumno para este curso
             $soloFuturas = $request->request->get('solo_futuras', false);
-            $deudasCanceladas = $this->deudaService->cancelarDeudasPendientesAlumnoCurso($alumno, $curso, $soloFuturas);
+            $deudasCanceladas = $deudaService->cancelarDeudasPendientesAlumnoCurso($alumno, $curso, $soloFuturas);
             
             if ($deudasCanceladas > 0) {
                 $this->addFlash('success', sprintf(
@@ -1009,7 +1043,7 @@ class AlumnoController extends AbstractController
      */
     private function resolverFechaInicioDeuda(\App\Entity\Curso $curso, bool $comenzarDeudaProximoMes): \DateTime
     {
-        $inicio = new \DateTime();
+        $inicio = $this->institutoTimezoneService->getCurrentDateForInstituto($curso->getInstituto());
         $inicio->modify('first day of this month');
 
         if ($comenzarDeudaProximoMes) {
@@ -1026,6 +1060,15 @@ class AlumnoController extends AbstractController
         }
 
         return $inicio;
+    }
+
+    private function getFinDeAnoInstituto(\App\Entity\Instituto $instituto): \DateTime
+    {
+        $ahoraInstituto = $this->institutoTimezoneService->getNowForInstituto($instituto);
+
+        return $this->institutoTimezoneService->normalizeDateOnly(
+            $ahoraInstituto->setDate((int) $ahoraInstituto->format('Y'), 12, 31)
+        );
     }
 
     /**

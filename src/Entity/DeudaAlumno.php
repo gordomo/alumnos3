@@ -74,10 +74,16 @@ class DeudaAlumno
      */
     private $instituto;
 
+    /**
+     * @ORM\OneToMany(targetEntity=SaldoFavorAplicacion::class, mappedBy="deuda", cascade={"persist", "remove"}, fetch="EAGER")
+     */
+    private $creditoAplicaciones;
+
     public function __construct()
     {
         $this->fechaCreacion = new \DateTime();
         $this->aplicaciones = new ArrayCollection();
+        $this->creditoAplicaciones = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -198,11 +204,50 @@ class DeudaAlumno
     }
 
     /**
-     * Calcula el monto pendiente (monto total - monto pagado)
+     * Calcula el monto pagado con créditos/saldos a favor
+     */
+    public function getMontoPagadoPorCreditos(): float
+    {
+        $total = 0;
+        foreach ($this->creditoAplicaciones as $aplicacion) {
+            $total += (float) $aplicacion->getMontoAplicado();
+        }
+        return $total;
+    }
+
+    /**
+     * Calcula el monto pendiente (monto total - monto pagado - créditos aplicados)
      */
     public function getMontoPendiente(): float
     {
-        return max(0, $this->getMontoTotal() - $this->getMontoPagado());
+        return max(0, $this->getMontoTotal() - $this->getMontoPagado() - $this->getMontoPagadoPorCreditos());
+    }
+
+    /**
+     * @return Collection<int, SaldoFavorAplicacion>
+     */
+    public function getCreditoAplicaciones(): Collection
+    {
+        return $this->creditoAplicaciones;
+    }
+
+    public function addCreditoAplicacion(SaldoFavorAplicacion $aplicacion): self
+    {
+        if (!$this->creditoAplicaciones->contains($aplicacion)) {
+            $this->creditoAplicaciones[] = $aplicacion;
+            $aplicacion->setDeuda($this);
+        }
+        return $this;
+    }
+
+    public function removeCreditoAplicacion(SaldoFavorAplicacion $aplicacion): self
+    {
+        if ($this->creditoAplicaciones->removeElement($aplicacion)) {
+            if ($aplicacion->getDeuda() === $this) {
+                $aplicacion->setDeuda(null);
+            }
+        }
+        return $this;
     }
 
     /**
