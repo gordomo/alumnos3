@@ -201,9 +201,9 @@
                         <h5 class="card-title mb-0">
                             Informe de Asistencias - {{ curso.nombre }}
                             {% if tipoInforme == 'dia' %}
-                                - {{ fecha|date(app_date_format|default('d/m/Y')) }}
+                                - {{ fecha }}
                             {% elseif tipoInforme == 'semana' %}
-                                - Semana del {{ fechaInicio|date(app_date_format|default('d/m/Y')) }} al {{ fechaFin|date(app_date_format|default('d/m/Y')) }}
+                                - Semana del {{ fechaInicio }} al {{ fechaFin }}
                             {% elseif tipoInforme == 'mes' %}
                                 - {{ fechaInicio|mes_es }}
                             {% endif %}

@@ -1,15 +1,11 @@
 {% extends 'base.html.twig' %}
 
 {% block title %}Asistencias de Alumnos{% endblock %}
-
+{% block panelTitle %}
+    Asistencias de Alumnos
+{% endblock %}
 {% block body %}
 <div class="container-fluid mt-4">
-    <div class="row mb-4">
-        <div class="col-12">
-            <h1>Asistencias de Alumnos</h1>
-        </div>
-    </div>
-
     <div class="row mb-4">
         <div class="col-12">
             <form method="get" action="{{ path('app_asistencia_alumnos_index') }}" class="row g-3" id="form-filtro-asistencias">

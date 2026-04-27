@@ -1,7 +1,9 @@
 {% extends 'base.html.twig' %}
 
 {% block title %}Asistencias de Alumnos - {{ app.user.instituto.nombre }}{% endblock %}
-
+{% block panelTitle %}
+    Asistencias de Alumnos
+{% endblock %}
 {% block stylesheets %}
     {{ parent() }}
     <style>
@@ -145,7 +147,6 @@
 {% block body %}
 <div class="container-fluid mt-3 asistencia-page">
     <div class="asistencia-intro">
-        <h1 class="asistencia-title">Asistencias de Alumnos</h1>
         <p class="asistencia-subtitle">Instituto: {{ app.user.instituto.nombre }}. Selecciona fecha y curso para registrar o revisar asistencias.</p>
     </div>
 
