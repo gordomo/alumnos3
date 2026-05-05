@@ -111,6 +111,17 @@ class InstitutoConfigController extends AbstractController
             // Pago total del curso requerido para aprobar
             $configuracion->setRequierePagoTotalParaAprobar($request->request->has('requiere_pago_total_para_aprobar'));
 
+            // Configuración de cuota de inscripción anual
+            $configuracion->setCobrarCuotaInscripcionAnual($request->request->has('cobrar_cuota_inscripcion_anual'));
+            $montoCuotaInscripcion = $request->request->get('monto_cuota_inscripcion_anual');
+            $configuracion->setMontoCuotaInscripcionAnual(
+                $montoCuotaInscripcion !== '' && $montoCuotaInscripcion !== null ? (float) $montoCuotaInscripcion : null
+            );
+            $mesCobroCuotaInscripcion = $request->request->get('mes_cobro_cuota_inscripcion_anual');
+            $configuracion->setMesCobroCuotaInscripcionAnual(
+                $mesCobroCuotaInscripcion !== '' && $mesCobroCuotaInscripcion !== null ? (int) $mesCobroCuotaInscripcion : 1
+            );
+
             // Manejo del logo
             if ($request->files->has('logo')) {
                 $logoFile = $request->files->get('logo');

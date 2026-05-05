@@ -331,6 +331,84 @@
                                     </div>
                                 </div>
 
+                                <!-- Configuración de Cuota de Inscripción Anual -->
+                                <div class="card config-section-card mb-4">
+                                    <div class="card-header config-section-header config-section-header--general" style="background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;">
+                                        <h4 class="card-title config-section-title mb-0 text-white">
+                                            <i class="bi bi-calendar-check"></i> Cuota de Inscripción Anual
+                                        </h4>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-12 mb-3">
+                                                <div class="form-check form-switch">
+                                                    <input class="form-check-input" type="checkbox" role="switch"
+                                                           id="cobrar_cuota_inscripcion_anual" 
+                                                           name="cobrar_cuota_inscripcion_anual"
+                                                           {% if configuracion.cobrarCuotaInscripcionAnual %}checked{% endif %}
+                                                           onchange="toggleCuotaInscripcionFields()">
+                                                    <label class="form-check-label" for="cobrar_cuota_inscripcion_anual">
+                                                        <i class="bi bi-toggle-on"></i> <strong>Habilitar cobro de cuota de inscripción anual</strong>
+                                                    </label>
+                                                </div>
+                                                <small class="form-text text-muted">
+                                                    Si se activa, se generará automáticamente una cuota de inscripción anual para todos los alumnos activos del instituto.
+                                                </small>
+                                            </div>
+                                        </div>
+                                        <div id="cuota_inscripcion_fields" style="display: {% if configuracion.cobrarCuotaInscripcionAnual %}block{% else %}none{% endif %};">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="mb-3">
+                                                        <label for="monto_cuota_inscripcion_anual" class="form-label">
+                                                            <i class="bi bi-currency-dollar"></i> Monto de la cuota de inscripción <span class="text-danger">*</span>
+                                                        </label>
+                                                        <div class="input-group">
+                                                            <span class="input-group-text">$</span>
+                                                            <input type="number" class="form-control" id="monto_cuota_inscripcion_anual" 
+                                                                   name="monto_cuota_inscripcion_anual"
+                                                                   value="{{ configuracion.montoCuotaInscripcionAnual }}"
+                                                                   min="0" step="0.01"
+                                                                   placeholder="Ej: 5000.00">
+                                                        </div>
+                                                        <small class="form-text text-muted">
+                                                            Monto fijo que se cobrará anualmente a cada alumno.
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="mb-3">
+                                                        <label for="mes_cobro_cuota_inscripcion_anual" class="form-label">
+                                                            <i class="bi bi-calendar-month"></i> Mes de cobro <span class="text-danger">*</span>
+                                                        </label>
+                                                        <select class="form-control form-select" id="mes_cobro_cuota_inscripcion_anual" 
+                                                                name="mes_cobro_cuota_inscripcion_anual">
+                                                            <option value="1" {% if configuracion.mesCobroCuotaInscripcionAnual == 1 %}selected{% endif %}>Enero</option>
+                                                            <option value="2" {% if configuracion.mesCobroCuotaInscripcionAnual == 2 %}selected{% endif %}>Febrero</option>
+                                                            <option value="3" {% if configuracion.mesCobroCuotaInscripcionAnual == 3 %}selected{% endif %}>Marzo</option>
+                                                            <option value="4" {% if configuracion.mesCobroCuotaInscripcionAnual == 4 %}selected{% endif %}>Abril</option>
+                                                            <option value="5" {% if configuracion.mesCobroCuotaInscripcionAnual == 5 %}selected{% endif %}>Mayo</option>
+                                                            <option value="6" {% if configuracion.mesCobroCuotaInscripcionAnual == 6 %}selected{% endif %}>Junio</option>
+                                                            <option value="7" {% if configuracion.mesCobroCuotaInscripcionAnual == 7 %}selected{% endif %}>Julio</option>
+                                                            <option value="8" {% if configuracion.mesCobroCuotaInscripcionAnual == 8 %}selected{% endif %}>Agosto</option>
+                                                            <option value="9" {% if configuracion.mesCobroCuotaInscripcionAnual == 9 %}selected{% endif %}>Septiembre</option>
+                                                            <option value="10" {% if configuracion.mesCobroCuotaInscripcionAnual == 10 %}selected{% endif %}>Octubre</option>
+                                                            <option value="11" {% if configuracion.mesCobroCuotaInscripcionAnual == 11 %}selected{% endif %}>Noviembre</option>
+                                                            <option value="12" {% if configuracion.mesCobroCuotaInscripcionAnual == 12 %}selected{% endif %}>Diciembre</option>
+                                                        </select>
+                                                        <small class="form-text text-muted">
+                                                            Mes en el que se generará automáticamente la cuota de inscripción anual.
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="alert alert-warning">
+                                                <i class="bi bi-exclamation-triangle"></i> <strong>Importante:</strong> La cuota de inscripción se generará automáticamente para todos los alumnos activos en el mes configurado. Esta deuda aparecerá en el estado de cuenta del alumno separada de las cuotas mensuales de los cursos.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div class="text-center">
                                     <button type="submit" class="btn btn-primary btn-lg">
                                         <i class="bi bi-save"></i> Guardar Cambios
@@ -942,5 +1020,12 @@
             tab.show();
         }
     });
+
+    // Función para mostrar/ocultar los campos de cuota de inscripción
+    function toggleCuotaInscripcionFields() {
+        const checkbox = document.getElementById('cobrar_cuota_inscripcion_anual');
+        const fields = document.getElementById('cuota_inscripcion_fields');
+        fields.style.display = checkbox.checked ? 'block' : 'none';
+    }
 </script>
 {% endblock %} 

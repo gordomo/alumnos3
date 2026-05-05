@@ -28,7 +28,7 @@ class DeudaAlumno
 
     /**
      * @ORM\ManyToOne(targetEntity=Curso::class)
-     * @ORM\JoinColumn(nullable=false)
+     * @ORM\JoinColumn(nullable=true)
      */
     private $curso;
 
@@ -78,6 +78,13 @@ class DeudaAlumno
      * @ORM\OneToMany(targetEntity=SaldoFavorAplicacion::class, mappedBy="deuda", cascade={"persist", "remove"}, fetch="EAGER")
      */
     private $creditoAplicaciones;
+
+    /**
+     * Si es true, esta deuda representa una cuota de inscripción anual en lugar de una cuota mensual de curso.
+     *
+     * @ORM\Column(type="boolean", options={"default": false})
+     */
+    private $esCuotaInscripcionAnual = false;
 
     public function __construct()
     {
@@ -153,6 +160,11 @@ class DeudaAlumno
 
     public function getPeriodo(): string
     {
+        // Si es una cuota de inscripción anual, mostrar solo el año
+        if ($this->esCuotaInscripcionAnual) {
+            return 'Inscripción Anual ' . $this->ano;
+        }
+        
         $nombresMeses = [
             1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril',
             5 => 'Mayo', 6 => 'Junio', 7 => 'Julio', 8 => 'Agosto',
@@ -338,6 +350,18 @@ class DeudaAlumno
     public function setInstituto(?Instituto $instituto): self
     {
         $this->instituto = $instituto;
+
+        return $this;
+    }
+
+    public function getEsCuotaInscripcionAnual(): bool
+    {
+        return $this->esCuotaInscripcionAnual;
+    }
+
+    public function setEsCuotaInscripcionAnual(bool $esCuotaInscripcionAnual): self
+    {
+        $this->esCuotaInscripcionAnual = $esCuotaInscripcionAnual;
 
         return $this;
     }

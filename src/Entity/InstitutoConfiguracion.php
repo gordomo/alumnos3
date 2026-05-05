@@ -124,6 +124,27 @@ class InstitutoConfiguracion
      */
     private $requierePagoTotalParaAprobar = false;
 
+    /**
+     * Si es true, se cobrará una cuota de inscripción anual a todos los alumnos.
+     *
+     * @ORM\Column(type="boolean", options={"default": false})
+     */
+    private $cobrarCuotaInscripcionAnual = false;
+
+    /**
+     * Monto de la cuota de inscripción anual.
+     *
+     * @ORM\Column(type="decimal", precision=10, scale=2, nullable=true)
+     */
+    private $montoCuotaInscripcionAnual;
+
+    /**
+     * Mes en que se cobra la cuota de inscripción anual (1-12).
+     *
+     * @ORM\Column(type="integer", nullable=true)
+     */
+    private $mesCobroCuotaInscripcionAnual;
+
     public function __construct()
     {
         $this->vencimientos = new ArrayCollection();
@@ -333,6 +354,39 @@ class InstitutoConfiguracion
     public function setRequierePagoTotalParaAprobar(bool $requierePagoTotalParaAprobar): self
     {
         $this->requierePagoTotalParaAprobar = $requierePagoTotalParaAprobar;
+        return $this;
+    }
+
+    public function getCobrarCuotaInscripcionAnual(): bool
+    {
+        return $this->cobrarCuotaInscripcionAnual;
+    }
+
+    public function setCobrarCuotaInscripcionAnual(bool $cobrarCuotaInscripcionAnual): self
+    {
+        $this->cobrarCuotaInscripcionAnual = $cobrarCuotaInscripcionAnual;
+        return $this;
+    }
+
+    public function getMontoCuotaInscripcionAnual(): ?float
+    {
+        return $this->montoCuotaInscripcionAnual;
+    }
+
+    public function setMontoCuotaInscripcionAnual(?float $montoCuotaInscripcionAnual): self
+    {
+        $this->montoCuotaInscripcionAnual = $montoCuotaInscripcionAnual;
+        return $this;
+    }
+
+    public function getMesCobroCuotaInscripcionAnual(): ?int
+    {
+        return $this->mesCobroCuotaInscripcionAnual;
+    }
+
+    public function setMesCobroCuotaInscripcionAnual(?int $mesCobroCuotaInscripcionAnual): self
+    {
+        $this->mesCobroCuotaInscripcionAnual = $mesCobroCuotaInscripcionAnual;
         return $this;
     }
 } 
