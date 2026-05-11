@@ -319,6 +319,74 @@
                                         </table>
                                     </div>
                                 </div>
+
+                                <!-- Cuota de Inscripción Anual -->
+                                <div class="card config-section-card mt-4">
+                                    <div class="card-header config-section-header" style="background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;">
+                                        <h4 class="card-title config-section-title mb-0 text-white">
+                                            <i class="bi bi-calendar-check"></i> Cuota de Inscripción Anual
+                                        </h4>
+                                    </div>
+                                    <div class="card-body">
+                                        <table class="table table-borderless config-data-table">
+                                            <tr>
+                                                <th width="40%">Cobro de cuota de inscripción anual:</th>
+                                                <td>
+                                                    {% if configuracion.cobrarCuotaInscripcionAnual %}
+                                                        <span class="badge bg-success"><i class="bi bi-check-circle"></i> Activado</span>
+                                                        <small class="text-muted d-block">Se generará automáticamente una cuota de inscripción anual para todos los alumnos activos</small>
+                                                    {% else %}
+                                                        <span class="badge bg-secondary">Desactivado</span>
+                                                        <small class="text-muted d-block">No se cobra cuota de inscripción anual</small>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                            {% if configuracion.cobrarCuotaInscripcionAnual %}
+                                            <tr>
+                                                <th>Monto de la cuota de inscripción:</th>
+                                                <td>
+                                                    {% if configuracion.montoCuotaInscripcionAnual %}
+                                                        <span class="badge bg-primary">${{ configuracion.montoCuotaInscripcionAnual|number_format(2, '.', ',') }}</span>
+                                                        <small class="text-muted d-block">Monto fijo que se cobra anualmente a cada alumno</small>
+                                                    {% else %}
+                                                        <span class="text-muted">No configurado</span>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <th>Mes de cobro:</th>
+                                                <td>
+                                                    {% if configuracion.mesCobroCuotaInscripcionAnual %}
+                                                        {% set meses = {
+                                                            1: 'Enero',
+                                                            2: 'Febrero',
+                                                            3: 'Marzo',
+                                                            4: 'Abril',
+                                                            5: 'Mayo',
+                                                            6: 'Junio',
+                                                            7: 'Julio',
+                                                            8: 'Agosto',
+                                                            9: 'Septiembre',
+                                                            10: 'Octubre',
+                                                            11: 'Noviembre',
+                                                            12: 'Diciembre'
+                                                        } %}
+                                                        <span class="badge bg-info">{{ meses[configuracion.mesCobroCuotaInscripcionAnual] ?? 'No especificado' }}</span>
+                                                        <small class="text-muted d-block">Mes en el que se genera automáticamente la cuota de inscripción anual</small>
+                                                    {% else %}
+                                                        <span class="text-muted">No configurado</span>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                            {% endif %}
+                                        </table>
+                                        {% if configuracion.cobrarCuotaInscripcionAnual %}
+                                        <div class="alert alert-info mt-3">
+                                            <i class="bi bi-info-circle"></i> La cuota de inscripción se genera automáticamente para todos los alumnos activos en el mes configurado. Esta deuda aparece en el estado de cuenta del alumno separada de las cuotas mensuales de los cursos.
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
                             </div>
 
                             <!-- Pestaña: Pagos y Vencimientos -->
