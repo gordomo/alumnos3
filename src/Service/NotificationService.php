@@ -14,6 +14,7 @@ use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\Mime\Address;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use App\Service\TokenService;
+use App\Service\InstitutoTimezoneService;
 
 class NotificationService
 {
@@ -21,6 +22,7 @@ class NotificationService
     private EntityManagerInterface $entityManager;
     private UrlGeneratorInterface $urlGenerator;
     private TokenService $tokenService;
+    private InstitutoTimezoneService $institutoTimezoneService;
     private string $baseUrl;
     private $deudaCalculator;
 
@@ -29,12 +31,14 @@ class NotificationService
         EntityManagerInterface $entityManager,
         UrlGeneratorInterface $urlGenerator,
         TokenService $tokenService,
+        InstitutoTimezoneService $institutoTimezoneService,
         DeudaCalculatorService $deudaCalculator
     ) {
         $this->mailer = $mailer;
         $this->entityManager = $entityManager;
         $this->urlGenerator = $urlGenerator;
         $this->tokenService = $tokenService;
+        $this->institutoTimezoneService = $institutoTimezoneService;
         $this->deudaCalculator = $deudaCalculator;
         
         // Obtener URL base
@@ -383,7 +387,7 @@ class NotificationService
             $emailLog->setTipo($tipo);
             $emailLog->setDestinatario($destinatario);
             $emailLog->setAsunto($asunto);
-            $emailLog->setFechaEnvio(new \DateTime());
+            $emailLog->setFechaEnvio($this->institutoTimezoneService->getNowForInstituto($instituto));
             $emailLog->setEstado($estado);
             $emailLog->setErrorMensaje($errorMensaje);
             $emailLog->setPago($pago);
