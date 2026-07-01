@@ -995,30 +995,30 @@ class AlumnosPagosController extends AbstractController
             return $fechaA <=> $fechaB;
         });
         
-        // Determinar qué cursos tienen todas las cuotas pagadas (hasta el mes actual)
-        // Un curso tiene "pago completo" si no tiene meses pendientes (no adelantados) sin pagar
+        // Determinar estado por curso:
+        // - cursosPagoCompleto: al día hasta hoy (sin deudas vencidas)
+        // - cursosTotalmentePagados: pagado completo (incluye cuotas futuras)
         $cursosPagoCompleto = [];
-        $cursosTotalmentePagados = []; // Cursos pagados hasta el final (incluyendo futuros)
-        
+        $cursosTotalmentePagados = [];
         foreach ($cursosHistoricos as $historico) {
             if (!$historico->isActivo()) {
                 continue;
             }
             $cursoId = $historico->getCurso()->getId();
-            $curso = $historico->getCurso();
             $tieneMesPendiente = false;
-            $tieneMesAdeudadoTotal = false; // Cualquier mes sin pagar (pendiente o futuro)
-            
+            $tieneMesAdeudadoTotal = false;
+
             foreach ($mesesAdeudados as $mesData) {
-                if ($mesData['curso_obj']->getId() === $cursoId) {
-                    // Si el mes NO está pagado, hay algo adeudado
-                    if (!($mesData['estaPagado'] ?? false)) {
-                        $tieneMesAdeudadoTotal = true;
-                    }
-                    // Si además es pendiente (vencido), marcarlo
-                    if (($mesData['esPendiente'] ?? false) && !($mesData['estaPagado'] ?? false)) {
-                        $tieneMesPendiente = true;
-                    }
+                if ($mesData['curso_obj']->getId() !== $cursoId) {
+                    continue;
+                }
+
+                if (!($mesData['estaPagado'] ?? false)) {
+                    $tieneMesAdeudadoTotal = true;
+                }
+
+                if (($mesData['esPendiente'] ?? false) && !($mesData['estaPagado'] ?? false)) {
+                    $tieneMesPendiente = true;
                 }
             }
             
@@ -1031,13 +1031,12 @@ class AlumnosPagosController extends AbstractController
                 }
             }
             
-            // Curso "al día" = no tiene deudas vencidas (pero puede tener meses futuros sin pagar)
+            // Curso "al día" = sin deudas vencidas (puede tener meses futuros sin pagar)
             if (!$tieneMesPendiente && $tieneAlgunPago) {
                 $cursosPagoCompleto[$cursoId] = true;
             }
             
-            // Curso "totalmente pagado" = NO tiene ningún mes sin pagar (ni vencido ni futuro)
-            // Solo se considera si tiene al menos un pago
+            // Curso "totalmente pagado" = sin ningún mes sin pagar (ni vencido ni futuro)
             if (!$tieneMesAdeudadoTotal && $tieneAlgunPago) {
                 $cursosTotalmentePagados[$cursoId] = true;
             }
