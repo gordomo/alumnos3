@@ -1,11 +1,11 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Pagos Históricos - {{ historicos[0].alumno.nombre }} {{ historicos[0].alumno.apellido }}{% endblock %}
+{% block title %}Pagos Históricos - {{ alumno.nombre }} {{ alumno.apellido }}{% endblock %}
 
 {% block body %}
     <div class="container mt-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1>Pagos Históricos - {{ historicos[0].alumno.nombre }} {{ historicos[0].alumno.apellido }}</h1>
+            <h1>Pagos Históricos - {{ alumno.nombre }} {{ alumno.apellido }}</h1>
             <a href="{{ path('app_pagos_historicos_index') }}" class="btn btn-secondary">
                 Volver
             </a>
@@ -13,6 +13,9 @@
 
         <div class="card">
             <div class="card-body">
+                {% if historicos is empty %}
+                    <p class="text-muted mb-0">Este alumno no tiene históricos de cursos registrados.</p>
+                {% else %}
                 <div class="table-responsive">
                     <table class="table table-striped">
                         <thead>
@@ -30,26 +33,30 @@
                         <tbody>
                             {% for historico in historicos %}
                                 <tr>
-                                    <td>{{ historico.curso.nombre }}</td>
-                                    <td>{{ historico.fechaInicio|date(app_date_format|default('d/m/Y')) }} - {{ historico.fechaFin|date(app_date_format|default('d/m/Y')) }}</td>
+                                    <td>{{ historico.curso ? historico.curso.nombre : '-' }}</td>
+                                    <td>{{ historico.fecha_inicio ? historico.fecha_inicio|date(app_date_format|default('d/m/Y')) : '-' }} - {{ historico.fecha_fin ? historico.fecha_fin|date(app_date_format|default('d/m/Y')) : '-' }}</td>
                                     <td>${{ historico.precio|number_format(2, ',', '.') }}</td>
                                     <td>
-                                        {% for mes in historico.mesesPagados %}
+                                        {% for mes in historico.meses_pagados %}
                                             <span class="badge bg-success">{{ mes }}</span>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
                                         {% endfor %}
                                     </td>
                                     <td>
-                                        {% for mes in historico.mesesAdeudados %}
+                                        {% for mes in historico.meses_adeudados %}
                                             <span class="badge bg-danger">{{ mes }}</span>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
                                         {% endfor %}
                                     </td>
                                     <td>
-                                        <span class="badge {% if historico.estado == 'Activo' %}bg-success{% else %}bg-warning{% endif %}">
+                                        <span class="badge {% if historico.estado == 'Cursando' %}bg-success{% else %}bg-warning{% endif %}">
                                             {{ historico.estado }}
                                         </span>
                                     </td>
-                                    <td>${{ (historico.precio * historico.mesesPagados|length)|number_format(2, ',', '.') }}</td>
-                                    <td>${{ (historico.precio * historico.mesesAdeudados|length)|number_format(2, ',', '.') }}</td>
+                                    <td>${{ (historico.precio * historico.meses_pagados|length)|number_format(2, ',', '.') }}</td>
+                                    <td>${{ (historico.precio * historico.meses_adeudados|length)|number_format(2, ',', '.') }}</td>
                                 </tr>
                             {% endfor %}
                         </tbody>
@@ -57,16 +64,17 @@
                             <tr class="table-primary">
                                 <td colspan="6" class="text-end"><strong>Totales:</strong></td>
                                 <td>
-                                    <strong>${{ historicos|reduce((total, h) => total + (h.precio * h.mesesPagados|length), 0)|number_format(2, ',', '.') }}</strong>
+                                    <strong>${{ historicos|reduce((total, h) => total + (h.precio * h.meses_pagados|length), 0)|number_format(2, ',', '.') }}</strong>
                                 </td>
                                 <td>
-                                    <strong>${{ historicos|reduce((total, h) => total + (h.precio * h.mesesAdeudados|length), 0)|number_format(2, ',', '.') }}</strong>
+                                    <strong>${{ historicos|reduce((total, h) => total + (h.precio * h.meses_adeudados|length), 0)|number_format(2, ',', '.') }}</strong>
                                 </td>
                             </tr>
                         </tfoot>
                     </table>
                 </div>
+                {% endif %}
             </div>
         </div>
     </div>
-{% endblock %} 
+{% endblock %}

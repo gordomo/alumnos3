@@ -304,6 +304,7 @@
                     </a>
                     <div class="excel">
                         <form action="{{ path('app_excel_import_alumnos') }}" enctype="multipart/form-data" method="POST">
+                            <input type="hidden" name="_token" value="{{ csrf_token('import_alumnos') }}">
                             <input type="file" id="file" name="file" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel">
                             <input type="submit">
                         </form>

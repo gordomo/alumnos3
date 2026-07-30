@@ -6,6 +6,10 @@
     <div class="container mt-4">
         <h1>Pagos Históricos</h1>
 
+        {% if pagos_por_alumno is empty %}
+            <p class="text-muted">No hay históricos de cursos registrados.</p>
+        {% endif %}
+
         {% for alumnoId, datos in pagos_por_alumno %}
             <div class="card mb-4">
                 <div class="card-header">
@@ -28,21 +32,25 @@
                             <tbody>
                                 {% for curso in datos.cursos %}
                                     <tr>
-                                        <td>{{ curso.curso.nombre }}</td>
-                                        <td>{{ curso.fecha_inicio|date(app_date_format|default('d/m/Y')) }} - {{ curso.fecha_fin|date(app_date_format|default('d/m/Y')) }}</td>
+                                        <td>{{ curso.curso ? curso.curso.nombre : '-' }}</td>
+                                        <td>{{ curso.fecha_inicio ? curso.fecha_inicio|date(app_date_format|default('d/m/Y')) : '-' }} - {{ curso.fecha_fin ? curso.fecha_fin|date(app_date_format|default('d/m/Y')) : '-' }}</td>
                                         <td>${{ curso.precio|number_format(2, ',', '.') }}</td>
                                         <td>
                                             {% for mes in curso.meses_pagados %}
                                                 <span class="badge bg-success">{{ mes }}</span>
+                                            {% else %}
+                                                <span class="text-muted">-</span>
                                             {% endfor %}
                                         </td>
                                         <td>
                                             {% for mes in curso.meses_adeudados %}
                                                 <span class="badge bg-danger">{{ mes }}</span>
+                                            {% else %}
+                                                <span class="text-muted">-</span>
                                             {% endfor %}
                                         </td>
                                         <td>
-                                            <span class="badge {% if curso.estado == 'Activo' %}bg-success{% else %}bg-warning{% endif %}">
+                                            <span class="badge {% if curso.estado == 'Cursando' %}bg-success{% else %}bg-warning{% endif %}">
                                                 {{ curso.estado }}
                                             </span>
                                         </td>

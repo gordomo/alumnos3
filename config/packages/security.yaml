@@ -87,6 +87,13 @@ security:
         # Alumnos pagos routes (ADMIN_INSTITUTO can access)
         - { path: ^/alumnos/pagos, roles: ROLE_ADMIN_INSTITUTO }
 
+        # Pagos históricos (ADMIN_INSTITUTO only): antes caía en la regla por defecto
+        # ^/ y quedaba accesible para cualquier usuario autenticado.
+        - { path: ^/pagos-historicos, roles: ROLE_ADMIN_INSTITUTO }
+
+        # Endpoint de diagnóstico del mailer: solo SUPER_ADMIN
+        - { path: ^/test, roles: ROLE_SUPER_ADMIN }
+
         # Alumno routes
         - { path: ^/alumno, roles: ROLE_ALUMNO }
         
