@@ -69,7 +69,31 @@
                             </div>
                         {% endif %}
                         
-                        {# Cursos al día (sin deudas pendientes hasta hoy) #}
+                        {# Cursos con cuotas vencidas. Antes este recuadro no existía: un curso
+                           con cuotas vencidas se comunicaba solo por ausencia del recuadro verde,
+                           que es fácil de pasar por alto. #}
+                        {% if cursosVencidos is defined and cursosVencidos|length > 0 %}
+                            <div class="mb-4" style="border-left: 4px solid #dc3545; background-color: #f8d7da; padding: 1rem; border-radius: 4px;">
+                                <h5 class="mb-2 text-dark">
+                                    <i class="bi bi-exclamation-triangle-fill" style="color: #dc3545;"></i> Cursos con Cuotas Vencidas
+                                </h5>
+                                {% for cursoObj in cursos %}
+                                    {% if cursosVencidos[cursoObj.id] is defined %}
+                                        {% set vencidas = cursosVencidos[cursoObj.id] %}
+                                        <div class="d-flex align-items-center mb-1">
+                                            <span class="badge bg-danger me-2" style="font-size: 0.85rem;">
+                                                <i class="bi bi-exclamation-triangle-fill"></i> {{ cursoObj.nombre }}
+                                            </span>
+                                            <small class="text-muted">
+                                                {{ vencidas }} cuota{{ vencidas > 1 ? 's' : '' }} vencida{{ vencidas > 1 ? 's' : '' }}
+                                            </small>
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+
+                        {# Cursos al día (sin cuotas vencidas) #}
                         {% if cursosPagoCompleto is defined and cursosPagoCompleto|length > 0 %}
                             <div class="mb-4" style="border-left: 4px solid #28a745; background-color: #d4edda; padding: 1rem; border-radius: 4px;">
                                 <h5 class="mb-2 text-dark">
@@ -77,14 +101,21 @@
                                 </h5>
                                 {% for cursoObj in cursos %}
                                     {# Solo mostrar si está al día pero NO totalmente pagado #}
-                                    {% if cursosPagoCompleto[cursoObj.id] is defined 
-                                       and cursosPagoCompleto[cursoObj.id] 
+                                    {% if cursosPagoCompleto[cursoObj.id] is defined
+                                       and cursosPagoCompleto[cursoObj.id]
                                        and not (cursosTotalmentePagados[cursoObj.id] is defined and cursosTotalmentePagados[cursoObj.id]) %}
                                         <div class="d-flex align-items-center mb-1">
                                             <span class="badge bg-success me-2" style="font-size: 0.85rem;">
                                                 <i class="bi bi-check-circle-fill"></i> {{ cursoObj.nombre }}
                                             </span>
-                                            <small class="text-muted">No tiene cuotas pendientes hasta la fecha</small>
+                                            <small class="text-muted">
+                                                {% if cursosPorVencer[cursoObj.id] is defined %}
+                                                    {% set porVencer = cursosPorVencer[cursoObj.id] %}
+                                                    Sin cuotas vencidas. {{ porVencer }} cuota{{ porVencer > 1 ? 's' : '' }} del mes en curso, todavía en plazo.
+                                                {% else %}
+                                                    No tiene cuotas pendientes hasta la fecha
+                                                {% endif %}
+                                            </small>
                                         </div>
                                     {% endif %}
                                 {% endfor %}
@@ -154,9 +185,15 @@
                                                 <div class="card-body">
                                                     <h6 class="card-title text-dark mb-3">
                                                         <strong>{{ curso }}</strong>
-                                                        {% if cursosTotalmentePagados[cursoId] is defined and cursosTotalmentePagados[cursoId] %}
-                                                            <span class="badge bg-success ms-2">
-                                                                <i class="bi bi-check-circle-fill"></i> Curso pagado completo
+                                                        {% if cursosVencidos[cursoId] is defined %}
+                                                            {% set vencidasMes = cursosVencidos[cursoId] %}
+                                                            <span class="badge bg-danger ms-2">
+                                                                <i class="bi bi-exclamation-triangle-fill"></i>
+                                                                {{ vencidasMes }} cuota{{ vencidasMes > 1 ? 's' : '' }} vencida{{ vencidasMes > 1 ? 's' : '' }}
+                                                            </span>
+                                                        {% elseif cursosTotalmentePagados[cursoId] is defined and cursosTotalmentePagados[cursoId] %}
+                                                            <span class="badge bg-primary ms-2">
+                                                                <i class="bi bi-star-fill"></i> Curso pagado completo
                                                             </span>
                                                         {% elseif cursosPagoCompleto[cursoId] is defined and cursosPagoCompleto[cursoId] %}
                                                             <span class="badge bg-success ms-2">
@@ -263,15 +300,36 @@
                             <div class="row">
                                 {% for cursoObj in cursosUnicosArray %}
                                     <div class="col-md-{% if cursosUnicosArray|length > 1 %}6{% else %}12{% endif %} mb-3">
-                                        <div class="card border-0" style="background-color: {% if cursosPagoCompleto[cursoObj.id] is defined and cursosPagoCompleto[cursoObj.id] %}#d4edda{% else %}#f8f9fa{% endif %}; border-left: 3px solid {% if cursosPagoCompleto[cursoObj.id] is defined and cursosPagoCompleto[cursoObj.id] %}#28a745{% else %}#0d6efd{% endif %} !important;">
+                                        {# Mismo código de colores que el panel de estado: rojo vencido,
+                                           verde al día, azul pagado completo. Antes un curso vencido
+                                           quedaba gris, visualmente igual a uno sin información. #}
+                                        {% set vencido = cursosVencidos[cursoObj.id] is defined %}
+                                        {% set alDia = cursosPagoCompleto[cursoObj.id] is defined and cursosPagoCompleto[cursoObj.id] %}
+                                        {% set pagadoTodo = cursosTotalmentePagados[cursoObj.id] is defined and cursosTotalmentePagados[cursoObj.id] %}
+                                        {% if vencido %}
+                                            {% set fondo = '#f8d7da' %}{% set borde = '#dc3545' %}
+                                        {% elseif pagadoTodo %}
+                                            {% set fondo = '#cfe2ff' %}{% set borde = '#0d6efd' %}
+                                        {% elseif alDia %}
+                                            {% set fondo = '#d4edda' %}{% set borde = '#28a745' %}
+                                        {% else %}
+                                            {% set fondo = '#f8f9fa' %}{% set borde = '#0d6efd' %}
+                                        {% endif %}
+                                        <div class="card border-0" style="background-color: {{ fondo }}; border-left: 3px solid {{ borde }} !important;">
                                             <div class="card-body">
                                                 <h6 class="card-title text-dark mb-2">
                                                     <strong>{{ cursoObj.nombre }}</strong>
-                                                    {% if cursosTotalmentePagados[cursoObj.id] is defined and cursosTotalmentePagados[cursoObj.id] %}
-                                                        <span class="badge bg-success ms-2">
-                                                            <i class="bi bi-check-circle-fill"></i> Curso pagado completo
+                                                    {% if vencido %}
+                                                        {% set vencidas = cursosVencidos[cursoObj.id] %}
+                                                        <span class="badge bg-danger ms-2">
+                                                            <i class="bi bi-exclamation-triangle-fill"></i>
+                                                            {{ vencidas }} cuota{{ vencidas > 1 ? 's' : '' }} vencida{{ vencidas > 1 ? 's' : '' }}
                                                         </span>
-                                                    {% elseif cursosPagoCompleto[cursoObj.id] is defined and cursosPagoCompleto[cursoObj.id] %}
+                                                    {% elseif pagadoTodo %}
+                                                        <span class="badge bg-primary ms-2">
+                                                            <i class="bi bi-star-fill"></i> Curso pagado completo
+                                                        </span>
+                                                    {% elseif alDia %}
                                                         <span class="badge bg-success ms-2">
                                                             <i class="bi bi-check-circle-fill"></i> Curso al día
                                                         </span>
