@@ -58,6 +58,24 @@ class AlumnosPagosController extends AbstractController
     }
 
     /**
+     * Primer día del mes de $fecha, a medianoche UTC, como \DateTime **mutable**.
+     *
+     * Mutable porque las fechas del instituto son DateTimeImmutable: ahí
+     * modify()/setTime() devuelven una instancia nueva en lugar de mutar, así que
+     * `clone $fecha; $fecha->modify(...)` es un no-op silencioso y los bucles
+     * `while (...) { $fecha->modify('+1 month'); }` no terminan nunca.
+     *
+     * UTC para que todos los límites de mes se comparen sobre la misma base, igual que
+     * InstitutoTimezoneService::normalizeDateOnly(), que es como se guardan las fechas
+     * sin hora (fechaAlta, fechaInicio/FinPeriodo). Se toma el mes civil de $fecha, así
+     * que una fecha en la zona del instituto conserva su mes.
+     */
+    private static function primerDiaDelMes(\DateTimeInterface $fecha): \DateTime
+    {
+        return new \DateTime($fecha->format('Y-m-01') . ' 00:00:00', new \DateTimeZone('UTC'));
+    }
+
+    /**
      * @Route("/", name="app_alumnos_pagos_index", methods={"GET"})
      */
     public function index(
@@ -245,18 +263,16 @@ class AlumnosPagosController extends AbstractController
         );
 
         // Calcular estadísticas por período
+        // OJO: getNowForInstituto() devuelve DateTimeImmutable, así que modify()/setTime()
+        // devuelven una instancia nueva y hay que reasignar el resultado.
         $fechaActual = $this->institutoTimezoneService->getNowForInstituto($instituto);
-        $hoy = clone $fechaActual;
-        $hoy->setTime(0, 0, 0);
-        
-        $inicioSemana = clone $fechaActual;
-        $inicioSemana->modify('monday this week')->setTime(0, 0, 0);
-        
-        $inicioMes = clone $fechaActual;
-        $inicioMes->modify('first day of this month')->setTime(0, 0, 0);
-        
-        $inicioAno = clone $fechaActual;
-        $inicioAno->modify('first day of january')->setTime(0, 0, 0);
+        $hoy = $fechaActual->setTime(0, 0, 0);
+
+        $inicioSemana = $fechaActual->modify('monday this week')->setTime(0, 0, 0);
+
+        $inicioMes = $fechaActual->modify('first day of this month')->setTime(0, 0, 0);
+
+        $inicioAno = $fechaActual->modify('first day of january')->setTime(0, 0, 0);
 
         // Estadísticas de pagos - función helper
         $getEstadisticas = function($fechaDesde) use ($alumnosPagosRepository, $instituto) {
@@ -828,7 +844,13 @@ class AlumnosPagosController extends AbstractController
             $primerMesPendiente = null;
             foreach ($mesesAdeudados as $mesData) {
                 if ($mesData['curso_obj']->getId() === $curso->getId()) {
-                    $fechaMes = \DateTime::createFromFormat('Y-m-d', $mesData['ano'] . '-' . str_pad($mesData['mes'], 2, '0', STR_PAD_LEFT) . '-01');
+                    // Medianoche UTC, igual que primerDiaDelMes(): createFromFormat('Y-m-d')
+                    // dejaba la hora actual y desvirtuaba las comparaciones contra los
+                    // primeros días de mes.
+                    $fechaMes = new \DateTime(
+                        sprintf('%04d-%02d-01 00:00:00', $mesData['ano'], $mesData['mes']),
+                        new \DateTimeZone('UTC')
+                    );
                     if ($primerMesPendiente === null || $fechaMes < $primerMesPendiente) {
                         $primerMesPendiente = $fechaMes;
                     }
@@ -845,23 +867,22 @@ class AlumnosPagosController extends AbstractController
             
             // Determinar el mes mínimo según la configuración de generación de deudas
             $modoGeneracionDeuda = $historico->getModoGeneracionDeuda();
-            $fechaMinimaInicio = clone $fechaAltaHistorico;
-            $fechaMinimaInicio->modify('first day of this month');
-            $fechaMinimaInicio->setTime(0, 0, 0);
-            
+            // IMPORTANTE: usar siempre \DateTime mutable construido a partir del primer día del mes.
+            // $fechaAltaHistorico y $fechaActual pueden ser DateTimeImmutable, y en ese caso
+            // modify()/setTime() no mutan el objeto y las fechas quedaban en "ahora".
+            $fechaMinimaInicio = self::primerDiaDelMes($fechaAltaHistorico);
+
             if ($modoGeneracionDeuda === 'proximo_mes') {
                 // Si está configurado para empezar desde el próximo mes, agregar 1 mes
                 $fechaMinimaInicio->modify('+1 month');
             }
             // Si es 'inscripcion' (default), usar el mes de inscripción tal cual
-            
+
             // Si hay meses pendientes, empezar desde el primero
             // Si no hay meses pendientes, empezar desde el mes siguiente al actual o desde el inicio del curso
-            $fechaInicio = clone $fechaActual;
-            $fechaInicio->modify('first day of this month');
+            $fechaInicio = self::primerDiaDelMes($fechaActual);
             $fechaInicio->modify('+1 month'); // Por defecto, desde el mes siguiente al actual
-            $fechaInicio->setTime(0, 0, 0);
-            
+
             if ($primerMesPendiente) {
                 // Si hay meses pendientes, empezar desde el primero para llenar todos los huecos
                 // PERO nunca antes de la fecha de alta del alumno en el curso
@@ -873,9 +894,7 @@ class AlumnosPagosController extends AbstractController
                 }
             } elseif ($fechaInicioCurso) {
                 // Si no hay meses pendientes pero hay fecha inicio del curso, empezar desde ahí
-                $fechaInicioCursoPrimerDia = clone $fechaInicioCurso;
-                $fechaInicioCursoPrimerDia->modify('first day of this month');
-                $fechaInicioCursoPrimerDia->setTime(0, 0, 0);
+                $fechaInicioCursoPrimerDia = self::primerDiaDelMes($fechaInicioCurso);
                 if ($fechaInicioCursoPrimerDia < $fechaInicio) {
                     $fechaInicio = $fechaInicioCursoPrimerDia;
                 }
@@ -890,20 +909,16 @@ class AlumnosPagosController extends AbstractController
             // Si no tiene fecha fin, usar 12 meses adelante como límite
             if ($fechaFinCurso) {
                 // Si el curso tiene fecha fin, permitir pagar hasta el fin del curso completo
-                $fechaFin = clone $fechaFinCurso;
-                $fechaFin->modify('first day of this month');
-                $fechaFin->setTime(0, 0, 0);
+                $fechaFin = self::primerDiaDelMes($fechaFinCurso);
             } else {
                 // Si no tiene fecha fin, limitar a 12 meses adelante
-                $fechaFin = clone $fechaActual;
-                $fechaFin->modify('first day of this month');
+                $fechaFin = self::primerDiaDelMes($fechaActual);
                 $fechaFin->modify('+12 months');
-                $fechaFin->setTime(0, 0, 0);
             }
-            
-            $fechaVerificacion = clone $fechaInicio;
-            $fechaVerificacion->setTime(0, 0, 0);
-            
+
+            // Debe ser mutable: el bucle avanza con $fechaVerificacion->modify('+1 month').
+            $fechaVerificacion = self::primerDiaDelMes($fechaInicio);
+
             while ($fechaVerificacion <= $fechaFin) {
                 $mesVerificar = (int)$fechaVerificacion->format('n');
                 $anoVerificar = (int)$fechaVerificacion->format('Y');

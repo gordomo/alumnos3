@@ -26,6 +26,21 @@ class DeudaCalculatorService
     }
 
     /**
+     * Último día del mes de $fecha a las 23:59:59 UTC, como \DateTime mutable.
+     *
+     * Se construye explícitamente porque las fechas del instituto son DateTimeImmutable
+     * y ahí modify('last day of this month') devuelve una instancia nueva sin mutar.
+     *
+     * UTC para comparar contra las fechas sin hora del histórico, que se guardan a
+     * medianoche UTC (ver InstitutoTimezoneService::normalizeDateOnly()). Se toma el mes
+     * civil de $fecha, así que una fecha en la zona del instituto conserva su mes.
+     */
+    private static function ultimoDiaDelMes(\DateTimeInterface $fecha): \DateTime
+    {
+        return new \DateTime($fecha->format('Y-m-t') . ' 23:59:59', new \DateTimeZone('UTC'));
+    }
+
+    /**
      * Calcula todas las deudas de un alumno basándose en su historial de cursos
      * 
      * @return array Array de deudas calculadas con estructura similar a DeudaAlumno
@@ -109,14 +124,14 @@ class DeudaCalculatorService
         // Fecha actual del instituto
         $fechaActual = $this->institutoTimezoneService->getNowForInstituto($instituto);
         
-        // Generar deudas solo hasta el mes actual (no futuras)
-        $fechaLimite = clone $fechaActual;
-        $fechaLimite->modify('last day of this month');
-        
+        // Generar deudas solo hasta el mes actual (no futuras).
+        // $fechaActual es DateTimeImmutable: modify() devuelve una instancia nueva y no muta,
+        // por eso se construye el último día del mes explícitamente.
+        $fechaLimite = self::ultimoDiaDelMes($fechaActual);
+
         // Si el curso ya finalizó, usar esa fecha como límite
         if ($fechaFin && $fechaFin < $fechaLimite) {
-            $fechaLimite = clone $fechaFin;
-            $fechaLimite->modify('last day of this month');
+            $fechaLimite = self::ultimoDiaDelMes($fechaFin);
         }
         
         // Iterar mes por mes

@@ -44,6 +44,23 @@ class ProfesorController extends AbstractController
     }
 
     /**
+     * Copia mutable de una fecha, preservando instante y zona horaria.
+     *
+     * Las fechas del instituto son DateTimeImmutable: ahí modify()/setTime() devuelven
+     * una instancia nueva en vez de mutar, así que un `$d->modify('+1 day')` dentro de
+     * un while nunca avanza y el bucle no termina.
+     */
+    private static function aDateTimeMutable(\DateTimeInterface $fecha): \DateTime
+    {
+        if ($fecha instanceof \DateTime) {
+            return clone $fecha;
+        }
+
+        return \DateTime::createFromFormat('U.u', $fecha->format('U.u'))
+            ->setTimezone($fecha->getTimezone());
+    }
+
+    /**
      * @Route("/", name="app_profesor_index", methods={"GET"})
      */
     public function index(Request $request, ProfesorRepository $profesorRepository, PaginatorInterface $paginator): Response
@@ -125,12 +142,11 @@ class ProfesorController extends AbstractController
 
         $desdeDt = $this->institutoTimezoneService->parseDateString($desdeStr, $dateFormat);
         $hastaDt = $this->institutoTimezoneService->parseDateString($hastaStr, $dateFormat);
-        if (!$desdeDt) {
-            $desdeDt = clone $primerDiaMes;
-        }
-        if (!$hastaDt) {
-            $hastaDt = clone $ultimoDiaMes;
-        }
+        // $primerDiaMes/$ultimoDiaMes derivan de getNowForInstituto() => DateTimeImmutable.
+        // Se normaliza a \DateTime mutable porque más abajo el rango se recorre con
+        // $current->modify('+1 day'), que sobre un immutable no avanza (bucle infinito).
+        $desdeDt = self::aDateTimeMutable($desdeDt ?: $primerDiaMes);
+        $hastaDt = self::aDateTimeMutable($hastaDt ?: $ultimoDiaMes);
         $desdeDt->setTime(0, 0, 0);
         $hastaDt->setTime(23, 59, 59);
         if ($hastaDt < $desdeDt) {
@@ -162,7 +178,10 @@ class ProfesorController extends AbstractController
         $rango = [];
         $current = clone $desdeDt;
         $current->setTime(0, 0, 0);
-        $hastaSoloFecha = (clone $hastaDt)->setTime(0, 0, 0);
+        // clone antes de setTime: sobre un \DateTime mutable, setTime() muta y devuelve
+        // el mismo objeto, con lo que $hastaSoloFecha y $hastaDt serían el mismo.
+        $hastaSoloFecha = (clone $hastaDt);
+        $hastaSoloFecha->setTime(0, 0, 0);
         while ($current <= $hastaSoloFecha) {
             $rango[] = [
                 'fecha' => $current->format($dateFormat),
