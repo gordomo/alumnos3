@@ -530,14 +530,21 @@ class InstitutoConfigController extends AbstractController
     /**
      * @Route("/metodo-pago/{id}/delete", name="instituto_config_metodo_pago_delete", methods={"POST"})
      */
-    public function deleteMetodoPago(MetodoPago $metodoPago, EntityManagerInterface $entityManager): Response
+    public function deleteMetodoPago(MetodoPago $metodoPago, Request $request, EntityManagerInterface $entityManager): Response
     {
         $instituto = $this->getUser()->getInstituto();
-        
+
         if ($metodoPago->getInstituto() !== $instituto) {
             throw $this->createAccessDeniedException();
         }
-        
+
+        // Mismo patrón que deleteVencimiento y deleteDescuentoPromocional.
+        if (!$this->isCsrfTokenValid('delete' . $metodoPago->getId(), $request->request->get('_token'))) {
+            $this->addFlash('error', 'Token de seguridad inválido. Volvé a intentar.');
+            return $this->redirectToRoute('instituto_config_index', ['tab' => 'metodos-pago']);
+        }
+
+
         // No permitir eliminar "Efectivo" porque es necesario para el descuento
         if (strtolower($metodoPago->getNombre()) === 'efectivo') {
             $this->addFlash('error', 'No se puede eliminar el método de pago "Efectivo" porque es necesario para el sistema de descuentos.');

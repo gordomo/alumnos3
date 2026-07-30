@@ -209,7 +209,9 @@ class AlumnosPagosController extends AbstractController
         if ($fechaHasta) {
             // Parsear fecha usando el formato del instituto
             $dateFormat = $this->institutoTimezoneService->getDateFormatForInstituto($instituto);
-            $fechaHastaParsed = $this->institutoTimezoneService->parseDateString($fechaHasta, $dateFormat);
+            // Fin del día: p.fecha es datetime, así que con la fecha a medianoche el <=
+            // dejaría afuera todos los pagos cargados ese mismo día.
+            $fechaHastaParsed = $this->institutoTimezoneService->parseDateStringEndOfDay($fechaHasta, $dateFormat);
             if ($fechaHastaParsed) {
                 $qb->andWhere('p.fecha <= :fechaHasta')
                    ->setParameter('fechaHasta', $fechaHastaParsed);

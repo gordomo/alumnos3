@@ -109,11 +109,37 @@ class InstitutoTimezoneService
             $formats = array_unique(array_merge([$preferredFormat], $formats));
         }
         foreach ($formats as $format) {
-            $d = \DateTime::createFromFormat($format, $str);
-            if ($d !== false) {
-                return $d;
+            // El '!' inicial resetea los campos no presentes en el formato, así la fecha
+            // queda a las 00:00:00. Sin eso createFromFormat arrastra la hora actual, y
+            // una fecha usada como límite de un rango (p.fecha <= :hasta) dejaba afuera
+            // lo cargado más tarde ese mismo día.
+            $d = \DateTime::createFromFormat('!' . $format, $str);
+            if ($d === false) {
+                continue;
             }
+
+            // createFromFormat es permisivo: '32/13/2026' desborda a otra fecha en lugar
+            // de fallar. Se descarta si hubo warnings o errores.
+            $errores = \DateTime::getLastErrors();
+            if (is_array($errores) && ($errores['warning_count'] > 0 || $errores['error_count'] > 0)) {
+                continue;
+            }
+
+            return $d;
         }
         return null;
+    }
+
+    /**
+     * Igual que parseDateString(), pero al final del día (23:59:59).
+     *
+     * Para usar como límite superior inclusivo de un rango sobre columnas datetime:
+     * con la fecha a medianoche, `campo <= :hasta` excluiría todo lo de ese mismo día.
+     */
+    public function parseDateStringEndOfDay(string $str, ?string $preferredFormat = null): ?\DateTime
+    {
+        $fecha = $this->parseDateString($str, $preferredFormat);
+
+        return $fecha?->setTime(23, 59, 59);
     }
 }
