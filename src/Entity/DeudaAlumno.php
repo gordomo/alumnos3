@@ -272,7 +272,14 @@ class DeudaAlumno
     }
 
     /**
-     * Verifica si la deuda está parcialmente pagada
+     * Verifica si la deuda está parcialmente pagada.
+     *
+     * @deprecated No usar: contradice la política del sistema. PagoService, al aplicar
+     * un pago menor al pendiente, baja el monto de la deuda a lo efectivamente pagado
+     * y la cancela (ver PagoService::aplicarPagoADeuda(), $cerrarDeudaSiMontoMenor, que
+     * todos los llamadores pasan en true). Por eso no quedan deudas parcialmente
+     * pagadas y este método siempre devuelve false después de aplicar un pago.
+     * Sin usos en el código.
      */
     public function isParcialmentePagado(): bool
     {

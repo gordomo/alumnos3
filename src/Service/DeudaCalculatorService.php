@@ -41,21 +41,124 @@ class DeudaCalculatorService
     }
 
     /**
+     * Índice de meses con pago precargado: 'alumnoId_cursoId_mes_ano' => true.
+     *
+     * Cuando está poblado, existePagoParaMes() lo consulta en memoria en lugar de
+     * hacer un COUNT por cada mes de cada histórico de cada alumno. null = sin
+     * precargar (se cae al COUNT individual, para las llamadas de un solo alumno).
+     */
+    private ?array $indicePagos = null;
+
+    /**
+     * Históricos activos precargados: id de alumno => AlumnoCursoHistorico[].
+     * null = sin precargar (se cae al findBy por alumno).
+     */
+    private ?array $indiceHistoricos = null;
+
+    /**
+     * Vencimientos por id de instituto, cacheados durante el request.
+     */
+    private array $cacheVencimientos = [];
+
+    /**
+     * Calcula las deudas de varios alumnos precargando los pagos en una sola query.
+     *
+     * Sin esto, el cálculo hacía (#alumnos × #históricos × #meses) COUNT: con unos
+     * cientos de alumnos son miles de queries por carga de pantalla.
+     *
+     * @param Alumno[] $alumnos
+     * @return array<int, array> deudas por id de alumno, en el mismo formato que calcularDeudasAlumno()
+     */
+    public function calcularDeudasParaAlumnos(array $alumnos): array
+    {
+        if (!$alumnos) {
+            return [];
+        }
+
+        $pagosAnterior = $this->indicePagos;
+        $historicosAnterior = $this->indiceHistoricos;
+        $this->indicePagos = $this->cargarIndicePagos($alumnos);
+        $this->indiceHistoricos = $this->cargarIndiceHistoricos($alumnos);
+
+        try {
+            $porAlumno = [];
+            foreach ($alumnos as $alumno) {
+                $porAlumno[$alumno->getId()] = $this->calcularDeudasAlumno($alumno);
+            }
+
+            return $porAlumno;
+        } finally {
+            $this->indicePagos = $pagosAnterior;
+            $this->indiceHistoricos = $historicosAnterior;
+        }
+    }
+
+    /**
+     * Carga en una query los históricos activos de los alumnos dados.
+     *
+     * @return array<int, AlumnoCursoHistorico[]> históricos por id de alumno
+     */
+    private function cargarIndiceHistoricos(array $alumnos): array
+    {
+        $historicos = $this->entityManager->getRepository(AlumnoCursoHistorico::class)
+            ->createQueryBuilder('h')
+            ->innerJoin('h.curso', 'c')
+            ->addSelect('c')
+            ->where('h.alumno IN (:alumnos)')
+            ->andWhere('h.activo = :activo')
+            ->setParameter('alumnos', $alumnos)
+            ->setParameter('activo', true)
+            ->getQuery()
+            ->getResult();
+
+        $indice = [];
+        foreach ($historicos as $historico) {
+            $indice[$historico->getAlumno()->getId()][] = $historico;
+        }
+
+        return $indice;
+    }
+
+    /**
+     * Carga en una query los meses que ya tienen algún pago, para los alumnos dados.
+     */
+    private function cargarIndicePagos(array $alumnos): array
+    {
+        $filas = $this->entityManager->createQueryBuilder()
+            ->select('IDENTITY(p.alumno) AS alumnoId', 'IDENTITY(p.curso) AS cursoId', 'p.mes', 'p.ano')
+            ->from(\App\Entity\AlumnosPagos::class, 'p')
+            ->where('p.alumno IN (:alumnos)')
+            ->setParameter('alumnos', $alumnos)
+            ->groupBy('p.alumno', 'p.curso', 'p.mes', 'p.ano')
+            ->getQuery()
+            ->getArrayResult();
+
+        $indice = [];
+        foreach ($filas as $fila) {
+            $indice[$fila['alumnoId'] . '_' . $fila['cursoId'] . '_' . $fila['mes'] . '_' . $fila['ano']] = true;
+        }
+
+        return $indice;
+    }
+
+    /**
      * Calcula todas las deudas de un alumno basándose en su historial de cursos
-     * 
+     *
      * @return array Array de deudas calculadas con estructura similar a DeudaAlumno
      */
     public function calcularDeudasAlumno(Alumno $alumno): array
     {
         $instituto = $alumno->getInstituto();
         $deudas = [];
-        
-        // Obtener todos los históricos activos del alumno
-        $historicos = $this->entityManager->getRepository(AlumnoCursoHistorico::class)->findBy([
-            'alumno' => $alumno,
-            'activo' => true
-        ]);
-        
+
+        // Obtener todos los históricos activos del alumno (precargados en cálculo masivo)
+        $historicos = $this->indiceHistoricos !== null
+            ? ($this->indiceHistoricos[$alumno->getId()] ?? [])
+            : $this->entityManager->getRepository(AlumnoCursoHistorico::class)->findBy([
+                'alumno' => $alumno,
+                'activo' => true
+            ]);
+
         foreach ($historicos as $historico) {
             $deudasHistorico = $this->calcularDeudasParaHistorico($historico);
             $deudas = array_merge($deudas, $deudasHistorico);
@@ -176,8 +279,15 @@ class DeudaCalculatorService
      */
     private function existePagoParaMes(Alumno $alumno, $curso, int $mes, int $ano): bool
     {
+        // Si los pagos vienen precargados (cálculo masivo), se resuelve en memoria.
+        if ($this->indicePagos !== null) {
+            $clave = $alumno->getId() . '_' . $curso->getId() . '_' . $mes . '_' . $ano;
+
+            return isset($this->indicePagos[$clave]);
+        }
+
         $qb = $this->entityManager->createQueryBuilder();
-        
+
         $qb->select('COUNT(p.id)')
            ->from(\App\Entity\AlumnosPagos::class, 'p')
            ->where('p.alumno = :alumno')
@@ -197,10 +307,13 @@ class DeudaCalculatorService
      */
     private function calcularInteres(Instituto $instituto, float $montoBase, int $mes, int $ano, \DateTimeImmutable $fechaActual): float
     {
-        // Obtener vencimientos configurados
-        $vencimientos = $this->entityManager->getRepository('App\Entity\Vencimiento')
-            ->findBy(['instituto' => $instituto], ['diaVencimiento' => 'ASC']);
-        
+        // Obtener vencimientos configurados. Se cachean por instituto: antes se
+        // consultaban de nuevo para cada mes de cada histórico de cada alumno, que era
+        // el grueso de las queries del dashboard (no cambian durante el request).
+        $vencimientos = $this->cacheVencimientos[$instituto->getId()]
+            ??= $this->entityManager->getRepository(\App\Entity\Vencimiento::class)
+                ->findBy(['instituto' => $instituto], ['diaVencimiento' => 'ASC']);
+
         if (empty($vencimientos)) {
             return 0;
         }
@@ -277,27 +390,38 @@ class DeudaCalculatorService
 
 
     /**
-     * Obtiene estadísticas de deudas para el dashboard
+     * Obtiene estadísticas de deudas para el dashboard.
+     *
+     * Devuelve además 'deudasPorAlumno' (id de alumno => deudas) para que quien
+     * necesite el detalle no vuelva a calcular lo mismo. Los parámetros
+     * $fechaInicio/$fechaFin que recibía antes se eliminaron: nunca se usaron dentro
+     * del método y ningún llamador los pasaba, así que solo prometían un filtro
+     * inexistente.
+     *
+     * @param Alumno[]|null $alumnos Alumnos ya cargados, para no volver a consultarlos.
      */
-    public function getEstadisticasDeudas(Instituto $instituto, ?\DateTime $fechaInicio = null, ?\DateTime $fechaFin = null): array
+    public function getEstadisticasDeudas(Instituto $instituto, ?array $alumnos = null): array
     {
         // Obtener todos los alumnos activos del instituto
-        $alumnos = $this->entityManager->getRepository(Alumno::class)->findBy([
-            'instituto' => $instituto,
-            'activo' => true
-        ]);
-        
+        if ($alumnos === null) {
+            $alumnos = $this->entityManager->getRepository(Alumno::class)->findBy([
+                'instituto' => $instituto,
+                'activo' => true
+            ]);
+        }
+
         $totalDeudores = 0;
         $montoTotalAdeudado = 0;
         $montoAdeudadoMensual = 0;
-        
+
         $fechaActual = $this->institutoTimezoneService->getNowForInstituto($instituto);
         $mesActual = (int)$fechaActual->format('n');
         $anoActual = (int)$fechaActual->format('Y');
-        
-        foreach ($alumnos as $alumno) {
-            $deudas = $this->calcularDeudasAlumno($alumno);
-            
+
+        // Una sola query de pagos para todos los alumnos, en lugar de un COUNT por mes.
+        $deudasPorAlumno = $this->calcularDeudasParaAlumnos($alumnos);
+
+        foreach ($deudasPorAlumno as $deudas) {
             if (count($deudas) > 0) {
                 $totalDeudores++;
                 
@@ -317,6 +441,7 @@ class DeudaCalculatorService
             'totalDeudores' => $totalDeudores,
             'montoTotalAdeudado' => $montoTotalAdeudado,
             'montoAdeudadoMensual' => $montoAdeudadoMensual,
+            'deudasPorAlumno' => $deudasPorAlumno,
         ];
     }
 }

@@ -74,8 +74,14 @@ class DashboardController extends AbstractController
         // Obtener todos los alumnos
         $alumnos = $alumnosQuery->getQuery()->getResult();
 
-        // Usar el nuevo servicio para calcular estadísticas de deudas
+        // Usar el nuevo servicio para calcular estadísticas de deudas.
+        // OJO: no se le pasan $alumnos, que puede venir filtrado por búsqueda; las
+        // tarjetas deben seguir reflejando a todos los alumnos activos del instituto.
+        // Se reutiliza su desglose más abajo (superset de $alumnos): antes se recorrían
+        // todos los alumnos acá y otra vez en el foreach siguiente, calculando dos
+        // veces exactamente las mismas deudas.
         $estadisticas = $this->deudaCalculator->getEstadisticasDeudas($instituto);
+        $deudasPorAlumno = $estadisticas['deudasPorAlumno'];
         $totalDeudores = $estadisticas['totalDeudores'];
         $montoTotalAdeudado = $estadisticas['montoTotalAdeudado'];
         $montoAdeudadoMensual = $estadisticas['montoAdeudadoMensual'];
@@ -86,8 +92,8 @@ class DashboardController extends AbstractController
         $totalAlumnos = count($alumnos);
 
         foreach ($alumnos as $alumno) {
-            $deudasAlumno = $this->deudaCalculator->calcularDeudasAlumno($alumno);
-            
+            $deudasAlumno = $deudasPorAlumno[$alumno->getId()] ?? [];
+
             if (!empty($deudasAlumno)) {
                 $cantidadMeses = count($deudasAlumno);
                 $deudores[] = [

@@ -107,14 +107,14 @@ class GenerarDeudasMensualesCommand extends Command
             
             foreach ($alumnos as $alumno) {
                 try {
-                    if (!$dryRun) {
-                        $deudasEntidades = $this->deudaCalculator->sincronizarDeudasConTabla($alumno);
-                        $deudasSincronizadas += count($deudasEntidades);
-                    } else {
-                        // En modo dry-run, solo calcular sin guardar
-                        $deudasCalculadas = $this->deudaCalculator->calcularDeudasAlumno($alumno);
-                        $deudasSincronizadas += count($deudasCalculadas);
-                    }
+                    // El sistema de deudas es 100% on-demand: no hay nada que persistir
+                    // acá (las filas en deuda_alumno las crea PagoService al cobrar).
+                    // Antes la corrida real llamaba a sincronizarDeudasConTabla(), que
+                    // está deprecada y devuelve [] siempre, así que informaba 0 deudas
+                    // mientras --dry-run informaba el número real. Ahora ambas cuentan
+                    // lo mismo y el reporte deja de contradecirse.
+                    $deudasCalculadas = $this->deudaCalculator->calcularDeudasAlumno($alumno);
+                    $deudasSincronizadas += count($deudasCalculadas);
                     $alumnosProcesados++;
                 } catch (\Exception $e) {
                     $errores[] = [
@@ -125,17 +125,18 @@ class GenerarDeudasMensualesCommand extends Command
             }
             
             if ($dryRun) {
-                $io->warning('Cambios no guardados (modo dry-run)');
+                $io->warning('Modo dry-run');
             }
-            
+            $io->note('Las deudas se calculan on-demand: este comando no persiste filas, solo informa el estado actual.');
+
             // Mostrar resultados
             $io->success('Proceso completado exitosamente');
-            
+
             $io->table(
                 ['Métrica', 'Cantidad'],
                 [
                     ['Alumnos procesados', $alumnosProcesados],
-                    ['Deudas sincronizadas', $deudasSincronizadas],
+                    ['Deudas pendientes calculadas', $deudasSincronizadas],
                     ['Errores', count($errores)]
                 ]
             );
