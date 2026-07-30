@@ -303,6 +303,24 @@ class DeudaCalculatorService
     }
 
     /**
+     * Interés que corresponde a la cuota de un mes/año, con los vencimientos del instituto.
+     *
+     * Es la misma regla que usa el cálculo on-demand para mostrar la deuda, expuesta para
+     * que al registrar un pago la fila de deuda_alumno se cree con el interés que
+     * realmente corresponde. Devuelve 0 para meses futuros (pago adelantado).
+     */
+    public function calcularInteresParaMes(Instituto $instituto, float $montoBase, int $mes, int $ano): float
+    {
+        return $this->calcularInteres(
+            $instituto,
+            $montoBase,
+            $mes,
+            $ano,
+            $this->institutoTimezoneService->getNowForInstituto($instituto)
+        );
+    }
+
+    /**
      * Calcula el interés para una deuda basándose en los vencimientos configurados
      */
     private function calcularInteres(Instituto $instituto, float $montoBase, int $mes, int $ano, \DateTimeImmutable $fechaActual): float

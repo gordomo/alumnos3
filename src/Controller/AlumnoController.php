@@ -841,19 +841,41 @@ class AlumnoController extends AbstractController
         }
         unset($datos);
 
-        // Determinar qué cursos tienen todas las cuotas pagadas
-        $cursosPagoCompleto = [];
-        foreach ($alumno->getCursosHistoricos() as $historico) {
-            if (!$historico->isActivo()) {
-                continue;
+        // Estado de cada curso, derivado de las MISMAS deudas on-demand que se listan abajo.
+        //
+        // Antes esto se calculaba con DeudaAlumnoRepository, es decir contra la tabla
+        // deuda_alumno, mientras la tabla de la pantalla se arma con el cálculo on-demand.
+        // Como las filas de deuda_alumno solo existen para los meses que se pagaron (las
+        // crea PagoService al cobrar), un curso con todas sus filas saldadas quedaba como
+        // "Curso pagado completo" aunque tuviera meses impagos que solo existen on-demand:
+        // el badge decía "pagado completo" y justo debajo se listaba el mes pendiente.
+        //
+        // Estados:
+        //  - 'vencido': tiene cuotas cuya fecha de vencimiento ya pasó.
+        //  - 'al_dia' : no tiene cuotas vencidas. Puede tener la del mes actual todavía
+        //               dentro del plazo, que no es una deuda vencida.
+        $estadoPorCurso = [];
+        foreach ($deudasPorCurso as $cId => $datos) {
+            $vencidas = 0;
+            foreach ($datos['deudas'] as $deuda) {
+                $mes = (int) $deuda['mes'];
+                $ano = (int) $deuda['ano'];
+                $esMesAnterior = $ano < $anoActualInstituto
+                    || ($ano === $anoActualInstituto && $mes < $mesActualInstituto);
+                $esMesActualVencido = $ano === $anoActualInstituto
+                    && $mes === $mesActualInstituto
+                    && $diaActualInstituto >= $primerDiaVencimiento;
+
+                if ($esMesAnterior || $esMesActualVencido) {
+                    $vencidas++;
+                }
             }
-            $cursoObj = $historico->getCurso();
-            $cId = $cursoObj->getId();
-            $deudasPendientesCurso = $deudaAlumnoRepository->findDeudaByAlumnoAndCurso($alumno, $cursoObj);
-            $totalDeudasCurso = $deudaAlumnoRepository->findBy(['alumno' => $alumno, 'curso' => $cursoObj]);
-            if (empty($deudasPendientesCurso) && !empty($totalDeudasCurso)) {
-                $cursosPagoCompleto[$cId] = true;
-            }
+
+            $estadoPorCurso[$cId] = [
+                'estado' => $vencidas > 0 ? 'vencido' : 'al_dia',
+                'vencidas' => $vencidas,
+                'pendientes' => count($datos['deudas']),
+            ];
         }
 
         return $this->render('alumno/deudas.html.twig', [
@@ -864,7 +886,7 @@ class AlumnoController extends AbstractController
             'mesActualInstituto' => $mesActualInstituto,
             'anoActualInstituto' => $anoActualInstituto,
             'primerDiaVencimiento' => $primerDiaVencimiento,
-            'cursosPagoCompleto' => $cursosPagoCompleto,
+            'estadoPorCurso' => $estadoPorCurso,
             'saldoFavorTotal' => $saldoFavorRepository->getSaldoDisponibleTotal($alumno),
         ]);
     }

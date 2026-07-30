@@ -15,14 +15,18 @@ class PagoService
     private InstitutoTimezoneService $institutoTimezoneService;
     private HistorialCursosService $historialCursosService;
 
+    private DeudaCalculatorService $deudaCalculator;
+
     public function __construct(
         EntityManagerInterface $entityManager,
         InstitutoTimezoneService $institutoTimezoneService,
-        HistorialCursosService $historialCursosService
+        HistorialCursosService $historialCursosService,
+        DeudaCalculatorService $deudaCalculator
     ) {
         $this->entityManager = $entityManager;
         $this->institutoTimezoneService = $institutoTimezoneService;
         $this->historialCursosService = $historialCursosService;
+        $this->deudaCalculator = $deudaCalculator;
     }
 
     /**
@@ -272,6 +276,18 @@ class PagoService
         $deuda->setMes($mes);
         $deuda->setAno($ano);
         $deuda->setMonto($precioMensual);
+        // El interés que corresponde al mes, con la misma regla que el cálculo on-demand
+        // usa para mostrarlo. Sin esto la deuda se creaba con interés nulo, así que
+        // getMontoTotal() era solo el precio base: al cobrar una cuota vencida con su
+        // recargo, la parte del recargo quedaba sin deuda que cubrir y se registraba como
+        // sobrepago (saldo a favor) en lugar de imputarse al interés.
+        // Para meses futuros (pago adelantado) devuelve 0.
+        $deuda->setInteres($this->deudaCalculator->calcularInteresParaMes(
+            $instituto,
+            (float) $precioMensual,
+            $mes,
+            $ano
+        ));
         $deuda->setInstituto($alumno->getInstituto());
 
         $this->entityManager->persist($deuda);
