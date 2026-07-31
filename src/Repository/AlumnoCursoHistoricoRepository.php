@@ -42,9 +42,18 @@ class AlumnoCursoHistoricoRepository extends ServiceEntityRepository
     /**
      * @return AlumnoCursoHistorico[] Returns an array of AlumnoCursoHistorico objects
      */
+    /**
+     * Históricos de un curso, con el alumno ya cargado.
+     *
+     * El fetch-join del alumno evita un N+1: los tres consumidores de este método
+     * (CalificacionService y CierreCursoService) iteran el resultado llamando a
+     * getAlumno(), lo que sin el join dispara una query por inscripción.
+     */
     public function findByCurso($curso): array
     {
         return $this->createQueryBuilder('a')
+            ->innerJoin('a.alumno', 'al')
+            ->addSelect('al')
             ->andWhere('a.curso = :curso')
             ->setParameter('curso', $curso)
             ->orderBy('a.id', 'ASC')
