@@ -44,6 +44,16 @@
         </div>
     </div>
 
+    {% if usaCalificaciones|default(false) %}
+        <div class="row mb-4">
+            <div class="col-12">
+                <a href="{{ path('app_alumno_notas') }}" class="btn btn-outline-primary">
+                    <i class="bi bi-mortarboard"></i> Ver mis notas
+                </a>
+            </div>
+        </div>
+    {% endif %}
+
     <div class="row">
         <!-- Mis Cursos -->
         <div class="col-md-6 mb-4">

@@ -1055,6 +1055,7 @@ class CursoController extends AbstractController
             'preview' => $cierreCursoService->calcularPreview($curso),
             'porcentajeRequerido' => $criterios['porcentajeRequerido'],
             'requierePagoTotal' => $criterios['requierePagoTotal'],
+            'requiereNotas' => $criterios['requiereNotas'],
         ]);
     }
 

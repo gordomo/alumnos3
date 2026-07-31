@@ -6,6 +6,7 @@ use App\Entity\Curso;
 use App\Repository\AlumnoCursoHistoricoRepository;
 use App\Repository\AsistenciaAlumnosRepository;
 use App\Repository\DeudaAlumnoRepository;
+use App\Repository\EvaluacionRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
@@ -27,14 +28,16 @@ class CierreCursoService
         private AsistenciaAlumnosRepository $asistenciaRepository,
         private DeudaAlumnoRepository $deudaAlumnoRepository,
         private InstitutoTimezoneService $institutoTimezoneService,
-        private EntityManagerInterface $entityManager
+        private EntityManagerInterface $entityManager,
+        private PromedioCalificacionService $promedioService,
+        private EvaluacionRepository $evaluacionRepository
     ) {
     }
 
     /**
      * Criterios de aprobación vigentes para el instituto del curso.
      *
-     * @return array{porcentajeRequerido: float|null, requierePagoTotal: bool}
+     * @return array{porcentajeRequerido: float|null, requierePagoTotal: bool, requiereNotas: bool}
      */
     public function getCriterios(Curso $curso): array
     {
@@ -43,7 +46,30 @@ class CierreCursoService
         return [
             'porcentajeRequerido' => $config ? $config->getPorcentajeAsistenciaAprobacion() : null,
             'requierePagoTotal' => $config ? $config->getRequierePagoTotalParaAprobar() : false,
+            'requiereNotas' => $this->criterioNotasActivo($curso),
         ];
+    }
+
+    /**
+     * ¿El criterio de calificaciones está activo para este curso?
+     *
+     * Tres condiciones, todas necesarias, de modo que la feature nazca apagada:
+     *  1. el instituto usa calificaciones (modo distinto de 'ninguno');
+     *  2. el administrador prendió explícitamente que las notas influyan;
+     *  3. el curso tiene al menos una evaluación que cuente para el promedio.
+     *
+     * Si alguna falla, las notas no pueden desaprobar a nadie y el cierre se comporta
+     * exactamente como antes de que existiera esta feature.
+     */
+    public function criterioNotasActivo(Curso $curso): bool
+    {
+        $config = $curso->getInstituto() ? $curso->getInstituto()->getConfiguracion() : null;
+
+        if (!$config || !$config->usaCalificaciones() || !$config->isNotasInfluyenAprobacion()) {
+            return false;
+        }
+
+        return $this->evaluacionRepository->contarQueCuentanParaPromedio($curso) > 0;
     }
 
     /**
@@ -55,10 +81,15 @@ class CierreCursoService
      */
     public function calcularPreview(Curso $curso): array
     {
-        ['porcentajeRequerido' => $porcentajeRequerido, 'requierePagoTotal' => $requierePagoTotal]
-            = $this->getCriterios($curso);
+        [
+            'porcentajeRequerido' => $porcentajeRequerido,
+            'requierePagoTotal' => $requierePagoTotal,
+            'requiereNotas' => $requiereNotas,
+        ] = $this->getCriterios($curso);
 
         $asistenciaPorAlumno = $this->getAsistenciaPorAlumno($curso);
+        // Una sola query de notas para todo el curso, cero por alumno.
+        $resumenNotas = $requiereNotas ? $this->promedioService->calcularParaCurso($curso) : [];
         $preview = [];
 
         foreach ($this->historicoRepository->findByCurso($curso) as $historico) {
@@ -82,6 +113,10 @@ class CierreCursoService
                 );
             }
 
+            $resumen = $requiereNotas
+                ? ($resumenNotas[$historico->getId()] ?? $this->promedioService->resumenVacio())
+                : null;
+
             $preview[] = [
                 'historico' => $historico,
                 'alumno' => $alumno,
@@ -92,9 +127,12 @@ class CierreCursoService
                     $porcentajeRequerido,
                     $porcentaje,
                     $requierePagoTotal,
-                    $tienePagoCompleto
+                    $tienePagoCompleto,
+                    $resumen ? $resumen['resultado'] : null
                 ),
                 'tienePagoCompleto' => $tienePagoCompleto,
+                'resultadoNotas' => $resumen ? $resumen['resultado'] : null,
+                'promedioNotas' => $resumen ? $resumen['promedio'] : null,
             ];
         }
 
@@ -122,6 +160,11 @@ class CierreCursoService
             $historico->setActivo(false);
             $historico->setFechaBaja($fechaActual);
 
+            // Snapshot del resultado de notas, para que quede constancia de con qué se
+            // decidió aunque después se agreguen o cambien evaluaciones.
+            $historico->setResultadoNotas($fila['resultadoNotas']);
+            $historico->setPromedioNotas($fila['promedioNotas']);
+
             if ($fila['estadoPrediccion'] === 'finalizado') {
                 $finalizados++;
             } else {
@@ -147,12 +190,19 @@ class CierreCursoService
         ?float $porcentajeRequerido,
         float $porcentajeAsistencia,
         bool $requierePagoTotal,
-        bool $tienePagoCompleto
+        bool $tienePagoCompleto,
+        ?string $resultadoNotas = null
     ): string {
         $fallaAsistencia = ($porcentajeRequerido !== null && $porcentajeAsistencia < $porcentajeRequerido);
         $fallaPago = ($requierePagoTotal && !$tienePagoCompleto);
 
-        return ($fallaAsistencia || $fallaPago) ? 'no_finalizado' : 'finalizado';
+        // 'sin_datos' NO desaprueba: un alumno sin notas cargadas no puede quedar
+        // desaprobado por un criterio que no se le pudo aplicar. Con $resultadoNotas en
+        // null el criterio está inactivo y esta línea no cambia nada, así que el árbol de
+        // decisión queda idéntico al que había antes de que existieran las notas.
+        $fallaNotas = ($resultadoNotas === PromedioCalificacionService::RESULTADO_DESAPROBADO);
+
+        return ($fallaAsistencia || $fallaPago || $fallaNotas) ? 'no_finalizado' : 'finalizado';
     }
 
     /**

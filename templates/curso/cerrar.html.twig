@@ -28,6 +28,11 @@
                     <br><i class="bi bi-cash-stack"></i> Se requiere el <strong>pago total del curso</strong> para aprobar.
                     Los alumnos con cuotas pendientes serán marcados como <span class="badge bg-danger">No finalizado</span>.
                 {% endif %}
+                {% if requiereNotas|default(false) %}
+                    <br><i class="bi bi-mortarboard"></i> Se verifica también la <strong>calificación</strong>.
+                    Un alumno <strong>sin notas cargadas no se desaprueba</strong> por este criterio: figura como
+                    <span class="badge bg-secondary">sin datos</span>.
+                {% endif %}
             </div>
 
             {% if preview|length > 0 %}
@@ -41,6 +46,10 @@
                                 <th class="text-center">% Asistencia</th>
                                 {% if requierePagoTotal %}
                                     <th class="text-center">Pago Completo</th>
+                                {% endif %}
+                                {% if requiereNotas|default(false) %}
+                                    <th class="text-center">Promedio</th>
+                                    <th class="text-center">Notas</th>
                                 {% endif %}
                                 <th class="text-center">Estado Resultante</th>
                             </tr>
@@ -66,6 +75,24 @@
                                                 <span class="badge bg-success"><i class="bi bi-check-circle"></i> Sí</span>
                                             {% else %}
                                                 <span class="badge bg-danger"><i class="bi bi-x-circle"></i> No</span>
+                                            {% endif %}
+                                        </td>
+                                    {% endif %}
+                                    {% if requiereNotas|default(false) %}
+                                        <td class="text-center">
+                                            {% if item.promedioNotas is not null %}
+                                                {{ item.promedioNotas|number_format(2, ',', '.') }}
+                                            {% else %}
+                                                <span class="text-muted">—</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-center">
+                                            {% if item.resultadoNotas == 'aprobado' %}
+                                                <span class="badge bg-success"><i class="bi bi-check-circle"></i> Aprobado</span>
+                                            {% elseif item.resultadoNotas == 'desaprobado' %}
+                                                <span class="badge bg-danger"><i class="bi bi-x-circle"></i> Desaprobado</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary" title="No hay notas cargadas: no desaprueba">sin datos</span>
                                             {% endif %}
                                         </td>
                                     {% endif %}
