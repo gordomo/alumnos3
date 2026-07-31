@@ -1,0 +1,138 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Boletín - {{ alumno.apellido }}, {{ alumno.nombre }}{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ path(rutas.index) }}">Calificaciones</a></li>
+            <li class="breadcrumb-item"><a href="{{ path(rutas.curso, {'id': curso.id}) }}">{{ curso.nombre }}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Boletín</li>
+        </ol>
+    </nav>
+
+    <div class="card">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">
+                <i class="bi bi-file-earmark-text"></i>
+                {{ alumno.apellido }}, {{ alumno.nombre }}
+                <small class="ms-2">— {{ curso.nombre }}</small>
+            </h4>
+            <button type="button" class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#modalEnviarBoletin">
+                <i class="bi bi-envelope"></i> Enviar por email
+            </button>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-light border d-flex justify-content-between align-items-center">
+                <div>
+                    {% if resumen.promedio is not null %}
+                        <strong>Promedio:</strong> {{ resumen.promedio|number_format(2, ',', '.') }}
+                    {% else %}
+                        <span class="text-muted">Sin promedio numérico</span>
+                    {% endif %}
+                    <span class="text-muted ms-2">· {{ resumen.cargadas }} nota(s) cargada(s)</span>
+                </div>
+                <div>
+                    {% if resumen.resultado == 'aprobado' %}
+                        <span class="badge bg-success"><i class="bi bi-check-circle-fill"></i> Aprobado</span>
+                    {% elseif resumen.resultado == 'desaprobado' %}
+                        <span class="badge bg-danger"><i class="bi bi-x-circle-fill"></i> Desaprobado</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Sin datos suficientes</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if historico.resultadoNotas %}
+                <div class="alert alert-secondary small">
+                    <i class="bi bi-lock"></i> Al cerrar el curso quedó registrado:
+                    resultado <strong>{{ historico.resultadoNotas }}</strong>
+                    {% if historico.promedioNotas is not null %}
+                        con promedio <strong>{{ historico.promedioNotas|number_format(2, ',', '.') }}</strong>
+                    {% endif %}.
+                </div>
+            {% endif %}
+
+            {% if calificaciones is empty %}
+                <p class="text-muted mb-0">Este alumno no tiene notas cargadas en el curso.</p>
+            {% else %}
+                <div class="table-responsive">
+                    <table class="table table-striped align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Evaluación</th>
+                                <th style="width: 120px;">Fecha</th>
+                                <th style="width: 90px;" class="text-center">Peso</th>
+                                <th style="width: 170px;">Nota</th>
+                                <th>Observaciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for calificacion in calificaciones %}
+                                <tr>
+                                    <td>
+                                        {{ calificacion.evaluacion.nombre }}
+                                        {% if not calificacion.evaluacion.cuentaParaPromedio %}
+                                            <span class="badge bg-secondary ms-1">no promedia</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ calificacion.evaluacion.fecha|date(date_format) }}</td>
+                                    <td class="text-center">{{ calificacion.evaluacion.peso == 1 ? '—' : calificacion.evaluacion.peso }}</td>
+                                    <td>
+                                        {% if calificacion.ausente %}
+                                            <span class="badge bg-warning text-dark">Ausente</span>
+                                        {% else %}
+                                            <strong>{{ calificacion.etiqueta }}</strong>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-muted small">{{ calificacion.observaciones ?: '—' }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="mt-3">
+        <a href="{{ path(rutas.curso, {'id': curso.id}) }}" class="btn btn-secondary">← Volver al curso</a>
+    </div>
+</div>
+
+<div class="modal fade" id="modalEnviarBoletin" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{{ path(rutas.boletin_email, {'id': historico.id}) }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('boletin_' ~ historico.id) }}">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-envelope"></i> Enviar boletín</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="email_destino" class="form-label">Email de destino</label>
+                        <input type="email" class="form-control" id="email_destino" name="email_destino"
+                               placeholder="{{ alumno.correTutor ?: alumno.email ?: 'Sin email configurado' }}">
+                        <small class="form-text text-muted">
+                            Si lo dejás vacío se envía al email del tutor
+                            {% if alumno.correTutor %}({{ alumno.correTutor }}){% endif %},
+                            y si el alumno no tiene tutor cargado, al del alumno.
+                        </small>
+                    </div>
+                    {% if not alumno.correTutor and not alumno.email %}
+                        <div class="alert alert-warning mb-0 small">
+                            Este alumno no tiene email de tutor ni propio: hay que indicar uno acá.
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Enviar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

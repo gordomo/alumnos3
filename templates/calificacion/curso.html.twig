@@ -95,6 +95,7 @@
                                 <th class="text-center">Notas cargadas</th>
                                 <th class="text-center">Promedio</th>
                                 <th class="text-center">Resultado</th>
+                                <th class="text-end">Boletín</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -122,6 +123,11 @@
                                         {% else %}
                                             <span class="badge bg-light text-dark" title="No hay notas suficientes para determinarlo">sin datos</span>
                                         {% endif %}
+                                    </td>
+                                    <td class="text-end">
+                                        <a href="{{ path(rutas.boletin, {'id': fila.historico.id}) }}" class="btn btn-sm btn-outline-secondary">
+                                            <i class="bi bi-file-earmark-text"></i> Ver
+                                        </a>
                                     </td>
                                 </tr>
                             {% endfor %}

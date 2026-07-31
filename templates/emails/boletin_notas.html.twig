@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f8f9fa; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; }
+        .header { text-align: center; padding-bottom: 16px; border-bottom: 2px solid #dee2e6; }
+        .header img { max-height: 70px; }
+        .header h2 { margin: 10px 0 0; color: #0d6efd; font-size: 20px; }
+        .resumen { background-color: #f1f6f5; border-left: 4px solid #0d6efd; padding: 12px 16px; margin: 20px 0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+        th, td { text-align: left; padding: 8px; border-bottom: 1px solid #dee2e6; font-size: 14px; }
+        th { background-color: #f8f9fa; }
+        .badge { display: inline-block; padding: 3px 9px; border-radius: 10px; font-size: 12px; color: #fff; }
+        .badge-ok { background-color: #198754; }
+        .badge-no { background-color: #dc3545; }
+        .badge-sd { background-color: #6c757d; }
+        .footer { margin-top: 24px; padding-top: 14px; border-top: 1px solid #dee2e6; font-size: 12px; color: #6c757d; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            {% if logoUrl %}
+                <img src="{{ logoUrl }}" alt="{{ instituto.nombre }}">
+            {% endif %}
+            <h2>Boletín de notas</h2>
+        </div>
+
+        <p>
+            Notas de <strong>{{ alumno.nombre }} {{ alumno.apellido }}</strong>
+            en el curso <strong>{{ curso.nombre }}</strong>.
+        </p>
+
+        <div class="resumen">
+            {% if resumen.promedio is not null %}
+                <strong>Promedio:</strong> {{ resumen.promedio|number_format(2, ',', '.') }}<br>
+            {% endif %}
+            <strong>Resultado:</strong>
+            {% if resumen.resultado == 'aprobado' %}
+                <span class="badge badge-ok">Aprobado</span>
+            {% elseif resumen.resultado == 'desaprobado' %}
+                <span class="badge badge-no">Desaprobado</span>
+            {% else %}
+                <span class="badge badge-sd">Sin datos suficientes</span>
+            {% endif %}
+        </div>
+
+        {% if calificaciones is empty %}
+            <p>Todavía no hay notas cargadas para este curso.</p>
+        {% else %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Evaluación</th>
+                        <th>Fecha</th>
+                        <th>Nota</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for calificacion in calificaciones %}
+                        <tr>
+                            <td>
+                                {{ calificacion.evaluacion.nombre }}
+                                {% if not calificacion.evaluacion.cuentaParaPromedio %}
+                                    <br><small style="color:#6c757d;">(no cuenta para el promedio)</small>
+                                {% endif %}
+                                {% if calificacion.observaciones %}
+                                    <br><small style="color:#6c757d;">{{ calificacion.observaciones }}</small>
+                                {% endif %}
+                            </td>
+                            <td>{{ calificacion.evaluacion.fecha|date(dateFormat|default('d/m/Y')) }}</td>
+                            <td><strong>{{ calificacion.etiqueta }}</strong></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+
+        {% if textoPersonalizado %}
+            <p style="margin-top: 20px;">{{ textoPersonalizado|nl2br }}</p>
+        {% endif %}
+
+        <div class="footer">
+            {{ instituto.nombre }}<br>
+            Este es un mensaje automático, por favor no responder a esta dirección.
+        </div>
+    </div>
+</body>
+</html>

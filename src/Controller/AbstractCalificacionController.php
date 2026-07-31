@@ -2,15 +2,18 @@
 
 namespace App\Controller;
 
+use App\Entity\AlumnoCursoHistorico;
 use App\Entity\Curso;
 use App\Entity\Evaluacion;
 use App\Form\EvaluacionType;
+use App\Repository\CalificacionRepository;
 use App\Repository\CursoRepository;
 use App\Repository\EvaluacionRepository;
 use App\Security\Voter\CursoVoter;
 use App\Service\CalificacionService;
 use App\Service\EscalaCalificacionService;
 use App\Service\InstitutoTimezoneService;
+use App\Service\NotificationService;
 use App\Service\PromedioCalificacionService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -34,7 +37,9 @@ abstract class AbstractCalificacionController extends AbstractController
         protected EscalaCalificacionService $escalaService,
         protected PromedioCalificacionService $promedioService,
         protected InstitutoTimezoneService $institutoTimezoneService,
-        protected EntityManagerInterface $entityManager
+        protected EntityManagerInterface $entityManager,
+        protected CalificacionRepository $calificacionRepository,
+        protected NotificationService $notificationService
     ) {
     }
 
@@ -264,6 +269,78 @@ abstract class AbstractCalificacionController extends AbstractController
     }
 
     /**
+     * Boletín de un alumno en un curso.
+     */
+    protected function pantallaBoletin(AlumnoCursoHistorico $historico): Response
+    {
+        $curso = $historico->getCurso();
+        $this->denyAccessUnlessGranted(CursoVoter::VER_NOTAS, $curso);
+
+        $calificaciones = $this->calificacionRepository->findByHistorico($historico);
+
+        return $this->render('calificacion/boletin.html.twig', [
+            'curso' => $curso,
+            'historico' => $historico,
+            'alumno' => $historico->getAlumno(),
+            'calificaciones' => $calificaciones,
+            'resumen' => $this->promedioService->resumir(
+                $calificaciones,
+                $this->criterioDelInstituto($curso)
+            ),
+            'rutas' => $this->rutas(),
+            'date_format' => $this->institutoTimezoneService->getDateFormatForInstituto($curso->getInstituto()),
+        ]);
+    }
+
+    /**
+     * Envía el boletín por email. Por defecto al tutor del alumno.
+     */
+    protected function accionEnviarBoletin(Request $request, AlumnoCursoHistorico $historico): Response
+    {
+        $curso = $historico->getCurso();
+        $this->denyAccessUnlessGranted(CursoVoter::VER_NOTAS, $curso);
+
+        if (!$this->isCsrfTokenValid('boletin_' . $historico->getId(), (string) $request->request->get('_token'))) {
+            $this->addFlash('danger', 'Token de seguridad inválido.');
+            return $this->redirectToRoute($this->rutas()['boletin'], ['id' => $historico->getId()]);
+        }
+
+        $calificaciones = $this->calificacionRepository->findByHistorico($historico);
+        if (!$calificaciones) {
+            $this->addFlash('warning', 'No hay notas cargadas para enviar.');
+            return $this->redirectToRoute($this->rutas()['boletin'], ['id' => $historico->getId()]);
+        }
+
+        $destino = trim((string) $request->request->get('email_destino')) ?: null;
+
+        $enviado = $this->notificationService->enviarBoletinNotas(
+            $historico,
+            $calificaciones,
+            $this->promedioService->resumir($calificaciones, $this->criterioDelInstituto($curso)),
+            $destino,
+            $this->getUser()
+        );
+
+        if ($enviado) {
+            $this->addFlash('success', 'Boletín enviado. Podés ver el registro en Historial de Emails.');
+        } else {
+            $this->addFlash('danger', 'No se pudo enviar el boletín. Revisá el email de destino en Historial de Emails.');
+        }
+
+        return $this->redirectToRoute($this->rutas()['boletin'], ['id' => $historico->getId()]);
+    }
+
+    /**
+     * Criterio de aprobación por notas del instituto del curso.
+     */
+    protected function criterioDelInstituto(Curso $curso): string
+    {
+        $config = $curso->getInstituto() ? $curso->getInstituto()->getConfiguracion() : null;
+
+        return $config ? $config->getCriterioAprobacionNotas() : 'promedio';
+    }
+
+    /**
      * Nombres de ruta de la subclase, para que los templates sean compartidos.
      *
      * @return array<string, string>
@@ -280,6 +357,8 @@ abstract class AbstractCalificacionController extends AbstractController
             'nueva' => $base . '_evaluacion_nueva',
             'editar' => $base . '_evaluacion_editar',
             'eliminar' => $base . '_evaluacion_eliminar',
+            'boletin' => $base . '_boletin',
+            'boletin_email' => $base . '_boletin_email',
         ];
     }
 }

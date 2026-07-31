@@ -4,6 +4,7 @@ namespace App\Service;
 
 use App\Entity\Instituto;
 use App\Entity\Alumno;
+use App\Entity\AlumnoCursoHistorico;
 use App\Entity\AlumnosPagos;
 use App\Entity\DeudaAlumno;
 use App\Entity\EmailLog;
@@ -143,6 +144,88 @@ class NotificationService
                 0,
                 $e
             );
+        }
+    }
+
+    /**
+     * Envía el boletín de notas de un alumno en un curso.
+     *
+     * Va por defecto al email del tutor, con fallback al del alumno. Sigue el mismo patrón
+     * que enviarReciboPago(): registra el envío en EmailLog con tipo 'boletin', tanto si
+     * sale bien como si falla, y no interrumpe el flujo si el registro del log falla.
+     *
+     * @param array $resumen resultado de PromedioCalificacionService
+     * @param array $calificaciones las notas a listar
+     */
+    public function enviarBoletinNotas(
+        AlumnoCursoHistorico $historico,
+        array $calificaciones,
+        array $resumen,
+        ?string $emailDestino = null,
+        ?User $solicitadoPor = null
+    ): bool {
+        $alumno = $historico->getAlumno();
+        $curso = $historico->getCurso();
+        $instituto = $alumno->getInstituto();
+        $configuracion = $instituto->getConfiguracion();
+
+        $asunto = sprintf('Boletín de notas - %s - %s', $curso->getNombre(), $instituto->getNombre());
+
+        // Prioridad: destino explícito, después el tutor, después el alumno.
+        $destino = $emailDestino ?: ($alumno->getCorreTutor() ?: $alumno->getEmail());
+
+        if (!$destino || !filter_var($destino, FILTER_VALIDATE_EMAIL)) {
+            $this->registrarEmailLog(
+                $instituto, $alumno, 'boletin', $destino ?: 'Sin email', $asunto,
+                'fallido', 'No hay un email de destino válido (ni del tutor ni del alumno)',
+                null, null, $solicitadoPor, false
+            );
+
+            return false;
+        }
+
+        $institutoEmail = $instituto->getEmail();
+        $fromEmail = 'noreply@teambuilder.com.ar';
+        if ($institutoEmail && filter_var($institutoEmail, FILTER_VALIDATE_EMAIL)) {
+            $emailDomain = substr(strrchr($institutoEmail, '@'), 1);
+            if (in_array($emailDomain, ['teambuilder.com.ar', 'dattaweb.com'])) {
+                $fromEmail = $institutoEmail;
+            }
+        }
+
+        try {
+            $email = (new TemplatedEmail())
+                ->from(new Address($fromEmail, $instituto->getNombre() ?? 'Instituto'))
+                ->to($destino)
+                ->subject($asunto)
+                ->htmlTemplate('emails/boletin_notas.html.twig')
+                ->context([
+                    'instituto' => $instituto,
+                    'alumno' => $alumno,
+                    'curso' => $curso,
+                    'historico' => $historico,
+                    'calificaciones' => $calificaciones,
+                    'resumen' => $resumen,
+                    'logoUrl' => $this->getLogoUrl($instituto),
+                    'dateFormat' => $this->institutoTimezoneService->getDateFormatForInstituto($instituto),
+                    'textoPersonalizado' => $configuracion ? $configuracion->getTextoPersonalizadoEmail() : null,
+                ]);
+
+            $this->mailer->send($email);
+
+            $this->registrarEmailLog(
+                $instituto, $alumno, 'boletin', $destino, $asunto,
+                'enviado', null, null, null, $solicitadoPor, false
+            );
+
+            return true;
+        } catch (\Exception $e) {
+            $this->registrarEmailLog(
+                $instituto, $alumno, 'boletin', $destino, $asunto,
+                'fallido', $e->getMessage(), null, null, $solicitadoPor, false
+            );
+
+            return false;
         }
     }
 

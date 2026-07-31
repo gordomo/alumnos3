@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\AlumnoCursoHistorico;
 use App\Entity\Curso;
 use App\Entity\Evaluacion;
 use Symfony\Component\HttpFoundation\Request;
@@ -110,5 +111,20 @@ class CalificacionProfesorController extends AbstractCalificacionController
     public function guardar(Request $request, Evaluacion $evaluacion): Response
     {
         return $this->accionGuardarGrilla($request, $evaluacion);
+    }
+    /**
+     * @Route("/boletin/{id}", name="app_profesor_calificaciones_boletin", methods={"GET"})
+     */
+    public function boletin(AlumnoCursoHistorico $historico): Response
+    {
+        return $this->pantallaBoletin($historico);
+    }
+
+    /**
+     * @Route("/boletin/{id}/email", name="app_profesor_calificaciones_boletin_email", methods={"POST"})
+     */
+    public function boletinEmail(Request $request, AlumnoCursoHistorico $historico): Response
+    {
+        return $this->accionEnviarBoletin($request, $historico);
     }
 }
