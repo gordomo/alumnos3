@@ -1,0 +1,139 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Calificaciones - {{ curso.nombre }}{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ path(rutas.index) }}">Calificaciones</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ curso.nombre }}</li>
+        </ol>
+    </nav>
+
+    {% if curso.cerrado %}
+        <div class="alert alert-secondary">
+            <i class="bi bi-lock"></i> Este curso está cerrado. Las notas se pueden consultar pero no modificar.
+        </div>
+    {% endif %}
+
+    {# Evaluaciones del curso #}
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0"><i class="bi bi-journal-text"></i> Evaluaciones de {{ curso.nombre }}</h4>
+            {% if puedeAdministrar and puedeCalificar %}
+                <a href="{{ path(rutas.nueva, {'id': curso.id}) }}" class="btn btn-light btn-sm">
+                    <i class="bi bi-plus-circle"></i> Nueva evaluación
+                </a>
+            {% endif %}
+        </div>
+        <div class="card-body">
+            {% if evaluaciones is empty %}
+                <p class="text-muted mb-0">
+                    Este curso todavía no tiene evaluaciones.
+                    {% if puedeAdministrar and puedeCalificar %}Creá la primera para empezar a cargar notas.{% endif %}
+                </p>
+            {% else %}
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Evaluación</th>
+                                <th>Fecha</th>
+                                <th class="text-center">Peso</th>
+                                <th class="text-center">Promedio</th>
+                                <th class="text-end">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for evaluacion in evaluaciones %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ evaluacion.nombre }}</strong>
+                                        {% if not evaluacion.cuentaParaPromedio %}
+                                            <span class="badge bg-secondary ms-1" title="No afecta el promedio">no promedia</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ evaluacion.fecha|date(date_format) }}</td>
+                                    <td class="text-center">{{ evaluacion.peso == 1 ? '—' : evaluacion.peso }}</td>
+                                    <td class="text-center">
+                                        <span class="badge bg-light text-dark">{{ evaluacion.calificaciones|length }} nota(s)</span>
+                                    </td>
+                                    <td class="text-end">
+                                        <a href="{{ path(rutas.grilla, {'id': evaluacion.id}) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-pencil-square"></i> Cargar notas
+                                        </a>
+                                        {% if puedeAdministrar and puedeCalificar %}
+                                            <a href="{{ path(rutas.editar, {'id': evaluacion.id}) }}" class="btn btn-sm btn-outline-secondary">
+                                                <i class="bi bi-gear"></i>
+                                            </a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {# Resumen por alumno #}
+    <div class="card">
+        <div class="card-header bg-light">
+            <h5 class="mb-0"><i class="bi bi-people"></i> Resumen por alumno</h5>
+        </div>
+        <div class="card-body">
+            {% if filas is empty %}
+                <p class="text-muted mb-0">Este curso no tiene alumnos inscritos.</p>
+            {% else %}
+                <div class="table-responsive">
+                    <table class="table table-striped align-middle">
+                        <thead>
+                            <tr>
+                                <th>Alumno</th>
+                                <th class="text-center">Notas cargadas</th>
+                                <th class="text-center">Promedio</th>
+                                <th class="text-center">Resultado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for fila in filas %}
+                                <tr{% if not fila.cargable %} class="table-secondary"{% endif %}>
+                                    <td>
+                                        {{ fila.alumno.apellido }}, {{ fila.alumno.nombre }}
+                                        {% if not fila.cargable %}
+                                            <span class="badge bg-secondary ms-1">baja administrativa</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">{{ fila.resumen.cargadas }}</td>
+                                    <td class="text-center">
+                                        {% if fila.resumen.promedio is not null %}
+                                            <strong>{{ fila.resumen.promedio|number_format(2, ',', '.') }}</strong>
+                                        {% else %}
+                                            <span class="text-muted">—</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        {% if fila.resumen.resultado == 'aprobado' %}
+                                            <span class="badge bg-success"><i class="bi bi-check-circle-fill"></i> Aprobado</span>
+                                        {% elseif fila.resumen.resultado == 'desaprobado' %}
+                                            <span class="badge bg-danger"><i class="bi bi-x-circle-fill"></i> Desaprobado</span>
+                                        {% else %}
+                                            <span class="badge bg-light text-dark" title="No hay notas suficientes para determinarlo">sin datos</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="mt-3">
+        <a href="{{ path(rutas.index) }}" class="btn btn-secondary">← Volver</a>
+    </div>
+</div>
+{% endblock %}

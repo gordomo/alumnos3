@@ -1,0 +1,79 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ esNueva ? 'Nueva evaluación' : 'Editar evaluación' }} - {{ curso.nombre }}{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ path(rutas.index) }}">Calificaciones</a></li>
+            <li class="breadcrumb-item"><a href="{{ path(rutas.curso, {'id': curso.id}) }}">{{ curso.nombre }}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ esNueva ? 'Nueva evaluación' : evaluacion.nombre }}</li>
+        </ol>
+    </nav>
+
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">
+                <i class="bi bi-journal-plus"></i>
+                {{ esNueva ? 'Nueva evaluación' : 'Editar evaluación' }}
+                <small>— {{ curso.nombre }}</small>
+            </h4>
+        </div>
+        <div class="card-body">
+            {{ form_start(form) }}
+                <div class="row">
+                    <div class="col-md-8 mb-3">
+                        {{ form_label(form.nombre) }}
+                        {{ form_widget(form.nombre) }}
+                        {{ form_errors(form.nombre) }}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        {{ form_label(form.fecha) }}
+                        {{ form_widget(form.fecha) }}
+                        {{ form_errors(form.fecha) }}
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        {{ form_label(form.peso) }}
+                        {{ form_widget(form.peso) }}
+                        {{ form_errors(form.peso) }}
+                        <small class="form-text text-muted">{{ form.peso.vars.help }}</small>
+                    </div>
+                    <div class="col-md-8 mb-3">
+                        <div class="form-check form-switch mt-4">
+                            {{ form_widget(form.cuentaParaPromedio) }}
+                            {{ form_label(form.cuentaParaPromedio) }}
+                        </div>
+                        <small class="form-text text-muted">{{ form.cuentaParaPromedio.vars.help }}</small>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    {{ form_label(form.descripcion) }}
+                    {{ form_widget(form.descripcion) }}
+                    {{ form_errors(form.descripcion) }}
+                </div>
+
+                {% if esNueva %}
+                    <div class="alert alert-info small">
+                        <i class="bi bi-info-circle"></i>
+                        La evaluación guarda la escala vigente del instituto en el momento de crearse,
+                        así que si más adelante cambiás la escala, las notas de esta evaluación se
+                        siguen interpretando con la original.
+                    </div>
+                {% endif %}
+
+                <div class="d-flex justify-content-between">
+                    <a href="{{ path(rutas.curso, {'id': curso.id}) }}" class="btn btn-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> {{ esNueva ? 'Crear evaluación' : 'Guardar cambios' }}
+                    </button>
+                </div>
+            {{ form_end(form) }}
+        </div>
+    </div>
+</div>
+{% endblock %}

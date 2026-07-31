@@ -316,6 +316,61 @@
                                                     {% endif %}
                                                 </td>
                                             </tr>
+                                            <tr>
+                                                <th>Escala de calificación:</th>
+                                                <td>
+                                                    {% if configuracion.modoCalificacion == 'ninguno' %}
+                                                        <span class="badge bg-secondary">No usa calificaciones</span>
+                                                        <small class="text-muted d-block">La sección de notas está oculta para profesores y alumnos</small>
+                                                    {% else %}
+                                                        {% if configuracion.modoCalificacion == 'numerico' %}
+                                                            <span class="badge bg-primary">Numérica</span>
+                                                        {% elseif configuracion.modoCalificacion == 'conceptual' %}
+                                                            <span class="badge bg-primary">Conceptual</span>
+                                                        {% else %}
+                                                            <span class="badge bg-primary">Numérica y conceptual</span>
+                                                        {% endif %}
+                                                        {% if configuracion.usaNotaNumerica and configuracion.notaMinima is not null and configuracion.notaMaxima is not null %}
+                                                            <small class="text-muted d-block">
+                                                                De {{ configuracion.notaMinima|number_format(2, ',', '.') }}
+                                                                a {{ configuracion.notaMaxima|number_format(2, ',', '.') }}
+                                                                {% if configuracion.notaAprobacion is not null %}
+                                                                    · aprueba desde {{ configuracion.notaAprobacion|number_format(2, ',', '.') }}
+                                                                {% endif %}
+                                                            </small>
+                                                        {% endif %}
+                                                        {% if configuracion.usaConcepto %}
+                                                            <small class="text-muted d-block">
+                                                                {% set activos = configuracion.conceptosCalificacionActivos %}
+                                                                {% if activos is empty %}
+                                                                    <span class="text-danger">Sin conceptos definidos: hay que agregar al menos uno para poder calificar.</span>
+                                                                {% else %}
+                                                                    Conceptos:
+                                                                    {% for concepto in activos %}
+                                                                        {{ concepto.nombre }}{% if not concepto.aprueba %} (no aprueba){% endif %}{% if not loop.last %} · {% endif %}
+                                                                    {% endfor %}
+                                                                {% endif %}
+                                                            </small>
+                                                        {% endif %}
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <th>Las notas influyen en la aprobación:</th>
+                                                <td>
+                                                    {% if configuracion.notasInfluyenAprobacion and configuracion.modoCalificacion != 'ninguno' %}
+                                                        <span class="badge bg-success"><i class="bi bi-check-circle"></i> Activado</span>
+                                                        <small class="text-muted d-block">
+                                                            Al cerrar un curso se verifica también la calificación
+                                                            ({{ configuracion.criterioAprobacionNotas == 'promedio' ? 'por promedio' : 'todas las evaluaciones deben aprobar' }}).
+                                                            Un alumno sin notas cargadas no se desaprueba por este criterio.
+                                                        </small>
+                                                    {% else %}
+                                                        <span class="badge bg-secondary">Desactivado</span>
+                                                        <small class="text-muted d-block">Las notas son informativas y no afectan el cierre de curso</small>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
                                         </table>
                                     </div>
                                 </div>

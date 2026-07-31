@@ -2,10 +2,13 @@
 
 namespace App\Controller;
 
+use App\Entity\ConceptoCalificacion;
 use App\Entity\Instituto;
+use App\Entity\InstitutoConfiguracion;
 use App\Entity\Vencimiento;
 use App\Entity\DescuentoPromocional;
 use App\Entity\MetodoPago;
+use App\Repository\ConceptoCalificacionRepository;
 use App\Repository\VencimientoRepository;
 use App\Repository\InstitutoConfiguracionRepository;
 use App\Repository\DescuentoPromocionalRepository;
@@ -38,7 +41,7 @@ class InstitutoConfigController extends AbstractController
     /**
      * @Route("/", name="instituto_config_index", methods={"GET"})
      */
-    public function index(VencimientoRepository $vencimientoRepository, InstitutoConfiguracionRepository $configuracionRepository, DescuentoPromocionalRepository $descuentoPromocionalRepository, MetodoPagoRepository $metodoPagoRepository): Response
+    public function index(VencimientoRepository $vencimientoRepository, InstitutoConfiguracionRepository $configuracionRepository, DescuentoPromocionalRepository $descuentoPromocionalRepository, MetodoPagoRepository $metodoPagoRepository, ConceptoCalificacionRepository $conceptoRepository): Response
     {
         $instituto = $this->getUser()->getInstituto();
         $vencimientos = $vencimientoRepository->findByInstitutoOrdered($instituto);
@@ -54,6 +57,7 @@ class InstitutoConfigController extends AbstractController
             'configuracion' => $configuracion,
             'metodos_pago' => $metodosPago,
             'descuentosPromocionales' => $descuentosPromocionales,
+            'conceptosCalificacion' => $conceptoRepository->findByInstituto($instituto, false),
         ]);
     }
 
@@ -68,7 +72,8 @@ class InstitutoConfigController extends AbstractController
         InstitutoConfiguracionRepository $configuracionRepository,
         VencimientoRepository $vencimientoRepository,
         DescuentoPromocionalRepository $descuentoPromocionalRepository,
-        MetodoPagoRepository $metodoPagoRepository
+        MetodoPagoRepository $metodoPagoRepository,
+        ConceptoCalificacionRepository $conceptoRepository
     ): Response {
         $instituto = $this->getUser()->getInstituto();
         $configuracion = $configuracionRepository->findOrCreateByInstituto($instituto);
@@ -110,6 +115,21 @@ class InstitutoConfigController extends AbstractController
 
             // Pago total del curso requerido para aprobar
             $configuracion->setRequierePagoTotalParaAprobar($request->request->has('requiere_pago_total_para_aprobar'));
+
+            // Escala de calificación. 'ninguno' deja toda la feature de notas apagada.
+            $configuracion->setModoCalificacion((string) $request->request->get('modo_calificacion', InstitutoConfiguracion::MODO_NINGUNO));
+
+            $notaMinima = $request->request->get('nota_minima');
+            $configuracion->setNotaMinima($notaMinima !== '' && $notaMinima !== null ? (float) $notaMinima : null);
+
+            $notaMaxima = $request->request->get('nota_maxima');
+            $configuracion->setNotaMaxima($notaMaxima !== '' && $notaMaxima !== null ? (float) $notaMaxima : null);
+
+            $notaAprobacion = $request->request->get('nota_aprobacion');
+            $configuracion->setNotaAprobacion($notaAprobacion !== '' && $notaAprobacion !== null ? (float) $notaAprobacion : null);
+
+            $configuracion->setNotasInfluyenAprobacion($request->request->has('notas_influyen_aprobacion'));
+            $configuracion->setCriterioAprobacionNotas((string) $request->request->get('criterio_aprobacion_notas', InstitutoConfiguracion::CRITERIO_PROMEDIO));
 
             // Configuración de cuota de inscripción anual
             $configuracion->setCobrarCuotaInscripcionAnual($request->request->has('cobrar_cuota_inscripcion_anual'));
@@ -235,7 +255,8 @@ class InstitutoConfigController extends AbstractController
             'configuracion' => $configuracion,
             'vencimientos' => $vencimientos,
             'descuentosPromocionales' => $descuentosPromocionales,
-            'metodos_pago' => $metodosPago
+            'metodos_pago' => $metodosPago,
+            'conceptosCalificacion' => $conceptoRepository->findByInstituto($instituto, false),
         ]);
     }
 
@@ -556,5 +577,140 @@ class InstitutoConfigController extends AbstractController
         
         $this->addFlash('success', 'Método de pago eliminado correctamente.');
         return $this->redirectToRoute('instituto_config_index', ['tab' => 'metodos-pago']);
+    }
+
+    /**
+     * @Route("/concepto-calificacion/new", name="instituto_config_concepto_new", methods={"POST"})
+     */
+    public function newConceptoCalificacion(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        ConceptoCalificacionRepository $conceptoRepository,
+        InstitutoConfiguracionRepository $configuracionRepository
+    ): Response {
+        $instituto = $this->getUser()->getInstituto();
+
+        if (!$this->isCsrfTokenValid('concepto_new', (string) $request->request->get('_token'))) {
+            $this->addFlash('danger', 'Token de seguridad inválido.');
+            return $this->redirectToRoute('instituto_config_index', ['tab' => 'general']);
+        }
+
+        $nombre = trim((string) $request->request->get('nombre'));
+        if ($nombre === '') {
+            $this->addFlash('danger', 'El nombre del concepto no puede estar vacío.');
+            return $this->redirectToRoute('instituto_config_index', ['tab' => 'general']);
+        }
+
+        $configuracion = $configuracionRepository->findOneBy(['instituto' => $instituto]);
+        if (!$configuracion) {
+            $configuracion = new InstitutoConfiguracion();
+            $configuracion->setInstituto($instituto);
+            $entityManager->persist($configuracion);
+        }
+
+        $concepto = new ConceptoCalificacion();
+        $concepto->setInstituto($instituto);
+        $concepto->setConfiguracion($configuracion);
+        $concepto->setNombre($nombre);
+
+        $abreviatura = trim((string) $request->request->get('abreviatura'));
+        $concepto->setAbreviatura($abreviatura !== '' ? $abreviatura : null);
+
+        $equivalente = $request->request->get('equivalente_numerico');
+        $concepto->setEquivalenteNumerico($equivalente !== '' && $equivalente !== null ? (float) $equivalente : null);
+
+        $concepto->setAprueba($request->request->has('aprueba'));
+        $concepto->setOrden($conceptoRepository->siguienteOrden($instituto));
+
+        $entityManager->persist($concepto);
+        $entityManager->flush();
+
+        $this->addFlash('success', sprintf('Concepto "%s" agregado a la escala.', $nombre));
+        return $this->redirectToRoute('instituto_config_index', ['tab' => 'general']);
+    }
+
+    /**
+     * @Route("/concepto-calificacion/{id}/edit", name="instituto_config_concepto_edit", methods={"POST"})
+     */
+    public function editConceptoCalificacion(
+        ConceptoCalificacion $concepto,
+        Request $request,
+        EntityManagerInterface $entityManager
+    ): Response {
+        $instituto = $this->getUser()->getInstituto();
+        if ($concepto->getInstituto() !== $instituto) {
+            throw $this->createAccessDeniedException();
+        }
+
+        if (!$this->isCsrfTokenValid('concepto_edit' . $concepto->getId(), (string) $request->request->get('_token'))) {
+            $this->addFlash('danger', 'Token de seguridad inválido.');
+            return $this->redirectToRoute('instituto_config_index', ['tab' => 'general']);
+        }
+
+        $nombre = trim((string) $request->request->get('nombre'));
+        if ($nombre !== '') {
+            $concepto->setNombre($nombre);
+        }
+
+        $abreviatura = trim((string) $request->request->get('abreviatura'));
+        $concepto->setAbreviatura($abreviatura !== '' ? $abreviatura : null);
+
+        $equivalente = $request->request->get('equivalente_numerico');
+        $concepto->setEquivalenteNumerico($equivalente !== '' && $equivalente !== null ? (float) $equivalente : null);
+
+        $concepto->setAprueba($request->request->has('aprueba'));
+
+        $orden = $request->request->get('orden');
+        if ($orden !== '' && $orden !== null) {
+            $concepto->setOrden((int) $orden);
+        }
+
+        $entityManager->flush();
+
+        $this->addFlash('success', 'Concepto actualizado.');
+        return $this->redirectToRoute('instituto_config_index', ['tab' => 'general']);
+    }
+
+    /**
+     * Desactiva un concepto en lugar de borrarlo si tiene notas cargadas: hay
+     * calificaciones apuntándolo y borrarlo perdería el significado de esas notas.
+     *
+     * @Route("/concepto-calificacion/{id}/delete", name="instituto_config_concepto_delete", methods={"POST"})
+     */
+    public function deleteConceptoCalificacion(
+        ConceptoCalificacion $concepto,
+        Request $request,
+        EntityManagerInterface $entityManager,
+        ConceptoCalificacionRepository $conceptoRepository
+    ): Response {
+        $instituto = $this->getUser()->getInstituto();
+        if ($concepto->getInstituto() !== $instituto) {
+            throw $this->createAccessDeniedException();
+        }
+
+        if (!$this->isCsrfTokenValid('delete' . $concepto->getId(), (string) $request->request->get('_token'))) {
+            $this->addFlash('danger', 'Token de seguridad inválido.');
+            return $this->redirectToRoute('instituto_config_index', ['tab' => 'general']);
+        }
+
+        $usos = $conceptoRepository->contarUsos($concepto);
+        if ($usos > 0) {
+            $concepto->setActivo(false);
+            $entityManager->flush();
+            $this->addFlash('warning', sprintf(
+                'El concepto "%s" tiene %d nota(s) cargada(s), así que se desactivó en lugar de borrarse. No se va a ofrecer más al calificar, pero las notas existentes lo conservan.',
+                $concepto->getNombre(),
+                $usos
+            ));
+
+            return $this->redirectToRoute('instituto_config_index', ['tab' => 'general']);
+        }
+
+        $nombre = $concepto->getNombre();
+        $entityManager->remove($concepto);
+        $entityManager->flush();
+
+        $this->addFlash('success', sprintf('Concepto "%s" eliminado.', $nombre));
+        return $this->redirectToRoute('instituto_config_index', ['tab' => 'general']);
     }
 } 

@@ -125,6 +125,60 @@ class InstitutoConfiguracion
     private $requierePagoTotalParaAprobar = false;
 
     /**
+     * Modo de calificación del instituto:
+     * - 'ninguno'    : el instituto no usa calificaciones (default, retrocompatible)
+     * - 'numerico'   : nota numérica entre notaMinima y notaMaxima
+     * - 'conceptual' : uno de los ConceptoCalificacion configurados
+     * - 'ambos'      : nota numérica y concepto en la misma calificación
+     *
+     * Es un enum en vez de un booleano aparte para que no exista el estado inconsistente
+     * "no usa notas pero tiene modo numérico".
+     *
+     * @ORM\Column(type="string", length=20, options={"default": "ninguno"})
+     */
+    private $modoCalificacion = self::MODO_NINGUNO;
+
+    /**
+     * @ORM\Column(type="decimal", precision=6, scale=2, nullable=true)
+     */
+    private $notaMinima;
+
+    /**
+     * @ORM\Column(type="decimal", precision=6, scale=2, nullable=true)
+     */
+    private $notaMaxima;
+
+    /**
+     * Nota mínima para aprobar, en escala numérica.
+     *
+     * @ORM\Column(type="decimal", precision=6, scale=2, nullable=true)
+     */
+    private $notaAprobacion;
+
+    /**
+     * Si es true, las calificaciones se suman como tercer criterio al cerrar un curso.
+     * Apagado por default: un instituto puede usar notas de forma informativa.
+     *
+     * @ORM\Column(type="boolean", options={"default": false})
+     */
+    private $notasInfluyenAprobacion = false;
+
+    /**
+     * Cómo se decide si las notas aprueban:
+     * - 'promedio' : el promedio ponderado alcanza notaAprobacion (default)
+     * - 'todas'    : todas las evaluaciones que cuentan deben estar aprobadas
+     *
+     * @ORM\Column(type="string", length=20, options={"default": "promedio"})
+     */
+    private $criterioAprobacionNotas = self::CRITERIO_PROMEDIO;
+
+    /**
+     * @ORM\OneToMany(targetEntity=ConceptoCalificacion::class, mappedBy="configuracion", cascade={"persist"})
+     * @ORM\OrderBy({"orden" = "ASC"})
+     */
+    private $conceptosCalificacion;
+
+    /**
      * Si es true, se cobrará una cuota de inscripción anual a todos los alumnos.
      *
      * @ORM\Column(type="boolean", options={"default": false})
@@ -145,10 +199,157 @@ class InstitutoConfiguracion
      */
     private $mesCobroCuotaInscripcionAnual;
 
+    public const MODO_NINGUNO = 'ninguno';
+    public const MODO_NUMERICO = 'numerico';
+    public const MODO_CONCEPTUAL = 'conceptual';
+    public const MODO_AMBOS = 'ambos';
+
+    public const CRITERIO_PROMEDIO = 'promedio';
+    public const CRITERIO_TODAS = 'todas';
+
     public function __construct()
     {
         $this->vencimientos = new ArrayCollection();
         $this->descuentosPromocionales = new ArrayCollection();
+        $this->conceptosCalificacion = new ArrayCollection();
+    }
+
+    public function getModoCalificacion(): string
+    {
+        return $this->modoCalificacion ?: self::MODO_NINGUNO;
+    }
+
+    public function setModoCalificacion(string $modoCalificacion): self
+    {
+        $validos = [self::MODO_NINGUNO, self::MODO_NUMERICO, self::MODO_CONCEPTUAL, self::MODO_AMBOS];
+        $this->modoCalificacion = in_array($modoCalificacion, $validos, true)
+            ? $modoCalificacion
+            : self::MODO_NINGUNO;
+
+        return $this;
+    }
+
+    /**
+     * ¿El instituto califica? Con 'ninguno' toda la feature queda invisible.
+     */
+    public function usaCalificaciones(): bool
+    {
+        return $this->getModoCalificacion() !== self::MODO_NINGUNO;
+    }
+
+    public function usaNotaNumerica(): bool
+    {
+        return in_array($this->getModoCalificacion(), [self::MODO_NUMERICO, self::MODO_AMBOS], true);
+    }
+
+    public function usaConcepto(): bool
+    {
+        return in_array($this->getModoCalificacion(), [self::MODO_CONCEPTUAL, self::MODO_AMBOS], true);
+    }
+
+    public function getNotaMinima(): ?float
+    {
+        return $this->notaMinima === null ? null : (float) $this->notaMinima;
+    }
+
+    public function setNotaMinima(?float $notaMinima): self
+    {
+        $this->notaMinima = $notaMinima;
+        return $this;
+    }
+
+    public function getNotaMaxima(): ?float
+    {
+        return $this->notaMaxima === null ? null : (float) $this->notaMaxima;
+    }
+
+    public function setNotaMaxima(?float $notaMaxima): self
+    {
+        $this->notaMaxima = $notaMaxima;
+        return $this;
+    }
+
+    public function getNotaAprobacion(): ?float
+    {
+        return $this->notaAprobacion === null ? null : (float) $this->notaAprobacion;
+    }
+
+    public function setNotaAprobacion(?float $notaAprobacion): self
+    {
+        $this->notaAprobacion = $notaAprobacion;
+        return $this;
+    }
+
+    public function isNotasInfluyenAprobacion(): bool
+    {
+        return (bool) $this->notasInfluyenAprobacion;
+    }
+
+    public function getNotasInfluyenAprobacion(): bool
+    {
+        return (bool) $this->notasInfluyenAprobacion;
+    }
+
+    public function setNotasInfluyenAprobacion(bool $notasInfluyenAprobacion): self
+    {
+        $this->notasInfluyenAprobacion = $notasInfluyenAprobacion;
+        return $this;
+    }
+
+    public function getCriterioAprobacionNotas(): string
+    {
+        return $this->criterioAprobacionNotas ?: self::CRITERIO_PROMEDIO;
+    }
+
+    public function setCriterioAprobacionNotas(string $criterio): self
+    {
+        $this->criterioAprobacionNotas = in_array($criterio, [self::CRITERIO_PROMEDIO, self::CRITERIO_TODAS], true)
+            ? $criterio
+            : self::CRITERIO_PROMEDIO;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, ConceptoCalificacion>
+     */
+    public function getConceptosCalificacion(): Collection
+    {
+        return $this->conceptosCalificacion;
+    }
+
+    /**
+     * Solo los conceptos vigentes, para ofrecer en los formularios de carga.
+     *
+     * @return ConceptoCalificacion[]
+     */
+    public function getConceptosCalificacionActivos(): array
+    {
+        $activos = [];
+        foreach ($this->conceptosCalificacion as $concepto) {
+            if ($concepto->isActivo()) {
+                $activos[] = $concepto;
+            }
+        }
+
+        return $activos;
+    }
+
+    public function addConceptoCalificacion(ConceptoCalificacion $concepto): self
+    {
+        if (!$this->conceptosCalificacion->contains($concepto)) {
+            $this->conceptosCalificacion[] = $concepto;
+            $concepto->setConfiguracion($this);
+        }
+
+        return $this;
+    }
+
+    public function removeConceptoCalificacion(ConceptoCalificacion $concepto): self
+    {
+        $this->conceptosCalificacion->removeElement($concepto);
+
+        return $this;
     }
 
     public function getId(): ?int

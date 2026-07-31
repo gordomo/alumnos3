@@ -331,6 +331,159 @@
                                     </div>
                                 </div>
 
+                                <!-- Escala de Calificación -->
+                                <div class="card config-section-card mb-4">
+                                    <div class="card-header config-section-header config-section-header--general">
+                                        <h4 class="card-title config-section-title mb-0">
+                                            <i class="bi bi-clipboard-data"></i> Escala de Calificación
+                                        </h4>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label for="modo_calificacion" class="form-label">Cómo califica el instituto</label>
+                                                <select class="form-select" id="modo_calificacion" name="modo_calificacion"
+                                                        onchange="toggleEscalaNotas()">
+                                                    <option value="ninguno" {% if configuracion.modoCalificacion == 'ninguno' %}selected{% endif %}>
+                                                        No usa calificaciones
+                                                    </option>
+                                                    <option value="numerico" {% if configuracion.modoCalificacion == 'numerico' %}selected{% endif %}>
+                                                        Numérica (ej: 1 a 10)
+                                                    </option>
+                                                    <option value="conceptual" {% if configuracion.modoCalificacion == 'conceptual' %}selected{% endif %}>
+                                                        Conceptual (ej: Muy bueno)
+                                                    </option>
+                                                    <option value="ambos" {% if configuracion.modoCalificacion == 'ambos' %}selected{% endif %}>
+                                                        Ambas (nota y concepto)
+                                                    </option>
+                                                </select>
+                                                <small class="form-text text-muted">
+                                                    Con "No usa calificaciones" la sección de notas queda oculta para todos.
+                                                </small>
+                                            </div>
+                                        </div>
+
+                                        <div class="row escala-numerica-fields" style="display: none;">
+                                            <div class="col-md-4 mb-3">
+                                                <label for="nota_minima" class="form-label">Nota mínima</label>
+                                                <input type="number" class="form-control" id="nota_minima" name="nota_minima"
+                                                       value="{{ configuracion.notaMinima }}" step="0.01" placeholder="Ej: 1">
+                                            </div>
+                                            <div class="col-md-4 mb-3">
+                                                <label for="nota_maxima" class="form-label">Nota máxima</label>
+                                                <input type="number" class="form-control" id="nota_maxima" name="nota_maxima"
+                                                       value="{{ configuracion.notaMaxima }}" step="0.01" placeholder="Ej: 10">
+                                            </div>
+                                            <div class="col-md-4 mb-3">
+                                                <label for="nota_aprobacion" class="form-label">Aprueba desde</label>
+                                                <input type="number" class="form-control" id="nota_aprobacion" name="nota_aprobacion"
+                                                       value="{{ configuracion.notaAprobacion }}" step="0.01" placeholder="Ej: 6">
+                                            </div>
+                                        </div>
+
+                                        {# Escala conceptual. Se administra con sus propias rutas y no con
+                                           este formulario, igual que los vencimientos y los descuentos. #}
+                                        <div class="escala-conceptos-fields" style="display: none;">
+                                            <hr>
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <label class="form-label mb-0">Conceptos de la escala</label>
+                                                <button type="button" class="btn btn-dark btn-sm" data-bs-toggle="modal" data-bs-target="#modalNuevoConcepto">
+                                                    <i class="bi bi-plus-circle"></i> Agregar concepto
+                                                </button>
+                                            </div>
+                                            {% if conceptosCalificacion is empty %}
+                                                <p class="text-muted small mb-0">
+                                                    Todavía no hay conceptos. Agregá al menos uno para poder calificar
+                                                    con esta escala (ej: Excelente, Muy bueno, Bueno, Regular, Insuficiente).
+                                                </p>
+                                            {% else %}
+                                                <div class="table-responsive">
+                                                    <table class="table table-sm align-middle">
+                                                        <thead>
+                                                            <tr>
+                                                                <th style="width: 70px;">Orden</th>
+                                                                <th>Concepto</th>
+                                                                <th style="width: 90px;">Abrev.</th>
+                                                                <th style="width: 110px;">Equiv. num.</th>
+                                                                <th style="width: 90px;" class="text-center">Aprueba</th>
+                                                                <th style="width: 110px;" class="text-end">Acciones</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {% for concepto in conceptosCalificacion %}
+                                                                <tr{% if not concepto.activo %} class="table-secondary"{% endif %}>
+                                                                    <td>{{ concepto.orden }}</td>
+                                                                    <td>
+                                                                        {{ concepto.nombre }}
+                                                                        {% if not concepto.activo %}
+                                                                            <span class="badge bg-secondary ms-1">desactivado</span>
+                                                                        {% endif %}
+                                                                    </td>
+                                                                    <td>{{ concepto.abreviatura ?: '—' }}</td>
+                                                                    <td>{{ concepto.equivalenteNumerico is not null ? concepto.equivalenteNumerico|number_format(2, ',', '.') : '—' }}</td>
+                                                                    <td class="text-center">
+                                                                        {% if concepto.aprueba %}
+                                                                            <span class="badge bg-success">Sí</span>
+                                                                        {% else %}
+                                                                            <span class="badge bg-danger">No</span>
+                                                                        {% endif %}
+                                                                    </td>
+                                                                    <td class="text-end">
+                                                                        <button type="button" class="btn btn-sm btn-outline-secondary"
+                                                                                data-bs-toggle="modal" data-bs-target="#modalEditarConcepto{{ concepto.id }}" title="Editar">
+                                                                            <i class="bi bi-pencil"></i>
+                                                                        </button>
+                                                                        <button type="button" class="btn btn-sm btn-outline-danger"
+                                                                                data-bs-toggle="modal" data-bs-target="#modalEliminarConcepto{{ concepto.id }}" title="Eliminar">
+                                                                            <i class="bi bi-trash"></i>
+                                                                        </button>
+                                                                    </td>
+                                                                </tr>
+                                                            {% endfor %}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                                <small class="form-text text-muted">
+                                                    El orden va de la mejor calificación a la peor. La equivalencia numérica
+                                                    es opcional y sirve para poder promediar una escala conceptual.
+                                                </small>
+                                            {% endif %}
+                                        </div>
+
+                                        <div class="escala-notas-fields" style="display: none;">
+                                            <hr>
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
+                                                    <div class="form-check form-switch">
+                                                        <input class="form-check-input" type="checkbox" role="switch"
+                                                               id="notas_influyen_aprobacion" name="notas_influyen_aprobacion"
+                                                               {% if configuracion.notasInfluyenAprobacion %}checked{% endif %}>
+                                                        <label class="form-check-label" for="notas_influyen_aprobacion">
+                                                            <i class="bi bi-check2-square"></i> Las notas influyen en la aprobación del curso
+                                                        </label>
+                                                    </div>
+                                                    <small class="form-text text-muted">
+                                                        Si está apagado, las notas son solo informativas y el cierre de curso
+                                                        sigue decidiéndose por asistencia y pago. Un alumno sin notas cargadas
+                                                        nunca se desaprueba por este criterio.
+                                                    </small>
+                                                </div>
+                                                <div class="col-md-6 mb-3">
+                                                    <label for="criterio_aprobacion_notas" class="form-label">Criterio de aprobación</label>
+                                                    <select class="form-select" id="criterio_aprobacion_notas" name="criterio_aprobacion_notas">
+                                                        <option value="promedio" {% if configuracion.criterioAprobacionNotas == 'promedio' %}selected{% endif %}>
+                                                            Por promedio
+                                                        </option>
+                                                        <option value="todas" {% if configuracion.criterioAprobacionNotas == 'todas' %}selected{% endif %}>
+                                                            Todas las evaluaciones deben aprobar
+                                                        </option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <!-- Configuración de Cuota de Inscripción Anual -->
                                 <div class="card config-section-card mb-4">
                                     <div class="card-header config-section-header config-section-header--general" style="background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;">
@@ -988,6 +1141,122 @@
 </div>
 {% endfor %}
 
+{# Conceptos de la escala de calificación. Fuera del formulario principal: no se pueden anidar forms. #}
+<div class="modal fade" id="modalNuevoConcepto" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{{ path('instituto_config_concepto_new') }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('concepto_new') }}">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-plus-circle"></i> Nuevo concepto</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="concepto_nombre" class="form-label">Nombre</label>
+                        <input type="text" class="form-control" id="concepto_nombre" name="nombre"
+                               maxlength="100" required placeholder="Ej: Muy bueno">
+                    </div>
+                    <div class="mb-3">
+                        <label for="concepto_abreviatura" class="form-label">Abreviatura (opcional)</label>
+                        <input type="text" class="form-control" id="concepto_abreviatura" name="abreviatura"
+                               maxlength="10" placeholder="Ej: MB">
+                    </div>
+                    <div class="mb-3">
+                        <label for="concepto_equivalente" class="form-label">Equivalencia numérica (opcional)</label>
+                        <input type="number" class="form-control" id="concepto_equivalente" name="equivalente_numerico"
+                               step="0.01" placeholder="Ej: 8">
+                        <small class="form-text text-muted">Permite calcular promedios sobre una escala conceptual.</small>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" role="switch" id="concepto_aprueba" name="aprueba" checked>
+                        <label class="form-check-label" for="concepto_aprueba">Este concepto aprueba</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Agregar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% for concepto in conceptosCalificacion %}
+    <div class="modal fade" id="modalEditarConcepto{{ concepto.id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="post" action="{{ path('instituto_config_concepto_edit', {'id': concepto.id}) }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('concepto_edit' ~ concepto.id) }}">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="bi bi-pencil"></i> Editar concepto</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Nombre</label>
+                            <input type="text" class="form-control" name="nombre" maxlength="100"
+                                   value="{{ concepto.nombre }}" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <label class="form-label">Abreviatura</label>
+                                <input type="text" class="form-control" name="abreviatura" maxlength="10"
+                                       value="{{ concepto.abreviatura }}">
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label class="form-label">Orden</label>
+                                <input type="number" class="form-control" name="orden" min="1"
+                                       value="{{ concepto.orden }}">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Equivalencia numérica</label>
+                            <input type="number" class="form-control" name="equivalente_numerico" step="0.01"
+                                   value="{{ concepto.equivalenteNumerico }}">
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch"
+                                   id="concepto_aprueba_{{ concepto.id }}" name="aprueba"
+                                   {% if concepto.aprueba %}checked{% endif %}>
+                            <label class="form-check-label" for="concepto_aprueba_{{ concepto.id }}">Este concepto aprueba</label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalEliminarConcepto{{ concepto.id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Eliminar concepto</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    ¿Eliminar el concepto <strong>{{ concepto.nombre }}</strong>?
+                    <br><small class="text-muted">
+                        Si tiene notas cargadas no se borra: se desactiva, así las notas existentes
+                        conservan su significado y deja de ofrecerse al calificar.
+                    </small>
+                </div>
+                <form method="post" action="{{ path('instituto_config_concepto_delete', {'id': concepto.id}) }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ concepto.id) }}">
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-danger">Eliminar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endfor %}
+
                     </div>
                 </div>
             </div>
@@ -1028,5 +1297,31 @@
         const fields = document.getElementById('cuota_inscripcion_fields');
         fields.style.display = checkbox.checked ? 'block' : 'none';
     }
+
+    // Muestra los campos de la escala según el modo elegido.
+    // Los campos numéricos solo aplican a 'numerico' y 'ambos'; los conceptos a
+    // 'conceptual' y 'ambos'; con 'ninguno' no se muestra nada.
+    function toggleEscalaNotas() {
+        const modo = document.getElementById('modo_calificacion').value;
+        const usaNotas = modo !== 'ninguno';
+        const usaNumerica = (modo === 'numerico' || modo === 'ambos');
+        const usaConcepto = (modo === 'conceptual' || modo === 'ambos');
+
+        document.querySelectorAll('.escala-numerica-fields').forEach(function (el) {
+            el.style.display = usaNumerica ? 'flex' : 'none';
+        });
+        document.querySelectorAll('.escala-notas-fields').forEach(function (el) {
+            el.style.display = usaNotas ? 'block' : 'none';
+        });
+        document.querySelectorAll('.escala-conceptos-fields').forEach(function (el) {
+            el.style.display = usaConcepto ? 'block' : 'none';
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        if (document.getElementById('modo_calificacion')) {
+            toggleEscalaNotas();
+        }
+    });
 </script>
 {% endblock %} 

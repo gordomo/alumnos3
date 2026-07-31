@@ -1,0 +1,208 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ evaluacion.nombre }} - {{ curso.nombre }}{% endblock %}
+
+{% set usaNumerica = escala.modo in ['numerico', 'ambos'] %}
+{% set usaConcepto = escala.modo in ['conceptual', 'ambos'] %}
+
+{% block body %}
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ path(rutas.index) }}">Calificaciones</a></li>
+            <li class="breadcrumb-item"><a href="{{ path(rutas.curso, {'id': curso.id}) }}">{{ curso.nombre }}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ evaluacion.nombre }}</li>
+        </ol>
+    </nav>
+
+    <div class="card">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">
+                <i class="bi bi-pencil-square"></i> {{ evaluacion.nombre }}
+                <small class="ms-2">{{ evaluacion.fecha|date(date_format) }}</small>
+            </h4>
+            {% if puedeAdministrar and not soloLectura %}
+                <div>
+                    <a href="{{ path(rutas.editar, {'id': evaluacion.id}) }}" class="btn btn-light btn-sm">
+                        <i class="bi bi-gear"></i> Editar
+                    </a>
+                    <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#modalEliminarEvaluacion">
+                        <i class="bi bi-trash"></i> Eliminar
+                    </button>
+                </div>
+            {% endif %}
+        </div>
+        <div class="card-body">
+            {% if evaluacion.descripcion %}
+                <p class="text-muted">{{ evaluacion.descripcion }}</p>
+            {% endif %}
+
+            {# Recordatorio de la escala con la que se creó esta evaluación #}
+            <div class="alert alert-light border">
+                <strong>Escala:</strong>
+                {% if escala.modo == 'numerico' %}
+                    numérica
+                    {% if escala.min is not null and escala.max is not null %}
+                        de {{ escala.min|number_format(2, ',', '.') }} a {{ escala.max|number_format(2, ',', '.') }}
+                    {% endif %}
+                {% elseif escala.modo == 'conceptual' %}
+                    conceptual
+                {% elseif escala.modo == 'ambos' %}
+                    numérica y conceptual
+                {% else %}
+                    <span class="text-danger">sin definir</span>
+                {% endif %}
+                {% if escala.aprobacion is not null %}
+                    · aprueba desde <strong>{{ escala.aprobacion|number_format(2, ',', '.') }}</strong>
+                {% endif %}
+                {% if not evaluacion.cuentaParaPromedio %}
+                    · <span class="badge bg-secondary">no cuenta para el promedio</span>
+                {% endif %}
+            </div>
+
+            {% if soloLectura %}
+                <div class="alert alert-secondary">
+                    <i class="bi bi-lock"></i> Solo lectura.
+                    {% if curso.cerrado %}El curso está cerrado.{% endif %}
+                </div>
+            {% endif %}
+
+            {% if filas is empty %}
+                <p class="text-muted mb-0">Este curso no tiene alumnos inscritos.</p>
+            {% else %}
+            <form method="post" action="{{ path(rutas.guardar, {'id': evaluacion.id}) }}" id="form-calificaciones">
+                {# La grilla de asistencias no valida CSRF; esta sí. #}
+                <input type="hidden" name="_token" value="{{ csrf_token('calificar_' ~ evaluacion.id) }}">
+
+                <div class="table-responsive">
+                    <table class="table table-striped align-middle">
+                        <thead>
+                            <tr>
+                                <th style="min-width: 220px;">Alumno</th>
+                                {% if usaNumerica %}<th style="width: 140px;">Nota</th>{% endif %}
+                                {% if usaConcepto %}<th style="width: 200px;">Concepto</th>{% endif %}
+                                <th style="width: 90px;" class="text-center">Ausente</th>
+                                <th>Observaciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for fila in filas %}
+                                {% set hid = fila.historico.id %}
+                                {% set cal = fila.calificacion %}
+                                <tr{% if not fila.cargable %} class="table-secondary"{% endif %}>
+                                    <td>
+                                        {{ fila.alumno.apellido }}, {{ fila.alumno.nombre }}
+                                        {% if not fila.cargable %}
+                                            <br><small class="text-muted">{{ fila.motivoNoCargable }} — no se califica</small>
+                                        {% endif %}
+                                    </td>
+
+                                    {% if fila.cargable and not soloLectura %}
+                                        {# Lista blanca: solo se tocan los alumnos que viajan en el POST #}
+                                        <input type="hidden" name="historicos_procesados[]" value="{{ hid }}">
+                                    {% endif %}
+
+                                    {% if usaNumerica %}
+                                        <td>
+                                            {% if fila.cargable and not soloLectura %}
+                                                <input type="number" class="form-control form-control-sm"
+                                                       name="notas[{{ hid }}]"
+                                                       value="{{ cal and cal.valorNumerico is not null ? cal.valorNumerico : '' }}"
+                                                       step="0.01"
+                                                       {% if escala.min is not null %}min="{{ escala.min }}"{% endif %}
+                                                       {% if escala.max is not null %}max="{{ escala.max }}"{% endif %}
+                                                       placeholder="—">
+                                            {% else %}
+                                                {{ cal and cal.valorNumerico is not null ? cal.valorNumerico|number_format(2, ',', '.') : '—' }}
+                                            {% endif %}
+                                        </td>
+                                    {% endif %}
+
+                                    {% if usaConcepto %}
+                                        <td>
+                                            {% if fila.cargable and not soloLectura %}
+                                                <select class="form-select form-select-sm" name="conceptos[{{ hid }}]">
+                                                    <option value="">— sin nota —</option>
+                                                    {% for concepto in escala.conceptos %}
+                                                        <option value="{{ concepto.id }}"
+                                                            {% if cal and cal.concepto and cal.concepto.id == concepto.id %}selected{% endif %}>
+                                                            {{ concepto.nombre }}{% if not concepto.aprueba %} (no aprueba){% endif %}
+                                                        </option>
+                                                    {% endfor %}
+                                                </select>
+                                            {% else %}
+                                                {{ cal and cal.concepto ? cal.concepto.nombre : '—' }}
+                                            {% endif %}
+                                        </td>
+                                    {% endif %}
+
+                                    <td class="text-center">
+                                        {% if fila.cargable and not soloLectura %}
+                                            <input type="checkbox" class="form-check-input" name="ausentes[{{ hid }}]" value="1"
+                                                   {% if cal and cal.ausente %}checked{% endif %}>
+                                        {% else %}
+                                            {{ cal and cal.ausente ? 'Sí' : '—' }}
+                                        {% endif %}
+                                    </td>
+
+                                    <td>
+                                        {% if fila.cargable and not soloLectura %}
+                                            <input type="text" class="form-control form-control-sm"
+                                                   name="observaciones[{{ hid }}]"
+                                                   value="{{ cal ? cal.observaciones : '' }}"
+                                                   placeholder="Opcional">
+                                        {% else %}
+                                            {{ cal and cal.observaciones ? cal.observaciones : '—' }}
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% if not soloLectura %}
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <small class="text-muted">
+                            Dejar todo vacío en una fila borra la nota de ese alumno.
+                        </small>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> Guardar notas
+                        </button>
+                    </div>
+                {% endif %}
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="mt-3">
+        <a href="{{ path(rutas.curso, {'id': curso.id}) }}" class="btn btn-secondary">← Volver al curso</a>
+    </div>
+</div>
+
+{% if puedeAdministrar and not soloLectura %}
+    <div class="modal fade" id="modalEliminarEvaluacion" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Eliminar evaluación</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    ¿Eliminar <strong>{{ evaluacion.nombre }}</strong>?
+                    Se van a borrar también las {{ evaluacion.calificaciones|length }} nota(s) cargadas.
+                    Esta acción no se puede deshacer.
+                </div>
+                <form method="post" action="{{ path(rutas.eliminar, {'id': evaluacion.id}) }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('eliminar_evaluacion_' ~ evaluacion.id) }}">
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-danger">Eliminar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

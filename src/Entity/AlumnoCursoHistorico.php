@@ -63,6 +63,26 @@ class AlumnoCursoHistorico
     private $pagos;
 
     /**
+     * @ORM\OneToMany(targetEntity=Calificacion::class, mappedBy="cursoHistorico", orphanRemoval=true)
+     */
+    private $calificaciones;
+
+    /**
+     * Resultado de las calificaciones al cerrar el curso, congelado en ese momento.
+     * 'aprobado' | 'desaprobado' | 'sin_datos' | null (no se evaluó por notas)
+     *
+     * @ORM\Column(type="string", length=20, nullable=true)
+     */
+    private $resultadoNotas;
+
+    /**
+     * Promedio de notas al cerrar el curso.
+     *
+     * @ORM\Column(type="decimal", precision=6, scale=2, nullable=true)
+     */
+    private $promedioNotas;
+
+    /**
      * Snapshot del curso al momento de la inscripción
      * Estos campos preservan la información original aunque el curso cambie después
      */
@@ -105,11 +125,42 @@ class AlumnoCursoHistorico
     public function __construct()
     {
         $this->pagos = new ArrayCollection();
+        $this->calificaciones = new ArrayCollection();
     }
 
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    /**
+     * @return Collection<int, Calificacion>
+     */
+    public function getCalificaciones(): Collection
+    {
+        return $this->calificaciones;
+    }
+
+    public function getResultadoNotas(): ?string
+    {
+        return $this->resultadoNotas;
+    }
+
+    public function setResultadoNotas(?string $resultadoNotas): self
+    {
+        $this->resultadoNotas = $resultadoNotas;
+        return $this;
+    }
+
+    public function getPromedioNotas(): ?float
+    {
+        return $this->promedioNotas === null ? null : (float) $this->promedioNotas;
+    }
+
+    public function setPromedioNotas(?float $promedioNotas): self
+    {
+        $this->promedioNotas = $promedioNotas;
+        return $this;
     }
 
     public function getAlumno(): ?Alumno
