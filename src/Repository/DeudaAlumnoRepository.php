@@ -68,13 +68,10 @@ class DeudaAlumnoRepository extends ServiceEntityRepository
     }
 
     /**
-     * Encuentra todas las deudas no pagadas de un alumno para un curso específico
-     */
-    /**
      * Deudas con saldo pendiente de todos los alumnos de un curso, agrupadas por alumno.
      *
-     * Versión en lote de findDeudaByAlumnoAndCurso(), con el mismo criterio de filtrado
-     * (montoPendiente > 0). Existe porque el cierre de curso la llamaba dentro del loop de
+     * Reemplaza al viejo findDeudaByAlumnoAndCurso(), con el mismo criterio de filtrado
+     * (montoPendiente > 0). Existe porque el cierre de curso lo llamaba dentro del loop de
      * alumnos, y además getMontoPendiente() recorre las colecciones aplicaciones y
      * creditoAplicaciones, que están mapeadas como fetch="EAGER": en un OneToMany eso hace
      * una query extra por colección por deuda. Con 16 alumnos eran decenas de queries.
@@ -109,23 +106,6 @@ class DeudaAlumnoRepository extends ServiceEntityRepository
         return $porAlumno;
     }
 
-    public function findDeudaByAlumnoAndCurso(Alumno $alumno, Curso $curso): array
-    {
-        $todasDeudas = $this->createQueryBuilder('d')
-            ->andWhere('d.alumno = :alumno')
-            ->andWhere('d.curso = :curso')
-            ->setParameter('alumno', $alumno)
-            ->setParameter('curso', $curso)
-            ->orderBy('d.ano', 'ASC')
-            ->addOrderBy('d.mes', 'ASC')
-            ->getQuery()
-            ->getResult();
-        
-        // Filtrar solo las que tienen monto pendiente
-        return array_filter($todasDeudas, function($deuda) {
-            return $deuda->getMontoPendiente() > 0;
-        });
-    }
 
     /**
      * Verifica si un alumno tiene alguna deuda pendiente
