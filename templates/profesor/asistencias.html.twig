@@ -226,19 +226,28 @@
                                         <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton{{ curso.id }}_{{ dayIndex }}_{{ profe.id }}">
                                             <li><h6 class="dropdown-header">Reemplazó:</h6></li>
                                             <li >
-                                                <a href="{{ path('falta_profe', {'id': profe.id, 'remplazo': 0, 'fecha': fecha, 'curso': curso.id, 'desde': desde, 'hasta': hasta}) }}" class="dropdown-item">sin reemplazo</a>
+                                                <form method="post" action="{{ path('falta_profe', {'id': profe.id, 'remplazo': 0, 'fecha': fecha, 'curso': curso.id, 'desde': desde, 'hasta': hasta}) }}" class="m-0">
+                                                    <input type="hidden" name="_token" value="{{ csrf_token('falta_profe' ~ profe.id) }}">
+                                                    <button type="submit" class="dropdown-item">sin reemplazo</button>
+                                                </form>
                                             </li>
                                             {% for profeInner in todosLosProfes %}
                                                 {% if profeInner.id != profe.id %}
                                                     <li >
-                                                        <a href="{{ path('falta_profe', {'id': profe.id, 'remplazo': profeInner.id, 'fecha': fecha, 'curso': curso.id, 'desde': desde, 'hasta': hasta}) }}" class="dropdown-item">{{ profeInner.apellido }}, {{ profeInner.nombre }}</a>
+                                                        <form method="post" action="{{ path('falta_profe', {'id': profe.id, 'remplazo': profeInner.id, 'fecha': fecha, 'curso': curso.id, 'desde': desde, 'hasta': hasta}) }}" class="m-0">
+                                                    <input type="hidden" name="_token" value="{{ csrf_token('falta_profe' ~ profe.id) }}">
+                                                    <button type="submit" class="dropdown-item">{{ profeInner.apellido }}, {{ profeInner.nombre }}</button>
+                                                </form>
                                                     </li>
                                                 {% endif %}
                                             {% endfor %}
                                             {% if btnClass == 'btn-danger' %}
                                                 <li><hr class="dropdown-divider"></li>
                                                 <li >
-                                                    <a href="{{ path('falta_profe', {'id': profe.id, 'remplazo': -1, 'fecha': fecha, 'curso': curso.id, 'desde': desde, 'hasta': hasta}) }}" class="dropdown-item">Limpiar falta</a>
+                                                    <form method="post" action="{{ path('falta_profe', {'id': profe.id, 'remplazo': -1, 'fecha': fecha, 'curso': curso.id, 'desde': desde, 'hasta': hasta}) }}" class="m-0">
+                                                    <input type="hidden" name="_token" value="{{ csrf_token('falta_profe' ~ profe.id) }}">
+                                                    <button type="submit" class="dropdown-item">Limpiar falta</button>
+                                                </form>
                                                 </li>
                                             {% endif %}
                                         </ul>

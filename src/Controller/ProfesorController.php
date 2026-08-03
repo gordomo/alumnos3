@@ -802,10 +802,17 @@ class ProfesorController extends AbstractController
     }
 
     /**
-     * @Route("/{id}/falto/{remplazo}", name="falta_profe", methods={"GET", "POST"})
+     * @Route("/{id}/falto/{remplazo}", name="falta_profe", methods={"POST"})
      */
     public function faltaprofe(Request $request, Profesor $profesor, ProfesorRepository $profesorRepository, $remplazo, AsistenciaProfesoresRepository $asistenciaProfesoresRepository): Response
     {
+        // Antes se invocaba con <a href>, o sea un GET que mutaba estado: alcanzaba con
+        // que el navegador precargara el link. Ahora la UI lo manda por POST con token.
+        if (!$this->isCsrfTokenValid('falta_profe' . $profesor->getId(), (string) $request->request->get('_token'))) {
+            $this->addFlash('danger', 'Token de seguridad invalido. Recarga la pagina y volve a intentar.');
+            return $this->redirectToRoute('asistencias', [], Response::HTTP_SEE_OTHER);
+        }
+
         $instituto = $profesor->getInstituto();
         $dateFormat = $this->institutoTimezoneService->getDateFormatForInstituto($instituto);
 
