@@ -7,6 +7,9 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form class="curso-form" data-alumno-id="{{ alumno.id }}">
+                {# El submit se intercepta por JS y se envía con fetch usando FormData(form),
+                   así que el token viaja solo por estar dentro del formulario. #}
+                <input type="hidden" name="_token" value="{{ csrf_token('alumno_cursos' ~ alumno.id) }}">
                 <div class="modal-body">
                     {% for curso in cursos %}
                         <div class="form-check">

@@ -18,6 +18,9 @@
                 <div class="card-body">
                     {% if soloLectura is not defined or not soloLectura %}
                         <form method="post" action="{{ path(rutaForm, {'fecha': fecha, 'curso': cursoSeleccionado.id, 'modo': modo|default('edicion')}) }}" id="form-asistencias">
+                            {# El id del token es fijo y no depende del curso ni de la fecha, porque
+                               el autoguardado reenvía este mismo formulario varias veces. #}
+                            <input type="hidden" name="_token" value="{{ csrf_token('asistencias') }}">
                             <input type="hidden" name="modo" value="{{ modo|default('edicion') }}">
                     {% endif %}
                         <div class="table-responsive">

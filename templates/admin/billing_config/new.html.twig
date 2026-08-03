@@ -21,6 +21,7 @@
                 </div>
                 <div class="card-body">
                     <form method="post" action="{{ path('admin_billing_config_new') }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('billing_config_new') }}">
                         <div class="mb-3">
                             <label for="price_per_student_monthly" class="form-label">
                                 Precio por Alumno/Mes <span class="text-danger">*</span>

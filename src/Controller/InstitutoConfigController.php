@@ -84,7 +84,14 @@ class InstitutoConfigController extends AbstractController
 
         if ($request->isMethod('POST')) {
             $section = $request->request->get('section', 'general');
-            
+
+            // Cada pestaña tiene su propio formulario apuntando a esta misma acción, así
+            // que el id del token incluye la sección.
+            if (!$this->isCsrfTokenValid('config_edit_' . $section, (string) $request->request->get('_token'))) {
+                $this->addFlash('danger', 'Token de seguridad invalido. Volve a intentar.');
+                return $this->redirectToRoute('instituto_config_index', ['tab' => $section]);
+            }
+
             if ($section === 'general') {
             $instituto->setNombre($request->request->get('nombre'));
             $instituto->setEmail($request->request->get('email'));
@@ -270,6 +277,11 @@ class InstitutoConfigController extends AbstractController
         $vencimiento->setInstituto($instituto);
 
         if ($request->isMethod('POST')) {
+            if (!$this->isCsrfTokenValid('vencimiento_new', (string) $request->request->get('_token'))) {
+                $this->addFlash('danger', 'Token de seguridad invalido. Volve a intentar.');
+                return $this->redirectToRoute('instituto_config_index', ['tab' => 'pagos']);
+            }
+
             $diaVencimiento = $request->request->get('diaVencimiento');
             $porcentajeInteres = $request->request->get('porcentajeInteres');
             
@@ -311,6 +323,11 @@ class InstitutoConfigController extends AbstractController
     public function editVencimiento(Request $request, Vencimiento $vencimiento, EntityManagerInterface $entityManager, ValidatorInterface $validator): Response
     {
         if ($request->isMethod('POST')) {
+            if (!$this->isCsrfTokenValid('vencimiento_edit' . $vencimiento->getId(), (string) $request->request->get('_token'))) {
+                $this->addFlash('danger', 'Token de seguridad invalido. Volve a intentar.');
+                return $this->redirectToRoute('instituto_config_index', ['tab' => 'pagos']);
+            }
+
             $diaVencimiento = $request->request->get('diaVencimiento');
             $porcentajeInteres = $request->request->get('porcentajeInteres');
 
@@ -363,6 +380,11 @@ class InstitutoConfigController extends AbstractController
         $descuentoPromocional->setConfiguracion($configuracion);
 
         if ($request->isMethod('POST')) {
+            if (!$this->isCsrfTokenValid('descuento_new', (string) $request->request->get('_token'))) {
+                $this->addFlash('danger', 'Token de seguridad invalido. Volve a intentar.');
+                return $this->redirectToRoute('instituto_config_index', ['tab' => 'descuentos']);
+            }
+
 
             $nombre = $request->request->get('nombre');
             $porcentaje = $request->request->get('porcentaje');
@@ -406,6 +428,11 @@ class InstitutoConfigController extends AbstractController
         }
 
         if ($request->isMethod('POST')) {
+            if (!$this->isCsrfTokenValid('descuento_edit' . $descuentoPromocional->getId(), (string) $request->request->get('_token'))) {
+                $this->addFlash('danger', 'Token de seguridad invalido. Volve a intentar.');
+                return $this->redirectToRoute('instituto_config_index', ['tab' => 'descuentos']);
+            }
+
             // Verificar tokens antes de editar
             if (!$this->tokenService->hasEnoughTokens($instituto, 'descuento.edit')) {
                 $this->addFlash('danger', 'No tienes suficientes tokens para editar un descuento. Balance actual: ' . $this->tokenService->getBalance($instituto)->getBalance());
@@ -497,6 +524,11 @@ class InstitutoConfigController extends AbstractController
      */
     public function newMetodoPago(Request $request, EntityManagerInterface $entityManager): Response
     {
+        if (!$this->isCsrfTokenValid('metodo_pago_new', (string) $request->request->get('_token'))) {
+            $this->addFlash('danger', 'Token de seguridad invalido. Volve a intentar.');
+            return $this->redirectToRoute('instituto_config_index', ['tab' => 'metodos-pago']);
+        }
+
         $instituto = $this->getUser()->getInstituto();
         
         $metodoPago = new MetodoPago();
@@ -527,6 +559,11 @@ class InstitutoConfigController extends AbstractController
      */
     public function editMetodoPago(MetodoPago $metodoPago, Request $request, EntityManagerInterface $entityManager): Response
     {
+        if (!$this->isCsrfTokenValid('metodo_pago_edit' . $metodoPago->getId(), (string) $request->request->get('_token'))) {
+            $this->addFlash('danger', 'Token de seguridad invalido. Volve a intentar.');
+            return $this->redirectToRoute('instituto_config_index', ['tab' => 'metodos-pago']);
+        }
+
         $instituto = $this->getUser()->getInstituto();
         
         if ($metodoPago->getInstituto() !== $instituto) {

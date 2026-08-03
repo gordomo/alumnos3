@@ -21,6 +21,7 @@
                 </div>
                 <div class="card-body">
                     <form method="post" action="{{ path('admin_billing_config_edit', {'id': config.id}) }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('billing_config_edit' ~ config.id) }}">
                         <div class="mb-3">
                             <label for="config_key" class="form-label">Clave de Configuración</label>
                             <input type="text" 

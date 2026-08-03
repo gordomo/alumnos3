@@ -48,6 +48,11 @@ class VencimientoController extends AbstractController
         $vencimiento->setInstituto($instituto);
 
         if ($request->isMethod('POST')) {
+            if (!$this->isCsrfTokenValid('vencimiento_new', (string) $request->request->get('_token'))) {
+                $this->addFlash('danger', 'Token de seguridad invalido. Volve a intentar.');
+                return $this->redirectToRoute('instituto_config_index', ['tab' => 'pagos']);
+            }
+
             // Verificar tokens antes de crear
             if (!$this->tokenService->hasEnoughTokens($instituto, 'vencimiento.create')) {
                 $this->addFlash('danger', 'No tienes suficientes tokens para crear un vencimiento. Balance actual: ' . $this->tokenService->getBalance($instituto)->getBalance());
@@ -107,6 +112,11 @@ class VencimientoController extends AbstractController
         $instituto = $vencimiento->getInstituto();
         
         if ($request->isMethod('POST')) {
+            if (!$this->isCsrfTokenValid('vencimiento_edit' . $vencimiento->getId(), (string) $request->request->get('_token'))) {
+                $this->addFlash('danger', 'Token de seguridad invalido. Volve a intentar.');
+                return $this->redirectToRoute('instituto_config_index', ['tab' => 'pagos']);
+            }
+
             // Verificar tokens antes de editar
             if (!$this->tokenService->hasEnoughTokens($instituto, 'vencimiento.edit')) {
                 $this->addFlash('danger', 'No tienes suficientes tokens para editar un vencimiento. Balance actual: ' . $this->tokenService->getBalance($instituto)->getBalance());

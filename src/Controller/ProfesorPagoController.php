@@ -117,6 +117,11 @@ class ProfesorPagoController extends AbstractController
         $liquidacion = $this->profesorPagoService->obtenerLiquidacion($profesor, $mes, $ano);
 
         if ($request->isMethod('POST')) {
+            if (!$this->isCsrfTokenValid('profesor_pago_registrar' . $profesorId, (string) $request->request->get('_token'))) {
+                $this->addFlash('danger', 'Token de seguridad invalido. Volve a intentar.');
+                return $this->redirectToRoute('app_profesor_pago_index');
+            }
+
             $monto = $request->request->get('monto');
             $metodoPago = $request->request->get('metodo_pago');
             $observacion = $request->request->get('observacion');

@@ -61,6 +61,11 @@ class BillingConfigController extends AbstractController
         $config->setPricePerStudentMonthly(50.0);
 
         if ($request->isMethod('POST')) {
+            if (!$this->isCsrfTokenValid('billing_config_new', (string) $request->request->get('_token'))) {
+                $this->addFlash('danger', 'Token de seguridad invalido. Volve a intentar.');
+                return $this->redirectToRoute('admin_billing_config_index');
+            }
+
             $price = $request->request->get('price_per_student_monthly');
             $description = $request->request->get('description');
 
@@ -131,6 +136,11 @@ class BillingConfigController extends AbstractController
         }
 
         if ($request->isMethod('POST')) {
+            if (!$this->isCsrfTokenValid('billing_config_edit' . $billingConfig->getId(), (string) $request->request->get('_token'))) {
+                $this->addFlash('danger', 'Token de seguridad invalido. Volve a intentar.');
+                return $this->redirectToRoute('admin_billing_config_index');
+            }
+
             $price = $request->request->get('price_per_student_monthly');
             $description = $request->request->get('description');
 

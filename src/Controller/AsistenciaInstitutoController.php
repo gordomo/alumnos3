@@ -68,6 +68,12 @@ class AsistenciaInstitutoController extends AbstractController
 
             // Si es una petición POST, procesar el formulario de asistencia
             if ($request->isMethod('POST')) {
+                // El id del token es fijo: el autoguardado reenvia el mismo formulario.
+                if (!$this->isCsrfTokenValid('asistencias', (string) $request->request->get('_token'))) {
+                    $this->addFlash('danger', 'Token de seguridad invalido. Recarga la pagina y volve a intentar.');
+                    return $this->redirectToRoute('app_instituto_asistencias_index', ['fecha' => $fecha, 'curso' => $cursoId]);
+                }
+
                 $this->logger->info('POST recibido en AsistenciaInstitutoController', [
                     'fecha' => $fecha,
                     'curso_id' => $cursoId,

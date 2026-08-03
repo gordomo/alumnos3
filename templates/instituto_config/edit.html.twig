@@ -167,6 +167,7 @@
                         <!-- Pestaña: Información General -->
                         <div class="tab-pane fade show active" id="edit-general" role="tabpanel" aria-labelledby="edit-general-tab">
                             <form method="post" enctype="multipart/form-data" action="{{ path('instituto_config_edit') }}">
+                                <input type="hidden" name="_token" value="{{ csrf_token('config_edit_general') }}">
                                 <input type="hidden" name="section" value="general">
                                 <div class="card mb-3">
                                     <div class="card-header bg-light">
@@ -636,6 +637,7 @@
                         <!-- Pestaña: Descuentos -->
                         <div class="tab-pane fade" id="edit-descuentos" role="tabpanel" aria-labelledby="edit-descuentos-tab">
                             <form method="post" action="{{ path('instituto_config_edit') }}">
+                                <input type="hidden" name="_token" value="{{ csrf_token('config_edit_descuentos') }}">
                                 <input type="hidden" name="section" value="descuentos">
                                 <div class="card config-section-card mb-4">
                                     <div class="card-header config-section-header config-section-header--discounts">
@@ -812,6 +814,7 @@
                                                 <i class="bi bi-plus-circle"></i> Agregar Nuevo Método de Pago
                                             </h5>
                                             <form method="post" action="{{ path('instituto_config_metodo_pago_new') }}">
+                                                <input type="hidden" name="_token" value="{{ csrf_token('metodo_pago_new') }}">
                                                 <div class="row g-3">
                                                     <div class="col-md-9">
                                                         <label class="form-label">Nombre del Método</label>
@@ -876,6 +879,7 @@
                                                                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                                             </div>
                                                             <form method="post" action="{{ path('instituto_config_metodo_pago_edit', {'id': metodo.id}) }}">
+                                                                <input type="hidden" name="_token" value="{{ csrf_token('metodo_pago_edit' ~ metodo.id) }}">
                                                                 <div class="modal-body">
                                                                     <div class="mb-3">
                                                                         <label class="form-label">Nombre</label>
@@ -932,6 +936,7 @@
                         <!-- Pestaña: Notificaciones -->
                         <div class="tab-pane fade" id="edit-notificaciones" role="tabpanel" aria-labelledby="edit-notificaciones-tab">
                             <form method="post" action="{{ path('instituto_config_edit') }}">
+                                <input type="hidden" name="_token" value="{{ csrf_token('config_edit_notificaciones') }}">
                                 <input type="hidden" name="section" value="notificaciones">
                                 <div class="card mb-3">
                                     <div class="card-header bg-secondary text-white">
@@ -1022,6 +1027,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <form method="post" action="{{ path('instituto_config_vencimiento_new') }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('vencimiento_new') }}">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalNuevoVencimientoLabel">Nuevo Vencimiento</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -1051,6 +1057,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <form method="post" action="{{ path('instituto_config_vencimiento_edit', {'id': vencimiento.id}) }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('vencimiento_edit' ~ vencimiento.id) }}">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalEditarVencimientoLabel{{ vencimiento.id }}">Editar Vencimiento</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -1080,6 +1087,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <form method="post" action="{{ path('instituto_config_descuento_promocional_new') }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('descuento_new') }}">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalNuevoDescuentoLabel">Nuevo Descuento Promocional</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -1113,6 +1121,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <form method="post" action="{{ path('instituto_config_descuento_promocional_edit', {'id': descuento.id}) }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('descuento_edit' ~ descuento.id) }}">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalEditarDescuentoLabel{{ descuento.id }}">Editar Descuento Promocional</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>

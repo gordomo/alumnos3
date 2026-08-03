@@ -31,6 +31,7 @@
     <div class="row">
         <div class="col-md-12">
             <form method="post" action="{{ path('app_asistencia_alumnos_curso', {'id': curso.id}) }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('asistencia_curso' ~ curso.id) }}">
                 <input type="hidden" name="fecha" value="{{ fecha|date('Y-m-d') }}">
                 
                 <div class="table-responsive">

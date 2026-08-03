@@ -669,6 +669,10 @@ class AlumnoController extends AbstractController
      */
     public function updateCursos(Request $request, Alumno $alumno, CursoRepository $cursoRepository, HistorialCursosService $historialCursosService, DeudaService $deudaService, InstitutoTimezoneService $institutoTimezoneService): JsonResponse
     {
+        if (!$this->isCsrfTokenValid('alumno_cursos' . $alumno->getId(), (string) $request->request->get('_token'))) {
+            return new JsonResponse(['success' => false, 'message' => 'Token de seguridad invalido. Recarga la pagina.'], 400);
+        }
+
         $instituto = $this->getUser()->getInstituto();
         $dateFormat = $institutoTimezoneService->getDateFormatForInstituto($instituto);
         $cursoIds = $request->request->get('cursos', []);

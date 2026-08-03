@@ -13,6 +13,7 @@
                 <div class="card">
                     <div class="card-body">
                         <form method="post">
+                            <input type="hidden" name="_token" value="{{ csrf_token('vencimiento_edit' ~ vencimiento.id) }}">
                             <div class="form-group">
                                 <label for="diaVencimiento">Día de Vencimiento (1-31)</label>
                                 <input type="number" class="form-control" id="diaVencimiento" name="diaVencimiento" min="1" max="31" value="{{ vencimiento.diaVencimiento }}" required>

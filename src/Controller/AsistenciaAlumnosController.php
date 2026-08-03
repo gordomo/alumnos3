@@ -79,6 +79,12 @@ class AsistenciaAlumnosController extends AbstractController
 
             // Si es una petición POST, procesar el formulario de asistencia
             if ($request->isMethod('POST')) {
+                // El id del token es fijo: el autoguardado reenvia el mismo formulario.
+                if (!$this->isCsrfTokenValid('asistencias', (string) $request->request->get('_token'))) {
+                    $this->addFlash('danger', 'Token de seguridad invalido. Recarga la pagina y volve a intentar.');
+                    return $this->redirectToRoute('app_asistencia_alumnos_index', ['fecha' => $fecha, 'curso' => $cursoId]);
+                }
+
                 $asistencias = $request->request->all('asistencias');
                 $observaciones = $request->request->all('observaciones');
                 $fechaAsistencia = $fechaObj;
@@ -179,6 +185,11 @@ class AsistenciaAlumnosController extends AbstractController
         $id
     ): Response
     {
+        if (!$this->isCsrfTokenValid('asistencia_curso' . $id, (string) $request->request->get('_token'))) {
+            $this->addFlash('danger', 'Token de seguridad invalido.');
+            return $this->redirectToRoute('app_asistencia_alumnos_index');
+        }
+
         $cursoId = $request->request->get('curso', $id);
         $fecha = $request->request->get('fecha');
         $asistencias = $request->request->all('asistencias');
