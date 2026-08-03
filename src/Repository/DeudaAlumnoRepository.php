@@ -70,6 +70,45 @@ class DeudaAlumnoRepository extends ServiceEntityRepository
     /**
      * Encuentra todas las deudas no pagadas de un alumno para un curso específico
      */
+    /**
+     * Deudas con saldo pendiente de todos los alumnos de un curso, agrupadas por alumno.
+     *
+     * Versión en lote de findDeudaByAlumnoAndCurso(), con el mismo criterio de filtrado
+     * (montoPendiente > 0). Existe porque el cierre de curso la llamaba dentro del loop de
+     * alumnos, y además getMontoPendiente() recorre las colecciones aplicaciones y
+     * creditoAplicaciones, que están mapeadas como fetch="EAGER": en un OneToMany eso hace
+     * una query extra por colección por deuda. Con 16 alumnos eran decenas de queries.
+     *
+     * Acá las dos colecciones se traen con fetch-join, así Doctrine las marca inicializadas
+     * y no dispara las consultas EAGER.
+     *
+     * @return array<int, DeudaAlumno[]> [alumnoId => deudas pendientes]
+     */
+    public function findPendientesByCursoAgrupadasPorAlumno(Curso $curso): array
+    {
+        $deudas = $this->createQueryBuilder('d')
+            ->leftJoin('d.aplicaciones', 'ap')
+            ->addSelect('ap')
+            ->leftJoin('d.creditoAplicaciones', 'ca')
+            ->addSelect('ca')
+            ->andWhere('d.curso = :curso')
+            ->setParameter('curso', $curso)
+            ->orderBy('d.ano', 'ASC')
+            ->addOrderBy('d.mes', 'ASC')
+            ->getQuery()
+            ->getResult();
+
+        $porAlumno = [];
+        foreach ($deudas as $deuda) {
+            if ($deuda->getMontoPendiente() > 0) {
+                // getAlumno() devuelve un proxy; pedirle el id no lo inicializa.
+                $porAlumno[$deuda->getAlumno()->getId()][] = $deuda;
+            }
+        }
+
+        return $porAlumno;
+    }
+
     public function findDeudaByAlumnoAndCurso(Alumno $alumno, Curso $curso): array
     {
         $todasDeudas = $this->createQueryBuilder('d')

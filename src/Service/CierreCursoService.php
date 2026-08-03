@@ -90,6 +90,10 @@ class CierreCursoService
         $asistenciaPorAlumno = $this->getAsistenciaPorAlumno($curso);
         // Una sola query de notas para todo el curso, cero por alumno.
         $resumenNotas = $requiereNotas ? $this->promedioService->calcularParaCurso($curso) : [];
+        // Idem con las deudas pendientes: antes se consultaba por alumno dentro del loop.
+        $deudasPendientesPorAlumno = $requierePagoTotal
+            ? $this->deudaAlumnoRepository->findPendientesByCursoAgrupadasPorAlumno($curso)
+            : [];
         $preview = [];
 
         foreach ($this->historicoRepository->findByCurso($curso) as $historico) {
@@ -104,13 +108,9 @@ class CierreCursoService
                 ? round(($datos['presentes'] / $datos['total']) * 100, 1)
                 : 0;
 
-            // TODO(N+1): esta consulta se hace por alumno. Se mantiene tal cual para que
-            // esta extracción no cambie el comportamiento; optimizarla es un cambio aparte.
             $tienePagoCompleto = true;
             if ($requierePagoTotal) {
-                $tienePagoCompleto = empty(
-                    $this->deudaAlumnoRepository->findDeudaByAlumnoAndCurso($alumno, $curso)
-                );
+                $tienePagoCompleto = empty($deudasPendientesPorAlumno[$alumno->getId()] ?? []);
             }
 
             $resumen = $requiereNotas
