@@ -1,0 +1,92 @@
+{% extends 'ayuda/_tema.html.twig' %}
+{% import 'ayuda/_macros.html.twig' as m %}
+
+{% block contenido %}
+<p>
+    El curso es la pieza central: define el precio, el período y los días de clase. Todo lo
+    demás —cuotas, asistencias, notas— se apoya en eso.
+</p>
+
+<h2>Crear un curso</h2>
+
+<ol>
+    <li>{{ m.ruta(['Cursos', 'Listado']) }} y clic en <strong>Nuevo curso</strong>.</li>
+    <li>
+        <strong>Nombre</strong> y <strong>descripción</strong>. El nombre es el que verán los
+        alumnos y el que queda guardado en su historial.
+    </li>
+    <li>
+        <strong>Fecha de inicio y fecha de fin</strong>. Marcan el período sobre el que se
+        generan las cuotas mensuales, así que conviene tenerlas definidas antes de inscribir gente.
+    </li>
+    <li>
+        <strong>Precio mensual</strong>. Es el valor que se copia a la inscripción de cada alumno
+        en el momento de inscribirlo.
+    </li>
+    <li><strong>Cupo</strong>, si querés limitar la cantidad de inscriptos.</li>
+    <li><strong>Horarios</strong>: día de la semana, hora de inicio y hora de fin. Podés cargar varios.</li>
+    <li><strong>Profesores</strong> asignados. Determina qué profesores pueden entrar a tomar asistencia y cargar notas de este curso.</li>
+    <li>Guardar.</li>
+</ol>
+
+{{ m.captura('curso-nuevo.png', 'Formulario de creación de un curso') }}
+
+{{ m.nota('info', 'El precio se congela en la inscripción',
+   'Si más adelante subís el precio mensual del curso, los alumnos ya inscriptos siguen con el
+    precio que tenían. Eso es deliberado: evita que un aumento reescriba deudas del pasado. Para
+    actualizarle el precio a un alumno hay que hacerlo en su inscripción.') }}
+
+<h2>El listado</h2>
+
+<p>
+    Muestra cada curso con sus horarios, su cantidad de inscriptos y su estado. Desde los
+    botones de cada fila se llega a ver el curso, editarlo, y a las acciones de asistencia y
+    calificaciones.
+</p>
+
+{{ m.captura('curso-index.png', 'Listado de cursos con los botones de acción') }}
+
+<h2>La ficha del curso</h2>
+
+<p>
+    Entrando a un curso ves la lista de alumnos inscriptos, los horarios, los profesores, y los
+    accesos directos a asistencias y calificaciones de ese curso.
+</p>
+
+{{ m.captura('curso-show.png', 'Ficha de un curso con sus alumnos inscriptos') }}
+
+<h2>El calendario</h2>
+
+<p>
+    {{ m.ruta(['Cursos', 'Calendario']) }} muestra todos los cursos del instituto ubicados en la
+    semana según sus horarios. Sirve para detectar solapamientos de aula o de profesor antes de
+    que sean un problema.
+</p>
+
+<h2>Cerrar un curso</h2>
+
+<p>
+    Cerrar un curso es la acción que <strong>decide qué alumnos lo finalizaron</strong>. Se hace
+    al terminar el período.
+</p>
+
+<ol>
+    <li>Entrá a la ficha del curso y buscá la acción <strong>Cerrar curso</strong>.</li>
+    <li>
+        El sistema muestra primero una <strong>vista previa</strong>: alumno por alumno, su
+        porcentaje de asistencia, su deuda, su promedio de notas, y el resultado que le
+        correspondería. <strong>Todavía no se guardó nada.</strong>
+    </li>
+    <li>Revisá la lista. Si algo no cuadra, cancelá, corregí los datos y volvé a entrar.</li>
+    <li>Confirmá. Ahí sí se escribe el resultado en el historial de cada alumno.</li>
+</ol>
+
+{{ m.captura('curso-cierre-preview.png', 'Vista previa del cierre, alumno por alumno') }}
+
+<p>Los criterios que se aplican son los que tengas activos en {{ m.ruta(['Configuración', 'Configuración académica']) }}. Si no activaste ninguno, todos los alumnos quedan finalizados.</p>
+
+{{ m.nota('warning', 'La vista previa es el momento de revisar',
+   'Una vez confirmado el cierre, el resultado queda escrito en el historial de cada alumno y
+    las notas del curso pasan a solo lectura. Leé la vista previa completa antes de confirmar,
+    especialmente las filas marcadas como <em>sin datos</em>.') }}
+{% endblock %}

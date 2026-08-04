@@ -1,0 +1,75 @@
+{% extends 'ayuda/_tema.html.twig' %}
+{% import 'ayuda/_macros.html.twig' as m %}
+
+{% block contenido %}
+<p>
+    Como alumno tenés dos pantallas: <strong>Mi Dashboard</strong>, con el resumen de tu
+    situación, y <strong>Mis Notas</strong>, con tus calificaciones. Solo ves tu propia
+    información.
+</p>
+
+<h2>Mi Dashboard</h2>
+
+<p>
+    Se entra por {{ m.ruta(['Mi Dashboard']) }}. Arriba hay cuatro números que resumen todo:
+</p>
+
+<ul>
+    <li><strong>Cursos activos</strong>: en cuántos cursos estás inscripto ahora.</li>
+    <li><strong>Asistencias (30 días)</strong>: cuántas clases se te registraron en el último mes.</li>
+    <li><strong>Pagos (30 días)</strong>: cuántos pagos tuyos se registraron en el último mes.</li>
+    <li><strong>Deudas pendientes</strong>: cuántas cuotas te figuran sin pagar.</li>
+</ul>
+
+{{ m.captura('alumno-dashboard.png', 'Mi Dashboard: resumen de cursos, asistencias, pagos y deudas') }}
+
+<p>Más abajo están los detalles:</p>
+
+<ul>
+    <li>
+        <strong>Tus cursos</strong>, con sus horarios, así podés confirmar el día y la hora de
+        cada clase.
+    </li>
+    <li>
+        <strong>Tus asistencias recientes</strong>, con la fecha, el curso y si quedaste como
+        presente o ausente. Si ves una falta que no corresponde, avisale al profesor o a la
+        administración: se corrige del lado de ellos.
+    </li>
+    <li>
+        <strong>Tus pagos</strong>, con fecha, curso y monto. Es el comprobante de lo que ya
+        abonaste según el sistema.
+    </li>
+    <li>
+        <strong>Tus deudas pendientes</strong>, con el curso y el mes de cada cuota.
+    </li>
+</ul>
+
+{{ m.nota('info', 'Sobre el importe de una deuda',
+   'Una cuota vencida puede tener recargo por atraso, así que el monto a pagar puede ser mayor al
+    precio del mes. El importe exacto te lo confirma la administración al momento de cobrar.') }}
+
+<h2>Mis Notas</h2>
+
+<p>
+    Se entra por {{ m.ruta(['Mis Notas']) }}. Aparecen tus cursos y, dentro de cada uno, las
+    evaluaciones que tuviste con la nota que sacaste, la fecha y las observaciones que haya
+    dejado el profesor.
+</p>
+
+{{ m.captura('alumno-notas.png', 'Mis Notas: evaluaciones y promedio por curso') }}
+
+<p>
+    Según cómo lo tenga configurado el instituto, la nota puede ser un número, un concepto
+    (Bueno, Muy bueno…) o las dos cosas. También se muestra tu <strong>promedio</strong> por curso.
+</p>
+
+<p>
+    Una evaluación sin nota significa que el profesor todavía no la cargó, no que estés
+    desaprobado.
+</p>
+
+<p>
+    Esta pantalla es de <strong>solo lectura</strong>: las notas las carga el profesor. Si
+    encontrás algo que no coincide con lo que te devolvieron, hablalo con el profesor del curso.
+</p>
+{% endblock %}

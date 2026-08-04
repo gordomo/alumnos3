@@ -1,0 +1,83 @@
+{% extends 'ayuda/_tema.html.twig' %}
+{% import 'ayuda/_macros.html.twig' as m %}
+
+{% block contenido %}
+<p>
+    Un alumno se carga una sola vez y después se lo inscribe a uno o varios cursos. La
+    <strong>inscripción</strong> es lo que genera las cuotas, no el alta del alumno.
+</p>
+
+<h2>Dar de alta un alumno</h2>
+
+<ol>
+    <li>{{ m.ruta(['Alumnos', 'Listado']) }} y clic en <strong>Nuevo alumno</strong>.</li>
+    <li>
+        <strong>Nombre, apellido y DNI</strong>. El DNI se usa para identificarlo y para
+        buscarlo, así que conviene cargarlo siempre.
+    </li>
+    <li><strong>Fecha de nacimiento</strong>, <strong>teléfono</strong>, <strong>dirección</strong>.</li>
+    <li>
+        <strong>Email</strong>. Es a donde llegan las comunicaciones del sistema, incluido el
+        boletín de notas si lo mandás.
+    </li>
+    <li>
+        <strong>Datos del tutor</strong> (nombre, teléfono, email). Para alumnos menores es el
+        contacto que usa el sistema para enviar el boletín.
+    </li>
+    <li>Guardar.</li>
+</ol>
+
+{{ m.captura('alumno-nuevo.png', 'Formulario de alta de un alumno') }}
+
+<h2>Inscribirlo a un curso</h2>
+
+<p>Desde la ficha del alumno, en el bloque de cursos:</p>
+
+<ol>
+    <li>Elegí el curso de la lista.</li>
+    <li>
+        Confirmá la <strong>fecha de alta</strong>. Es la fecha desde la cual el alumno debe
+        cuotas de ese curso.
+    </li>
+    <li>
+        El <strong>precio mensual</strong> se toma del curso, pero podés cambiarlo para este
+        alumno en particular (una beca, un precio de hermano, etc.).
+    </li>
+    <li>Guardar. En ese momento se generan las cuotas del período.</li>
+</ol>
+
+{{ m.captura('alumno-cursos.png', 'Cursos de un alumno, con la opción de inscribirlo a otro') }}
+
+{{ m.nota('info', 'La fecha de alta define desde cuándo debe',
+   'Si inscribís en mayo a un alumno cuyo curso arrancó en marzo, poné la fecha de alta en mayo:
+    el sistema no le va a generar deuda de marzo ni abril. Si en cambio la fecha de alta es marzo,
+    esas cuotas aparecen como deuda desde el primer día.') }}
+
+<h2>El listado de alumnos</h2>
+
+<p>
+    Muestra a cada alumno con sus cursos y su situación de deuda. Se puede buscar por nombre,
+    apellido o DNI. Desde los botones de cada fila se llega a la ficha, a la edición, y a la
+    gestión de sus deudas y pagos.
+</p>
+
+{{ m.captura('alumno-index.png', 'Listado de alumnos con su estado de deuda') }}
+
+<h2>Dar de baja de un curso</h2>
+
+<p>
+    Al dar de baja a un alumno de un curso se registra la fecha de baja y el motivo, y desde
+    ahí deja de generársele cuotas. La inscripción no se borra: queda en el
+    <strong>historial</strong> del alumno, con el nombre del curso y el precio que tenía. Por eso
+    después se puede consultar qué cursó y con qué resultado, incluso si el curso se modificó
+    o se borró.
+</p>
+
+<h2>Usuario para que el alumno entre al sistema</h2>
+
+<p>
+    Cargar el alumno no le crea un acceso. Para que pueda entrar y ver sus notas y sus pagos,
+    hay que crearle un usuario en {{ m.ruta(['Usuarios']) }} con rol de alumno, asociado a su
+    ficha. Sin eso el alumno existe en el sistema pero no puede iniciar sesión.
+</p>
+{% endblock %}

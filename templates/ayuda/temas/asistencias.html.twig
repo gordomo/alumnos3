@@ -1,0 +1,75 @@
+{% extends 'ayuda/_tema.html.twig' %}
+{% import 'ayuda/_macros.html.twig' as m %}
+
+{% block contenido %}
+{% set esProfe = is_granted('ROLE_PROFESOR') and not is_granted('ROLE_ADMIN_INSTITUTO') %}
+
+<p>
+    La asistencia se toma <strong>por curso y por fecha</strong>. Cada clase es un registro
+    aparte, y el porcentaje de asistencia del alumno sale de la suma de todas.
+</p>
+
+{% if esProfe %}
+    <p>Se entra por {{ m.ruta(['Asistencias de Alumnos']) }} en el menú.</p>
+{% else %}
+    <p>
+        Se entra por {{ m.ruta(['Alumnos', 'Asistencias']) }}. Los profesores lo hacen desde
+        {{ m.ruta(['Asistencias de Alumnos']) }} y solo ven los cursos que tienen asignados.
+    </p>
+{% endif %}
+
+<h2>Tomar asistencia de una clase</h2>
+
+<ol>
+    <li>Elegí el curso.</li>
+    <li>
+        Elegí la <strong>fecha</strong> de la clase. Por default viene el día de hoy, pero podés
+        cargar una clase anterior si te quedó pendiente.
+    </li>
+    <li>Aparece la grilla con todos los alumnos inscriptos.</li>
+    <li>Marcá el estado de cada uno: <strong>presente</strong>, <strong>ausente</strong> o <strong>justificado</strong>.</li>
+    <li>Si hace falta, agregá una <strong>observación</strong> por alumno.</li>
+    <li>Clic en <strong>Guardar</strong>.</li>
+</ol>
+
+{{ m.captura('asistencia-grilla.png', 'Grilla de asistencia de una clase') }}
+
+{{ m.nota('info', 'Dejar un alumno sin marcar no es lo mismo que marcarlo ausente',
+   'Un alumno que no tildaste queda <em>sin registro</em> para esa clase, y esa clase no le cuenta
+    ni a favor ni en contra en el porcentaje. Si faltó, marcalo ausente explícitamente: es la
+    única forma de que la falta impacte en su asistencia.') }}
+
+<h2>Corregir una asistencia ya tomada</h2>
+
+<p>
+    Volvé a entrar con el mismo curso y la misma fecha: la grilla se abre con lo que se había
+    guardado, lo cambiás y guardás de nuevo. No se duplica el registro de la clase.
+</p>
+
+<h2>Informes</h2>
+
+<p>
+    {% if esProfe %}El informe de asistencias{% else %}{{ m.ruta(['Alumnos', 'Informes de Asistencia']) }}{% endif %}
+    muestra, para un curso y un rango de fechas, el porcentaje de asistencia de cada alumno junto
+    con la cantidad de presentes, ausentes y justificados.
+</p>
+
+{{ m.captura('asistencia-informe.png', 'Informe de asistencia por curso') }}
+
+<p>El informe se puede exportar para trabajarlo en una planilla.</p>
+
+{% if not esProfe %}
+<h2>Cómo se usa la asistencia al cerrar el curso</h2>
+
+<p>
+    Si en {{ m.ruta(['Configuración', 'Configuración académica']) }} cargaste un porcentaje
+    mínimo de asistencia, al cerrar el curso los alumnos que no lo alcancen quedan como
+    <em>no finalizado</em>. Si dejás ese campo vacío, la asistencia no se tiene en cuenta para aprobar.
+</p>
+
+<p>
+    Conviene revisar el informe antes de cerrar: una clase que nadie cargó baja el porcentaje de
+    todo el curso, y se nota mucho más en cursos cortos.
+</p>
+{% endif %}
+{% endblock %}

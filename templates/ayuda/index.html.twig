@@ -1,0 +1,45 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Ayuda{% endblock %}
+
+{% block body %}
+<div class="container mt-4 px-4">
+    <div class="mb-4">
+        <h1 class="h3 mb-1"><i class="bi bi-life-preserver"></i> Ayuda</h1>
+        <p class="text-muted mb-0">
+            Cómo funciona cada parte del sistema, con el paso a paso y capturas de las
+            pantallas reales. Solo se muestran los temas de las secciones a las que tenés acceso.
+        </p>
+    </div>
+
+    {% if temas is empty %}
+        <div class="alert alert-info mb-0">
+            Todavía no hay temas de ayuda disponibles para tu tipo de usuario.
+        </div>
+    {% else %}
+        <div class="row">
+            {% for slug, tema in temas %}
+                <div class="col-md-6 col-lg-4 mb-3">
+                    <a href="{{ path('app_ayuda_tema', {'tema': slug}) }}"
+                       class="card h-100 text-decoration-none ayuda-card">
+                        <div class="card-body">
+                            <h5 class="card-title text-dark mb-2">
+                                <i class="bi {{ tema.icono }} text-primary"></i> {{ tema.titulo }}
+                            </h5>
+                            <p class="card-text text-muted small mb-0">{{ tema.resumen }}</p>
+                        </div>
+                    </a>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .ayuda-card { transition: box-shadow .15s ease, transform .15s ease; }
+        .ayuda-card:hover { box-shadow: 0 .5rem 1rem rgba(0,0,0,.1); transform: translateY(-2px); }
+    </style>
+{% endblock %}

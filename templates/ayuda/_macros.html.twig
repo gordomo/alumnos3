@@ -1,0 +1,27 @@
+{# Macros compartidos por los temas de ayuda. #}
+
+{# Captura de pantalla con epígrafe.
+   Los archivos van en public/assets/ayuda/ y NO en public/ayuda/: un directorio con ese
+   nombre hace que Apache redirija /ayuda -> /ayuda/, y como la ruta del controller es
+   /ayuda sin barra, Symfony redirige de vuelta y queda un loop de redirecciones. #}
+{% macro captura(archivo, epigrafe) %}
+    <figure>
+        <img src="{{ asset('assets/ayuda/' ~ archivo) }}" alt="{{ epigrafe }}" loading="lazy">
+        <figcaption><i class="bi bi-image"></i> {{ epigrafe }}</figcaption>
+    </figure>
+{% endmacro %}
+
+{# Ruta de navegación dentro del sistema: {{ ruta(['Cursos', 'Nuevo curso']) }} #}
+{% macro ruta(pasos) %}
+    <span class="ruta">{{ pasos|join(' → ') }}</span>
+{% endmacro %}
+
+{# Aviso destacado. tipo: info | warning | danger | success #}
+{% macro nota(tipo, titulo, texto) %}
+    {% set iconos = {'info': 'bi-info-circle', 'warning': 'bi-exclamation-triangle',
+                     'danger': 'bi-x-octagon', 'success': 'bi-check-circle'} %}
+    <div class="alert alert-{{ tipo }}">
+        <strong><i class="bi {{ iconos[tipo]|default('bi-info-circle') }}"></i> {{ titulo }}</strong><br>
+        {{ texto|raw }}
+    </div>
+{% endmacro %}

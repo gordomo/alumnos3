@@ -185,6 +185,16 @@
             </ul>
         {% endif %}
 
+            {# Manual de uso. El propio controller filtra los temas por rol, así que este
+               enlace vale para cualquier usuario logueado. #}
+            <ul class="nav nav-tabs sidebar-dropdown-ul">
+                <li class="nav-item">
+                    <a class="list-group-item list-group-item-action bg-light {% if app.request.get('_route') starts with 'app_ayuda_' %}active{% endif %}" href="{{ path('app_ayuda_index') }}">
+                        <i class="bi bi-life-preserver"></i> Ayuda
+                    </a>
+                </li>
+            </ul>
+
             <ul class="nav nav-tabs sidebar-dropdown-ul">
                 <li class="nav-item">
                     <form method="post" action="{{ path('app_logout') }}" class="d-inline">

@@ -1,0 +1,61 @@
+{# Layout compartido por todos los temas de ayuda.
+   Cada tema extiende este archivo y solo define el bloque `contenido`. #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Ayuda · {{ tema.titulo }}{% endblock %}
+
+{% block body %}
+<div class="container mt-4 px-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ path('app_ayuda_index') }}">Ayuda</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ tema.titulo }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-lg-9">
+            <h1 class="h3 mb-3"><i class="bi {{ tema.icono }} text-primary"></i> {{ tema.titulo }}</h1>
+            <div class="ayuda-contenido">
+                {% block contenido %}{% endblock %}
+            </div>
+            <hr class="mt-5">
+            <a href="{{ path('app_ayuda_index') }}" class="btn btn-secondary">← Volver a la ayuda</a>
+        </div>
+
+        <div class="col-lg-3">
+            <div class="card">
+                <div class="card-header bg-light"><strong>Otros temas</strong></div>
+                <div class="list-group list-group-flush">
+                    {% for slug, otro in temas %}
+                        <a href="{{ path('app_ayuda_tema', {'tema': slug}) }}"
+                           class="list-group-item list-group-item-action {% if slug == tema.slug %}active{% endif %}">
+                            <i class="bi {{ otro.icono }}"></i> {{ otro.titulo }}
+                        </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .ayuda-contenido h2 { font-size: 1.3rem; margin-top: 2rem; margin-bottom: .75rem; }
+        .ayuda-contenido h3 { font-size: 1.08rem; margin-top: 1.5rem; margin-bottom: .5rem; }
+        .ayuda-contenido p, .ayuda-contenido li { line-height: 1.7; }
+        .ayuda-contenido ol, .ayuda-contenido ul { margin-bottom: 1rem; }
+        .ayuda-contenido figure { margin: 1.25rem 0 1.75rem; }
+        .ayuda-contenido figure img {
+            max-width: 100%; border: 1px solid #dee2e6; border-radius: 6px;
+            box-shadow: 0 .25rem .75rem rgba(0,0,0,.06);
+        }
+        .ayuda-contenido figcaption { font-size: .85rem; color: #6c757d; margin-top: .4rem; }
+        .ayuda-contenido .ruta {
+            background: #f1f6f5; border: 1px solid #d9e4e2; border-radius: 4px;
+            padding: .1rem .4rem; font-size: .9rem; white-space: nowrap;
+        }
+    </style>
+{% endblock %}

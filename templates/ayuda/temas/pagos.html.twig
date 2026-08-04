@@ -1,0 +1,149 @@
+{% extends 'ayuda/_tema.html.twig' %}
+{% import 'ayuda/_macros.html.twig' as m %}
+
+{% block contenido %}
+<p>
+    El sistema no lleva una "cuenta corriente" a mano: las deudas se
+    <strong>calculan</strong> a partir de las inscripciones, el precio mensual, el período del
+    curso y los pagos ya registrados. Por eso no hay que dar de alta cuotas una por una.
+</p>
+
+<h2>Registrar un pago</h2>
+
+<ol>
+    <li>{{ m.ruta(['Pagos']) }} y clic en <strong>Registrar pago</strong>. También se llega desde la ficha del alumno.</li>
+    <li>Elegí el alumno.</li>
+    <li>
+        El sistema muestra el estado de cada uno de sus cursos y la lista de
+        <strong>Meses para Pagar</strong>.
+    </li>
+    <li>Tildá los meses que se están pagando. Se pueden tildar varios de una vez.</li>
+    <li>Elegí el <strong>método de pago</strong> y, si corresponde, un <strong>descuento</strong>.</li>
+    <li>Revisá el total y confirmá.</li>
+</ol>
+
+{{ m.captura('pago-nuevo.png', 'Pantalla de registrar pago: estado de los cursos y meses a pagar') }}
+
+<h2>Los recuadros de estado del curso</h2>
+
+<p>Arriba de la lista de meses hay hasta cuatro recuadros. Cada uno dice algo distinto:</p>
+
+<table class="table table-bordered align-middle">
+    <thead class="table-light">
+        <tr><th style="width: 30%">Recuadro</th><th>Qué significa</th></tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><span class="badge bg-primary"><i class="bi bi-star-fill"></i> Azul</span><br><small>Todas las cuotas pagadas</small></td>
+            <td>El curso está <strong>terminado de pagar</strong>: no queda ninguna cuota pendiente hasta el fin del curso.</td>
+        </tr>
+        <tr>
+            <td><span class="badge bg-success"><i class="bi bi-check-circle-fill"></i> Verde</span><br><small>Cursos al Día</small></td>
+            <td>
+                <strong>No tiene nada vencido</strong>, pero puede tener cuotas del mes en curso
+                que todavía están en plazo. Verde no quiere decir "no debe nada": quiere decir
+                "no debe nada <em>todavía</em>".
+            </td>
+        </tr>
+        <tr>
+            <td><span class="badge bg-danger"><i class="bi bi-exclamation-triangle-fill"></i> Rojo</span><br><small>Cursos con Cuotas Vencidas</small></td>
+            <td>Tiene cuotas cuyo vencimiento ya pasó, con la cantidad. Estas son las que llevan recargo.</td>
+        </tr>
+        <tr>
+            <td><span class="badge bg-warning text-dark"><i class="bi bi-exclamation-circle"></i> Amarillo</span><br><small>Meses para Pagar</small></td>
+            <td>La lista concreta de meses que se pueden cobrar, agrupados por curso.</td>
+        </tr>
+    </tbody>
+</table>
+
+{{ m.nota('info', 'Por qué un alumno puede aparecer en verde y con meses para pagar al mismo tiempo',
+   'Es la situación normal a principio de mes: la cuota del mes en curso ya está disponible para
+    cobrar, pero su fecha de vencimiento todavía no llegó, así que no está vencida. El verde
+    habla de <em>atraso</em>; la lista amarilla habla de <em>qué se puede cobrar</em>.') }}
+
+<h2>Los estados de cada mes</h2>
+
+<p>Dentro de <strong>Meses para Pagar</strong>, cada mes trae su propia etiqueta:</p>
+
+<ul>
+    <li><span class="badge bg-danger">Vencido</span> El plazo ya pasó. El importe que se muestra <strong>ya incluye el recargo</strong>.</li>
+    <li><span class="badge bg-success">Corriente</span> Es el mes en curso y todavía está en plazo: se paga el precio sin recargo.</li>
+    <li><span class="badge" style="background:#5bc0de">Adelantado</span> Es un mes futuro. Se puede cobrar por adelantado.</li>
+</ul>
+
+<p>
+    Un mes que ya se cobró aparece atenuado y no se puede volver a tildar. El botón
+    <strong>Seleccionar todos</strong> de cada curso tilda de una vez todo lo pendiente de ese curso.
+</p>
+
+<h2>Cobrar meses adelantados</h2>
+
+<p>
+    Se pueden tildar meses futuros y cobrarlos junto con los del mes en curso. El total se
+    recalcula solo. Si el alumno está en varios cursos, aparece un selector para filtrar por
+    curso; se puede pagar todo junto, pero conviene hacer un pago por curso para que el
+    historial quede legible.
+</p>
+
+<h2>El importe: cálculo y ajuste a mano</h2>
+
+<p>
+    El bloque <strong>Cálculo del Pago</strong> detalla cómo se llegó al total: qué meses entraron,
+    qué recargo se aplicó y por qué vencimiento, y qué descuento. El orden es
+    <strong>primero el interés, después el descuento</strong>: el recargo se calcula sobre el precio
+    base y el descuento se aplica sobre ese resultado.
+</p>
+
+<p>
+    El campo <strong>Precio a Cobrar</strong> se puede editar. Sirve para redondear o para un
+    arreglo puntual con el alumno.
+</p>
+
+{{ m.nota('warning', 'Cobrar menos igual cancela la cuota',
+   'Si escribís un importe menor al calculado, los meses que tildaste quedan cancelados de todas
+    formas: el sistema no deja un saldo parcial pendiente. Si lo que querés es un pago parcial,
+    cobrá menos meses en lugar de bajar el importe.') }}
+
+<h2>Cómo se calculan los recargos</h2>
+
+<p>
+    El recargo viene de los <strong>vencimientos</strong> que definiste en
+    {{ m.ruta(['Configuración']) }}. Para cada cuota el sistema mira la fecha de hoy —según la
+    zona horaria del instituto— y aplica el último vencimiento cuyo día ya pasó.
+</p>
+
+<p>
+    Una cuota de un mes anterior está vencida en su totalidad, así que arrastra el recargo más
+    alto configurado. Por eso el importe de una cuota atrasada crece a medida que pasan los meses.
+</p>
+
+<h2>Saldos a favor</h2>
+
+<p>
+    Si un alumno paga de más —por ejemplo, entrega un importe redondo mayor al total—, la
+    diferencia queda registrada como <strong>saldo a favor</strong> y se descuenta
+    automáticamente del próximo pago que registres. No hay que anotarlo aparte.
+</p>
+
+<h2>El listado de pagos</h2>
+
+<p>
+    {{ m.ruta(['Pagos']) }} muestra todos los pagos registrados con su fecha, alumno, curso,
+    importe y método. Desde ahí se puede ver el detalle de un pago, editarlo o anularlo.
+</p>
+
+{{ m.captura('pagos-index.png', 'Listado de pagos registrados') }}
+
+{{ m.nota('warning', 'Editar o anular un pago cambia la deuda',
+   'Como la deuda se calcula a partir de los pagos, anular un pago hace reaparecer esas cuotas
+    como pendientes —y si ya pasó el vencimiento, con recargo. Es el comportamiento correcto,
+    pero conviene tenerlo en cuenta antes de anular algo viejo.') }}
+
+<h2>Gestión de deudas de un curso</h2>
+
+<p>
+    Desde la ficha de un curso se puede ver de una sola vez la situación de todos sus alumnos:
+    quién debe, cuántas cuotas y cuánto. Es la pantalla para revisar antes de cerrar el curso,
+    sobre todo si tenés activado el criterio de pago total para aprobar.
+</p>
+{% endblock %}

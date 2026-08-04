@@ -1,0 +1,71 @@
+{% extends 'ayuda/_tema.html.twig' %}
+{% import 'ayuda/_macros.html.twig' as m %}
+
+{% block contenido %}
+<p>
+    El sistema se organiza alrededor de tres cosas: <strong>cursos</strong>,
+    <strong>alumnos</strong> y las <strong>inscripciones</strong> que los vinculan. Casi todo
+    lo demás (deudas, asistencias, notas) se deriva de esas inscripciones.
+</p>
+
+<h2>En qué orden conviene cargar todo</h2>
+
+<p>Si el instituto arranca de cero, este orden evita tener que volver atrás:</p>
+
+<ol>
+    <li>
+        <strong>Configuración del instituto.</strong> Los días de vencimiento y los intereses
+        primero, porque las deudas que se generen después los usan para calcular recargos.
+        {{ m.ruta(['Configuración']) }}
+    </li>
+    <li>
+        <strong>Métodos de pago y descuentos.</strong> En la misma pantalla de configuración.
+    </li>
+    <li><strong>Profesores.</strong> {{ m.ruta(['Profesores', 'Listado']) }}</li>
+    <li>
+        <strong>Cursos</strong>, con sus horarios y los profesores asignados. Un curso necesita
+        fecha de inicio y de fin: sobre ese período se calculan las cuotas.
+    </li>
+    <li>
+        <strong>Alumnos</strong>, y recién ahí inscribirlos a los cursos. Al inscribir se
+        generan las cuotas, así que conviene tener el curso bien configurado antes.
+    </li>
+</ol>
+
+{{ m.nota('warning', 'El orden importa por las cuotas',
+   'Si inscribís un alumno antes de definir los vencimientos, sus cuotas ya generadas no
+    tendrán el recargo configurado. Se puede arreglar, pero es más trabajo que hacerlo en orden.') }}
+
+<h2>El menú</h2>
+
+<p>
+    Todo se navega desde el menú de la izquierda. Lo que ves ahí depende de tu tipo de
+    usuario: un profesor ve solo sus cursos y las pantallas de carga; un administrador del
+    instituto ve todo.
+</p>
+
+{{ m.captura('sidebar-admin.png', 'Menú de un administrador de instituto') }}
+
+<h2>Tipos de usuario</h2>
+
+<ul>
+    <li>
+        <strong>Administrador del instituto.</strong> Configura el instituto, carga cursos,
+        alumnos y profesores, registra pagos y ve todos los informes.
+    </li>
+    <li>
+        <strong>Profesor.</strong> Entra solo a los cursos que tiene asignados, para tomar
+        asistencia y cargar notas.
+    </li>
+    <li>
+        <strong>Alumno.</strong> Ve su propia información: cursos, asistencias, pagos,
+        deudas y notas.
+    </li>
+</ul>
+
+<p>
+    Los usuarios se crean en {{ m.ruta(['Usuarios']) }}. Un profesor o un alumno necesita
+    tener su ficha cargada (en Profesores o en Alumnos) <em>y</em> un usuario asociado para
+    poder entrar al sistema.
+</p>
+{% endblock %}

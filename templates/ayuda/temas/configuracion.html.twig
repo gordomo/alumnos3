@@ -1,0 +1,108 @@
+{% extends 'ayuda/_tema.html.twig' %}
+{% import 'ayuda/_macros.html.twig' as m %}
+
+{% block contenido %}
+<p>
+    Todo lo de esta pantalla se configura una vez y afecta a todo el instituto. Se entra
+    desde {{ m.ruta(['Configuración']) }}. La pantalla muestra el resumen; el botón
+    <strong>Editar</strong> abre el formulario.
+</p>
+
+{{ m.captura('config-index.png', 'Resumen de la configuración del instituto') }}
+
+<h2>Datos del instituto</h2>
+
+<p>
+    Nombre, dirección, teléfono, email de contacto y <strong>zona horaria</strong>. La zona
+    horaria no es un detalle cosmético: define qué día es "hoy" para el sistema, y con eso se
+    calculan los vencimientos y los recargos. Si está mal, las deudas vencen el día equivocado.
+</p>
+
+<h2>Vencimientos e intereses</h2>
+
+<p>
+    Un vencimiento es una regla del tipo <em>"a partir del día 10 del mes, la cuota tiene un
+    5% de recargo"</em>. Se pueden cargar varios y se aplican en escalera: el sistema toma el
+    último vencimiento cuyo día ya pasó.
+</p>
+
+<ol>
+    <li>En Configuración, buscá el bloque <strong>Vencimientos</strong>.</li>
+    <li>Clic en <strong>Nuevo vencimiento</strong>.</li>
+    <li>Cargá el <strong>día del mes</strong> y el <strong>porcentaje de recargo</strong>.</li>
+    <li>Guardá. Podés editarlo o borrarlo después.</li>
+</ol>
+
+{{ m.captura('config-vencimientos.png', 'Vencimientos cargados, con día y porcentaje') }}
+
+{{ m.nota('info', 'Ejemplo',
+   'Con dos vencimientos — día 10 al 5% y día 20 al 10% — una cuota de $10.000 se paga
+    $10.000 hasta el 9, $10.500 del 10 al 19, y $11.000 del 20 en adelante.') }}
+
+<h2>Métodos de pago</h2>
+
+<p>
+    La lista de formas de cobro que aparecerá en el desplegable al registrar un pago
+    (efectivo, transferencia, débito, etc.). Se agregan y se editan en la misma pantalla de
+    configuración, sin salir de ella.
+</p>
+
+<p>
+    Un método que ya se usó en pagos no conviene borrarlo: desactivalo. Así deja de ofrecerse
+    en pagos nuevos pero los pagos históricos siguen mostrando con qué se cobraron.
+</p>
+
+<h2>Descuentos promocionales</h2>
+
+<p>
+    Descuentos que se pueden aplicar al registrar un pago. Se definen con nombre y porcentaje,
+    y quedan disponibles para elegir en el momento del cobro.
+</p>
+
+<h2>Configuración académica</h2>
+
+<p>Es el bloque que define <strong>cuándo un alumno aprueba un curso</strong>. Hay tres criterios, y cada uno se prende por separado:</p>
+
+<h3>1. Asistencia mínima</h3>
+<p>
+    El porcentaje de clases al que el alumno tiene que haber ido. Si lo dejás vacío, la
+    asistencia no se tiene en cuenta para aprobar.
+</p>
+
+<h3>2. Pago total</h3>
+<p>
+    Si lo activás, un alumno con deuda pendiente al cerrar el curso queda como
+    <em>no finalizado</em> aunque tenga la asistencia y las notas en regla.
+</p>
+
+<h3>3. Notas</h3>
+<p>
+    Para usar notas primero hay que elegir la <strong>escala</strong>. Mientras la escala esté
+    en <em>"No usar calificaciones"</em>, todo el módulo de notas queda apagado.
+</p>
+
+<ul>
+    <li><strong>Numérica</strong>: definís nota mínima, máxima y nota de aprobación (por ejemplo 1, 10 y 6).</li>
+    <li><strong>Conceptual</strong>: cargás una lista de conceptos (Insuficiente, Regular, Bueno, Muy bueno…) y marcás cuáles aprueban.</li>
+    <li><strong>Ambas</strong>: el profesor carga número y concepto. Para que el promedio funcione, a cada concepto le podés poner un equivalente numérico.</li>
+</ul>
+
+<p>
+    Con la escala elegida, aparece <strong>"Requerir aprobar notas para aprobar el curso"</strong>.
+    Recién ahí las notas empiezan a pesar en el cierre, y podés elegir el criterio:
+    <strong>promedio</strong> (el promedio del alumno tiene que alcanzar la nota de aprobación)
+    o <strong>todas</strong> (tiene que aprobar cada evaluación).
+</p>
+
+{{ m.captura('config-academica.png', 'Configuración académica: asistencia, pago y escala de notas') }}
+
+{{ m.nota('warning', 'Cambiar la escala no recalcula lo ya cargado',
+   'Cada evaluación guarda la escala que estaba vigente cuando se creó. Si hoy cambiás de
+    escala numérica 1-10 a 1-100, las evaluaciones viejas siguen interpretándose con la escala
+    con la que se cargaron. Es a propósito: si no, una nota de 7 pasaría a estar desaprobada de
+    un día para el otro.') }}
+
+{{ m.nota('info', 'Si no cargaste notas, nadie se desaprueba por eso',
+   'Un alumno sin evaluaciones o sin notas cargadas queda como <em>sin datos</em> en el cierre,
+    y eso <strong>no</strong> lo desaprueba. La falta de información nunca perjudica al alumno.') }}
+{% endblock %}

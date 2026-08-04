@@ -1,0 +1,157 @@
+{% extends 'ayuda/_tema.html.twig' %}
+{% import 'ayuda/_macros.html.twig' as m %}
+
+{% block contenido %}
+{% set esProfe = is_granted('ROLE_PROFESOR') and not is_granted('ROLE_ADMIN_INSTITUTO') %}
+
+<p>
+    Las notas se organizan en <strong>evaluaciones</strong>: cada evaluación es una instancia
+    con nombre y fecha (un parcial, un trabajo práctico, una muestra), y dentro de ella se carga
+    una nota por alumno.
+</p>
+
+{% if esProfe %}
+    <p>Se entra por {{ m.ruta(['Calificaciones']) }} en el menú.</p>
+{% else %}
+    <p>
+        Se entra por {{ m.ruta(['Alumnos', 'Calificaciones']) }}. Los profesores tienen su propio
+        acceso en {{ m.ruta(['Calificaciones']) }} y ven ahí <strong>solo los cursos que tienen
+        asignados</strong>; vos, como administrador del instituto, ves todos.
+    </p>
+{% endif %}
+
+<h2>Antes de empezar: la escala</h2>
+
+{% if esProfe %}
+    <p>
+        Para poder cargar notas, el instituto tiene que tener definida una escala. Si al entrar
+        ves un aviso de que las calificaciones no están habilitadas, pedile al administrador del
+        instituto que la configure.
+    </p>
+    <p>Según lo que haya elegido, vas a cargar:</p>
+{% else %}
+    <p>
+        El módulo arranca apagado. Primero hay que elegir la escala en
+        {{ m.ruta(['Configuración', 'Configuración académica']) }}. Mientras esté en
+        <em>"No usar calificaciones"</em>, la pantalla de calificaciones avisa que no está habilitada.
+    </p>
+    <p>Según la escala elegida, la grilla pide:</p>
+{% endif %}
+
+<ul>
+    <li><strong>Numérica</strong>: un número dentro del rango definido (por ejemplo 1 a 10).</li>
+    <li><strong>Conceptual</strong>: un concepto de la lista (Insuficiente, Bueno, Muy bueno…).</li>
+    <li><strong>Ambas</strong>: el número y el concepto.</li>
+</ul>
+
+<h2>1. Elegir el curso</h2>
+
+<p>
+    La primera pantalla lista los cursos disponibles con la cantidad de evaluaciones que ya
+    tienen. Clic en el curso para entrar.
+</p>
+
+{{ m.captura('notas-index.png', 'Listado de cursos con calificaciones') }}
+
+<h2>2. Crear una evaluación</h2>
+
+<ol>
+    <li>Dentro del curso, clic en <strong>Nueva evaluación</strong>.</li>
+    <li><strong>Nombre</strong>: cómo la vas a reconocer después ("Primer parcial", "TP integrador").</li>
+    <li><strong>Fecha</strong>: cuándo se tomó. Las evaluaciones se ordenan por esta fecha.</li>
+    <li>
+        <strong>Peso en el promedio</strong>: dejalo en 1 y todas las evaluaciones pesan igual.
+        Ponele 2 a un parcial y va a valer el doble que un trabajo con peso 1.
+    </li>
+    <li>
+        <strong>Cuenta para el promedio</strong>: desmarcalo para una evaluación diagnóstica o de
+        práctica. La nota se carga y se ve en el boletín, pero no entra en el promedio.
+    </li>
+    <li><strong>Descripción</strong>, opcional: temas, consigna, aclaraciones.</li>
+    <li>Guardar.</li>
+</ol>
+
+{{ m.captura('notas-evaluacion-nueva.png', 'Formulario de una evaluación nueva') }}
+
+<p>
+    La pantalla del curso muestra todas sus evaluaciones y, abajo, un
+    <strong>resumen por alumno</strong>: cuántas notas tiene, su promedio y si está aprobando.
+</p>
+
+{{ m.captura('notas-curso.png', 'Evaluaciones del curso y resumen por alumno') }}
+
+{{ m.nota('info', 'Cada evaluación se queda con la escala del día que se creó',
+   'Si el instituto cambia de escala más adelante, las evaluaciones ya creadas siguen
+    interpretándose con la escala con la que se cargaron. Así una nota nunca cambia de
+    significado por una modificación posterior en la configuración.') }}
+
+<h2>3. Cargar las notas</h2>
+
+<ol>
+    <li>Clic en <strong>Cargar notas</strong> en la evaluación.</li>
+    <li>Aparece la grilla con todos los alumnos inscriptos al curso.</li>
+    <li>Completá la nota de cada uno. <strong>Podés dejar filas vacías</strong>: un alumno sin nota queda como "sin calificar", no como desaprobado.</li>
+    <li>Tildá <strong>Ausente</strong> para el alumno que no se presentó a esa evaluación.</li>
+    <li>Si querés, agregá una <strong>observación</strong> por alumno.</li>
+    <li>Clic en <strong>Guardar notas</strong>. Se guarda toda la grilla de una vez.</li>
+</ol>
+
+{{ m.captura('notas-grilla.png', 'Grilla de carga de notas de una evaluación') }}
+
+<p>
+    Arriba de la grilla, un recuadro te recuerda con qué escala se está cargando esa evaluación
+    y desde qué valor aprueba.
+</p>
+
+<p>
+    Volver a entrar y guardar de nuevo <strong>corrige</strong> las notas existentes, no las
+    duplica. Se puede cargar en varias pasadas sin problema. Para <strong>borrar</strong> la nota
+    de un alumno, dejá vacía toda su fila y guardá.
+</p>
+
+{{ m.nota('warning', 'Curso cerrado = notas en solo lectura',
+   'Una vez que el curso se cierra, la grilla se muestra pero no se puede modificar. Es a
+    propósito: el cierre ya decidió aprobaciones sobre esas notas. Cargá todo antes de cerrar.') }}
+
+<h2>4. El boletín</h2>
+
+<p>
+    Desde el resumen del curso, cada alumno tiene un <strong>boletín</strong>: la lista de sus
+    evaluaciones con la nota de cada una, su promedio y su situación.
+</p>
+
+{{ m.captura('notas-boletin.png', 'Boletín de un alumno') }}
+
+<p>
+    La columna <strong>Peso</strong> muestra cuánto pesó cada evaluación; un guión significa peso
+    normal (1). Por eso el promedio no siempre es la media simple de las notas.
+</p>
+
+<p>
+    En el boletín está el botón para <strong>enviarlo por email</strong>. El sistema lo manda al
+    email del tutor si está cargado; si no, al del alumno. Cada envío queda registrado, así que
+    después se puede verificar que salió{% if not esProfe %} desde {{ m.ruta(['Historial de Emails']) }}{% endif %}.
+</p>
+
+{% if not esProfe %}
+<h2>Cómo se usan las notas al cerrar el curso</h2>
+
+<p>
+    Por default las notas <strong>no</strong> intervienen en el cierre: se cargan, se muestran y
+    se envían, y nada más. Para que cuenten hay que activar
+    <strong>"Requerir aprobar notas para aprobar el curso"</strong> en la configuración académica,
+    y elegir el criterio:
+</p>
+
+<ul>
+    <li><strong>Promedio</strong>: el promedio del alumno tiene que alcanzar la nota de aprobación.</li>
+    <li><strong>Todas</strong>: el alumno tiene que aprobar cada evaluación.</li>
+</ul>
+
+<p>
+    Un alumno sin notas cargadas queda como <em>sin datos</em> y <strong>no</strong> se
+    desaprueba por eso; en la vista previa del cierre aparece marcado para que lo veas antes
+    de confirmar.
+</p>
+{% endif %}
+{% endblock %}
