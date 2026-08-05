@@ -1049,16 +1049,19 @@ class AlumnosPagosController extends AbstractController
                 }
             }
 
+            // Los tres estados son mutuamente excluyentes. Antes un curso pagado completo
+            // entraba también en $cursosPagoCompleto, y la caja "Cursos al Día" se dibujaba
+            // vacía: el if que la muestra miraba si la lista tenía algo, pero el for de
+            // adentro descartaba justamente a los que ya estaban pagados completos.
             if ($vencidas > 0) {
                 $cursosVencidos[$cursoId] = $vencidas;
-            } else {
+            } elseif ($tieneMesAdeudadoTotal) {
+                // Al día: nada vencido, pero le quedan meses por pagar.
                 $cursosPagoCompleto[$cursoId] = true;
                 if ($porVencer > 0) {
                     $cursosPorVencer[$cursoId] = $porVencer;
                 }
-            }
-
-            if (!$tieneMesAdeudadoTotal) {
+            } else {
                 $cursosTotalmentePagados[$cursoId] = true;
             }
         }
