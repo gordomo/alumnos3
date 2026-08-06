@@ -59,6 +59,42 @@
     y quedan disponibles para elegir en el momento del cobro.
 </p>
 
+<h2>Cuota de inscripción anual</h2>
+
+<p>
+    Es un cargo que se le hace al alumno <strong>una vez por año</strong> y que no pertenece a
+    ningún curso. Se activa en la configuración con tres datos: prenderla, el
+    <strong>monto</strong> y el <strong>mes de cobro</strong>.
+</p>
+
+<p>Una vez activada:</p>
+
+<ul>
+    <li>
+        A los alumnos que <strong>inscribas de ahí en adelante</strong> se les genera sola al
+        momento de inscribirlos a cualquier curso.
+    </li>
+    <li>
+        A los que <strong>ya estaban inscriptos</strong> hay que generársela una vez. Eso lo hace
+        una tarea del servidor, la misma que hay que correr al empezar cada año nuevo. Si recién
+        activás la opción y no ves las cuotas, es eso lo que falta.
+    </li>
+</ul>
+
+<p>
+    La cuota aparece en {{ m.ruta(['Alumnos', 'Listado', 'Gestionar Deudas']) }}, en su propio
+    recuadro arriba de los cursos, con el botón para cobrarla. En el listado de deudas se
+    distingue con la etiqueta <strong>Inscripción</strong> en lugar de un curso.
+</p>
+
+{{ m.nota('info', 'No lleva recargo por mora',
+   'A diferencia de las cuotas mensuales, la de inscripción no acumula interés por vencimiento:
+    se cobra por el monto configurado.') }}
+
+{{ m.nota('warning', 'Si cambiás el monto, no cambian las ya generadas',
+   'Cada cuota guarda el monto que estaba configurado cuando se creó. Un aumento afecta a las
+    que se generen después, no a las que el alumno ya tiene pendientes.') }}
+
 <h2>Notificaciones por email</h2>
 
 <p>

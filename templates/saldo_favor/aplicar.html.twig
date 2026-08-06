@@ -61,13 +61,13 @@
                                         {% set pendiente = deuda.montoPendiente %}
                                         {% set maxAplicar = min(saldoFavor.montoDisponible, pendiente) %}
                                         <tr>
-                                            <td>{{ deuda.curso.nombre }}</td>
-                                            <td>{{ deuda.periodo }}</td>
+                                            <td>{{ deuda.curso ? deuda.curso.nombre : 'Cuota de inscripción' }}</td>
+                                            <td>{{ deuda.curso ? deuda.periodo : deuda.ano }}</td>
                                             <td class="text-end">${{ deuda.montoTotal|number_format(2, ',', '.') }}</td>
                                             <td class="text-end">${{ deuda.montoPagado|number_format(2, ',', '.') }}</td>
                                             <td class="text-end"><strong class="text-danger">${{ pendiente|number_format(2, ',', '.') }}</strong></td>
                                             <td>
-                                                <form method="post" action="{{ path('app_saldo_favor_aplicar', {'id': saldoFavor.id}) }}" class="d-inline-flex align-items-center gap-2" onsubmit="return confirm('¿Aplicar $' + this.monto_aplicar.value + ' del saldo a favor a la deuda de {{ deuda.periodo }} ({{ deuda.curso.nombre }})?');">
+                                                <form method="post" action="{{ path('app_saldo_favor_aplicar', {'id': saldoFavor.id}) }}" class="d-inline-flex align-items-center gap-2" onsubmit="return confirm('¿Aplicar $' + this.monto_aplicar.value + ' del saldo a favor a la deuda de {{ deuda.curso ? deuda.periodo : deuda.ano }} ({{ deuda.curso ? deuda.curso.nombre : 'Cuota de inscripción' }})?');">
                                                     <input type="hidden" name="_token" value="{{ csrf_token('saldo-favor-aplicar' ~ saldoFavor.id) }}">
                                                     <input type="hidden" name="deuda_id" value="{{ deuda.id }}">
                                                     <div class="input-group input-group-sm" style="width: 150px;">
@@ -106,8 +106,8 @@
                                 {% for app in saldoFavor.aplicaciones %}
                                     <tr>
                                         <td>{{ app.fechaAplicacion|date('d/m/Y H:i') }}</td>
-                                        <td>{{ app.deuda.periodo }}</td>
-                                        <td>{{ app.deuda.curso.nombre }}</td>
+                                        <td>{{ app.deuda.curso ? app.deuda.periodo : app.deuda.ano }}</td>
+                                        <td>{{ app.deuda.curso ? app.deuda.curso.nombre : 'Cuota de inscripción' }}</td>
                                         <td class="text-end">${{ app.montoAplicado|number_format(2, ',', '.') }}</td>
                                     </tr>
                                 {% endfor %}

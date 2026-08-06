@@ -35,8 +35,8 @@
         </thead>
         <tbody>
         <tr>
-            <td class="service">{{ alumnos_pago.curso.nombre }}</td>
-            <td class="desc"><b>Pago Cuota - {{ ('months.' ~ alumnos_pago.mes)|trans }}/{{ alumnos_pago.ano }}</b></td>
+            <td class="service">{{ alumnos_pago.curso ? alumnos_pago.curso.nombre : 'Cuota de inscripción' }}</td>
+            <td class="desc"><b>{% if alumnos_pago.curso %}Pago Cuota - {{ ('months.' ~ alumnos_pago.mes)|trans }}/{{ alumnos_pago.ano }}{% else %}Cuota de inscripción {{ alumnos_pago.ano }}{% endif %}</b></td>
             <td class="unit">${{ alumnos_pago.monto }}</td>
             <td class="unit">${{ alumnos_pago.monto }}</td>
         </tr>

@@ -461,7 +461,7 @@
                 <tr>
                     <td>{{ pago.fecha|date(app_date_format|default('d/m/Y')) }}</td>
                     <td>{{ pago.alumno.apellido }}, {{ pago.alumno.nombre }}</td>
-                    <td>{{ pago.curso.nombre }}</td>
+                    <td>{{ pago.curso ? pago.curso.nombre : 'Cuota de inscripción' }}</td>
                                             <td><strong>${{ pago.monto|number_format(2, ',', '.') }}</strong></td>
                                             <td><span class="badge bg-secondary">{{ pago.metodoPago }}</span></td>
                     <td>{{ nombresMeses[pago.mes] ?? pago.mes }}</td>
@@ -667,7 +667,13 @@
                                                 <td>
                                                     <strong>{{ deuda.alumno.apellido }}, {{ deuda.alumno.nombre }}</strong>
                                                 </td>
-                                                <td>{{ deuda.curso.nombre }}</td>
+                                                <td>
+                                                    {% if deuda.curso %}
+                                                        {{ deuda.curso.nombre }}
+                                                    {% else %}
+                                                        <span class="badge bg-warning text-dark"><i class="bi bi-person-plus"></i> Inscripción</span>
+                                                    {% endif %}
+                                                </td>
                                                 <td>
                                                     <span class="badge bg-secondary">
                                                         {{ nombresMeses[deuda.mes] ?? deuda.mes }} {{ deuda.ano }}
@@ -688,12 +694,16 @@
                                                             <a href="{{ path('app_alumnos_pagos_new', {'id': deuda.alumno.id}) }}" class="btn btn-sm btn-success" title="Registrar pago">
                                                                 <i class="bi bi-cash-coin"></i> Pagar
                                                             </a>
+                                                            {# La ruta de cancelar es por curso, mes y año, así que no aplica a la
+                                                               cuota de inscripción, que no tiene curso. #}
+                                                            {% if deuda.curso %}
                                                             <form method="post" action="{{ path('app_alumno_cancelar_deuda', {'id': deuda.alumno.id, 'cursoId': deuda.curso.id, 'mes': deuda.mes, 'ano': deuda.ano, 'return_url': app.request.uri}) }}" onsubmit="return confirm('¿Está seguro de cancelar esta deuda?');" style="display:inline;">
                                                                 <input type="hidden" name="_token" value="{{ csrf_token('cancelar-deuda' ~ deuda.curso.id ~ '-' ~ deuda.mes ~ '-' ~ deuda.ano) }}">
                                                                 <button type="submit" class="btn btn-sm btn-outline-danger" title="Cancelar deuda">
                                                                     <i class="bi bi-x-circle"></i>
                                                                 </button>
                                                             </form>
+                                                            {% endif %}
                                                         </div>
                                                     {% else %}
                                                         <span class="text-muted small">Completa</span>

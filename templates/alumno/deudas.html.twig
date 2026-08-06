@@ -45,7 +45,46 @@
                                 </a>
                             </div>
                         {% endif %}
-                        
+
+                        {# Cuota de inscripción anual: va en su propio bloque porque no
+                           pertenece a ningún curso ni a ningún mes de cursada. #}
+                        {% if cuotasInscripcion is defined and cuotasInscripcion|length > 0 %}
+                            <div class="card border-warning mb-3">
+                                <div class="card-header bg-warning bg-opacity-25">
+                                    <strong><i class="bi bi-person-plus"></i> Cuota de inscripción</strong>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-sm mb-0 align-middle">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Año</th>
+                                                <th class="text-end">Monto</th>
+                                                <th class="text-end">Pendiente</th>
+                                                <th class="text-end">Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for cuota in cuotasInscripcion %}
+                                                <tr>
+                                                    <td><strong>{{ cuota.ano }}</strong></td>
+                                                    <td class="text-end">${{ cuota.monto|number_format(2, ',', '.') }}</td>
+                                                    <td class="text-end text-danger">
+                                                        <strong>${{ cuota.montoPendiente|number_format(2, ',', '.') }}</strong>
+                                                    </td>
+                                                    <td class="text-end">
+                                                        <a href="{{ path('app_alumnos_pagos_por_deuda', {'id': cuota.id}) }}"
+                                                           class="btn btn-sm btn-success">
+                                                            <i class="bi bi-cash-coin"></i> Registrar pago
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        {% endif %}
+
                         <div class="alert alert-secondary">
                             <h5><i class="bi bi-book"></i> Cursos del alumno</h5>
                             {% for cursoId, datos in deudasPorCurso %}

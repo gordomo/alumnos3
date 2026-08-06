@@ -367,8 +367,15 @@ class PagoService
     {
         $alumno = $pago->getAlumno();
         $curso = $pago->getCurso();
-        
+
         if ($pago->getMes() === null || $pago->getAno() === null) {
+            return;
+        }
+
+        // Un pago que no es de un curso no tiene inscripción a la que colgarse: es el caso de
+        // la cuota de inscripción anual. Sin este corte, seguía de largo, no encontraba
+        // histórico y terminaba llamando a inscribirAlumnoEnCurso() con el curso en null.
+        if ($curso === null) {
             return;
         }
         

@@ -87,7 +87,7 @@ class TestNotificationCommand extends Command
                     
                     if ($enviado) {
                         $io->success("Email de recibo enviado a: {$emailDestino}");
-                        $io->note("Pago usado: ID {$pago->getId()} - {$alumno->getNombre()} {$alumno->getApellido()} - {$pago->getCurso()->getNombre()}");
+                        $io->note("Pago usado: ID {$pago->getId()} - {$alumno->getNombre()} {$alumno->getApellido()} - {($pago->getCurso() ? $pago->getCurso()->getNombre() : 'Cuota de inscripcion')}");
                         $io->note("Instituto: {$alumno->getInstituto()->getNombre()}");
                         $io->note("Email remitente: " . ($alumno->getInstituto()->getEmail() ?? 'noreply@instituto.com'));
                     } else {

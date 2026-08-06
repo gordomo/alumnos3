@@ -17,14 +17,18 @@ class HistorialCursosService
     private $deudaService;
     private $institutoTimezoneService;
 
+    private ?CuotaInscripcionService $cuotaInscripcionService = null;
+
     public function __construct(
         EntityManagerInterface $entityManager, 
         InstitutoTimezoneService $institutoTimezoneService,
-        DeudaService $deudaService = null
+        DeudaService $deudaService = null,
+        CuotaInscripcionService $cuotaInscripcionService = null
     ) {
         $this->entityManager = $entityManager;
         $this->institutoTimezoneService = $institutoTimezoneService;
         $this->deudaService = $deudaService;
+        $this->cuotaInscripcionService = $cuotaInscripcionService;
     }
 
     /**
@@ -78,9 +82,17 @@ class HistorialCursosService
             return $historico;
         }
         
-        // Las deudas se calculan on-demand (DeudaCalculatorService) y se crean en tabla
-        // solo al momento de registrar un pago (PagoService). No es necesario pre-generarlas.
-        
+        // Las deudas mensuales se calculan on-demand (DeudaCalculatorService) y se crean en
+        // tabla solo al momento de registrar un pago (PagoService). No hace falta pre-generarlas.
+        //
+        // La cuota de inscripcion anual es distinta: no se deriva de ningun curso ni mes, asi
+        // que si no se crea acá no existe en ningún lado. El servicio no hace nada si el
+        // instituto no la tiene activada, si no hay monto, si todavia no llego el mes de cobro
+        // o si el alumno ya la tiene de este ano.
+        if ($this->cuotaInscripcionService) {
+            $this->cuotaInscripcionService->verificarYGenerarCuotaInscripcion($alumno);
+        }
+
         return $historico;
     }
     

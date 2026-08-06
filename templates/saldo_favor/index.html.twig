@@ -105,7 +105,7 @@
                                                                 <li>
                                                                     {{ app.fechaAplicacion|date('d/m/Y') }} — 
                                                                     ${{ app.montoAplicado|number_format(2, ',', '.') }} aplicado a 
-                                                                    {{ app.deuda.periodo }} ({{ app.deuda.curso.nombre }})
+                                                                    {{ app.deuda.curso ? app.deuda.periodo : app.deuda.ano }} ({{ app.deuda.curso ? app.deuda.curso.nombre : 'Cuota de inscripción' }})
                                                                 </li>
                                                             {% endfor %}
                                                         </ul>

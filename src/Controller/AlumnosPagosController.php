@@ -2080,7 +2080,7 @@ class AlumnosPagosController extends AbstractController
                         $instituto,
                         'pago.edit',
                         $this->getUser(),
-                        'Editar pago: ' . $pago->getAlumno()->getNombreApellido() . ' - ' . $pago->getCurso()->getNombre() . ' (' . $pago->getMes() . '/' . $pago->getAno() . ')',
+                        'Editar pago: ' . $pago->getAlumno()->getNombreApellido() . ' - ' . ($pago->getCurso() ? $pago->getCurso()->getNombre() : 'Cuota de inscripcion') . ' (' . $pago->getMes() . '/' . $pago->getAno() . ')',
                         'AlumnosPagos',
                         $pago->getId()
                     );
@@ -2138,7 +2138,7 @@ class AlumnosPagosController extends AbstractController
                 $instituto,
                 'pago.delete',
                 $this->getUser(),
-                'Eliminar pago: ' . $pago->getAlumno()->getNombreApellido() . ' - ' . $pago->getCurso()->getNombre() . ' (' . $pago->getMes() . '/' . $pago->getAno() . ')',
+                'Eliminar pago: ' . $pago->getAlumno()->getNombreApellido() . ' - ' . ($pago->getCurso() ? $pago->getCurso()->getNombre() : 'Cuota de inscripcion') . ' (' . $pago->getMes() . '/' . $pago->getAno() . ')',
                 'AlumnosPagos',
                 $pago->getId()
             );

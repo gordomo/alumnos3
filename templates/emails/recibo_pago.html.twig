@@ -113,8 +113,8 @@
                     <span class="info-value">{{ pago.fecha|date(app_date_format|default('d/m/Y')) }}</span>
                 </div>
                 <div class="info-row">
-                    <span class="info-label">Curso:</span>
-                    <span class="info-value">{{ pago.curso.nombre }}</span>
+                    <span class="info-label">{% if pago.curso %}Curso{% else %}Concepto{% endif %}:</span>
+                    <span class="info-value">{{ pago.curso ? pago.curso.nombre : 'Cuota de inscripción' }}</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Mes/Año:</span>

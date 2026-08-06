@@ -123,13 +123,21 @@ class CuotaInscripcionService
         $omitidas = 0;
 
         foreach ($alumnosActivos as $alumno) {
+            // Se pregunta antes en vez de mirar si el id quedó en null:
+            // generarCuotaInscripcionParaAlumno() hace flush antes de devolver, así que el id
+            // siempre viene cargado y "generadas" contaba siempre 0.
+            $yaTenia = $this->getCuotaInscripcionPorAno($alumno, $ano) !== null;
+
             $deuda = $this->generarCuotaInscripcionParaAlumno($alumno, $ano);
-            if ($deuda && $deuda->getId() === null) {
-                // Es una deuda nueva
-                $generadas++;
-            } else {
-                // Ya existía
+
+            if ($deuda === null) {
+                continue;
+            }
+
+            if ($yaTenia) {
                 $omitidas++;
+            } else {
+                $generadas++;
             }
         }
 
@@ -186,8 +194,37 @@ class CuotaInscripcionService
     }
 
     /**
+     * Cuotas de inscripción del alumno que todavía tienen saldo pendiente, de la más nueva
+     * a la más vieja.
+     *
+     * @return DeudaAlumno[]
+     */
+    public function getCuotasPendientes(Alumno $alumno): array
+    {
+        return array_values(array_filter(
+            $this->getCuotasInscripcionAlumno($alumno),
+            static function (DeudaAlumno $deuda) {
+                return $deuda->getMontoPendiente() > 0;
+            }
+        ));
+    }
+
+    /**
+     * Cuánto le falta pagar al alumno en concepto de inscripción, sumando todos los años.
+     */
+    public function getTotalPendiente(Alumno $alumno): float
+    {
+        $total = 0.0;
+        foreach ($this->getCuotasPendientes($alumno) as $deuda) {
+            $total += $deuda->getMontoPendiente();
+        }
+
+        return $total;
+    }
+
+    /**
      * Obtiene la cuota de inscripción de un alumno para un año específico
-     * 
+     *
      * @param Alumno $alumno El alumno
      * @param int $ano El año
      * @return DeudaAlumno|null La deuda o null si no existe

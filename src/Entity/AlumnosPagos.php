@@ -68,8 +68,15 @@ class AlumnosPagos
     private $metodoPago;
 
     /**
+     * Inscripción a la que corresponde el pago.
+     *
+     * Null para los pagos que no son de un curso, como la cuota de inscripción anual: esa se
+     * le cobra al alumno una vez al año y no pertenece a ninguna materia. Se verificó que
+     * getCursoHistorico() sobre un pago se usa en un solo lugar del proyecto, y es una
+     * comparación de identidad que ya tolera null.
+     *
      * @ORM\ManyToOne(targetEntity=AlumnoCursoHistorico::class, inversedBy="pagos")
-     * @ORM\JoinColumn(nullable=false)
+     * @ORM\JoinColumn(nullable=true)
      */
     private $cursoHistorico;
 

@@ -128,7 +128,7 @@
             <div class="deuda-info">
                 <div class="info-row">
                     <span class="info-label">{% if variasCuotas %}Cuota más antigua{% else %}Curso{% endif %}:</span>
-                    <span class="info-value">{{ deuda.curso.nombre }}</span>
+                    <span class="info-value">{{ deuda.curso ? deuda.curso.nombre : 'Cuota de inscripción' }}</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Mes/Año:</span>

@@ -704,7 +704,7 @@ class AlumnoController extends AbstractController
     /**
      * @Route("/{id}/deudas", name="app_alumno_deudas", methods={"GET"})
      */
-    public function verDeudas(Alumno $alumno, CursoRepository $cursoRepository, \App\Service\DeudaCalculatorService $deudaCalculator, \App\Repository\DeudaAlumnoRepository $deudaAlumnoRepository, \App\Repository\SaldoFavorRepository $saldoFavorRepository): Response
+    public function verDeudas(Alumno $alumno, CursoRepository $cursoRepository, \App\Service\DeudaCalculatorService $deudaCalculator, \App\Repository\DeudaAlumnoRepository $deudaAlumnoRepository, \App\Repository\SaldoFavorRepository $saldoFavorRepository, \App\Service\CuotaInscripcionService $cuotaInscripcionService): Response
     {
         // Verificar que el alumno pertenece al instituto del usuario actual
         $instituto = $this->getUser()->getInstituto();
@@ -821,6 +821,9 @@ class AlumnoController extends AbstractController
             'primerDiaVencimiento' => $primerDiaVencimiento,
             'estadoPorCurso' => $estadoPorCurso,
             'saldoFavorTotal' => $saldoFavorRepository->getSaldoDisponibleTotal($alumno),
+            // La cuota de inscripción no cuelga de ningún curso, así que no entra en
+            // deudasPorCurso: va en su propio bloque.
+            'cuotasInscripcion' => $cuotaInscripcionService->getCuotasPendientes($alumno),
         ]);
     }
 

@@ -138,7 +138,7 @@
             <div class="detail-value">
                 Pago #{{ email.pago.id }} - ${{ email.pago.monto|number_format(2, ',', '.') }}
                 <br>
-                <small class="text-muted">{{ email.pago.curso.nombre }} - {{ email.pago.mes }}/{{ email.pago.ano }}</small>
+                <small class="text-muted">{{ email.pago.curso ? email.pago.curso.nombre : 'Cuota de inscripción' }} - {{ email.pago.mes }}/{{ email.pago.ano }}</small>
             </div>
         </div>
         {% endif %}
@@ -151,7 +151,7 @@
             <div class="detail-value">
                 Deuda #{{ email.deuda.id }} - ${{ email.deuda.monto|number_format(2, ',', '.') }}
                 <br>
-                <small class="text-muted">{{ email.deuda.curso.nombre }} - {{ email.deuda.mes }}/{{ email.deuda.ano }}</small>
+                <small class="text-muted">{{ email.deuda.curso ? email.deuda.curso.nombre : 'Cuota de inscripción' }} - {{ email.deuda.mes }}/{{ email.deuda.ano }}</small>
             </div>
         </div>
         {% endif %}

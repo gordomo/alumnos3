@@ -94,10 +94,10 @@
                         <div class="list-group">
                             {% for deuda in deudasPendientes %}
                                 <div class="list-group-item">
-                                    <h6 class="mb-1">{{ deuda.curso.nombre }}</h6>
+                                    <h6 class="mb-1">{{ deuda.curso ? deuda.curso.nombre : 'Cuota de inscripción' }}</h6>
                                     <p class="mb-1 text-muted small">
                                         <strong>Período:</strong> {{ deuda.mes }}/{{ deuda.ano }}<br>
-                                        <strong>Monto:</strong> ${{ deuda.curso.precio|number_format(2, ',', '.') }}
+                                        <strong>Monto:</strong> ${{ deuda.montoTotal|number_format(2, ',', '.') }}
                                     </p>
                                 </div>
                             {% endfor %}
@@ -177,7 +177,7 @@
                                     {% for pago in pagosRecientes %}
                                         <tr>
                                             <td>{{ pago.fecha|date(app_date_format|default('d/m/Y')) }}</td>
-                                            <td>{{ pago.curso.nombre }}</td>
+                                            <td>{{ pago.curso ? pago.curso.nombre : 'Cuota de inscripción' }}</td>
                                             <td>${{ pago.monto|number_format(2, ',', '.') }}</td>
                                         </tr>
                                     {% endfor %}

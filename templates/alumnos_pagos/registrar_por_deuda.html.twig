@@ -41,14 +41,24 @@
                                         <p class="mb-0 fw-bold">{{ deuda.alumno.nombre }} {{ deuda.alumno.apellido }}</p>
                                     </div>
                                     
+                                    {# La cuota de inscripción anual no pertenece a ningún curso,
+                                       así que acá deuda.curso viene en null. #}
                                     <div class="mb-3">
-                                        <label class="text-muted small">Curso</label>
-                                        <p class="mb-0 fw-bold">{{ deuda.curso.nombre }}</p>
+                                        <label class="text-muted small">Concepto</label>
+                                        <p class="mb-0 fw-bold">
+                                            {% if deuda.curso %}
+                                                {{ deuda.curso.nombre }}
+                                            {% else %}
+                                                <i class="bi bi-person-plus"></i> Cuota de inscripción
+                                            {% endif %}
+                                        </p>
                                     </div>
-                                    
+
                                     <div class="mb-3">
-                                        <label class="text-muted small">Período</label>
-                                        <p class="mb-0 fw-bold">{{ deuda.periodo }}</p>
+                                        <label class="text-muted small">{% if deuda.curso %}Período{% else %}Año{% endif %}</label>
+                                        <p class="mb-0 fw-bold">
+                                            {% if deuda.curso %}{{ deuda.periodo }}{% else %}{{ deuda.ano }}{% endif %}
+                                        </p>
                                     </div>
                                     
                                     <hr>
