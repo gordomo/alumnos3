@@ -374,6 +374,25 @@
                                                 </td>
                                             </tr>
                                             <tr>
+                                                <th>Áreas de evaluación:</th>
+                                                <td>
+                                                    {% set areasActivas = configuracion.areasEvaluacionActivas %}
+                                                    {% if areasActivas is empty %}
+                                                        <span class="badge bg-secondary">Sin áreas</span>
+                                                        <small class="text-muted d-block">
+                                                            La libreta lista las evaluaciones sueltas en lugar de agruparlas por eje.
+                                                        </small>
+                                                    {% else %}
+                                                        {% for area in areasActivas %}
+                                                            <span class="badge bg-dark">
+                                                                {% if area.icono %}<i class="bi {{ area.icono }}"></i>{% endif %}
+                                                                {{ area.nombre }}
+                                                            </span>
+                                                        {% endfor %}
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                            <tr>
                                                 <th>Las notas influyen en la aprobación:</th>
                                                 <td>
                                                     {% if configuracion.notasInfluyenAprobacion and configuracion.modoCalificacion != 'ninguno' %}

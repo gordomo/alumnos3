@@ -65,6 +65,10 @@
         desplegable, porque esas no se proponen solas.
     </li>
     <li>
+        <strong>Área</strong>, si el instituto tiene ejes cargados (Writing, Listening…).
+        Es lo que agrupa la evaluación en la libreta. Dejalo sin área si es integradora.
+    </li>
+    <li>
         <strong>Peso en el promedio</strong>: dejalo en 1 y todas las evaluaciones pesan igual.
         Ponele 2 a un parcial y va a valer el doble que un trabajo con peso 1.
     </li>
@@ -133,9 +137,10 @@
 </p>
 
 <p>
-    En el boletín está el botón para <strong>enviarlo por email</strong>. El sistema lo manda al
-    email del tutor si está cargado; si no, al del alumno. Cada envío queda registrado, así que
-    después se puede verificar que salió{% if not esProfe %} desde {{ m.ruta(['Historial de Emails']) }}{% endif %}.
+    En el boletín está el botón para <strong>enviarlo por email</strong>. Va a las direcciones que
+    corresponda según la configuración del instituto —solo el alumno, solo el tutor, o los dos—.
+    Cada envío queda registrado, así que después se puede verificar que
+    salió{% if not esProfe %} desde {{ m.ruta(['Historial de Emails']) }}{% endif %}.
 </p>
 
 {% if not esProfe %}

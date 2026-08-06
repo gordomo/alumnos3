@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\AreaEvaluacion;
 use App\Entity\ConceptoCalificacion;
 use App\Entity\PeriodoAcademico;
 use App\Entity\Instituto;
@@ -9,6 +10,7 @@ use App\Entity\InstitutoConfiguracion;
 use App\Entity\Vencimiento;
 use App\Entity\DescuentoPromocional;
 use App\Entity\MetodoPago;
+use App\Repository\AreaEvaluacionRepository;
 use App\Repository\ConceptoCalificacionRepository;
 use App\Repository\PeriodoAcademicoRepository;
 use App\Repository\VencimientoRepository;
@@ -43,7 +45,7 @@ class InstitutoConfigController extends AbstractController
     /**
      * @Route("/", name="instituto_config_index", methods={"GET"})
      */
-    public function index(VencimientoRepository $vencimientoRepository, InstitutoConfiguracionRepository $configuracionRepository, DescuentoPromocionalRepository $descuentoPromocionalRepository, MetodoPagoRepository $metodoPagoRepository, ConceptoCalificacionRepository $conceptoRepository, PeriodoAcademicoRepository $periodoRepository): Response
+    public function index(VencimientoRepository $vencimientoRepository, InstitutoConfiguracionRepository $configuracionRepository, DescuentoPromocionalRepository $descuentoPromocionalRepository, MetodoPagoRepository $metodoPagoRepository, ConceptoCalificacionRepository $conceptoRepository, PeriodoAcademicoRepository $periodoRepository, AreaEvaluacionRepository $areaRepository): Response
     {
         $instituto = $this->getUser()->getInstituto();
         $vencimientos = $vencimientoRepository->findByInstitutoOrdered($instituto);
@@ -61,6 +63,7 @@ class InstitutoConfigController extends AbstractController
             'descuentosPromocionales' => $descuentosPromocionales,
             'conceptosCalificacion' => $conceptoRepository->findByInstituto($instituto, false),
             'periodosAcademicos' => $periodoRepository->findByInstituto($instituto, false),
+            'areasEvaluacion' => $areaRepository->findByInstituto($instituto, false),
         ]);
     }
 
@@ -77,7 +80,8 @@ class InstitutoConfigController extends AbstractController
         DescuentoPromocionalRepository $descuentoPromocionalRepository,
         MetodoPagoRepository $metodoPagoRepository,
         ConceptoCalificacionRepository $conceptoRepository,
-        PeriodoAcademicoRepository $periodoRepository
+        PeriodoAcademicoRepository $periodoRepository,
+        AreaEvaluacionRepository $areaRepository
     ): Response {
         $instituto = $this->getUser()->getInstituto();
         $configuracion = $configuracionRepository->findOrCreateByInstituto($instituto);
@@ -285,6 +289,7 @@ class InstitutoConfigController extends AbstractController
             'metodos_pago' => $metodosPago,
             'conceptosCalificacion' => $conceptoRepository->findByInstituto($instituto, false),
             'periodosAcademicos' => $periodoRepository->findByInstituto($instituto, false),
+            'areasEvaluacion' => $areaRepository->findByInstituto($instituto, false),
         ]);
     }
 
@@ -740,7 +745,8 @@ class InstitutoConfigController extends AbstractController
         Request $request,
         EntityManagerInterface $entityManager,
         ConceptoCalificacionRepository $conceptoRepository,
-        PeriodoAcademicoRepository $periodoRepository
+        PeriodoAcademicoRepository $periodoRepository,
+        AreaEvaluacionRepository $areaRepository
     ): Response {
         $instituto = $this->getUser()->getInstituto();
         if ($concepto->getInstituto() !== $instituto) {
@@ -867,7 +873,8 @@ class InstitutoConfigController extends AbstractController
         PeriodoAcademico $periodo,
         Request $request,
         EntityManagerInterface $entityManager,
-        PeriodoAcademicoRepository $periodoRepository
+        PeriodoAcademicoRepository $periodoRepository,
+        AreaEvaluacionRepository $areaRepository
     ): Response {
         $instituto = $this->getUser()->getInstituto();
         if ($periodo->getInstituto() !== $instituto) {
@@ -897,6 +904,129 @@ class InstitutoConfigController extends AbstractController
         $entityManager->flush();
 
         $this->addFlash('success', sprintf('Período "%s" eliminado.', $nombre));
+        return $this->redirectToRoute('instituto_config_index', ['tab' => 'general']);
+    }
+    /**
+     * @Route("/area-evaluacion/new", name="instituto_config_area_new", methods={"POST"})
+     */
+    public function newAreaEvaluacion(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        AreaEvaluacionRepository $areaRepository,
+        InstitutoConfiguracionRepository $configuracionRepository
+    ): Response {
+        $instituto = $this->getUser()->getInstituto();
+
+        if (!$this->isCsrfTokenValid('area_new', (string) $request->request->get('_token'))) {
+            $this->addFlash('danger', 'Token de seguridad inválido.');
+            return $this->redirectToRoute('instituto_config_index', ['tab' => 'general']);
+        }
+
+        $nombre = trim((string) $request->request->get('nombre'));
+        if ($nombre === '') {
+            $this->addFlash('danger', 'El nombre del área no puede estar vacío.');
+            return $this->redirectToRoute('instituto_config_index', ['tab' => 'general']);
+        }
+
+        $configuracion = $configuracionRepository->findOneBy(['instituto' => $instituto]);
+        if (!$configuracion) {
+            $configuracion = new InstitutoConfiguracion();
+            $configuracion->setInstituto($instituto);
+            $entityManager->persist($configuracion);
+        }
+
+        $area = new AreaEvaluacion();
+        $area->setInstituto($instituto);
+        $area->setConfiguracion($configuracion);
+        $area->setNombre($nombre);
+        $area->setAbreviatura($request->request->get('abreviatura'));
+        $area->setIcono($request->request->get('icono'));
+        $area->setOrden($areaRepository->siguienteOrden($instituto));
+
+        $entityManager->persist($area);
+        $entityManager->flush();
+
+        $this->addFlash('success', sprintf('Área "%s" agregada.', $nombre));
+        return $this->redirectToRoute('instituto_config_index', ['tab' => 'general']);
+    }
+
+    /**
+     * @Route("/area-evaluacion/{id}/edit", name="instituto_config_area_edit", methods={"POST"})
+     */
+    public function editAreaEvaluacion(
+        AreaEvaluacion $area,
+        Request $request,
+        EntityManagerInterface $entityManager
+    ): Response {
+        $instituto = $this->getUser()->getInstituto();
+        if ($area->getInstituto() !== $instituto) {
+            throw $this->createAccessDeniedException();
+        }
+
+        if (!$this->isCsrfTokenValid('area_edit' . $area->getId(), (string) $request->request->get('_token'))) {
+            $this->addFlash('danger', 'Token de seguridad inválido.');
+            return $this->redirectToRoute('instituto_config_index', ['tab' => 'general']);
+        }
+
+        $nombre = trim((string) $request->request->get('nombre'));
+        if ($nombre !== '') {
+            $area->setNombre($nombre);
+        }
+
+        $area->setAbreviatura($request->request->get('abreviatura'));
+        $area->setIcono($request->request->get('icono'));
+
+        $orden = $request->request->get('orden');
+        if ($orden !== '' && $orden !== null) {
+            $area->setOrden((int) $orden);
+        }
+
+        $entityManager->flush();
+
+        $this->addFlash('success', 'Área actualizada.');
+        return $this->redirectToRoute('instituto_config_index', ['tab' => 'general']);
+    }
+
+    /**
+     * Desactiva el área en lugar de borrarla si ya tiene evaluaciones asignadas: borrarla las
+     * dejaría sin área y la libreta perdería la fila.
+     *
+     * @Route("/area-evaluacion/{id}/delete", name="instituto_config_area_delete", methods={"POST"})
+     */
+    public function deleteAreaEvaluacion(
+        AreaEvaluacion $area,
+        Request $request,
+        EntityManagerInterface $entityManager,
+        AreaEvaluacionRepository $areaRepository
+    ): Response {
+        $instituto = $this->getUser()->getInstituto();
+        if ($area->getInstituto() !== $instituto) {
+            throw $this->createAccessDeniedException();
+        }
+
+        if (!$this->isCsrfTokenValid('area_delete' . $area->getId(), (string) $request->request->get('_token'))) {
+            $this->addFlash('danger', 'Token de seguridad inválido.');
+            return $this->redirectToRoute('instituto_config_index', ['tab' => 'general']);
+        }
+
+        $usos = $areaRepository->contarUsos($area);
+        if ($usos > 0) {
+            $area->setActivo(false);
+            $entityManager->flush();
+            $this->addFlash('warning', sprintf(
+                'El área "%s" tiene %d evaluación(es) asignada(s), así que se desactivó en lugar de borrarse. No se va a ofrecer más al crear evaluaciones, pero las existentes la conservan.',
+                $area->getNombre(),
+                $usos
+            ));
+
+            return $this->redirectToRoute('instituto_config_index', ['tab' => 'general']);
+        }
+
+        $nombre = $area->getNombre();
+        $entityManager->remove($area);
+        $entityManager->flush();
+
+        $this->addFlash('success', sprintf('Área "%s" eliminada.', $nombre));
         return $this->redirectToRoute('instituto_config_index', ['tab' => 'general']);
     }
 }

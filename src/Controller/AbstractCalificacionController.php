@@ -15,6 +15,7 @@ use App\Service\EscalaCalificacionService;
 use App\Service\InstitutoTimezoneService;
 use App\Service\NotificationService;
 use App\Service\PromedioCalificacionService;
+use App\Repository\AreaEvaluacionRepository;
 use App\Repository\PeriodoAcademicoRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -41,7 +42,8 @@ abstract class AbstractCalificacionController extends AbstractController
         protected EntityManagerInterface $entityManager,
         protected CalificacionRepository $calificacionRepository,
         protected NotificationService $notificationService,
-        protected PeriodoAcademicoRepository $periodoRepository
+        protected PeriodoAcademicoRepository $periodoRepository,
+        protected AreaEvaluacionRepository $areaRepository
     ) {
     }
 
@@ -139,6 +141,7 @@ abstract class AbstractCalificacionController extends AbstractController
 
         $instituto = $curso->getInstituto();
         $periodos = $this->periodoRepository->findByInstituto($instituto);
+        $areas = $this->areaRepository->findByInstituto($instituto);
 
         $esNueva = $evaluacion === null;
         if ($esNueva) {
@@ -156,6 +159,7 @@ abstract class AbstractCalificacionController extends AbstractController
             'date_format' => $dateFormat,
             'curso' => $curso,
             'periodos' => $periodos,
+            'areas' => $areas,
         ]);
         $form->handleRequest($request);
 

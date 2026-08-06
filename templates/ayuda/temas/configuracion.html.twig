@@ -216,6 +216,40 @@
     columna de período aparece un guión.
 </p>
 
+<h3>Áreas de evaluación</h3>
+
+<p>
+    Son los <strong>ejes</strong> sobre los que calificás: Writing, Listening, Speaking, o
+    Técnica y Ritmo si es una escuela de música. Se cargan una vez y valen para todo el
+    instituto.
+</p>
+
+<ol>
+    <li>En la configuración académica, clic en <strong>Agregar área</strong>.</li>
+    <li><strong>Nombre</strong>: cómo se llama el eje.</li>
+    <li><strong>Nombre corto</strong>, opcional: para la libreta, donde el espacio de la fila es acotado.</li>
+    <li>
+        <strong>Ícono</strong>, opcional: el nombre de un ícono de Bootstrap Icons, empezando
+        con <code>bi-</code> (por ejemplo <code>bi-pencil</code>, <code>bi-ear</code>).
+    </li>
+</ol>
+
+<p>
+    Al crear una evaluación aparece el campo <strong>Área</strong>. Con las áreas y los períodos
+    cargados, la libreta se arma como una <strong>grilla de áreas por período</strong>, y cada
+    celda sale del promedio de las evaluaciones de esa área en ese período.
+</p>
+
+{{ m.nota('info', 'El profesor no carga nada nuevo',
+   'La grilla se calcula. El profesor sigue creando evaluaciones y cargando notas como siempre;
+    lo único que cambia es que ahora indica a qué eje corresponde cada evaluación.') }}
+
+<p>
+    Una evaluación puede quedar <strong>sin área</strong>: es el caso de una integradora. No
+    entra en la grilla, pero sigue contando para el promedio general del curso. El orden de las
+    áreas es el orden de las filas de la libreta.
+</p>
+
 <h3>3. Notas</h3>
 <p>
     Para usar notas primero hay que elegir la <strong>escala</strong>. Mientras la escala esté

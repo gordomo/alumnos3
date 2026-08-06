@@ -222,6 +222,15 @@ class InstitutoConfiguracion
     private $periodosAcademicos;
 
     /**
+     * Ejes sobre los que se califica: Writing, Listening, Speaking. Vacío significa que el
+     * instituto no separa por áreas y la libreta lista las evaluaciones sueltas.
+     *
+     * @ORM\OneToMany(targetEntity=AreaEvaluacion::class, mappedBy="configuracion", cascade={"persist"})
+     * @ORM\OrderBy({"orden" = "ASC"})
+     */
+    private $areasEvaluacion;
+
+    /**
      * Si es true, se cobrará una cuota de inscripción anual a todos los alumnos.
      *
      * @ORM\Column(type="boolean", options={"default": false})
@@ -256,6 +265,7 @@ class InstitutoConfiguracion
         $this->descuentosPromocionales = new ArrayCollection();
         $this->conceptosCalificacion = new ArrayCollection();
         $this->periodosAcademicos = new ArrayCollection();
+        $this->areasEvaluacion = new ArrayCollection();
     }
 
     public function getModoCalificacion(): string
@@ -439,6 +449,51 @@ class InstitutoConfiguracion
     public function removePeriodoAcademico(PeriodoAcademico $periodo): self
     {
         $this->periodosAcademicos->removeElement($periodo);
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, AreaEvaluacion>
+     */
+    public function getAreasEvaluacion(): Collection
+    {
+        return $this->areasEvaluacion;
+    }
+
+    /**
+     * @return AreaEvaluacion[]
+     */
+    public function getAreasEvaluacionActivas(): array
+    {
+        $activas = [];
+        foreach ($this->areasEvaluacion as $area) {
+            if ($area->isActivo()) {
+                $activas[] = $area;
+            }
+        }
+
+        return $activas;
+    }
+
+    public function usaAreas(): bool
+    {
+        return count($this->getAreasEvaluacionActivas()) > 0;
+    }
+
+    public function addAreaEvaluacion(AreaEvaluacion $area): self
+    {
+        if (!$this->areasEvaluacion->contains($area)) {
+            $this->areasEvaluacion[] = $area;
+            $area->setConfiguracion($this);
+        }
+
+        return $this;
+    }
+
+    public function removeAreaEvaluacion(AreaEvaluacion $area): self
+    {
+        $this->areasEvaluacion->removeElement($area);
 
         return $this;
     }

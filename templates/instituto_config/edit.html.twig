@@ -521,6 +521,66 @@
                                             </small>
                                         {% endif %}
 
+                                        {# Áreas de evaluación: los ejes de la libreta. Rutas propias, igual que
+                                           los períodos y los conceptos. #}
+                                        <hr>
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <label class="form-label mb-0">Áreas de evaluación</label>
+                                            <button type="button" class="btn btn-dark btn-sm" data-bs-toggle="modal" data-bs-target="#modalNuevaArea">
+                                                <i class="bi bi-plus-circle"></i> Agregar área
+                                            </button>
+                                        </div>
+                                        {% if areasEvaluacion is empty %}
+                                            <p class="text-muted small">
+                                                Son los ejes sobre los que calificás: Writing, Listening, Speaking, Técnica.
+                                                Si los cargás, la libreta se arma como una grilla de áreas por período, y cada
+                                                celda sale del promedio de las evaluaciones de esa área. Sin áreas, la libreta
+                                                lista las evaluaciones sueltas.
+                                            </p>
+                                        {% else %}
+                                            <div class="table-responsive">
+                                                <table class="table table-sm align-middle">
+                                                    <thead class="table-light">
+                                                        <tr>
+                                                            <th>Orden</th>
+                                                            <th>Área</th>
+                                                            <th>Corto</th>
+                                                            <th class="text-end">Acciones</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {% for area in areasEvaluacion %}
+                                                            <tr {% if not area.activo %}class="table-secondary"{% endif %}>
+                                                                <td>{{ area.orden }}</td>
+                                                                <td>
+                                                                    {% if area.icono %}<i class="bi {{ area.icono }}"></i>{% endif %}
+                                                                    {{ area.nombre }}
+                                                                    {% if not area.activo %}
+                                                                        <span class="badge bg-secondary">Inactiva</span>
+                                                                    {% endif %}
+                                                                </td>
+                                                                <td>{{ area.abreviatura|default('—') }}</td>
+                                                                <td class="text-end">
+                                                                    <button type="button" class="btn btn-sm btn-outline-primary"
+                                                                            data-bs-toggle="modal" data-bs-target="#modalEditarArea{{ area.id }}">
+                                                                        <i class="bi bi-pencil"></i>
+                                                                    </button>
+                                                                    <button type="button" class="btn btn-sm btn-outline-danger"
+                                                                            data-bs-toggle="modal" data-bs-target="#modalBorrarArea{{ area.id }}">
+                                                                        <i class="bi bi-trash"></i>
+                                                                    </button>
+                                                                </td>
+                                                            </tr>
+                                                        {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            <small class="form-text text-muted">
+                                                El orden es el de las filas de la libreta. Una evaluación puede no tener área:
+                                                en ese caso no entra en la grilla, pero sigue contando para el promedio general.
+                                            </small>
+                                        {% endif %}
+
                                         <div class="escala-notas-fields" style="display: none;">
                                             <hr>
                                             <div class="row">
@@ -1605,6 +1665,112 @@
                         <small class="text-muted">
                             Si ya tiene evaluaciones asignadas, en lugar de borrarse se desactiva: deja de
                             ofrecerse al crear evaluaciones, pero las existentes lo conservan.
+                        </small>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-danger">Borrar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endfor %}
+
+
+{# Áreas de evaluación. Fuera del formulario principal: no se pueden anidar forms. #}
+<div class="modal fade" id="modalNuevaArea" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{{ path('instituto_config_area_new') }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('area_new') }}">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-plus-circle"></i> Nueva área de evaluación</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="area_nombre" class="form-label">Nombre</label>
+                        <input type="text" class="form-control" id="area_nombre" name="nombre"
+                               maxlength="100" required placeholder="Ej: Writing">
+                    </div>
+                    <div class="mb-3">
+                        <label for="area_abreviatura" class="form-label">Nombre corto (opcional)</label>
+                        <input type="text" class="form-control" id="area_abreviatura" name="abreviatura"
+                               maxlength="20" placeholder="Ej: Wr">
+                        <small class="form-text text-muted">Se usa en la libreta, donde el espacio de la fila es acotado.</small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="area_icono" class="form-label">Ícono (opcional)</label>
+                        <input type="text" class="form-control" id="area_icono" name="icono"
+                               maxlength="40" placeholder="Ej: bi-pencil">
+                        <small class="form-text text-muted">
+                            Nombre de un ícono de Bootstrap Icons, empezando con <code>bi-</code>. Se muestra al lado del área en la libreta.
+                        </small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Agregar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% for area in areasEvaluacion %}
+    <div class="modal fade" id="modalEditarArea{{ area.id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="post" action="{{ path('instituto_config_area_edit', {'id': area.id}) }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('area_edit' ~ area.id) }}">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="bi bi-pencil"></i> Editar área</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Nombre</label>
+                            <input type="text" class="form-control" name="nombre" maxlength="100"
+                                   value="{{ area.nombre }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Nombre corto (opcional)</label>
+                            <input type="text" class="form-control" name="abreviatura" maxlength="20"
+                                   value="{{ area.abreviatura }}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Ícono (opcional)</label>
+                            <input type="text" class="form-control" name="icono" maxlength="40"
+                                   value="{{ area.icono }}" placeholder="Ej: bi-pencil">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Orden</label>
+                            <input type="number" class="form-control" name="orden" min="1" value="{{ area.orden }}">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalBorrarArea{{ area.id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form method="post" action="{{ path('instituto_config_area_delete', {'id': area.id}) }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('area_delete' ~ area.id) }}">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><i class="bi bi-trash"></i> Borrar área</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="mb-0">¿Borrar el área <strong>{{ area.nombre }}</strong>?</p>
+                        <small class="text-muted">
+                            Si ya tiene evaluaciones asignadas, en lugar de borrarse se desactiva.
                         </small>
                     </div>
                     <div class="modal-footer">

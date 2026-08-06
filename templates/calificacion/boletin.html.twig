@@ -62,6 +62,7 @@
                         <thead>
                             <tr>
                                 <th>Evaluación</th>
+                                <th style="width: 130px;">Área</th>
                                 <th style="width: 130px;">Período</th>
                                 <th style="width: 120px;">Fecha</th>
                                 <th style="width: 90px;" class="text-center">Peso</th>
@@ -76,6 +77,14 @@
                                         {{ calificacion.evaluacion.nombre }}
                                         {% if not calificacion.evaluacion.cuentaParaPromedio %}
                                             <span class="badge bg-secondary ms-1">no promedia</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if calificacion.evaluacion.area %}
+                                            {% if calificacion.evaluacion.area.icono %}<i class="bi {{ calificacion.evaluacion.area.icono }}"></i>{% endif %}
+                                            {{ calificacion.evaluacion.area.etiquetaCorta }}
+                                        {% else %}
+                                            <span class="text-muted">—</span>
                                         {% endif %}
                                     </td>
                                     <td>

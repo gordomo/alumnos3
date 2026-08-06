@@ -3,6 +3,7 @@
 namespace App\Form;
 
 use App\Entity\Curso;
+use App\Entity\AreaEvaluacion;
 use App\Entity\Evaluacion;
 use App\Entity\PeriodoAcademico;
 use Symfony\Component\Form\AbstractType;
@@ -26,6 +27,7 @@ class EvaluacionType extends AbstractType
         /** @var Curso|null $curso */
         $curso = $options['curso'];
         $periodos = $options['periodos'];
+        $areas = $options['areas'];
 
         $builder
             ->add('nombre', TextType::class, [
@@ -111,6 +113,20 @@ class EvaluacionType extends AbstractType
                 'help' => 'Se propone según la fecha de la evaluación. Los de examen hay que elegirlos a mano.',
             ]);
         }
+
+        if ($areas) {
+            $builder->add('area', EntityType::class, [
+                'class' => AreaEvaluacion::class,
+                'choices' => $areas,
+                'choice_label' => 'nombre',
+                'required' => false,
+                'placeholder' => 'Sin área',
+                'attr' => ['class' => 'form-select'],
+                'label_attr' => ['class' => 'form-label'],
+                'label' => 'Área',
+                'help' => 'El eje que evalúa. Dejalo sin área si es una evaluación integradora.',
+            ]);
+        }
     }
 
     public function configureOptions(OptionsResolver $resolver): void
@@ -122,6 +138,8 @@ class EvaluacionType extends AbstractType
             // Períodos activos del instituto. Vacío = el instituto no los usa y el campo
             // no se agrega al formulario.
             'periodos' => [],
+            // Áreas activas del instituto. Vacío = no las usa y el campo no se agrega.
+            'areas' => [],
         ]);
     }
 

@@ -73,6 +73,19 @@ class Evaluacion
     private $periodo;
 
     /**
+     * Eje que evalúa: Writing, Listening, Speaking.
+     *
+     * Es lo que permite que la libreta sea una grilla de áreas por períodos: la nota de una
+     * celda es el promedio de las evaluaciones de esa área en ese período.
+     *
+     * Null cuando el instituto no usa áreas, o cuando la evaluación es integradora.
+     *
+     * @ORM\ManyToOne(targetEntity=AreaEvaluacion::class)
+     * @ORM\JoinColumn(nullable=true, onDelete="SET NULL")
+     */
+    private $area;
+
+    /**
      * @ORM\Column(type="text", nullable=true)
      */
     private $descripcion;
@@ -196,6 +209,17 @@ class Evaluacion
     public function setPeriodo(?PeriodoAcademico $periodo): self
     {
         $this->periodo = $periodo;
+        return $this;
+    }
+
+    public function getArea(): ?AreaEvaluacion
+    {
+        return $this->area;
+    }
+
+    public function setArea(?AreaEvaluacion $area): self
+    {
+        $this->area = $area;
         return $this;
     }
 

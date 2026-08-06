@@ -39,6 +39,7 @@
                         <thead>
                             <tr>
                                 <th>Evaluación</th>
+                                <th>Área</th>
                                 <th>Período</th>
                                 <th>Fecha</th>
                                 <th class="text-center">Peso</th>
@@ -53,6 +54,14 @@
                                         <strong>{{ evaluacion.nombre }}</strong>
                                         {% if not evaluacion.cuentaParaPromedio %}
                                             <span class="badge bg-secondary ms-1" title="No afecta el promedio">no promedia</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if evaluacion.area %}
+                                            {% if evaluacion.area.icono %}<i class="bi {{ evaluacion.area.icono }}"></i>{% endif %}
+                                            {{ evaluacion.area.nombre }}
+                                        {% else %}
+                                            <span class="text-muted">—</span>
                                         {% endif %}
                                     </td>
                                     <td>
