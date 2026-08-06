@@ -366,19 +366,19 @@ class NotificationService
                 'activo' => true,
             ]);
 
-            foreach ($alumnos as $alumno) {
-                $this->deudaCalculator->sincronizarDeudasConTabla($alumno);
-            }
-
-            $vencidasPorAlumno = $this->deudasVencidasPorAlumno($instituto);
-
-            foreach ($vencidasPorAlumno as $datos) {
-                if (count($datos['deudas']) < $configuracion->getRecordatorioMinCuotasVencidas()) {
+            foreach ($this->vencidasPorAlumno($instituto, $alumnos) as $datos) {
+                if ($datos['cantidad'] < $configuracion->getRecordatorioMinCuotasVencidas()) {
                     continue;
                 }
 
-                // La más vieja: es la que conviene mostrar y la que ancla el "cada N días".
-                $deuda = $datos['deudas'][0];
+                $alumnoDeuda = $datos['alumno'];
+
+                // La cuota más vieja, materializada como fila recién ahora: es la que se
+                // muestra en el mail y la que ancla la regla de "repetir cada N días".
+                $deuda = $this->materializarDeuda($datos['masVieja']);
+                if ($deuda === null) {
+                    continue;
+                }
 
                 $debeEnviar = $esDiaDeAviso;
 
@@ -390,8 +390,14 @@ class NotificationService
                     continue;
                 }
 
+                // Con la regla de dias fijos, dos corridas el mismo dia mandaban dos mails.
+                // El "cada N dias" ya se protegia solo, esta regla no.
+                if ($this->yaSeAvisoHoy($alumnoDeuda, $instituto)) {
+                    continue;
+                }
+
                 $resumen = [
-                    'cantidad' => count($datos['deudas']),
+                    'cantidad' => $datos['cantidad'],
                     'total' => $datos['total'],
                 ];
 
@@ -426,66 +432,149 @@ class NotificationService
     }
 
     /**
-     * Cuotas impagas y ya vencidas del instituto, agrupadas por alumno y ordenadas de la más
-     * vieja a la más nueva.
+     * Cuotas vencidas por alumno, tomadas del cálculo on-demand.
      *
-     * Impaga = lo aplicado por pagos no cubre monto + interés. Vencida = de un mes anterior al
-     * actual, o del mes actual con el día del primer vencimiento ya cumplido; es el mismo
-     * criterio que usa la pantalla de deudas, para que el mail no diga algo distinto de la app.
+     * Antes esto se consultaba sobre la tabla deuda_alumno, y ahí estaba el problema: las
+     * deudas mensuales se calculan al vuelo y sólo se materializan como fila cuando se
+     * registra un pago. O sea que el alumno que nunca pagó nada no tenía ni una fila y no
+     * recibía recordatorio, justo el que más lo necesita. Verificado con un alumno que la
+     * pantalla de deudas mostraba con 5 cuotas vencidas y 0 filas en la tabla.
      *
-     * @return array<int, array{alumno: Alumno, deudas: DeudaAlumno[], total: float}>
+     * Ahora la fuente es la misma que ve la pantalla de deudas, así que el mail no puede
+     * decir algo distinto de la app. Se usa el cálculo masivo para no hacer una tanda de
+     * queries por alumno.
+     *
+     * Vencida = de un mes anterior al actual, o del mes actual con el día del primer
+     * vencimiento ya cumplido. Los meses ya pagados no vienen en el cálculo.
+     *
+     * @param Alumno[] $alumnos
+     * @return array<int, array{alumno: Alumno, cantidad: int, total: float, masVieja: array}>
      */
-    private function deudasVencidasPorAlumno(Instituto $instituto): array
+    private function vencidasPorAlumno(Instituto $instituto, array $alumnos): array
     {
+        if (!$alumnos) {
+            return [];
+        }
+
         $hoy = $this->institutoTimezoneService->getNowForInstituto($instituto);
         $mesActual = (int) $hoy->format('n');
         $anoActual = (int) $hoy->format('Y');
         $diaActual = (int) $hoy->format('d');
         $diaVencimiento = $this->primerDiaVencimiento($instituto) ?? 5;
 
-        $deudas = $this->entityManager->getRepository(DeudaAlumno::class)
-            ->createQueryBuilder('d')
-            ->leftJoin('d.alumno', 'a')
-            ->leftJoin('d.aplicaciones', 'pa')
-            ->groupBy('d.id')
-            ->having('COALESCE(SUM(pa.montoAplicado), 0) < d.monto + COALESCE(d.interes, 0)')
-            ->andWhere('a.instituto = :instituto')
-            ->andWhere('a.activo = :activo')
-            // Alcanza con que haya email del alumno o del tutor: cuál se usa lo decide
-            // resolverDestinatarios() según la configuración.
-            ->andWhere('(a.email IS NOT NULL AND a.email != :vacio) OR (a.corre_tutor IS NOT NULL AND a.corre_tutor != :vacio)')
-            ->setParameter('instituto', $instituto)
-            ->setParameter('activo', true)
-            ->setParameter('vacio', '')
-            ->orderBy('d.ano', 'ASC')
-            ->addOrderBy('d.mes', 'ASC')
-            ->getQuery()
-            ->getResult();
+        $deudasPorAlumno = $this->deudaCalculator->calcularDeudasParaAlumnos($alumnos);
 
-        $porAlumno = [];
-        foreach ($deudas as $deuda) {
-            $ano = (int) $deuda->getAno();
-            $mes = (int) $deuda->getMes();
+        $resultado = [];
+        foreach ($alumnos as $alumno) {
+            $vencidas = [];
 
-            $esMesAnterior = $ano < $anoActual || ($ano === $anoActual && $mes < $mesActual);
-            $esMesActualVencido = $ano === $anoActual && $mes === $mesActual && $diaActual >= $diaVencimiento;
+            foreach ($deudasPorAlumno[$alumno->getId()] ?? [] as $deuda) {
+                $ano = (int) $deuda['ano'];
+                $mes = (int) $deuda['mes'];
 
-            if (!$esMesAnterior && !$esMesActualVencido) {
+                $esMesAnterior = $ano < $anoActual || ($ano === $anoActual && $mes < $mesActual);
+                $esMesActualVencido = $ano === $anoActual && $mes === $mesActual && $diaActual >= $diaVencimiento;
+
+                if ($esMesAnterior || $esMesActualVencido) {
+                    $vencidas[] = $deuda;
+                }
+            }
+
+            if (!$vencidas) {
                 continue;
             }
 
-            $alumno = $deuda->getAlumno();
-            $id = $alumno->getId();
+            // calcularDeudasAlumno() ya devuelve ordenado por año y mes, pero el orden es
+            // parte del contrato de esta función, así que se asegura acá.
+            usort($vencidas, static function (array $a, array $b) {
+                return [$a['ano'], $a['mes']] <=> [$b['ano'], $b['mes']];
+            });
 
-            if (!isset($porAlumno[$id])) {
-                $porAlumno[$id] = ['alumno' => $alumno, 'deudas' => [], 'total' => 0.0];
+            $total = 0.0;
+            foreach ($vencidas as $deuda) {
+                $total += (float) $deuda['monto'] + (float) ($deuda['interes'] ?? 0);
             }
 
-            $porAlumno[$id]['deudas'][] = $deuda;
-            $porAlumno[$id]['total'] += (float) $deuda->getMonto() + (float) $deuda->getInteres();
+            $resultado[$alumno->getId()] = [
+                'alumno' => $alumno,
+                'cantidad' => count($vencidas),
+                'total' => $total,
+                'masVieja' => $vencidas[0],
+            ];
         }
 
-        return $porAlumno;
+        return $resultado;
+    }
+
+    /**
+     * Si ya se le mandó un recordatorio a este alumno hoy, en la fecha civil del instituto.
+     */
+    private function yaSeAvisoHoy(Alumno $alumno, Instituto $instituto): bool
+    {
+        $hoy = $this->institutoTimezoneService->getNowForInstituto($instituto);
+        $desde = new \DateTime($hoy->format('Y-m-d') . ' 00:00:00');
+        $hasta = new \DateTime($hoy->format('Y-m-d') . ' 23:59:59');
+
+        $cantidad = (int) $this->entityManager->getRepository(EmailLog::class)
+            ->createQueryBuilder('e')
+            ->select('COUNT(e.id)')
+            ->where('e.alumno = :alumno')
+            ->andWhere('e.tipo = :tipo')
+            ->andWhere('e.estado = :estado')
+            ->andWhere('e.fechaEnvio BETWEEN :desde AND :hasta')
+            ->setParameter('alumno', $alumno)
+            ->setParameter('tipo', 'recordatorio')
+            ->setParameter('estado', 'enviado')
+            ->setParameter('desde', $desde)
+            ->setParameter('hasta', $hasta)
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return $cantidad > 0;
+    }
+
+    /**
+     * Devuelve la fila de deuda_alumno de esta cuota calculada, creándola si no existe.
+     *
+     * Hace falta porque enviarRecordatorioDeuda() y EmailLog trabajan con la entidad, no con
+     * el array del cálculo. Es el mismo patrón que usa PagoService cuando se cobra una cuota
+     * que todavía no tenía fila.
+     */
+    private function materializarDeuda(array $calculada): ?DeudaAlumno
+    {
+        $alumno = $calculada['alumno'] ?? null;
+        $curso = $calculada['curso'] ?? null;
+
+        if (!$alumno || !$curso) {
+            return null;
+        }
+
+        $existente = $this->entityManager->getRepository(DeudaAlumno::class)->findOneBy([
+            'alumno' => $alumno,
+            'curso' => $curso,
+            'mes' => (int) $calculada['mes'],
+            'ano' => (int) $calculada['ano'],
+            'esCuotaInscripcionAnual' => false,
+        ]);
+
+        if ($existente) {
+            return $existente;
+        }
+
+        $deuda = new DeudaAlumno();
+        $deuda->setAlumno($alumno);
+        $deuda->setCurso($curso);
+        $deuda->setCursoHistorico($calculada['cursoHistorico'] ?? null);
+        $deuda->setMes((int) $calculada['mes']);
+        $deuda->setAno((int) $calculada['ano']);
+        $deuda->setMonto((float) $calculada['monto']);
+        $deuda->setInteres((float) ($calculada['interes'] ?? 0));
+        $deuda->setInstituto($alumno->getInstituto());
+
+        $this->entityManager->persist($deuda);
+        $this->entityManager->flush();
+
+        return $deuda;
     }
 
     /**
