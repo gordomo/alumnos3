@@ -3,12 +3,14 @@
 namespace App\Controller;
 
 use App\Entity\ConceptoCalificacion;
+use App\Entity\PeriodoAcademico;
 use App\Entity\Instituto;
 use App\Entity\InstitutoConfiguracion;
 use App\Entity\Vencimiento;
 use App\Entity\DescuentoPromocional;
 use App\Entity\MetodoPago;
 use App\Repository\ConceptoCalificacionRepository;
+use App\Repository\PeriodoAcademicoRepository;
 use App\Repository\VencimientoRepository;
 use App\Repository\InstitutoConfiguracionRepository;
 use App\Repository\DescuentoPromocionalRepository;
@@ -41,7 +43,7 @@ class InstitutoConfigController extends AbstractController
     /**
      * @Route("/", name="instituto_config_index", methods={"GET"})
      */
-    public function index(VencimientoRepository $vencimientoRepository, InstitutoConfiguracionRepository $configuracionRepository, DescuentoPromocionalRepository $descuentoPromocionalRepository, MetodoPagoRepository $metodoPagoRepository, ConceptoCalificacionRepository $conceptoRepository): Response
+    public function index(VencimientoRepository $vencimientoRepository, InstitutoConfiguracionRepository $configuracionRepository, DescuentoPromocionalRepository $descuentoPromocionalRepository, MetodoPagoRepository $metodoPagoRepository, ConceptoCalificacionRepository $conceptoRepository, PeriodoAcademicoRepository $periodoRepository): Response
     {
         $instituto = $this->getUser()->getInstituto();
         $vencimientos = $vencimientoRepository->findByInstitutoOrdered($instituto);
@@ -58,6 +60,7 @@ class InstitutoConfigController extends AbstractController
             'metodos_pago' => $metodosPago,
             'descuentosPromocionales' => $descuentosPromocionales,
             'conceptosCalificacion' => $conceptoRepository->findByInstituto($instituto, false),
+            'periodosAcademicos' => $periodoRepository->findByInstituto($instituto, false),
         ]);
     }
 
@@ -73,7 +76,8 @@ class InstitutoConfigController extends AbstractController
         VencimientoRepository $vencimientoRepository,
         DescuentoPromocionalRepository $descuentoPromocionalRepository,
         MetodoPagoRepository $metodoPagoRepository,
-        ConceptoCalificacionRepository $conceptoRepository
+        ConceptoCalificacionRepository $conceptoRepository,
+        PeriodoAcademicoRepository $periodoRepository
     ): Response {
         $instituto = $this->getUser()->getInstituto();
         $configuracion = $configuracionRepository->findOrCreateByInstituto($instituto);
@@ -280,6 +284,7 @@ class InstitutoConfigController extends AbstractController
             'descuentosPromocionales' => $descuentosPromocionales,
             'metodos_pago' => $metodosPago,
             'conceptosCalificacion' => $conceptoRepository->findByInstituto($instituto, false),
+            'periodosAcademicos' => $periodoRepository->findByInstituto($instituto, false),
         ]);
     }
 
@@ -734,7 +739,8 @@ class InstitutoConfigController extends AbstractController
         ConceptoCalificacion $concepto,
         Request $request,
         EntityManagerInterface $entityManager,
-        ConceptoCalificacionRepository $conceptoRepository
+        ConceptoCalificacionRepository $conceptoRepository,
+        PeriodoAcademicoRepository $periodoRepository
     ): Response {
         $instituto = $this->getUser()->getInstituto();
         if ($concepto->getInstituto() !== $instituto) {
@@ -766,4 +772,131 @@ class InstitutoConfigController extends AbstractController
         $this->addFlash('success', sprintf('Concepto "%s" eliminado.', $nombre));
         return $this->redirectToRoute('instituto_config_index', ['tab' => 'general']);
     }
-} 
+    /**
+     * @Route("/periodo-academico/new", name="instituto_config_periodo_new", methods={"POST"})
+     */
+    public function newPeriodoAcademico(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        PeriodoAcademicoRepository $periodoRepository,
+        InstitutoConfiguracionRepository $configuracionRepository
+    ): Response {
+        $instituto = $this->getUser()->getInstituto();
+
+        if (!$this->isCsrfTokenValid('periodo_new', (string) $request->request->get('_token'))) {
+            $this->addFlash('danger', 'Token de seguridad inválido.');
+            return $this->redirectToRoute('instituto_config_index', ['tab' => 'general']);
+        }
+
+        $nombre = trim((string) $request->request->get('nombre'));
+        if ($nombre === '') {
+            $this->addFlash('danger', 'El nombre del período no puede estar vacío.');
+            return $this->redirectToRoute('instituto_config_index', ['tab' => 'general']);
+        }
+
+        $configuracion = $configuracionRepository->findOneBy(['instituto' => $instituto]);
+        if (!$configuracion) {
+            $configuracion = new InstitutoConfiguracion();
+            $configuracion->setInstituto($instituto);
+            $entityManager->persist($configuracion);
+        }
+
+        $periodo = new PeriodoAcademico();
+        $periodo->setInstituto($instituto);
+        $periodo->setConfiguracion($configuracion);
+        $periodo->setNombre($nombre);
+        $periodo->setAbreviatura($request->request->get('abreviatura'));
+        $periodo->setTipo($request->request->get('tipo'));
+        $periodo->setMesInicio((int) $request->request->get('mes_inicio', 1));
+        $periodo->setMesFin((int) $request->request->get('mes_fin', 12));
+        $periodo->setOrden($periodoRepository->siguienteOrden($instituto));
+
+        $entityManager->persist($periodo);
+        $entityManager->flush();
+
+        $this->addFlash('success', sprintf('Período "%s" agregado.', $nombre));
+        return $this->redirectToRoute('instituto_config_index', ['tab' => 'general']);
+    }
+
+    /**
+     * @Route("/periodo-academico/{id}/edit", name="instituto_config_periodo_edit", methods={"POST"})
+     */
+    public function editPeriodoAcademico(
+        PeriodoAcademico $periodo,
+        Request $request,
+        EntityManagerInterface $entityManager
+    ): Response {
+        $instituto = $this->getUser()->getInstituto();
+        if ($periodo->getInstituto() !== $instituto) {
+            throw $this->createAccessDeniedException();
+        }
+
+        if (!$this->isCsrfTokenValid('periodo_edit' . $periodo->getId(), (string) $request->request->get('_token'))) {
+            $this->addFlash('danger', 'Token de seguridad inválido.');
+            return $this->redirectToRoute('instituto_config_index', ['tab' => 'general']);
+        }
+
+        $nombre = trim((string) $request->request->get('nombre'));
+        if ($nombre !== '') {
+            $periodo->setNombre($nombre);
+        }
+
+        $periodo->setAbreviatura($request->request->get('abreviatura'));
+        $periodo->setTipo($request->request->get('tipo'));
+        $periodo->setMesInicio((int) $request->request->get('mes_inicio', $periodo->getMesInicio()));
+        $periodo->setMesFin((int) $request->request->get('mes_fin', $periodo->getMesFin()));
+
+        $orden = $request->request->get('orden');
+        if ($orden !== '' && $orden !== null) {
+            $periodo->setOrden((int) $orden);
+        }
+
+        $entityManager->flush();
+
+        $this->addFlash('success', 'Período actualizado.');
+        return $this->redirectToRoute('instituto_config_index', ['tab' => 'general']);
+    }
+
+    /**
+     * Desactiva el período en lugar de borrarlo si ya tiene evaluaciones asignadas: borrarlo
+     * las dejaría sin período y el boletín perdería la columna.
+     *
+     * @Route("/periodo-academico/{id}/delete", name="instituto_config_periodo_delete", methods={"POST"})
+     */
+    public function deletePeriodoAcademico(
+        PeriodoAcademico $periodo,
+        Request $request,
+        EntityManagerInterface $entityManager,
+        PeriodoAcademicoRepository $periodoRepository
+    ): Response {
+        $instituto = $this->getUser()->getInstituto();
+        if ($periodo->getInstituto() !== $instituto) {
+            throw $this->createAccessDeniedException();
+        }
+
+        if (!$this->isCsrfTokenValid('periodo_delete' . $periodo->getId(), (string) $request->request->get('_token'))) {
+            $this->addFlash('danger', 'Token de seguridad inválido.');
+            return $this->redirectToRoute('instituto_config_index', ['tab' => 'general']);
+        }
+
+        $usos = $periodoRepository->contarUsos($periodo);
+        if ($usos > 0) {
+            $periodo->setActivo(false);
+            $entityManager->flush();
+            $this->addFlash('warning', sprintf(
+                'El período "%s" tiene %d evaluación(es) asignada(s), así que se desactivó en lugar de borrarse. No se va a ofrecer más al crear evaluaciones, pero las existentes lo conservan.',
+                $periodo->getNombre(),
+                $usos
+            ));
+
+            return $this->redirectToRoute('instituto_config_index', ['tab' => 'general']);
+        }
+
+        $nombre = $periodo->getNombre();
+        $entityManager->remove($periodo);
+        $entityManager->flush();
+
+        $this->addFlash('success', sprintf('Período "%s" eliminado.', $nombre));
+        return $this->redirectToRoute('instituto_config_index', ['tab' => 'general']);
+    }
+}

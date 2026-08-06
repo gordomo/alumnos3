@@ -356,6 +356,24 @@
                                                 </td>
                                             </tr>
                                             <tr>
+                                                <th>Períodos académicos:</th>
+                                                <td>
+                                                    {% set periodosActivos = configuracion.periodosAcademicosActivos %}
+                                                    {% if periodosActivos is empty %}
+                                                        <span class="badge bg-secondary">Sin períodos</span>
+                                                        <small class="text-muted d-block">
+                                                            Las evaluaciones no se agrupan. Cargalos si dividís el año en trimestres o bimestres.
+                                                        </small>
+                                                    {% else %}
+                                                        {% for periodo in periodosActivos %}
+                                                            <span class="badge {{ periodo.esExamen ? 'bg-info text-dark' : 'bg-primary' }}">
+                                                                {{ periodo.nombre }}{% if not periodo.esExamen %} ({{ periodo.rangoTexto }}){% endif %}
+                                                            </span>
+                                                        {% endfor %}
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                            <tr>
                                                 <th>Las notas influyen en la aprobación:</th>
                                                 <td>
                                                     {% if configuracion.notasInfluyenAprobacion and configuracion.modoCalificacion != 'ninguno' %}

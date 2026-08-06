@@ -58,6 +58,21 @@ class Evaluacion
     private $fecha;
 
     /**
+     * Período al que pertenece la evaluación: un trimestre, una mesa de examen.
+     *
+     * Explícito y no derivado de la fecha, porque los períodos de examen se solapan con los
+     * de cursada (una mesa de julio cae dentro del segundo trimestre) y la fecha sola no
+     * alcanza para desambiguar. El formulario lo propone según la fecha y el profesor puede
+     * cambiarlo.
+     *
+     * Null cuando el instituto no usa períodos, o cuando la fecha no cae en ninguno.
+     *
+     * @ORM\ManyToOne(targetEntity=PeriodoAcademico::class)
+     * @ORM\JoinColumn(nullable=true, onDelete="SET NULL")
+     */
+    private $periodo;
+
+    /**
      * @ORM\Column(type="text", nullable=true)
      */
     private $descripcion;
@@ -170,6 +185,17 @@ class Evaluacion
     public function setFecha(\DateTimeInterface $fecha): self
     {
         $this->fecha = $fecha;
+        return $this;
+    }
+
+    public function getPeriodo(): ?PeriodoAcademico
+    {
+        return $this->periodo;
+    }
+
+    public function setPeriodo(?PeriodoAcademico $periodo): self
+    {
+        $this->periodo = $periodo;
         return $this;
     }
 

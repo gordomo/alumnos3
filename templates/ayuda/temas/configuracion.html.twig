@@ -172,6 +172,50 @@
     <em>no finalizado</em> aunque tenga la asistencia y las notas en regla.
 </p>
 
+<h3>Períodos académicos</h3>
+
+<p>
+    Si dividís el año en <strong>trimestres</strong> o <strong>bimestres</strong>, o si tomás
+    <strong>mesas de examen</strong>, cargalos acá. Cada evaluación queda asignada a un período
+    y las pantallas de notas los muestran agrupados.
+</p>
+
+<ol>
+    <li>En la configuración académica, clic en <strong>Agregar período</strong>.</li>
+    <li><strong>Nombre</strong>: cómo lo llamás ("1er Trimestre", "Mid Year Exam").</li>
+    <li>
+        <strong>Nombre corto</strong>, opcional: se usa en los encabezados donde no entra el
+        nombre completo ("1T", "MYE").
+    </li>
+    <li>
+        <strong>Tipo</strong>: <em>cursada</em> para un trimestre o bimestre, <em>examen</em>
+        para una mesa.
+    </li>
+    <li><strong>Desde</strong> y <strong>hasta</strong>: los meses que abarca, ambos incluidos.</li>
+</ol>
+
+<p>
+    Los períodos se definen por <strong>rango de meses, sin año</strong>, así que se configuran
+    una sola vez y sirven todos los años. Si el mes de fin es anterior al de inicio, el período
+    cruza el fin de año — por ejemplo noviembre a febrero.
+</p>
+
+{{ m.nota('info', 'Por qué las mesas de examen se eligen a mano',
+   'Al crear una evaluación, el sistema propone el período de <em>cursada</em> que contiene su
+    fecha. Los de tipo examen no se proponen, porque su mes casi siempre cae dentro de un
+    trimestre: una mesa de julio está dentro del segundo trimestre. Si la evaluación es una mesa,
+    el profesor la elige en el desplegable.') }}
+
+<p>
+    Un período que ya tiene evaluaciones asignadas no se borra: se <strong>desactiva</strong>.
+    Deja de ofrecerse al crear evaluaciones nuevas, pero las que ya existen lo conservan.
+</p>
+
+<p>
+    Si no cargás ninguno, todo funciona como antes: las evaluaciones no se agrupan y en la
+    columna de período aparece un guión.
+</p>
+
 <h3>3. Notas</h3>
 <p>
     Para usar notas primero hay que elegir la <strong>escala</strong>. Mientras la escala esté

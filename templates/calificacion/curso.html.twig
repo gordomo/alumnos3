@@ -39,6 +39,7 @@
                         <thead>
                             <tr>
                                 <th>Evaluación</th>
+                                <th>Período</th>
                                 <th>Fecha</th>
                                 <th class="text-center">Peso</th>
                                 <th class="text-center">Promedio</th>
@@ -52,6 +53,15 @@
                                         <strong>{{ evaluacion.nombre }}</strong>
                                         {% if not evaluacion.cuentaParaPromedio %}
                                             <span class="badge bg-secondary ms-1" title="No afecta el promedio">no promedia</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if evaluacion.periodo %}
+                                            <span class="badge {{ evaluacion.periodo.esExamen ? 'bg-info text-dark' : 'bg-primary' }}">
+                                                {{ evaluacion.periodo.etiquetaCorta }}
+                                            </span>
+                                        {% else %}
+                                            <span class="text-muted">—</span>
                                         {% endif %}
                                     </td>
                                     <td>{{ evaluacion.fecha|date(date_format) }}</td>

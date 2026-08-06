@@ -213,6 +213,15 @@ class InstitutoConfiguracion
     private $conceptosCalificacion;
 
     /**
+     * Trimestres, bimestres o mesas de examen del instituto. Vacío significa que el
+     * instituto no divide el año, y todo funciona como antes de que esto existiera.
+     *
+     * @ORM\OneToMany(targetEntity=PeriodoAcademico::class, mappedBy="configuracion", cascade={"persist"})
+     * @ORM\OrderBy({"orden" = "ASC"})
+     */
+    private $periodosAcademicos;
+
+    /**
      * Si es true, se cobrará una cuota de inscripción anual a todos los alumnos.
      *
      * @ORM\Column(type="boolean", options={"default": false})
@@ -246,6 +255,7 @@ class InstitutoConfiguracion
         $this->vencimientos = new ArrayCollection();
         $this->descuentosPromocionales = new ArrayCollection();
         $this->conceptosCalificacion = new ArrayCollection();
+        $this->periodosAcademicos = new ArrayCollection();
     }
 
     public function getModoCalificacion(): string
@@ -382,6 +392,53 @@ class InstitutoConfiguracion
     public function removeConceptoCalificacion(ConceptoCalificacion $concepto): self
     {
         $this->conceptosCalificacion->removeElement($concepto);
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, PeriodoAcademico>
+     */
+    public function getPeriodosAcademicos(): Collection
+    {
+        return $this->periodosAcademicos;
+    }
+
+    /**
+     * Solo los períodos vigentes, para ofrecer en los formularios.
+     *
+     * @return PeriodoAcademico[]
+     */
+    public function getPeriodosAcademicosActivos(): array
+    {
+        $activos = [];
+        foreach ($this->periodosAcademicos as $periodo) {
+            if ($periodo->isActivo()) {
+                $activos[] = $periodo;
+            }
+        }
+
+        return $activos;
+    }
+
+    public function usaPeriodos(): bool
+    {
+        return count($this->getPeriodosAcademicosActivos()) > 0;
+    }
+
+    public function addPeriodoAcademico(PeriodoAcademico $periodo): self
+    {
+        if (!$this->periodosAcademicos->contains($periodo)) {
+            $this->periodosAcademicos[] = $periodo;
+            $periodo->setConfiguracion($this);
+        }
+
+        return $this;
+    }
+
+    public function removePeriodoAcademico(PeriodoAcademico $periodo): self
+    {
+        $this->periodosAcademicos->removeElement($periodo);
 
         return $this;
     }

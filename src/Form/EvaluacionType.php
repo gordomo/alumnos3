@@ -4,7 +4,9 @@ namespace App\Form;
 
 use App\Entity\Curso;
 use App\Entity\Evaluacion;
+use App\Entity\PeriodoAcademico;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\NumberType;
@@ -23,6 +25,7 @@ class EvaluacionType extends AbstractType
         $symfonyFormat = $this->phpToSymfonyDateFormat($dateFormat);
         /** @var Curso|null $curso */
         $curso = $options['curso'];
+        $periodos = $options['periodos'];
 
         $builder
             ->add('nombre', TextType::class, [
@@ -88,6 +91,26 @@ class EvaluacionType extends AbstractType
                 'label_attr' => ['class' => 'form-label'],
                 'label' => 'Descripción (opcional)',
             ]);
+
+        // El campo de período solo existe si el instituto cargó períodos. Sin ellos, agregarlo
+        // dejaría un desplegable vacío en el formulario.
+        if ($periodos) {
+            $builder->add('periodo', EntityType::class, [
+                'class' => PeriodoAcademico::class,
+                'choices' => $periodos,
+                'choice_label' => function (PeriodoAcademico $periodo) {
+                    return $periodo->esExamen()
+                        ? $periodo->getNombre() . ' (examen)'
+                        : $periodo->getNombre() . ' — ' . $periodo->getRangoTexto();
+                },
+                'required' => false,
+                'placeholder' => 'Sin período',
+                'attr' => ['class' => 'form-select'],
+                'label_attr' => ['class' => 'form-label'],
+                'label' => 'Período',
+                'help' => 'Se propone según la fecha de la evaluación. Los de examen hay que elegirlos a mano.',
+            ]);
+        }
     }
 
     public function configureOptions(OptionsResolver $resolver): void
@@ -96,6 +119,9 @@ class EvaluacionType extends AbstractType
             'data_class' => Evaluacion::class,
             'date_format' => 'd/m/Y',
             'curso' => null,
+            // Períodos activos del instituto. Vacío = el instituto no los usa y el campo
+            // no se agrega al formulario.
+            'periodos' => [],
         ]);
     }
 

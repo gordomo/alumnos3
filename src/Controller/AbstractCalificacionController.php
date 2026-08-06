@@ -15,6 +15,7 @@ use App\Service\EscalaCalificacionService;
 use App\Service\InstitutoTimezoneService;
 use App\Service\NotificationService;
 use App\Service\PromedioCalificacionService;
+use App\Repository\PeriodoAcademicoRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -39,7 +40,8 @@ abstract class AbstractCalificacionController extends AbstractController
         protected InstitutoTimezoneService $institutoTimezoneService,
         protected EntityManagerInterface $entityManager,
         protected CalificacionRepository $calificacionRepository,
-        protected NotificationService $notificationService
+        protected NotificationService $notificationService,
+        protected PeriodoAcademicoRepository $periodoRepository
     ) {
     }
 
@@ -135,18 +137,25 @@ abstract class AbstractCalificacionController extends AbstractController
             throw $this->createAccessDeniedException('No podés administrar evaluaciones.');
         }
 
+        $instituto = $curso->getInstituto();
+        $periodos = $this->periodoRepository->findByInstituto($instituto);
+
         $esNueva = $evaluacion === null;
         if ($esNueva) {
             $evaluacion = new Evaluacion();
             $evaluacion->setCurso($curso);
-            $evaluacion->setInstituto($curso->getInstituto());
-            $evaluacion->setFecha($this->institutoTimezoneService->getCurrentDateForInstituto($curso->getInstituto()));
+            $evaluacion->setInstituto($instituto);
+            $evaluacion->setFecha($this->institutoTimezoneService->getCurrentDateForInstituto($instituto));
+            // Se propone el período que contiene la fecha. Los de examen no se proponen: su
+            // mes se solapa con el de un trimestre, así que el profesor los elige a mano.
+            $evaluacion->setPeriodo($this->periodoRepository->findParaFecha($instituto, $evaluacion->getFecha()));
         }
 
-        $dateFormat = $this->institutoTimezoneService->getDateFormatForInstituto($curso->getInstituto());
+        $dateFormat = $this->institutoTimezoneService->getDateFormatForInstituto($instituto);
         $form = $this->createForm(EvaluacionType::class, $evaluacion, [
             'date_format' => $dateFormat,
             'curso' => $curso,
+            'periodos' => $periodos,
         ]);
         $form->handleRequest($request);
 
