@@ -1115,9 +1115,17 @@ class AlumnosPagosController extends AbstractController
         }
 
         $cursosHistoricos = $alumno->getCursosHistoricos();
+        // Indexado por id del curso, no acumulado: un alumno dado de baja y reinscripto
+        // tiene dos históricos del mismo curso, y con una lista plana el panel de estado
+        // recorría los dos e imprimía el curso repetido, con el mismo número de cuotas
+        // ("Robotica - 3 cuotas vencidas" dos veces).
         $cursos = [];
         foreach ($cursosHistoricos as $cursoHistorico) {
-            $cursos[] = $cursoHistorico->getCurso();
+            $curso = $cursoHistorico->getCurso();
+            if ($curso === null) {
+                continue;
+            }
+            $cursos[$curso->getId()] = $curso;
         }
         } else {
             // Sin alumno: valores por defecto para el formulario
