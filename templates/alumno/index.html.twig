@@ -445,81 +445,11 @@
             }
         );
 
-        // Manejar formularios de gestión de cursos
-        document.addEventListener('DOMContentLoaded', function() {
-            // Guardar cursos iniciales cuando se abre el modal
-            document.addEventListener('show.bs.modal', function(e) {
-                const modal = e.target;
-                if (modal.id && modal.id.startsWith('cursosModal')) {
-                    const form = modal.querySelector('.curso-form');
-                    if (form) {
-                        const cursosIniciales = new Set();
-                        const checkboxes = form.querySelectorAll('input[name="cursos[]"]:checked');
-                        checkboxes.forEach(cb => cursosIniciales.add(cb.value));
-                        form.dataset.cursosIniciales = JSON.stringify(Array.from(cursosIniciales));
-                    }
-                }
-            });
-            
-            // Manejar cambios en checkboxes de cursos
-            document.addEventListener('change', function(e) {
-                if (e.target.name === 'cursos[]') {
-                    const form = e.target.closest('.curso-form');
-                    if (form) {
-                        const alumnoId = form.dataset.alumnoId;
-                        const comenzarDeudaContainer = document.getElementById(`comenzarDeudaContainer_${alumnoId}`);
-                        const comenzarDeudaCheckbox = document.getElementById(`comenzarDeudaProximoMes_${alumnoId}`);
-                        
-                        const cursosInicialesStr = form.dataset.cursosIniciales || '[]';
-                        const cursosIniciales = new Set(JSON.parse(cursosInicialesStr));
-                        
-                        const checkboxes = form.querySelectorAll('input[name="cursos[]"]');
-                        let hayCursosNuevos = false;
-                        
-                        checkboxes.forEach(cb => {
-                            if (cb.checked && !cursosIniciales.has(cb.value)) {
-                                hayCursosNuevos = true;
-                            }
-                        });
-                        
-                        if (comenzarDeudaContainer) {
-                            comenzarDeudaContainer.style.display = hayCursosNuevos ? 'block' : 'none';
-                            if (!hayCursosNuevos && comenzarDeudaCheckbox) {
-                                comenzarDeudaCheckbox.checked = false;
-                            }
-                        }
-                    }
-                }
-            });
-            
-            // Manejar envío de formularios
-            document.addEventListener('submit', async function(e) {
-                if (e.target.classList.contains('curso-form')) {
-                    e.preventDefault();
-                    const form = e.target;
-                    const alumnoId = form.dataset.alumnoId;
-                    const formData = new FormData(form);
-                    
-                    try {
-                        const response = await fetch(`{{ path('app_alumno_update_cursos', {'id': '__ALUMNO_ID__'}) }}`.replace('__ALUMNO_ID__', alumnoId), {
-                            method: 'POST',
-                            body: formData
-                        });
-                        
-                        const data = await response.json();
-                        
-                        if (data.success) {
-                            alert(data.message + (data.detalles && data.detalles.length > 0 ? '\n\n' + data.detalles.join('\n') : ''));
-                            location.reload();
-                        } else {
-                            alert('Error: ' + (data.message || 'No se pudieron actualizar los cursos'));
-                        }
-                    } catch (error) {
-                        console.error('Error:', error);
-                        alert('Error al actualizar los cursos. Por favor, intente nuevamente.');
-                    }
-                }
-            });
-        });
+        {# La gestión del modal de cursos vive en public/js/alumno-cursos.js, que se
+           carga desde base.html.twig. Acá había una segunda copia de la misma lógica:
+           sus handlers de show.bs.modal y change no hacían nada (buscaban los
+           checkboxes con form.querySelectorAll, y el parser de HTML los deja fuera del
+           <form> al incluir el modal dentro del <tbody>), pero el de submit sí corría,
+           así que cada guardado del modal mandaba el POST dos veces. #}
     </script>
 {% endblock %}
