@@ -236,6 +236,22 @@ class InstitutoConfigController extends AbstractController
                 $configuracion->setEnviarRecordatorioEnDiaVencimiento($request->request->has('enviarRecordatorioEnDiaVencimiento'));
                 $configuracion->setTextoPersonalizadoEmail($request->request->get('textoPersonalizadoEmail'));
 
+                // A quién le llega cada notificación. El setter descarta cualquier valor que no
+                // sea alumno/tutor/ambos, así que no hace falta validar el <select> acá.
+                $configuracion->setNotificarA($request->request->get('notificarA'));
+
+                $configuracion->setRecordatorioDiasMes($request->request->get('recordatorioDiasMes') ?: null);
+
+                $cadaDias = $request->request->get('recordatorioCadaDias');
+                $configuracion->setRecordatorioCadaDias(
+                    $cadaDias !== '' && $cadaDias !== null ? (int) $cadaDias : null
+                );
+
+                $minCuotas = $request->request->get('recordatorioMinCuotasVencidas');
+                $configuracion->setRecordatorioMinCuotasVencidas(
+                    $minCuotas !== '' && $minCuotas !== null ? (int) $minCuotas : null
+                );
+
                 try {
                     $errorsConfig = $validator->validate($configuracion);
                     

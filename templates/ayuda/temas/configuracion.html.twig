@@ -59,6 +59,67 @@
     y quedan disponibles para elegir en el momento del cobro.
 </p>
 
+<h2>Notificaciones por email</h2>
+
+<p>
+    En la pestaña <strong>Notificaciones</strong> se define qué manda el sistema y a quién.
+</p>
+
+<h3>¿A quién le llegan?</h3>
+
+<p>
+    Un solo desplegable que vale para <strong>los recibos, los recordatorios de deuda y los
+    boletines de notas</strong>: solo al alumno, solo al tutor, o a los dos. Se usan el email
+    del alumno y el del tutor cargados en su ficha.
+</p>
+
+<ul>
+    <li>Si las dos direcciones son la misma, se manda una sola copia.</li>
+    <li>Con <strong>solo al tutor</strong>, un alumno que no tenga email de tutor cargado recibe el mail en su propia dirección: es mejor que no le llegue a nadie.</li>
+</ul>
+
+<h3>Recibo al pagar</h3>
+
+<p>
+    Con <strong>enviar recibos</strong> activado, cada pago que registrás dispara el recibo
+    automáticamente. No hay que hacer nada más.
+</p>
+
+<h3>Recordatorios de deuda</h3>
+
+<p>
+    Se prenden con <strong>enviar recordatorios de deudas automáticamente</strong>, y después se
+    define <em>cuándo</em>. Hay tres reglas y basta que se cumpla una:
+</p>
+
+<ul>
+    <li><strong>Días del mes en que avisar</strong>: días fijos separados por coma. Es la opción para el clásico "avisales después del 20".</li>
+    <li><strong>El día del vencimiento</strong>: avisa el primer día de vencimiento que tengas configurado.</li>
+    <li><strong>Repetir cada N días</strong>: insiste con una misma cuota impaga cada tantos días. Vacío apaga la repetición.</li>
+</ul>
+
+<p>
+    Y <strong>avisar desde N cuotas vencidas</strong> pone el umbral: con 1 se avisa desde la
+    primera. Solo cuentan las cuotas <em>vencidas</em>: la del mes en curso que todavía está en
+    plazo no genera recordatorio.
+</p>
+
+{{ m.nota('info', 'Un solo mail por alumno y por día',
+   'Un alumno con cinco cuotas atrasadas recibe <strong>un</strong> recordatorio, no cinco: se
+    manda por la cuota más antigua y el mail dice cuántas debe y el total.') }}
+
+{{ m.nota('warning', 'Los automáticos dependen de una tarea programada',
+   'El envío automático lo dispara una tarea que corre una vez por día en el servidor. Si no
+    está configurada, los recordatorios solo salen a mano desde la ficha del alumno. Los recibos
+    al registrar un pago, en cambio, no dependen de eso: salen en el momento.') }}
+
+<h3>Texto personalizado</h3>
+
+<p>
+    Un texto libre que se agrega al final de todos los emails. Sirve para el CBU, los horarios de
+    caja o cualquier aclaración que quieras que viaje en cada aviso.
+</p>
+
 <h2>Configuración académica</h2>
 
 <p>Es el bloque que define <strong>cuándo un alumno aprueba un curso</strong>. Hay tres criterios, y cada uno se prende por separado:</p>

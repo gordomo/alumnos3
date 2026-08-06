@@ -960,18 +960,34 @@
                                             </div>
                                         </div>
                                         
+                                        <div class="mb-4">
+                                            <label for="notificarA" class="form-label">
+                                                <strong>¿A quién le llegan los emails?</strong>
+                                            </label>
+                                            <select class="form-select" id="notificarA" name="notificarA">
+                                                <option value="alumno" {% if configuracion.notificarA == 'alumno' %}selected{% endif %}>Solo al alumno</option>
+                                                <option value="tutor" {% if configuracion.notificarA == 'tutor' %}selected{% endif %}>Solo al tutor</option>
+                                                <option value="ambos" {% if configuracion.notificarA == 'ambos' %}selected{% endif %}>Al alumno y al tutor</option>
+                                            </select>
+                                            <div class="form-text text-muted">
+                                                Aplica a los recibos de pago, los recordatorios de deuda y los boletines de notas.
+                                                Se usa el email del alumno y el del tutor cargados en su ficha; si son el mismo, se manda una sola copia.
+                                                Con <strong>Solo al tutor</strong>, un alumno sin email de tutor cargado recibe el mail en su propia dirección.
+                                            </div>
+                                        </div>
+
                                         <div class="form-check mb-3">
-                                            <input type="checkbox" 
-                                                   class="form-check-input" 
-                                                   id="enviarRecordatoriosDeudas" 
+                                            <input type="checkbox"
+                                                   class="form-check-input"
+                                                   id="enviarRecordatoriosDeudas"
                                                    name="enviarRecordatoriosDeudas"
                                                    {% if configuracion.enviarRecordatoriosDeudas %}checked{% endif %}>
                                             <label class="form-check-label" for="enviarRecordatoriosDeudas">
                                                 <strong>Enviar recordatorios de deudas automáticamente</strong>
                                             </label>
                                             <div class="form-text text-muted">
-                                                <strong>Activado:</strong> Se enviarán recordatorios automáticos cada 3 días desde que se genera la deuda. Por ejemplo, si una deuda se genera el día 10, se enviarán recordatorios el día 10, 13, 16, 19, etc. <strong>Requiere configurar un cron job en el servidor.</strong><br>
-                                                <strong>Desactivado:</strong> Los recordatorios solo se pueden enviar manualmente desde el botón "Enviar Recordatorio" en la vista de cada alumno (con límite de 48 horas entre envíos).
+                                                <strong>Activado:</strong> se envían recordatorios según las reglas de abajo. <strong>Requiere el cron job en el servidor.</strong> El alumno recibe un solo email por día aunque deba varias cuotas: se manda por la más antigua e indica cuántas debe en total.<br>
+                                                <strong>Desactivado:</strong> los recordatorios solo se pueden enviar a mano desde el botón "Enviar Recordatorio" en la vista de cada alumno.
                                             </div>
                                         </div>
                                         
@@ -985,7 +1001,54 @@
                                                 <strong>Enviar recordatorio adicional en el día de vencimiento</strong>
                                             </label>
                                             <div class="form-text text-muted">
-                                                Cuando está activado junto con "Enviar recordatorios de deudas automáticamente", se enviará un recordatorio adicional específicamente el primer día de vencimiento configurado de cada mes. Por ejemplo, si tu primer vencimiento es el día 10, se enviará un recordatorio adicional el día 10 de cada mes (además de los recordatorios cada 3 días). <strong>Requiere configurar un cron job en el servidor.</strong>
+                                                Manda un recordatorio el primer día de vencimiento configurado de cada mes. Por ejemplo, si tu primer vencimiento es el día 10, avisa el día 10.
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="recordatorioDiasMes" class="form-label">
+                                                <strong>Días del mes en que avisar</strong>
+                                            </label>
+                                            <input type="text"
+                                                   class="form-control"
+                                                   id="recordatorioDiasMes"
+                                                   name="recordatorioDiasMes"
+                                                   value="{{ configuracion.recordatorioDiasMes }}"
+                                                   placeholder="Ej: 20, 28">
+                                            <div class="form-text text-muted">
+                                                Días fijos del mes, separados por coma. Es la opción para el clásico "avisales después del 20". Dejalo vacío para no usar esta regla.
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label for="recordatorioCadaDias" class="form-label">
+                                                    <strong>Repetir cada (días)</strong>
+                                                </label>
+                                                <input type="number"
+                                                       class="form-control"
+                                                       id="recordatorioCadaDias"
+                                                       name="recordatorioCadaDias"
+                                                       min="1"
+                                                       value="{{ configuracion.recordatorioCadaDias }}"
+                                                       placeholder="Vacío = no repetir">
+                                                <div class="form-text text-muted">
+                                                    Cada cuántos días se insiste con una misma cuota impaga. Vacío apaga la repetición y solo avisa en los días fijos.
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label for="recordatorioMinCuotasVencidas" class="form-label">
+                                                    <strong>Avisar desde (cuotas vencidas)</strong>
+                                                </label>
+                                                <input type="number"
+                                                       class="form-control"
+                                                       id="recordatorioMinCuotasVencidas"
+                                                       name="recordatorioMinCuotasVencidas"
+                                                       min="1"
+                                                       value="{{ configuracion.recordatorioMinCuotasVencidas }}">
+                                                <div class="form-text text-muted">
+                                                    Mínimo de cuotas vencidas para que se le avise. Con <strong>1</strong> se avisa desde la primera.
+                                                </div>
                                             </div>
                                         </div>
                                         

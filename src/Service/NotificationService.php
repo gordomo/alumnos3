@@ -8,6 +8,7 @@ use App\Entity\AlumnoCursoHistorico;
 use App\Entity\AlumnosPagos;
 use App\Entity\DeudaAlumno;
 use App\Entity\EmailLog;
+use App\Entity\InstitutoConfiguracion;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Mailer\MailerInterface;
@@ -69,12 +70,13 @@ class NotificationService
         }
         
         $alumno = $pago->getAlumno();
-        $emailAlumno = $emailDestino ?? $alumno->getEmail();
-        
-        if (!$emailAlumno) {
-            $this->registrarEmailLog($instituto, $alumno, 'recibo', 'Sin email', 
-                'Recibo de Pago - ' . $instituto->getNombre(), 'fallido', 
-                'El alumno no tiene email configurado', $pago, null, $solicitadoPor, false);
+        $destinatarios = $this->resolverDestinatarios($alumno, $emailDestino, $configuracion);
+        $emailAlumno = implode(', ', $destinatarios);
+
+        if (!$destinatarios) {
+            $this->registrarEmailLog($instituto, $alumno, 'recibo', 'Sin email',
+                'Recibo de Pago - ' . $instituto->getNombre(), 'fallido',
+                'No hay ninguna dirección válida para notificar según la configuración del instituto', $pago, null, $solicitadoPor, false);
             return false;
         }
         
@@ -100,7 +102,7 @@ class NotificationService
             
             $email = (new TemplatedEmail())
                 ->from(new Address($fromEmail, $fromName))
-                ->to($emailAlumno)
+                ->to(...$destinatarios)
                 ->subject($asunto)
                 ->htmlTemplate('emails/recibo_pago.html.twig')
                 ->context([
@@ -171,13 +173,15 @@ class NotificationService
 
         $asunto = sprintf('Boletín de notas - %s - %s', $curso->getNombre(), $instituto->getNombre());
 
-        // Prioridad: destino explícito, después el tutor, después el alumno.
-        $destino = $emailDestino ?: ($alumno->getCorreTutor() ?: $alumno->getEmail());
+        // Igual que el recibo y el recordatorio: quién recibe lo decide la configuración del
+        // instituto. Antes acá el tutor tapaba al alumno y nunca llegaba a los dos.
+        $destinatarios = $this->resolverDestinatarios($alumno, $emailDestino, $configuracion);
+        $destino = implode(', ', $destinatarios);
 
-        if (!$destino || !filter_var($destino, FILTER_VALIDATE_EMAIL)) {
+        if (!$destinatarios) {
             $this->registrarEmailLog(
-                $instituto, $alumno, 'boletin', $destino ?: 'Sin email', $asunto,
-                'fallido', 'No hay un email de destino válido (ni del tutor ni del alumno)',
+                $instituto, $alumno, 'boletin', 'Sin email', $asunto,
+                'fallido', 'No hay ninguna dirección válida para notificar según la configuración del instituto',
                 null, null, $solicitadoPor, false
             );
 
@@ -196,7 +200,7 @@ class NotificationService
         try {
             $email = (new TemplatedEmail())
                 ->from(new Address($fromEmail, $instituto->getNombre() ?? 'Instituto'))
-                ->to($destino)
+                ->to(...$destinatarios)
                 ->subject($asunto)
                 ->htmlTemplate('emails/boletin_notas.html.twig')
                 ->context([
@@ -232,7 +236,11 @@ class NotificationService
     /**
      * Envía un recordatorio de deuda pendiente
      */
-    public function enviarRecordatorioDeuda(Alumno $alumno, DeudaAlumno $deuda, ?string $emailDestino = null, bool $forzarEnvio = false, ?User $solicitadoPor = null): bool
+    /**
+     * @param array|null $resumenVencidas ['cantidad' => int, 'total' => float] cuando el alumno
+     *                                    debe varias cuotas y se le manda un solo recordatorio.
+     */
+    public function enviarRecordatorioDeuda(Alumno $alumno, DeudaAlumno $deuda, ?string $emailDestino = null, bool $forzarEnvio = false, ?User $solicitadoPor = null, ?array $resumenVencidas = null): bool
     {
         $instituto = $alumno->getInstituto();
         $configuracion = $instituto->getConfiguracion();
@@ -245,12 +253,13 @@ class NotificationService
             return false;
         }
         
-        $emailAlumno = $emailDestino ?? $alumno->getEmail();
-        
-        if (!$emailAlumno) {
-            $this->registrarEmailLog($instituto, $alumno, 'recordatorio', 'Sin email', 
-                'Recordatorio de Pago Pendiente - ' . $instituto->getNombre(), 'fallido', 
-                'El alumno no tiene email configurado', null, $deuda, $solicitadoPor, false);
+        $destinatarios = $this->resolverDestinatarios($alumno, $emailDestino, $configuracion);
+        $emailAlumno = implode(', ', $destinatarios);
+
+        if (!$destinatarios) {
+            $this->registrarEmailLog($instituto, $alumno, 'recordatorio', 'Sin email',
+                'Recordatorio de Pago Pendiente - ' . $instituto->getNombre(), 'fallido',
+                'No hay ninguna dirección válida para notificar según la configuración del instituto', null, $deuda, $solicitadoPor, false);
             return false;
         }
         
@@ -276,7 +285,7 @@ class NotificationService
             
             $email = (new TemplatedEmail())
                 ->from(new Address($fromEmail, $fromName))
-                ->to($emailAlumno)
+                ->to(...$destinatarios)
                 ->subject($asunto)
                 ->htmlTemplate('emails/recordatorio_deuda.html.twig')
                 ->context([
@@ -284,6 +293,9 @@ class NotificationService
                     'alumno' => $alumno,
                     'deuda' => $deuda,
                     'logoUrl' => $logoUrl,
+                    // Cuando el recordatorio sale del proceso automático, el alumno recibe uno
+                    // solo aunque deba varias cuotas, así que el mail tiene que decir cuántas.
+                    'resumenVencidas' => $resumenVencidas,
                     'textoPersonalizado' => $configuracion ? $configuracion->getTextoPersonalizadoEmail() : null,
                 ]);
             
@@ -315,94 +327,174 @@ class NotificationService
     }
 
     /**
-     * Procesa y envía recordatorios automáticos según la configuración
-     * Se ejecuta diariamente para verificar deudas que requieren notificación
+     * Procesa y envía los recordatorios de deuda automáticos. Lo corre a diario el comando
+     * app:send-notifications.
+     *
+     * Tres reglas, todas configurables por instituto, y basta que se cumpla una:
+     *  - Días del mes fijos (recordatorioDiasMes), para el clásico "avisales después del 20".
+     *  - El día del primer vencimiento (enviarRecordatorioEnDiaVencimiento).
+     *  - Cada N días desde el último recordatorio de esa cuota (recordatorioCadaDias).
+     *
+     * Además el alumno tiene que llegar al mínimo de cuotas vencidas configurado, y recibe
+     * un solo mail por corrida aunque deba varias: se manda por la cuota más vieja e incluye
+     * cuántas debe en total. Antes se mandaba uno por cuota, o sea tres mails a un padre con
+     * tres meses atrasados.
      */
     public function procesarRecordatoriosAutomaticos(): int
     {
         $enviados = 0;
-        $fechaActual = new \DateTime();
-        $diaActual = (int)$fechaActual->format('d');
-        
-        // Obtener todos los institutos activos
-        $institutos = $this->entityManager->getRepository(Instituto::class)->findAll();
-        
-        foreach ($institutos as $instituto) {
+
+        foreach ($this->entityManager->getRepository(Instituto::class)->findAll() as $instituto) {
             $configuracion = $instituto->getConfiguracion();
-            
-            // Verificar si tiene activado el envío automático de recordatorios
+
             if (!$configuracion || !$configuracion->getEnviarRecordatoriosDeudas()) {
                 continue;
             }
-            
-            // Sincronizar deudas calculadas on-demand para todos los alumnos activos del instituto
+
+            // El día se evalúa en la zona horaria del instituto: con institutos en husos
+            // distintos, "hoy es 20" no es lo mismo para todos.
+            $diaActual = (int) $this->institutoTimezoneService->getNowForInstituto($instituto)->format('d');
+
+            $esDiaDeAviso = in_array($diaActual, $configuracion->getRecordatorioDiasMesArray(), true);
+
+            if (!$esDiaDeAviso && $configuracion->getEnviarRecordatorioEnDiaVencimiento()) {
+                $esDiaDeAviso = $diaActual === $this->primerDiaVencimiento($instituto);
+            }
+
             $alumnos = $this->entityManager->getRepository(Alumno::class)->findBy([
                 'instituto' => $instituto,
-                'activo' => true
+                'activo' => true,
             ]);
-            
+
             foreach ($alumnos as $alumno) {
                 $this->deudaCalculator->sincronizarDeudasConTabla($alumno);
             }
-            
-            // Obtener todas las deudas pendientes (no solo del mes actual)
-            $deudas = $this->entityManager->getRepository(DeudaAlumno::class)
-                ->createQueryBuilder('d')
-                ->leftJoin('d.alumno', 'a')
-                ->leftJoin('d.aplicaciones', 'pa')
-                ->groupBy('d.id')
-                ->having('COALESCE(SUM(pa.montoAplicado), 0) < d.monto + COALESCE(d.interes, 0)')
-                ->andWhere('a.instituto = :instituto')
-                ->andWhere('a.activo = :activo')
-                ->andWhere('a.email IS NOT NULL')
-                ->andWhere('a.email != :empty')
-                ->setParameter('instituto', $instituto)
-                ->setParameter('activo', true)
-                ->setParameter('empty', '')
-                ->getQuery()
-                ->getResult();
-            
-            foreach ($deudas as $deuda) {
-                $debeEnviar = false;
-                
-                // Opción 1: Enviar cada 3 días desde la creación o último envío
-                if ($this->debeEnviarRecordatorio($deuda)) {
-                    $debeEnviar = true;
+
+            $vencidasPorAlumno = $this->deudasVencidasPorAlumno($instituto);
+
+            foreach ($vencidasPorAlumno as $datos) {
+                if (count($datos['deudas']) < $configuracion->getRecordatorioMinCuotasVencidas()) {
+                    continue;
                 }
-                
-                // Opción 2: Enviar en el día de vencimiento (si está activado)
-                if ($configuracion->getEnviarRecordatorioEnDiaVencimiento()) {
-                    $vencimientos = $instituto->getVencimientos()->toArray();
-                    if (!empty($vencimientos)) {
-                        usort($vencimientos, function($a, $b) {
-                            return $a->getOrden() <=> $b->getOrden();
-                        });
-                        $primerVencimiento = reset($vencimientos);
-                        $diaVencimiento = $primerVencimiento->getDiaVencimiento();
-                        
-                        // Si estamos en el día de vencimiento, enviar
-                        if ($diaActual == $diaVencimiento) {
-                            $debeEnviar = true;
-                        }
-                    }
+
+                // La más vieja: es la que conviene mostrar y la que ancla el "cada N días".
+                $deuda = $datos['deudas'][0];
+
+                $debeEnviar = $esDiaDeAviso;
+
+                if (!$debeEnviar && $configuracion->getRecordatorioCadaDias()) {
+                    $debeEnviar = $this->debeEnviarRecordatorio($deuda, $configuracion->getRecordatorioCadaDias());
                 }
-                
-                if ($debeEnviar) {
-                    if ($this->enviarRecordatorioDeuda($deuda->getAlumno(), $deuda, true)) {
-                        $enviados++;
-                    }
+
+                if (!$debeEnviar) {
+                    continue;
+                }
+
+                $resumen = [
+                    'cantidad' => count($datos['deudas']),
+                    'total' => $datos['total'],
+                ];
+
+                // forzarEnvio va en true porque el switch del instituto ya se chequeó arriba.
+                // Antes este true se pasaba en la posición de $emailDestino, así que sin
+                // strict_types PHP lo convertía en la cadena "1" y todos los recordatorios
+                // automáticos se intentaban mandar a esa dirección y fallaban.
+                if ($this->enviarRecordatorioDeuda($datos['alumno'], $deuda, null, true, null, $resumen)) {
+                    $enviados++;
                 }
             }
         }
-        
+
         return $enviados;
     }
 
     /**
-     * Verifica si debe enviarse un recordatorio para una deuda
-     * Se envía cada 3 días desde la creación de la deuda o desde el último recordatorio
+     * Día del mes del primer vencimiento del instituto, o null si no tiene ninguno cargado.
      */
-    private function debeEnviarRecordatorio(DeudaAlumno $deuda): bool
+    private function primerDiaVencimiento(Instituto $instituto): ?int
+    {
+        $vencimientos = $instituto->getVencimientos()->toArray();
+        if (!$vencimientos) {
+            return null;
+        }
+
+        usort($vencimientos, static function ($a, $b) {
+            return $a->getOrden() <=> $b->getOrden();
+        });
+
+        return (int) reset($vencimientos)->getDiaVencimiento();
+    }
+
+    /**
+     * Cuotas impagas y ya vencidas del instituto, agrupadas por alumno y ordenadas de la más
+     * vieja a la más nueva.
+     *
+     * Impaga = lo aplicado por pagos no cubre monto + interés. Vencida = de un mes anterior al
+     * actual, o del mes actual con el día del primer vencimiento ya cumplido; es el mismo
+     * criterio que usa la pantalla de deudas, para que el mail no diga algo distinto de la app.
+     *
+     * @return array<int, array{alumno: Alumno, deudas: DeudaAlumno[], total: float}>
+     */
+    private function deudasVencidasPorAlumno(Instituto $instituto): array
+    {
+        $hoy = $this->institutoTimezoneService->getNowForInstituto($instituto);
+        $mesActual = (int) $hoy->format('n');
+        $anoActual = (int) $hoy->format('Y');
+        $diaActual = (int) $hoy->format('d');
+        $diaVencimiento = $this->primerDiaVencimiento($instituto) ?? 5;
+
+        $deudas = $this->entityManager->getRepository(DeudaAlumno::class)
+            ->createQueryBuilder('d')
+            ->leftJoin('d.alumno', 'a')
+            ->leftJoin('d.aplicaciones', 'pa')
+            ->groupBy('d.id')
+            ->having('COALESCE(SUM(pa.montoAplicado), 0) < d.monto + COALESCE(d.interes, 0)')
+            ->andWhere('a.instituto = :instituto')
+            ->andWhere('a.activo = :activo')
+            // Alcanza con que haya email del alumno o del tutor: cuál se usa lo decide
+            // resolverDestinatarios() según la configuración.
+            ->andWhere('(a.email IS NOT NULL AND a.email != :vacio) OR (a.corre_tutor IS NOT NULL AND a.corre_tutor != :vacio)')
+            ->setParameter('instituto', $instituto)
+            ->setParameter('activo', true)
+            ->setParameter('vacio', '')
+            ->orderBy('d.ano', 'ASC')
+            ->addOrderBy('d.mes', 'ASC')
+            ->getQuery()
+            ->getResult();
+
+        $porAlumno = [];
+        foreach ($deudas as $deuda) {
+            $ano = (int) $deuda->getAno();
+            $mes = (int) $deuda->getMes();
+
+            $esMesAnterior = $ano < $anoActual || ($ano === $anoActual && $mes < $mesActual);
+            $esMesActualVencido = $ano === $anoActual && $mes === $mesActual && $diaActual >= $diaVencimiento;
+
+            if (!$esMesAnterior && !$esMesActualVencido) {
+                continue;
+            }
+
+            $alumno = $deuda->getAlumno();
+            $id = $alumno->getId();
+
+            if (!isset($porAlumno[$id])) {
+                $porAlumno[$id] = ['alumno' => $alumno, 'deudas' => [], 'total' => 0.0];
+            }
+
+            $porAlumno[$id]['deudas'][] = $deuda;
+            $porAlumno[$id]['total'] += (float) $deuda->getMonto() + (float) $deuda->getInteres();
+        }
+
+        return $porAlumno;
+    }
+
+    /**
+     * Si toca repetir el recordatorio de esta cuota: cuentan los días desde el último
+     * recordatorio enviado, o desde que se creó la deuda si nunca se mandó ninguno.
+     *
+     * $cadaDias antes estaba fijo en 3 acá adentro; ahora lo define el instituto.
+     */
+    private function debeEnviarRecordatorio(DeudaAlumno $deuda, int $cadaDias): bool
     {
         $fechaActual = new \DateTime();
         
@@ -430,8 +522,62 @@ class NotificationService
         // Calcular días transcurridos
         $diasTranscurridos = $fechaActual->diff($fechaReferencia)->days;
         
-        // Enviar si han pasado 3 o más días
-        return $diasTranscurridos >= 3;
+        return $diasTranscurridos >= $cadaDias;
+    }
+
+    /**
+     * Direcciones a las que va una notificación de este alumno.
+     *
+     * $override gana sobre todo: lo usa el reenvío manual desde el historial de emails,
+     * que apunta a una dirección concreta elegida por el operador.
+     *
+     * Sin override manda la configuración del instituto: 'alumno', 'tutor' o 'ambos'.
+     * Se descartan las direcciones inválidas y las repetidas, así que un alumno cuyo email
+     * es el mismo que el del tutor recibe una sola copia y no dos.
+     *
+     * Devuelve lista vacía si no hay ninguna dirección usable; el llamador lo registra
+     * como fallido en el log en vez de intentar un envío que va a explotar.
+     *
+     * @return string[]
+     */
+    private function resolverDestinatarios(
+        Alumno $alumno,
+        ?string $override,
+        ?InstitutoConfiguracion $configuracion
+    ): array {
+        if ($override !== null && trim($override) !== '') {
+            $override = trim($override);
+
+            return filter_var($override, FILTER_VALIDATE_EMAIL) ? [$override] : [];
+        }
+
+        $modo = $configuracion ? $configuracion->getNotificarA() : 'alumno';
+
+        $candidatos = [];
+        if ($modo === 'alumno' || $modo === 'ambos') {
+            $candidatos[] = $alumno->getEmail();
+        }
+        if ($modo === 'tutor' || $modo === 'ambos') {
+            $candidatos[] = $alumno->getCorreTutor();
+        }
+        // Con 'tutor' y sin email de tutor cargado, se cae al del alumno: es mejor que la
+        // notificación llegue a alguien que a nadie.
+        if ($modo === 'tutor' && !$alumno->getCorreTutor()) {
+            $candidatos[] = $alumno->getEmail();
+        }
+
+        $destinatarios = [];
+        foreach ($candidatos as $candidato) {
+            $email = trim((string) $candidato);
+            if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                continue;
+            }
+            if (!in_array($email, $destinatarios, true)) {
+                $destinatarios[] = $email;
+            }
+        }
+
+        return $destinatarios;
     }
 
     /**

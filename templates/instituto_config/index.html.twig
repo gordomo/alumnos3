@@ -689,6 +689,33 @@
                                                         </td>
                                                     </tr>
                                                     <tr>
+                                                        <th>Destinatarios de los emails:</th>
+                                                        <td>
+                                                            {% set etiquetasNotificarA = {
+                                                                'alumno': 'Solo al alumno',
+                                                                'tutor': 'Solo al tutor',
+                                                                'ambos': 'Al alumno y al tutor'
+                                                            } %}
+                                                            <span class="badge bg-primary">{{ etiquetasNotificarA[configuracion.notificarA]|default('Solo al alumno') }}</span>
+                                                            <small class="text-muted d-block">Aplica a recibos, recordatorios de deuda y boletines</small>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th>Cuándo se manda el recordatorio:</th>
+                                                        <td>
+                                                            {% if configuracion.recordatorioDiasMesArray is not empty %}
+                                                                <span class="badge bg-info text-dark">Días {{ configuracion.recordatorioDiasMesArray|join(', ') }} de cada mes</span>
+                                                            {% endif %}
+                                                            {% if configuracion.recordatorioCadaDias %}
+                                                                <span class="badge bg-info text-dark">Repite cada {{ configuracion.recordatorioCadaDias }} día{{ configuracion.recordatorioCadaDias > 1 ? 's' : '' }}</span>
+                                                            {% endif %}
+                                                            {% if configuracion.recordatorioDiasMesArray is empty and not configuracion.recordatorioCadaDias and not configuracion.enviarRecordatorioEnDiaVencimiento %}
+                                                                <span class="text-muted">Sin ninguna regla activa: no se enviarán recordatorios automáticos</span>
+                                                            {% endif %}
+                                                            <small class="text-muted d-block">Desde {{ configuracion.recordatorioMinCuotasVencidas }} cuota{{ configuracion.recordatorioMinCuotasVencidas > 1 ? 's' : '' }} vencida{{ configuracion.recordatorioMinCuotasVencidas > 1 ? 's' : '' }}</small>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
                                                         <th>Texto personalizado para emails:</th>
                                                         <td>
                                                             {% if configuracion.textoPersonalizadoEmail %}

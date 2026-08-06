@@ -112,13 +112,22 @@
             
             <p>Estimado/a <strong>{{ alumno.nombre }} {{ alumno.apellido }}</strong>,</p>
             
+            {# resumenVencidas llega desde el proceso automático, que manda un solo mail por
+               alumno aunque deba varias cuotas. En un reenvío manual no viene. #}
+            {% set variasCuotas = resumenVencidas is defined and resumenVencidas and resumenVencidas.cantidad > 1 %}
+
             <div class="alerta">
-                <strong>⚠️ Recordatorio:</strong> Le recordamos que tiene un pago pendiente.
+                <strong>⚠️ Recordatorio:</strong>
+                {% if variasCuotas %}
+                    Le recordamos que tiene <strong>{{ resumenVencidas.cantidad }} cuotas vencidas</strong> sin abonar.
+                {% else %}
+                    Le recordamos que tiene un pago pendiente.
+                {% endif %}
             </div>
-            
+
             <div class="deuda-info">
                 <div class="info-row">
-                    <span class="info-label">Curso:</span>
+                    <span class="info-label">{% if variasCuotas %}Cuota más antigua{% else %}Curso{% endif %}:</span>
                     <span class="info-value">{{ deuda.curso.nombre }}</span>
                 </div>
                 <div class="info-row">
@@ -135,7 +144,13 @@
             </div>
             
             <div class="monto-deuda">
-                Monto Pendiente: ${{ deuda.monto|number_format(2, ',', '.') }}
+                {% if variasCuotas %}
+                    Total vencido: ${{ resumenVencidas.total|number_format(2, ',', '.') }}
+                {% else %}
+                    {# Monto más interés: mostrar solo el monto dejaba el recargo por mora afuera
+                       y el mail decía menos de lo que hay que pagar. #}
+                    Monto Pendiente: ${{ (deuda.monto + (deuda.interes ?? 0))|number_format(2, ',', '.') }}
+                {% endif %}
             </div>
             
             {% if textoPersonalizado %}

@@ -89,6 +89,40 @@ class InstitutoConfiguracion
     private $textoPersonalizadoEmail;
 
     /**
+     * A quién se le manda cada notificación del alumno: 'alumno', 'tutor' o 'ambos'.
+     *
+     * El default es 'alumno' porque es lo que hacía el sistema antes de que esto fuera
+     * configurable, así que los institutos existentes no cambian de comportamiento.
+     *
+     * @ORM\Column(type="string", length=20, options={"default": "alumno"})
+     */
+    private $notificarA = 'alumno';
+
+    /**
+     * Días del mes en los que se manda el recordatorio de deuda, separados por coma
+     * (ej: "20,28"). Vacío significa que esta regla no se aplica.
+     *
+     * @ORM\Column(type="string", length=60, nullable=true)
+     */
+    private $recordatorioDiasMes;
+
+    /**
+     * Cada cuántos días se repite el recordatorio de una misma cuota impaga.
+     * Null o 0 apaga la repetición. Antes estaba fijo en 3 dentro del servicio.
+     *
+     * @ORM\Column(type="integer", nullable=true, options={"default": 3})
+     */
+    private $recordatorioCadaDias = 3;
+
+    /**
+     * Mínimo de cuotas vencidas que tiene que tener el alumno para que se le mande el
+     * recordatorio. Con 1 se avisa desde la primera, que es lo que se pidió.
+     *
+     * @ORM\Column(type="integer", options={"default": 1})
+     */
+    private $recordatorioMinCuotasVencidas = 1;
+
+    /**
      * Zona horaria del instituto para fechas y "hoy" (ej: America/Argentina/Buenos_Aires).
      * Si es null, se usa APP_TIMEZONE o la del servidor.
      *
@@ -511,6 +545,81 @@ class InstitutoConfiguracion
     public function setTextoPersonalizadoEmail(?string $textoPersonalizadoEmail): self
     {
         $this->textoPersonalizadoEmail = $textoPersonalizadoEmail;
+        return $this;
+    }
+
+    public function getNotificarA(): string
+    {
+        return $this->notificarA ?: 'alumno';
+    }
+
+    public function setNotificarA(?string $notificarA): self
+    {
+        // Cualquier valor que no sea uno de los tres cae en 'alumno', que es el default
+        // histórico: es preferible avisarle a alguien que no avisarle a nadie.
+        $this->notificarA = in_array($notificarA, ['alumno', 'tutor', 'ambos'], true)
+            ? $notificarA
+            : 'alumno';
+
+        return $this;
+    }
+
+    public function getRecordatorioDiasMes(): ?string
+    {
+        return $this->recordatorioDiasMes;
+    }
+
+    public function setRecordatorioDiasMes(?string $recordatorioDiasMes): self
+    {
+        $this->recordatorioDiasMes = $recordatorioDiasMes;
+        return $this;
+    }
+
+    /**
+     * Los días del mes ya normalizados: sin repetidos, ordenados y dentro de 1..31.
+     *
+     * @return int[]
+     */
+    public function getRecordatorioDiasMesArray(): array
+    {
+        if (!$this->recordatorioDiasMes) {
+            return [];
+        }
+
+        $dias = [];
+        foreach (explode(',', $this->recordatorioDiasMes) as $parte) {
+            $dia = (int) trim($parte);
+            if ($dia >= 1 && $dia <= 31 && !in_array($dia, $dias, true)) {
+                $dias[] = $dia;
+            }
+        }
+        sort($dias);
+
+        return $dias;
+    }
+
+    public function getRecordatorioCadaDias(): ?int
+    {
+        return $this->recordatorioCadaDias;
+    }
+
+    public function setRecordatorioCadaDias(?int $recordatorioCadaDias): self
+    {
+        $this->recordatorioCadaDias = $recordatorioCadaDias !== null && $recordatorioCadaDias > 0
+            ? $recordatorioCadaDias
+            : null;
+
+        return $this;
+    }
+
+    public function getRecordatorioMinCuotasVencidas(): int
+    {
+        return max(1, (int) $this->recordatorioMinCuotasVencidas);
+    }
+
+    public function setRecordatorioMinCuotasVencidas(?int $minimo): self
+    {
+        $this->recordatorioMinCuotasVencidas = $minimo !== null && $minimo > 0 ? $minimo : 1;
         return $this;
     }
 
