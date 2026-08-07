@@ -103,6 +103,14 @@ class EvaluacionController extends AbstractCalificacionController
     }
 
     /**
+     * @Route("/libreta/{id}", name="app_evaluacion_libreta", methods={"GET"})
+     */
+    public function libreta(AlumnoCursoHistorico $historico): Response
+    {
+        return $this->pantallaLibreta($historico);
+    }
+
+    /**
      * @Route("/boletin/{id}/email", name="app_evaluacion_boletin_email", methods={"POST"})
      */
     public function boletinEmail(Request $request, AlumnoCursoHistorico $historico): Response

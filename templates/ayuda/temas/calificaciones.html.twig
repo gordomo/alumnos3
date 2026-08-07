@@ -122,7 +122,48 @@
    'Una vez que el curso se cierra, la grilla se muestra pero no se puede modificar. Es a
     propósito: el cierre ya decidió aprobaciones sobre esas notas. Cargá todo antes de cerrar.') }}
 
-<h2>4. El boletín</h2>
+<h2>4. La libreta</h2>
+
+<p>
+    Es la vista de siempre, la de papel: una <strong>grilla de áreas por período</strong> con el
+    logo y los colores del instituto, lista para imprimir o guardar como PDF.
+</p>
+
+<p>Se llega desde el resumen del curso, con el botón <strong>Libreta</strong> de cada alumno.</p>
+
+<p>Tiene tres bloques:</p>
+
+<ul>
+    <li><strong>Asistencia</strong>: presentes, ausentes y porcentaje de cada período.</li>
+    <li>
+        <strong>Calificaciones</strong>: una fila por área y una columna por período. Cada celda
+        es el promedio de las evaluaciones de esa área en ese período, y la última columna el
+        promedio del área en todo el año.
+    </li>
+    <li>
+        <strong>Otras evaluaciones</strong>: las que no tienen área asignada. No entran en la
+        grilla pero sí en el promedio general.
+    </li>
+</ul>
+
+{{ m.nota('info', 'No hay nada que cargar en la libreta',
+   'Se calcula sola con las notas que ya cargó el profesor y las asistencias que ya se tomaron.
+    Lo único que hay que hacer es indicar el área y el período de cada evaluación.') }}
+
+<h3>Imprimirla o guardarla en PDF</h3>
+
+<p>
+    El botón <strong>Imprimir / Guardar PDF</strong> abre el diálogo de impresión del navegador.
+    En el destino, elegí <em>Guardar como PDF</em> y tenés el archivo. Al imprimir se ocultan el
+    menú y los botones: sale solo la hoja.
+</p>
+
+{{ m.nota('warning', 'Activá los colores de fondo al imprimir',
+   'En las opciones del diálogo de impresión, buscá <em>Más ajustes</em> y activá
+    <strong>Gráficos de fondo</strong>. Sin eso los encabezados de las tablas salen en blanco y
+    la libreta pierde los colores del instituto.') }}
+
+<h2>5. El boletín</h2>
 
 <p>
     Desde el resumen del curso, cada alumno tiene un <strong>boletín</strong>: la lista de sus

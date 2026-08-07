@@ -521,6 +521,38 @@
                                             </small>
                                         {% endif %}
 
+                                        {# Identidad de la libreta. El logo se sube en Información General. #}
+                                        <hr>
+                                        <label class="form-label">Colores de la libreta</label>
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label for="color_primario" class="form-label small text-muted">Color principal</label>
+                                                <div class="input-group">
+                                                    <input type="color" class="form-control form-control-color"
+                                                           id="color_primario_picker"
+                                                           value="{{ configuracion.colorPrimario|default('#0d6efd') }}"
+                                                           onchange="document.getElementById('color_primario').value = this.value;">
+                                                    <input type="text" class="form-control" id="color_primario"
+                                                           name="color_primario" maxlength="7" placeholder="#0d6efd"
+                                                           value="{{ configuracion.colorPrimario }}">
+                                                </div>
+                                                <small class="form-text text-muted">Bordes y encabezados. Vacío usa el color del sistema.</small>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label for="color_secundario" class="form-label small text-muted">Color secundario</label>
+                                                <div class="input-group">
+                                                    <input type="color" class="form-control form-control-color"
+                                                           id="color_secundario_picker"
+                                                           value="{{ configuracion.colorSecundario|default('#e7f1ff') }}"
+                                                           onchange="document.getElementById('color_secundario').value = this.value;">
+                                                    <input type="text" class="form-control" id="color_secundario"
+                                                           name="color_secundario" maxlength="7" placeholder="#e7f1ff"
+                                                           value="{{ configuracion.colorSecundario }}">
+                                                </div>
+                                                <small class="form-text text-muted">Fondos suaves de las filas.</small>
+                                            </div>
+                                        </div>
+
                                         {# Áreas de evaluación: los ejes de la libreta. Rutas propias, igual que
                                            los períodos y los conceptos. #}
                                         <hr>

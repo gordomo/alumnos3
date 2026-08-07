@@ -121,6 +121,14 @@ class CalificacionProfesorController extends AbstractCalificacionController
     }
 
     /**
+     * @Route("/libreta/{id}", name="app_profesor_calificaciones_libreta", methods={"GET"})
+     */
+    public function libreta(AlumnoCursoHistorico $historico): Response
+    {
+        return $this->pantallaLibreta($historico);
+    }
+
+    /**
      * @Route("/boletin/{id}/email", name="app_profesor_calificaciones_boletin_email", methods={"POST"})
      */
     public function boletinEmail(Request $request, AlumnoCursoHistorico $historico): Response

@@ -1,0 +1,308 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Libreta · {{ alumno.apellido }}, {{ alumno.nombre }}{% endblock %}
+
+{% set primario = configuracion and configuracion.colorPrimario ? configuracion.colorPrimario : '#0d6efd' %}
+{% set secundario = configuracion and configuracion.colorSecundario ? configuracion.colorSecundario : '#e7f1ff' %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    {# Los dos colores vienen validados como #rrggbb desde la entidad, justamente porque acá se
+       interpolan dentro de CSS. #}
+    <style>
+        .libreta {
+            --lib-primario: {{ primario }};
+            --lib-secundario: {{ secundario }};
+        }
+        .libreta-hoja {
+            background: #fff;
+            border: 2px solid var(--lib-primario);
+            border-radius: 14px;
+            padding: 1.25rem 1.5rem;
+        }
+        .libreta-encabezado {
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+            flex-wrap: wrap;
+            border-bottom: 2px solid var(--lib-primario);
+            padding-bottom: 1rem;
+            margin-bottom: 1.25rem;
+        }
+        .libreta-logo { max-height: 74px; max-width: 190px; }
+        .libreta-datos { flex: 1 1 320px; min-width: 260px; }
+        .libreta-campo {
+            border: 2px solid var(--lib-primario);
+            border-radius: 999px;
+            padding: .3rem .9rem;
+            margin-bottom: .45rem;
+            background: #fff;
+        }
+        .libreta-campo .etiqueta {
+            color: var(--lib-primario);
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: .78rem;
+            letter-spacing: .4px;
+            margin-right: .4rem;
+        }
+        .libreta-campo .valor { font-weight: 700; font-size: 1.05rem; }
+
+        .libreta table { width: 100%; border-collapse: collapse; }
+        .libreta th, .libreta td {
+            border: 1px solid #cfd8dc;
+            padding: .45rem .55rem;
+            vertical-align: middle;
+        }
+        .libreta thead th {
+            background: var(--lib-primario);
+            color: #fff;
+            text-align: center;
+            font-size: .85rem;
+            text-transform: uppercase;
+            letter-spacing: .3px;
+        }
+        .libreta thead th.libreta-th-area {
+            background: var(--lib-primario);
+            text-align: left;
+        }
+        .libreta tbody th {
+            background: var(--lib-secundario);
+            text-align: left;
+            font-weight: 700;
+            color: #1f2a2d;
+        }
+        .libreta td { text-align: center; font-weight: 600; }
+        .libreta .celda-vacia { color: #b0bec5; font-weight: 400; }
+        .libreta-total { background: var(--lib-secundario); }
+
+        @media print {
+            /* En papel sobra todo lo que no es la hoja: menú, botones y encabezado del panel. */
+            #sidebar-wrapper, .sidebar-wrapper, nav, .navbar,
+            #menu-toggle, .libreta-sin-imprimir { display: none !important; }
+            .libreta-hoja { border: none; padding: 0; }
+            /* Solo se anulan los márgenes: poniendo el padding en cero también se perdía el
+               del contenedor y el borde izquierdo de la hoja quedaba cortado. */
+            body, #wrapper, #page-content-wrapper { margin: 0 !important; }
+            .libreta { padding: 0 6mm !important; }
+            .libreta thead th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .libreta tbody th, .libreta-total { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid mt-3 libreta">
+
+    <div class="d-flex justify-content-between align-items-center mb-3 libreta-sin-imprimir">
+        <nav aria-label="breadcrumb" class="mb-0">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{{ path(rutas.index) }}">Calificaciones</a></li>
+                <li class="breadcrumb-item"><a href="{{ path(rutas.curso, {'id': curso.id}) }}">{{ curso.nombre }}</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Libreta</li>
+            </ol>
+        </nav>
+        <div class="d-flex gap-2">
+            <a href="{{ path(rutas.boletin, {'id': historico.id}) }}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-list-ul"></i> Ver como boletín
+            </a>
+            <button type="button" class="btn btn-primary btn-sm" onclick="window.print();">
+                <i class="bi bi-printer"></i> Imprimir / Guardar PDF
+            </button>
+        </div>
+    </div>
+
+    <div class="libreta-hoja">
+        <div class="libreta-encabezado">
+            {% if instituto.logo %}
+                <img src="{{ asset('uploads/logos/' ~ instituto.logo) }}" alt="{{ instituto.nombre }}" class="libreta-logo">
+            {% else %}
+                <div style="font-weight: 800; font-size: 1.4rem; color: var(--lib-primario);">
+                    {{ instituto.nombre }}
+                </div>
+            {% endif %}
+
+            <div class="libreta-datos">
+                <div class="libreta-campo">
+                    <span class="etiqueta">Alumno</span>
+                    <span class="valor">{{ alumno.apellido }}, {{ alumno.nombre }}</span>
+                </div>
+                <div class="d-flex gap-2 flex-wrap">
+                    <div class="libreta-campo flex-grow-1">
+                        <span class="etiqueta">Curso</span>
+                        <span class="valor">{{ historico.nombreCurso|default(curso.nombre) }}</span>
+                    </div>
+                    <div class="libreta-campo">
+                        <span class="etiqueta">Año</span>
+                        <span class="valor">{{ ano }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if not usaGrilla %}
+            <div class="alert alert-info libreta-sin-imprimir">
+                <strong>Esta libreta todavía no tiene grilla.</strong>
+                Para armarla hacen falta <strong>períodos</strong> (los trimestres o mesas, que son las
+                columnas) y <strong>áreas de evaluación</strong> (Writing, Listening…, que son las filas).
+                Se cargan en Configuración → Configuración académica. Abajo se listan las notas del alumno.
+            </div>
+        {% endif %}
+
+        {% if asistencia is not empty %}
+            <h2 class="h6 text-uppercase mb-2" style="color: var(--lib-primario);">Asistencia</h2>
+            <div class="table-responsive mb-4">
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="libreta-th-area" style="width: 26%;">&nbsp;</th>
+                            {% for periodo in periodos %}
+                                <th>{{ periodo.etiquetaCorta }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th>Presentes</th>
+                            {% for periodo in periodos %}
+                                {% set dato = asistencia[periodo.id]|default(null) %}
+                                <td>{{ dato and dato.total > 0 ? dato.presentes : '—' }}</td>
+                            {% endfor %}
+                        </tr>
+                        <tr>
+                            <th>Ausentes</th>
+                            {% for periodo in periodos %}
+                                {% set dato = asistencia[periodo.id]|default(null) %}
+                                <td>{{ dato and dato.total > 0 ? dato.ausentes : '—' }}</td>
+                            {% endfor %}
+                        </tr>
+                        <tr class="libreta-total">
+                            <th>% de asistencia</th>
+                            {% for periodo in periodos %}
+                                {% set dato = asistencia[periodo.id]|default(null) %}
+                                <td>
+                                    {% if dato and dato.porcentaje is not null %}
+                                        {{ dato.porcentaje }}%
+                                    {% else %}
+                                        <span class="celda-vacia">—</span>
+                                    {% endif %}
+                                </td>
+                            {% endfor %}
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+
+        {% if grilla is not empty and periodos is not empty %}
+            <h2 class="h6 text-uppercase mb-2" style="color: var(--lib-primario);">Calificaciones</h2>
+            <div class="table-responsive mb-3">
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="libreta-th-area" style="width: 26%;">Área</th>
+                            {% for periodo in periodos %}
+                                <th>{{ periodo.etiquetaCorta }}</th>
+                            {% endfor %}
+                            <th style="width: 12%;">Promedio</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for fila in grilla %}
+                            <tr>
+                                <th>
+                                    {% if fila.area.icono %}<i class="bi {{ fila.area.icono }}"></i>{% endif %}
+                                    {{ fila.area.nombre }}
+                                </th>
+                                {% for periodo in periodos %}
+                                    {% set celda = fila.celdas[periodo.id]|default(null) %}
+                                    <td>
+                                        {% if celda and celda.promedio is not null %}
+                                            {{ celda.promedio|number_format(2, ',', '.') }}
+                                        {% elseif celda and celda.cargadas > 0 %}
+                                            <span title="Tiene notas sin valor numérico">✓</span>
+                                        {% else %}
+                                            <span class="celda-vacia">—</span>
+                                        {% endif %}
+                                    </td>
+                                {% endfor %}
+                                <td class="libreta-total">
+                                    {% if fila.resumenArea and fila.resumenArea.promedio is not null %}
+                                        {{ fila.resumenArea.promedio|number_format(2, ',', '.') }}
+                                    {% else %}
+                                        <span class="celda-vacia">—</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+
+        {% if sinArea is not empty %}
+            <h2 class="h6 text-uppercase mb-2" style="color: var(--lib-primario);">
+                Otras evaluaciones
+            </h2>
+            <div class="table-responsive mb-3">
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="libreta-th-area">Evaluación</th>
+                            <th style="width: 16%;">Período</th>
+                            <th style="width: 16%;">Fecha</th>
+                            <th style="width: 16%;">Nota</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for calificacion in sinArea %}
+                            <tr>
+                                <th>{{ calificacion.evaluacion.nombre }}</th>
+                                <td>
+                                    {{ calificacion.evaluacion.periodo
+                                        ? calificacion.evaluacion.periodo.etiquetaCorta
+                                        : '—' }}
+                                </td>
+                                <td>{{ calificacion.evaluacion.fecha|date(date_format) }}</td>
+                                <td>
+                                    {% if calificacion.ausente %}
+                                        <span class="badge bg-warning text-dark">Ausente</span>
+                                    {% else %}
+                                        {{ calificacion.etiqueta }}
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3 pt-3"
+             style="border-top: 2px solid var(--lib-primario);">
+            <div>
+                <span class="etiqueta" style="color: var(--lib-primario); font-weight: 700; text-transform: uppercase;">
+                    Promedio general
+                </span>
+                <strong class="ms-2" style="font-size: 1.2rem;">
+                    {{ resumen.promedio is not null ? resumen.promedio|number_format(2, ',', '.') : '—' }}
+                </strong>
+                <small class="text-muted ms-2">{{ resumen.cargadas }} nota(s)</small>
+            </div>
+            <div>
+                {% if resumen.resultado == 'aprobado' %}
+                    <span class="badge bg-success fs-6"><i class="bi bi-check-circle"></i> Aprobado</span>
+                {% elseif resumen.resultado == 'desaprobado' %}
+                    <span class="badge bg-danger fs-6"><i class="bi bi-x-circle"></i> Desaprobado</span>
+                {% else %}
+                    <span class="badge bg-secondary fs-6">Sin datos</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <a href="{{ path(rutas.curso, {'id': curso.id}) }}" class="btn btn-secondary mt-3 libreta-sin-imprimir">
+        ← Volver al curso
+    </a>
+</div>
+{% endblock %}

@@ -16,6 +16,7 @@ use App\Service\InstitutoTimezoneService;
 use App\Service\NotificationService;
 use App\Service\PromedioCalificacionService;
 use App\Repository\AreaEvaluacionRepository;
+use App\Service\LibretaService;
 use App\Repository\PeriodoAcademicoRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -43,7 +44,8 @@ abstract class AbstractCalificacionController extends AbstractController
         protected CalificacionRepository $calificacionRepository,
         protected NotificationService $notificationService,
         protected PeriodoAcademicoRepository $periodoRepository,
-        protected AreaEvaluacionRepository $areaRepository
+        protected AreaEvaluacionRepository $areaRepository,
+        protected LibretaService $libretaService
     ) {
     }
 
@@ -306,6 +308,28 @@ abstract class AbstractCalificacionController extends AbstractController
     }
 
     /**
+     * Libreta del alumno: la grilla de áreas por período, lista para imprimir.
+     *
+     * Comparte permiso con el boletín (VER_NOTAS): es la misma información, presentada como la
+     * libreta de papel que ya usan los institutos.
+     */
+    protected function pantallaLibreta(AlumnoCursoHistorico $historico): Response
+    {
+        $curso = $historico->getCurso();
+        $this->denyAccessUnlessGranted(CursoVoter::VER_NOTAS, $curso);
+
+        $instituto = $curso->getInstituto();
+        $configuracion = $instituto->getConfiguracion();
+
+        return $this->render('calificacion/libreta.html.twig', $this->libretaService->construir($historico) + [
+            'instituto' => $instituto,
+            'configuracion' => $configuracion,
+            'rutas' => $this->rutas(),
+            'date_format' => $this->institutoTimezoneService->getDateFormatForInstituto($instituto),
+        ]);
+    }
+
+    /**
      * Envía el boletín por email. Por defecto al tutor del alumno.
      */
     protected function accionEnviarBoletin(Request $request, AlumnoCursoHistorico $historico): Response
@@ -371,6 +395,7 @@ abstract class AbstractCalificacionController extends AbstractController
             'editar' => $base . '_evaluacion_editar',
             'eliminar' => $base . '_evaluacion_eliminar',
             'boletin' => $base . '_boletin',
+            'libreta' => $base . '_libreta',
             'boletin_email' => $base . '_boletin_email',
         ];
     }

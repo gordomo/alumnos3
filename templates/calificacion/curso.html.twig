@@ -145,7 +145,10 @@
                                     </td>
                                     <td class="text-end">
                                         <a href="{{ path(rutas.boletin, {'id': fila.historico.id}) }}" class="btn btn-sm btn-outline-secondary">
-                                            <i class="bi bi-file-earmark-text"></i> Ver
+                                            <i class="bi bi-file-earmark-text"></i> Boletín
+                                        </a>
+                                        <a href="{{ path(rutas.libreta, {'id': fila.historico.id}) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-journal-bookmark"></i> Libreta
                                         </a>
                                     </td>
                                 </tr>

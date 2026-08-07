@@ -19,9 +19,14 @@
                 {{ alumno.apellido }}, {{ alumno.nombre }}
                 <small class="ms-2">— {{ curso.nombre }}</small>
             </h4>
-            <button type="button" class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#modalEnviarBoletin">
-                <i class="bi bi-envelope"></i> Enviar por email
-            </button>
+            <div class="d-flex gap-2">
+                <a href="{{ path(rutas.libreta, {'id': historico.id}) }}" class="btn btn-light btn-sm">
+                    <i class="bi bi-journal-bookmark"></i> Ver como libreta
+                </a>
+                <button type="button" class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#modalEnviarBoletin">
+                    <i class="bi bi-envelope"></i> Enviar por email
+                </button>
+            </div>
         </div>
         <div class="card-body">
             <div class="alert alert-light border d-flex justify-content-between align-items-center">

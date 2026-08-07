@@ -231,6 +231,20 @@ class InstitutoConfiguracion
     private $areasEvaluacion;
 
     /**
+     * Color principal de la libreta, en hexadecimal (#rrggbb). Null usa el color por default.
+     *
+     * @ORM\Column(type="string", length=7, nullable=true)
+     */
+    private $colorPrimario;
+
+    /**
+     * Color secundario de la libreta, para los fondos suaves.
+     *
+     * @ORM\Column(type="string", length=7, nullable=true)
+     */
+    private $colorSecundario;
+
+    /**
      * Si es true, se cobrará una cuota de inscripción anual a todos los alumnos.
      *
      * @ORM\Column(type="boolean", options={"default": false})
@@ -496,6 +510,57 @@ class InstitutoConfiguracion
         $this->areasEvaluacion->removeElement($area);
 
         return $this;
+    }
+
+    public function getColorPrimario(): ?string
+    {
+        return $this->colorPrimario;
+    }
+
+    public function setColorPrimario(?string $color): self
+    {
+        $this->colorPrimario = self::normalizarColor($color);
+        return $this;
+    }
+
+    public function getColorSecundario(): ?string
+    {
+        return $this->colorSecundario;
+    }
+
+    public function setColorSecundario(?string $color): self
+    {
+        $this->colorSecundario = self::normalizarColor($color);
+        return $this;
+    }
+
+    /**
+     * Deja el color en #rrggbb minúsculas, o null si no es un hexadecimal válido.
+     *
+     * Se valida acá y no en el template porque estos valores se interpolan dentro de un
+     * atributo style: cualquier otra cosa sería inyectar CSS arbitrario en la página.
+     */
+    private static function normalizarColor(?string $color): ?string
+    {
+        if ($color === null) {
+            return null;
+        }
+
+        $color = trim($color);
+        if ($color === '') {
+            return null;
+        }
+
+        if ($color[0] !== '#') {
+            $color = '#' . $color;
+        }
+
+        // Se acepta la forma corta #abc y se expande, para no rechazar algo válido en CSS.
+        if (preg_match('/^#([0-9a-fA-F]{3})$/', $color, $m) === 1) {
+            $color = '#' . $m[1][0] . $m[1][0] . $m[1][1] . $m[1][1] . $m[1][2] . $m[1][2];
+        }
+
+        return preg_match('/^#[0-9a-fA-F]{6}$/', $color) === 1 ? strtolower($color) : null;
     }
 
     public function getId(): ?int

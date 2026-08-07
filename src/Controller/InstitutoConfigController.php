@@ -143,6 +143,11 @@ class InstitutoConfigController extends AbstractController
             $notaAprobacion = $request->request->get('nota_aprobacion');
             $configuracion->setNotaAprobacion($notaAprobacion !== '' && $notaAprobacion !== null ? (float) $notaAprobacion : null);
 
+            // Colores de la libreta. El setter descarta lo que no sea un hexadecimal válido,
+            // porque estos valores se interpolan dentro de CSS en la libreta.
+            $configuracion->setColorPrimario($request->request->get('color_primario'));
+            $configuracion->setColorSecundario($request->request->get('color_secundario'));
+
             $configuracion->setNotasInfluyenAprobacion($request->request->has('notas_influyen_aprobacion'));
             $configuracion->setCriterioAprobacionNotas((string) $request->request->get('criterio_aprobacion_notas', InstitutoConfiguracion::CRITERIO_PROMEDIO));
 

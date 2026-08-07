@@ -80,6 +80,10 @@ class CalificacionRepository extends ServiceEntityRepository
         return $this->createQueryBuilder('c')
             ->innerJoin('c.evaluacion', 'e')->addSelect('e')
             ->leftJoin('c.concepto', 'co')->addSelect('co')
+            // Área y período vienen en la misma query porque la libreta los recorre para armar
+            // la grilla: sin esto son dos lazy loads por calificación.
+            ->leftJoin('e.area', 'ar')->addSelect('ar')
+            ->leftJoin('e.periodo', 'pe')->addSelect('pe')
             ->andWhere('c.cursoHistorico = :historico')
             ->setParameter('historico', $historico)
             ->orderBy('e.fecha', 'ASC')

@@ -81,4 +81,44 @@ class AsistenciaAlumnosRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
-} 
+    /**
+     * Presentes y ausentes por mes de un alumno en un curso, dentro de un rango.
+     *
+     * Devuelve el conteo agrupado por mes en una sola query, para que la libreta pueda
+     * repartirlo entre sus periodos sin hacer una consulta por periodo.
+     *
+     * @return array<int, array{presentes: int, ausentes: int}> indexado por numero de mes
+     */
+    public function contarPorMes(
+        \App\Entity\Alumno $alumno,
+        \App\Entity\Curso $curso,
+        \DateTimeInterface $desde,
+        \DateTimeInterface $hasta
+    ): array {
+        $filas = $this->createQueryBuilder('a')
+            ->select('MONTH(a.fecha) AS mes', 'a.presente', 'COUNT(a.id) AS cantidad')
+            ->andWhere('a.alumno = :alumno')
+            ->andWhere('a.curso = :curso')
+            ->andWhere('a.fecha BETWEEN :desde AND :hasta')
+            ->setParameter('alumno', $alumno)
+            ->setParameter('curso', $curso)
+            ->setParameter('desde', $desde)
+            ->setParameter('hasta', $hasta)
+            ->groupBy('mes')
+            ->addGroupBy('a.presente')
+            ->getQuery()
+            ->getScalarResult();
+
+        $porMes = [];
+        foreach ($filas as $fila) {
+            $mes = (int) $fila['mes'];
+            if (!isset($porMes[$mes])) {
+                $porMes[$mes] = ['presentes' => 0, 'ausentes' => 0];
+            }
+            $clave = $fila['presente'] ? 'presentes' : 'ausentes';
+            $porMes[$mes][$clave] += (int) $fila['cantidad'];
+        }
+
+        return $porMes;
+    }
+}
