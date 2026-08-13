@@ -666,6 +666,9 @@
                                             <tr>
                                                 <td>
                                                     <strong>{{ deuda.alumno.apellido }}, {{ deuda.alumno.nombre }}</strong>
+                                                    {% if not deuda.alumno.activo %}
+                                                        <span class="badge bg-secondary" title="Dado de baja: no se le genera deuda nueva, pero sigue debiendo esto">Inactivo</span>
+                                                    {% endif %}
                                                 </td>
                                                 <td>
                                                     {% if deuda.curso %}
@@ -691,7 +694,11 @@
                                                 <td class="text-center">
                                                     {% if montoPendiente > 0 %}
                                                         <div class="d-flex gap-1 justify-content-center">
-                                                            <a href="{{ path('app_alumnos_pagos_new', {'id': deuda.alumno.id}) }}" class="btn btn-sm btn-success" title="Registrar pago">
+                                                            {# Se cobra esta cuota puntual y no se abre la pantalla general de
+                                                               cobro del alumno: esa arma los meses desde las inscripciones
+                                                               activas, así que a un alumno dado de baja no le ofrecía nada y su
+                                                               deuda quedaba visible pero incobrable. #}
+                                                            <a href="{{ path('app_alumnos_pagos_por_deuda', {'id': deuda.id}) }}" class="btn btn-sm btn-success" title="Registrar el pago de esta cuota">
                                                                 <i class="bi bi-cash-coin"></i> Pagar
                                                             </a>
                                                             {# La ruta de cancelar es por curso, mes y año, así que no aplica a la

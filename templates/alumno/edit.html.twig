@@ -88,31 +88,55 @@
                     </table>
                 </div>
 
-                {% if deleteWarning.resumen.pagos|default(0) > 0 %}
+                {% set sePuedeEliminar = deleteWarning.sePuedeEliminar is defined ? deleteWarning.sePuedeEliminar : true %}
+                {% if not sePuedeEliminar %}
                     <div class="alert alert-danger">
                         <i class="bi bi-exclamation-octagon-fill me-2"></i>
-                        <strong>Ojo:</strong> este alumno tiene <strong>{{ deleteWarning.resumen.pagos }}</strong>
-                        pago(s) registrado(s). Borrarlo elimina también ese historial de cobranza.
-                        Si lo que querés es que deje de aparecer en las listas, conviene marcarlo
-                        como inactivo en lugar de borrarlo.
+                        <strong>Este alumno no se puede borrar.</strong>
+                        Tiene <strong>{{ deleteWarning.resumen.pagos }}</strong> pago(s) registrado(s), y borrarlo
+                        cambiaría hacia atrás lo cobrado en meses que ya cerraste.
+                    </div>
+                    <div class="alert alert-info mb-0">
+                        <strong><i class="bi bi-box-arrow-right me-2"></i>La alternativa: darlo de baja.</strong>
+                        <ul class="mb-2 mt-2">
+                            <li>Se lo da de baja de todos sus cursos, con la fecha de hoy.</li>
+                            <li>Deja de generársele deuda nueva.</li>
+                            <li>No recibe más recordatorios ni cuota de inscripción.</li>
+                            <li>Sale de los listados y del dashboard.</li>
+                            <li>Se conserva todo: pagos, notas, asistencias y su historial de cursos.</li>
+                        </ul>
+                        Si tiene deuda pendiente, se le puede seguir cobrando desde Pagos. Y si vuelve,
+                        lo reactivás y lo reinscribís sin perder nada.
                     </div>
                 {% endif %}
 
-                <div class="alert alert-danger">
-                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                    <strong>¿Está seguro de que desea eliminar este alumno?</strong><br>
-                    Se eliminarán todas las relaciones asociadas incluyendo cursos, asistencias y deudas pendientes.
-                </div>
+                {% if sePuedeEliminar %}
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <strong>¿Seguro que querés eliminar este alumno?</strong><br>
+                        Se borra todo lo listado arriba y no se puede recuperar. Si en realidad se fue del
+                        instituto, conviene darlo de baja en lugar de borrarlo.
+                    </div>
+                {% endif %}
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="window.location.reload();">
                     <i class="bi bi-x-circle"></i> Cancelar
                 </button>
-                <form method="post" action="{{ path('app_alumno_delete', {'id': alumno.id}) }}" style="display: inline;">
-                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ alumno.id) }}">
-                    <input type="hidden" name="force_delete" value="1">
-                    <button type="submit" class="btn btn-danger" onclick="window.showLoading();">
-                        <i class="bi bi-trash"></i> Sí, eliminar de todas formas
+                {% if sePuedeEliminar %}
+                    <form method="post" action="{{ path('app_alumno_delete', {'id': alumno.id}) }}" style="display: inline;">
+                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ alumno.id) }}">
+                        <input type="hidden" name="force_delete" value="1">
+                        <button type="submit" class="btn btn-danger" onclick="window.showLoading();">
+                            <i class="bi bi-trash"></i> Sí, eliminar de todas formas
+                        </button>
+                    </form>
+                {% endif %}
+                <form method="post" action="{{ path('app_alumno_desactivar', {'id': alumno.id}) }}" style="display: inline;">
+                    <input type="hidden" name="_token" value="{{ csrf_token('desactivar' ~ alumno.id) }}">
+                    <input type="hidden" name="motivo" value="Baja administrativa">
+                    <button type="submit" class="btn btn-warning" onclick="window.showLoading();">
+                        <i class="bi bi-box-arrow-right"></i> Dar de baja y marcar inactivo
                     </button>
                 </form>
             </div>

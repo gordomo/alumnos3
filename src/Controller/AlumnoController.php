@@ -479,10 +479,23 @@ class AlumnoController extends AbstractController
                         $alumno->getCurso()->toArray()
                     ),
                     'resumen' => $resumen,
+                    // Con pagos registrados no se ofrece borrar: se ofrece dar de baja.
+                    'sePuedeEliminar' => $eliminarAlumnoService->sePuedeEliminar($alumno),
                 ]);
 
                 return $this->redirectToRoute('app_alumno_edit', ['id' => $alumno->getId()]);
             }
+        }
+
+        // Se verifica del lado del servidor y no solo escondiendo el botón: borrar un alumno
+        // con pagos cambiaría hacia atrás lo cobrado de meses ya cerrados.
+        if (!$eliminarAlumnoService->sePuedeEliminar($alumno)) {
+            $this->addFlash('warning', sprintf(
+                '%s tiene pagos registrados, así que no se puede borrar sin perder ese historial de cobranza. Dalo de baja: deja de generar deuda y sale de los listados, pero se conserva todo.',
+                $alumno->getNombreApellido()
+            ));
+
+            return $this->redirectToRoute('app_alumno_edit', ['id' => $alumno->getId()]);
         }
 
         // Desarmar las relaciones de hermanos, que se guardan como lista de ids y no como FK,
@@ -523,6 +536,58 @@ class AlumnoController extends AbstractController
         $request->getSession()->remove('delete_alumno_warning');
 
         $this->addFlash('success', sprintf('Alumno %s eliminado, con todo su historial.', $nombre));
+        return $this->redirectToRoute('app_alumno_index', [], Response::HTTP_SEE_OTHER);
+    }
+
+    /**
+     * Da de baja al alumno en lugar de borrarlo: lo saca de sus cursos y lo marca inactivo.
+     *
+     * Es la salida para el alumno que se fue y tiene movimientos. No borra nada.
+     *
+     * @Route("/{id}/desactivar", name="app_alumno_desactivar", methods={"POST"})
+     */
+    public function desactivar(
+        Request $request,
+        Alumno $alumno,
+        \App\Service\EliminarAlumnoService $eliminarAlumnoService
+    ): Response {
+        $instituto = $this->getUser()->getInstituto();
+        if ($alumno->getInstituto() !== $instituto) {
+            $this->addFlash('danger', 'No tiene acceso a este alumno.');
+            return $this->redirectToRoute('app_alumno_index');
+        }
+
+        if (!$this->isCsrfTokenValid('desactivar' . $alumno->getId(), (string) $request->request->get('_token'))) {
+            $this->addFlash('danger', 'Token de seguridad inválido.');
+            return $this->redirectToRoute('app_alumno_edit', ['id' => $alumno->getId()]);
+        }
+
+        $motivo = trim((string) $request->request->get('motivo')) ?: null;
+
+        $resultado = $eliminarAlumnoService->desactivar($alumno, $motivo);
+        $request->getSession()->remove('delete_alumno_warning');
+
+        $mensaje = sprintf(
+            '%s quedó inactivo%s. No se le va a generar más deuda y sale de los listados; su historial se conserva.',
+            $alumno->getNombreApellido(),
+            $resultado['cursos'] > 0
+                ? sprintf(' y se lo dio de baja de %d curso(s)', $resultado['cursos'])
+                : ''
+        );
+
+        if ($resultado['deudasCanceladas'] > 0) {
+            $mensaje .= sprintf(
+                ' Se cancelaron %d cuota(s) del mes en curso y siguientes, que ya no va a cursar.',
+                $resultado['deudasCanceladas']
+            );
+        }
+
+        if ($resultado['deudaPendiente']) {
+            $mensaje .= ' Le queda deuda anterior sin pagar: se le puede seguir cobrando desde Pagos.';
+        }
+
+        $this->addFlash('success', $mensaje);
+
         return $this->redirectToRoute('app_alumno_index', [], Response::HTTP_SEE_OTHER);
     }
 

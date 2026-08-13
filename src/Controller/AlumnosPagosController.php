@@ -313,9 +313,9 @@ class AlumnosPagosController extends AbstractController
             ->leftJoin('d.curso', 'c')
             ->leftJoin('d.aplicaciones', 'pa')
             ->andWhere('a.instituto = :instituto')
-            ->andWhere('a.activo = :activo')
-            ->setParameter('instituto', $instituto)
-            ->setParameter('activo', true);
+            // Sin filtro por alumno activo: al alumno que se fue debiendo hay que poder verle
+            // y cobrarle la deuda. Antes desaparecía de esta pantalla al darlo de baja.
+            ->setParameter('instituto', $instituto);
 
         // Mostrar todas las deudas con saldo pendiente (incluye futuras).
         // Esto permite gestionarlas/cancelarlas desde esta pantalla.
@@ -402,12 +402,11 @@ class AlumnosPagosController extends AbstractController
             20
         );
         
-        // Obtener todos los alumnos activos del instituto para el filtro
+        // Todos los alumnos del instituto para el filtro, activos o no: los inactivos pueden
+        // tener deuda pendiente y hay que poder filtrar por ellos.
         $alumnos = $alumnoRepository->createQueryBuilder('a')
             ->where('a.instituto = :instituto')
-            ->andWhere('a.activo = :activo')
             ->setParameter('instituto', $instituto)
-            ->setParameter('activo', true)
             ->orderBy('a.apellido', 'ASC')
             ->addOrderBy('a.nombre', 'ASC')
             ->getQuery()
@@ -2253,30 +2252,24 @@ class AlumnosPagosController extends AbstractController
                     $instituto,
                     'pago.create',
                     $this->getUser(),
-                    'Registrar pago: ' . $deuda->getAlumno()->getNombreApellido() . ' - ' . $deuda->getCurso()->getNombre() . ' (' . $deuda->getPeriodo() . ')',
+                    'Registrar pago: ' . $deuda->getAlumno()->getNombreApellido() . ' - ' . ($deuda->getCurso() ? $deuda->getCurso()->getNombre() : 'Cuota de inscripcion') . ' (' . $deuda->getPeriodo() . ')',
                     'AlumnosPagos',
                     $pago->getId()
                 );
                 
-                // Enviar email con el recibo si está configurado
-                try {
-                    $enviado = $this->notificationService->enviarReciboPago($pago, null, false, $this->getUser());
-                    if ($enviado) {
-                        $mensaje .= ' Se envió el recibo por email.';
-                    }
-                } catch (\Exception $e) {
-                    // No interrumpir el flujo si falla el envío del email
-                    $this->addFlash('warning', 'El pago se registró pero no se pudo enviar el email: ' . $e->getMessage());
-                }
-                
-                // Mostrar información sobre el resultado
+                // El mensaje se arma primero: antes el bloque del email le hacía .= cuando
+                // todavía no existía, y el warning de PHP se atajaba como si el envío hubiera
+                // fallado. O sea que el recibo salía bien y la pantalla decía lo contrario.
                 $mensaje = sprintf(
-                    'Pago de $%s registrado correctamente para %s %s, curso %s, periodo %s.', 
+                    'Pago de $%s registrado correctamente para %s %s, %s.',
                     number_format($monto, 2, ',', '.'),
-                    $deuda->getAlumno()->getNombre(), 
+                    $deuda->getAlumno()->getNombre(),
                     $deuda->getAlumno()->getApellido(),
-                    $deuda->getCurso()->getNombre(),
-                    $deuda->getPeriodo()
+                    // La cuota de inscripción anual no tiene curso, y getPeriodo() ya devuelve
+                    // "Inscripción Anual <año>" en ese caso.
+                    $deuda->getCurso()
+                        ? sprintf('curso %s, periodo %s', $deuda->getCurso()->getNombre(), $deuda->getPeriodo())
+                        : $deuda->getPeriodo()
                 );
                 
                 if ($resultado['montoRestante'] > 0) {
@@ -2295,6 +2288,15 @@ class AlumnosPagosController extends AbstractController
                     $mensaje .= ' La deuda quedó completamente pagada.';
                 }
                 
+                try {
+                    if ($this->notificationService->enviarReciboPago($pago, null, false, $this->getUser())) {
+                        $mensaje .= ' Se envió el recibo por email.';
+                    }
+                } catch (\Throwable $e) {
+                    // Que falle el email no invalida el cobro, que ya está registrado.
+                    $this->addFlash('warning', 'El pago se registró pero no se pudo enviar el email: ' . $e->getMessage());
+                }
+
                 $this->addFlash('success', $mensaje);
                 
                 return $this->redirectToRoute('app_alumnos_pagos_index', ['alumno' => $deuda->getAlumno()->getId()]);

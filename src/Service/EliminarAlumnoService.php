@@ -32,8 +32,11 @@ use Doctrine\ORM\EntityManagerInterface;
  */
 class EliminarAlumnoService
 {
-    public function __construct(private EntityManagerInterface $entityManager)
-    {
+    public function __construct(
+        private EntityManagerInterface $entityManager,
+        private HistorialCursosService $historialCursosService,
+        private DeudaService $deudaService
+    ) {
     }
 
     /**
@@ -60,6 +63,77 @@ class EliminarAlumnoService
                 ? $this->contarPor(Calificacion::class, 'cursoHistorico', $historicoIds)
                 : 0,
         ];
+    }
+
+    /**
+     * Si al alumno se le puede borrar sin perder plata registrada.
+     *
+     * Un alumno con pagos es historial de cobranza del instituto: si se borra, el total
+     * cobrado de meses ya cerrados cambia hacia atrás y nadie se entera. Para esos casos la
+     * salida es darlo de baja, que conserva todo.
+     */
+    public function sePuedeEliminar(Alumno $alumno): bool
+    {
+        return $this->idsDe(AlumnosPagos::class, $alumno) === [];
+    }
+
+    /**
+     * Da de baja al alumno sin borrar nada: lo saca de todos sus cursos y lo marca inactivo.
+     *
+     * Es la alternativa a borrar cuando el alumno tiene movimientos. Después de esto:
+     *  - Deja de generarse deuda nueva, porque la deuda se calcula sobre las inscripciones
+     *    activas y estas quedan cerradas con su fecha de baja.
+     *  - No recibe más recordatorios ni cuota de inscripción anual.
+     *  - Sale de los listados y de los números del dashboard.
+     *  - Se conserva todo: inscripciones con el nombre y el precio del curso, notas,
+     *    asistencias, pagos y deudas. Si vuelve, se lo reinscribe y tiene su historia.
+     *
+     * @return array{cursos: int, deudaPendiente: bool}
+     */
+    public function desactivar(Alumno $alumno, ?string $motivo = null): array
+    {
+        $cursosDadosDeBaja = 0;
+        $deudasCanceladas = 0;
+
+        // Se hace exactamente lo mismo que la baja de un curso desde la ficha del alumno, para
+        // que el estado final sea el mismo por los dos caminos: cerrar el histórico con su
+        // fecha y motivo, cancelar las cuotas del mes actual y las futuras (no se cobran meses
+        // que no va a cursar), y sacarlo de la lista de cursos.
+        foreach ($alumno->getCurso()->toArray() as $curso) {
+            $historico = $this->historialCursosService->getHistoricoActivoPorAlumnoYCurso($alumno, $curso);
+
+            if ($this->historialCursosService->finalizarInscripcion($alumno, $curso)) {
+                if ($historico) {
+                    $historico->setMotivoBaja($motivo ?: 'baja_administrativa');
+                }
+                $cursosDadosDeBaja++;
+            }
+
+            $deudasCanceladas += $this->deudaService->cancelarDeudasPendientesAlumnoCurso($alumno, $curso, true);
+            $alumno->removeCurso($curso);
+        }
+
+        $alumno->setActivo(false);
+        $this->entityManager->flush();
+
+        return [
+            'cursos' => $cursosDadosDeBaja,
+            'deudasCanceladas' => $deudasCanceladas,
+            // La deuda vieja NO se cancela: sigue debiéndola y se le puede cobrar. Se informa
+            // para que el operador sepa que quedó plata por cobrar.
+            'deudaPendiente' => $this->tieneDeudaPendiente($alumno),
+        ];
+    }
+
+    private function tieneDeudaPendiente(Alumno $alumno): bool
+    {
+        foreach ($this->entityManager->getRepository(DeudaAlumno::class)->findBy(['alumno' => $alumno]) as $deuda) {
+            if ($deuda->getMontoPendiente() > 0) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
