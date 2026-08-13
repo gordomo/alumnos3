@@ -1,10 +1,43 @@
-<form method="post" action="{{ path('app_alumno_delete', {'id': alumno.id}) }}" 
-      id="delete-alumno-form-{{ alumno.id }}">
-    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ alumno.id) }}">
-    <button type="button" class="btn btn-danger" onclick="
-        if (confirm('Seguro desea borrar este Alumno?')) {
-            window.showLoading();
-            document.getElementById('delete-alumno-form-{{ alumno.id }}').submit();
+{# Botón de borrar un alumno.
+   No emite un <form>: este partial se incluye desde alumno/_form.html.twig, o sea DENTRO del
+   formulario de edición, y el parser de HTML descarta los formularios anidados. Con el form
+   escrito acá, document.getElementById(...) devolvía null, .submit() explotaba y el envío
+   nunca salía; pero showLoading() ya se había ejecutado, así que la pantalla quedaba con el
+   spinner girando para siempre. Era el "queda procesando y colgado y nunca elimina".
+   El formulario se arma en el momento y se cuelga de <body>, donde no puede quedar anidado. #}
+<button type="button" class="btn btn-danger"
+        data-delete-url="{{ path('app_alumno_delete', {'id': alumno.id}) }}"
+        data-delete-token="{{ csrf_token('delete' ~ alumno.id) }}"
+        onclick="window.borrarAlumno(this)">
+    <i class="bi bi-trash"></i> Borrar
+</button>
+
+<script>
+    // Se define una sola vez aunque el partial se incluya en varias pantallas.
+    window.borrarAlumno = window.borrarAlumno || function (boton) {
+        if (!confirm('¿Seguro que querés borrar este alumno?')) {
+            return;
         }
-    ">Borrar</button>
-</form>
+
+        var form = document.createElement('form');
+        form.method = 'post';
+        form.action = boton.dataset.deleteUrl;
+
+        var token = document.createElement('input');
+        token.type = 'hidden';
+        token.name = '_token';
+        token.value = boton.dataset.deleteToken;
+        form.appendChild(token);
+
+        // Colgarlo del body y no del contenedor del botón: acá no puede quedar dentro de otro
+        // formulario, que es lo que rompía el envío.
+        document.body.appendChild(form);
+
+        // El spinner recién ahora, cuando ya está todo listo para enviar.
+        if (typeof window.showLoading === 'function') {
+            window.showLoading();
+        }
+
+        form.submit();
+    };
+</script>

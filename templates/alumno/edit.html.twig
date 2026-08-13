@@ -42,68 +42,62 @@
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" onclick="window.location.reload();"></button>
             </div>
-            <div class="modal-body">
                 <div class="alert alert-warning">
-                    <strong>El alumno <em>{{ alumno.nombreApellido }}</em> tiene las siguientes relaciones activas:</strong>
+                    <strong>El alumno <em>{{ alumno.nombreApellido }}</em> tiene información asociada.</strong>
+                    Si confirmás, se borra todo junto con el alumno y no se puede recuperar.
                 </div>
-                
+
                 {% if deleteWarning.cursos|length > 0 %}
-                <div class="mb-3">
-                    <h6><i class="bi bi-book me-2"></i>Cursos activos:</h6>
-                    <ul class="list-group">
+                    <div class="mb-3">
+                        <h6><i class="bi bi-book me-2"></i>Cursos en los que está inscripto</h6>
                         {% for curso in deleteWarning.cursos %}
-                        <li class="list-group-item">
-                            <i class="bi bi-check-circle text-warning me-2"></i>{{ curso }}
-                        </li>
+                            <span class="badge bg-secondary">{{ curso }}</span>
                         {% endfor %}
-                    </ul>
-                </div>
-                {% endif %}
-                
-                {% if deleteWarning.asistencias_count > 0 %}
-                <div class="mb-3">
-                    <h6><i class="bi bi-clipboard-check me-2"></i>Registros de asistencia:</h6>
-                    <p class="text-muted mb-0">
-                        <i class="bi bi-info-circle me-2"></i>
-                        El alumno tiene <strong>{{ deleteWarning.asistencias_count }}</strong> registro(s) de asistencia que serán eliminados.
-                    </p>
-                </div>
-                {% endif %}
-                
-                {% if deleteWarning.deudas|length > 0 %}
-                <div class="mb-3">
-                    <h6><i class="bi bi-cash-coin me-2"></i>Deudas pendientes:</h6>
-                    <div class="table-responsive">
-                        <table class="table table-sm table-bordered">
-                            <thead class="table-warning">
-                                <tr>
-                                    <th>Curso</th>
-                                    <th>Período</th>
-                                    <th class="text-end">Monto</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% set totalDeudas = 0 %}
-                                {% for deuda in deleteWarning.deudas %}
-                                    {% set totalDeudas = totalDeudas + deuda.monto %}
-                                    <tr>
-                                        <td>{{ deuda.curso }}</td>
-                                        <td>{{ deuda.periodo }}</td>
-                                        <td class="text-end">${{ deuda.monto|number_format(2, ',', '.') }}</td>
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                            <tfoot class="table-warning">
-                                <tr>
-                                    <th colspan="2" class="text-end">Total:</th>
-                                    <th class="text-end">${{ totalDeudas|number_format(2, ',', '.') }}</th>
-                                </tr>
-                            </tfoot>
-                        </table>
                     </div>
-                </div>
                 {% endif %}
-                
+
+                {% set etiquetas = {
+                    'inscripciones': 'Inscripciones (historial de cursos)',
+                    'asistencias': 'Registros de asistencia',
+                    'calificaciones': 'Notas cargadas',
+                    'deudas': 'Cuotas registradas',
+                    'pagos': 'Pagos registrados',
+                    'saldosFavor': 'Saldos a favor',
+                    'emails': 'Emails enviados (recibos, recordatorios, boletines)'
+                } %}
+
+                <div class="table-responsive mb-3">
+                    <table class="table table-sm table-bordered mb-0">
+                        <thead class="table-warning">
+                            <tr>
+                                <th>Se va a borrar</th>
+                                <th class="text-end" style="width: 120px;">Cantidad</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for clave, etiqueta in etiquetas %}
+                                {% set cantidad = deleteWarning.resumen[clave]|default(0) %}
+                                {% if cantidad > 0 %}
+                                    <tr>
+                                        <td>{{ etiqueta }}</td>
+                                        <td class="text-end"><strong>{{ cantidad }}</strong></td>
+                                    </tr>
+                                {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% if deleteWarning.resumen.pagos|default(0) > 0 %}
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-octagon-fill me-2"></i>
+                        <strong>Ojo:</strong> este alumno tiene <strong>{{ deleteWarning.resumen.pagos }}</strong>
+                        pago(s) registrado(s). Borrarlo elimina también ese historial de cobranza.
+                        Si lo que querés es que deje de aparecer en las listas, conviene marcarlo
+                        como inactivo en lugar de borrarlo.
+                    </div>
+                {% endif %}
+
                 <div class="alert alert-danger">
                     <i class="bi bi-exclamation-triangle-fill me-2"></i>
                     <strong>¿Está seguro de que desea eliminar este alumno?</strong><br>

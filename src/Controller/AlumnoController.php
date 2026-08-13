@@ -453,7 +453,7 @@ class AlumnoController extends AbstractController
     /**
      * @Route("/{id}", name="app_alumno_delete", methods={"POST"})
      */
-    public function delete(Request $request, Alumno $alumno, AlumnoRepository $alumnoRepository, DeudaService $deudaService): Response
+    public function delete(Request $request, Alumno $alumno, AlumnoRepository $alumnoRepository, \App\Service\EliminarAlumnoService $eliminarAlumnoService): Response
     {
         $user = $this->getUser();
         $instituto = $user->getInstituto();
@@ -463,75 +463,66 @@ class AlumnoController extends AbstractController
             return $this->redirectToRoute('app_alumno_edit', ['id' => $alumno->getId()]);
         }
 
-        // Verificar si es una eliminación forzada (después de mostrar advertencia)
         $forceDelete = $request->request->get('force_delete', false);
 
-        // Verificar relaciones antes de eliminar (solo si no es forzado)
+        // Sin confirmación explícita, se le muestra al operador todo lo que se va a borrar.
+        // Antes esta lista solo contaba cursos, asistencias y deudas impagas, y ni mencionaba
+        // los pagos ni el historial de emails, que también se borran.
         if (!$forceDelete) {
-            $cursosActivos = $alumno->getCurso()->toArray();
-            $asistencias = $alumno->getAsistencias()->toArray();
-            // Obtener todas las deudas y filtrar las que tienen monto pendiente
-            $todasDeudas = $this->entityManager->getRepository(\App\Entity\DeudaAlumno::class)
-                ->findBy(['alumno' => $alumno]);
-            
-            $deudasPendientes = array_filter($todasDeudas, function($deuda) {
-                return $deuda->getMontoPendiente() > 0;
-            });
+            $resumen = $eliminarAlumnoService->resumenDependencias($alumno);
 
-            // Si hay relaciones, guardar información y redirigir para mostrar advertencia
-            if (!empty($cursosActivos) || !empty($asistencias) || !empty($deudasPendientes)) {
+            if (array_sum($resumen) > 0) {
                 $request->getSession()->set('delete_alumno_warning', [
                     'alumno_id' => $alumno->getId(),
-                    'cursos' => array_map(function($c) { return $c->getNombre(); }, $cursosActivos),
-                    'asistencias_count' => count($asistencias),
-                    'deudas' => array_map(function($d) {
-                        return [
-                            'curso' => $d->getCurso()->getNombre(),
-                            'periodo' => $d->getMes() . '/' . $d->getAno(),
-                            'monto' => $d->getMonto() + $d->getInteres()
-                        ];
-                    }, $deudasPendientes)
+                    'cursos' => array_map(
+                        static function ($c) { return $c->getNombre(); },
+                        $alumno->getCurso()->toArray()
+                    ),
+                    'resumen' => $resumen,
                 ]);
-                
+
                 return $this->redirectToRoute('app_alumno_edit', ['id' => $alumno->getId()]);
             }
         }
 
-        // Proceder con la eliminación
-        // Remover relaciones con cursos
-        foreach ($alumno->getCurso() as $curso) {
-            // Cancelar todas las deudas pendientes
-            $deudaService->cancelarDeudasPendientesAlumnoCurso($alumno, $curso, false);
-            $alumno->removeCurso($curso);
-        }
-
-        // Desarmar relaciones de hermanos
-        $hermanosActuales = $alumno->getHermanos();
-        foreach ($hermanosActuales as $hermanoId) {
+        // Desarmar las relaciones de hermanos, que se guardan como lista de ids y no como FK,
+        // así que no las alcanza el borrado en cascada.
+        foreach ($alumno->getHermanos() as $hermanoId) {
             $hermano = $alumnoRepository->find($hermanoId);
-            if ($hermano) {
-                $hermanosDelHermano = $hermano->getHermanos();
-                if (($key = array_search($alumno->getId(), $hermanosDelHermano)) !== false) {
-                    unset($hermanosDelHermano[$key]);
-                    $hermano->setHermanos(array_values($hermanosDelHermano));
-                    $alumnoRepository->add($hermano);
-                }
+            if (!$hermano) {
+                continue;
+            }
+
+            $hermanosDelHermano = $hermano->getHermanos();
+            if (($key = array_search($alumno->getId(), $hermanosDelHermano)) !== false) {
+                unset($hermanosDelHermano[$key]);
+                $hermano->setHermanos(array_values($hermanosDelHermano));
+                $alumnoRepository->add($hermano);
             }
         }
         $alumno->setHermanos([]);
-        
-        // Eliminar asistencias asociadas
-        foreach ($alumno->getAsistencias() as $asistencia) {
-            $this->entityManager->remove($asistencia);
-        }
-        
-        $alumnoRepository->remove($alumno);
         $this->entityManager->flush();
+
+        $nombre = $alumno->getNombreApellido();
+
+        try {
+            $eliminarAlumnoService->eliminar($alumno);
+        } catch (\Throwable $e) {
+            // Sin este catch, cualquier problema de integridad devolvía un 500 y la pantalla
+            // quedaba con el spinner girando para siempre.
+            $this->addFlash('danger', sprintf(
+                'No se pudo eliminar a %s: %s',
+                $nombre,
+                $e->getMessage()
+            ));
+
+            return $this->redirectToRoute('app_alumno_edit', ['id' => $alumno->getId()]);
+        }
 
         // Limpiar la sesión si había advertencia
         $request->getSession()->remove('delete_alumno_warning');
 
-        $this->addFlash('success', 'Alumno eliminado exitosamente.');
+        $this->addFlash('success', sprintf('Alumno %s eliminado, con todo su historial.', $nombre));
         return $this->redirectToRoute('app_alumno_index', [], Response::HTTP_SEE_OTHER);
     }
 
