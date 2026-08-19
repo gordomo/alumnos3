@@ -272,7 +272,7 @@
 {% endblock %}
 
 {% block panelTitle %}
-    Alumnos
+    Alumn@s
 {% endblock %}
 
 {% block body %}
@@ -329,7 +329,7 @@
         </div>
         {% if alumnosQueNoGuardadamos | length > 0 %}
             <div class="col-12 alert alumno-alert-inline" role="alert">
-                <h5>Alumnos que no pudimos agregar: </h5>
+                <h5>Alumn@s que no pudimos agregar: </h5>
                 {% for alumnoQueNoGuardadamos in alumnosQueNoGuardadamos %}
                     Nombre: {{ alumnoQueNoGuardadamos.nombre }} {{ alumnoQueNoGuardadamos.apellido }} - Email: {{ alumnoQueNoGuardadamos.email }} - DNI: {{ alumnoQueNoGuardadamos.dni }}<br>
                 {% endfor %}

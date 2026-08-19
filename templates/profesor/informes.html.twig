@@ -1,5 +1,21 @@
 {% extends 'base.html.twig' %}
 
+{# Las horas se acumulan como decimal (1.25, 1.5, 1.75) y se muestran como h:mm. Estaba
+   duplicado literal en la celda de Total Horas y en la de Horas Reemplazo. #}
+{% macro horas(total) %}
+    {% set partes = total|split('.') %}
+    {%- if partes[1] is defined -%}
+        {%- if partes[1] == 25 -%}{{ partes[0] }}:15hs
+        {%- elseif partes[1] == 5 -%}{{ partes[0] }}:30hs
+        {%- elseif partes[1] == 75 -%}{{ partes[0] }}:45hs
+        {%- endif -%}
+    {%- else -%}
+        {{- partes[0] }}:00hs
+    {%- endif -%}
+{% endmacro %}
+
+{% import _self as fmt %}
+
 {% block title %}Informes{% endblock %}
 
 {% block panelTitle %}
@@ -196,9 +212,10 @@
                         <th scope="col" class="border-start text-center">{{ fechas }}</th>
                     {% endfor %}
                     <th scope="col" class="border-start text-center totals-head">Total Faltas</th>
+                    <th scope="col" class="border-start text-center totals-head">Horas Reemp.</th>
+                    <th scope="col" class="border-start text-center totals-head">Precio Hora</th>
                     <th scope="col" class="border-start text-center totals-head">Total Horas</th>
-                    <th scope="col" class="border-start text-center totals-head">Horas Reemplazo</th>
-                    <th scope="col" class="border-start text-center totals-head">Total Precio</th>
+                    <th scope="col" class="border-start text-center totals-head">Total Pagar</th>
                 </tr>
             </thead>
             <tbody>
@@ -237,32 +254,17 @@
                                 {{ totalFaltas }}
                             </td>
                             <td class="border-start text-center">
-                                {% set totalRedondeadas = totalHoras | split('.') %}
-                                {% if totalRedondeadas[1] is defined %}
-                                    {% if totalRedondeadas[1] == 25 %}
-                                        {{ totalRedondeadas[0] }}:15hs
-                                    {% elseif totalRedondeadas[1] == 5 %}
-                                        {{ totalRedondeadas[0] }}:30hs
-                                    {% elseif totalRedondeadas[1] == 75 %}
-                                        {{ totalRedondeadas[0] }}:45hs
-                                    {% endif %}
+                                {{ fmt.horas(totalHorasReemplazo) }}
+                            </td>
+                            <td class="border-start text-center">
+                                {% if asistencia['precioHora'] is defined %}
+                                    ${{ asistencia['precioHora'] }}
                                 {% else %}
-                                    {{ totalRedondeadas[0] }}:00hs
+                                    <span class="text-muted">&mdash;</span>
                                 {% endif %}
                             </td>
                             <td class="border-start text-center">
-                                {% set totalReemplazoRedondeadas = totalHorasReemplazo | split('.') %}
-                                {% if totalReemplazoRedondeadas[1] is defined %}
-                                    {% if totalReemplazoRedondeadas[1] == 25 %}
-                                        {{ totalReemplazoRedondeadas[0] }}:15hs
-                                    {% elseif totalReemplazoRedondeadas[1] == 5 %}
-                                        {{ totalReemplazoRedondeadas[0] }}:30hs
-                                    {% elseif totalReemplazoRedondeadas[1] == 75 %}
-                                        {{ totalReemplazoRedondeadas[0] }}:45hs
-                                    {% endif %}
-                                {% else %}
-                                    {{ totalReemplazoRedondeadas[0] }}:00hs
-                                {% endif %}
+                                {{ fmt.horas(totalHoras) }}
                             </td>
                             <td class="border-start text-center">
                                 {% if asistencia['precioHora'] is defined %}

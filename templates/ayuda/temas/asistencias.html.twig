@@ -10,11 +10,11 @@
 </p>
 
 {% if esProfe %}
-    <p>Se entra por {{ m.ruta(['Asistencias de Alumnos']) }} en el menú.</p>
+    <p>Se entra por {{ m.ruta(['Asistencias de Alumn@s']) }} en el menú.</p>
 {% else %}
     <p>
-        Se entra por {{ m.ruta(['Alumnos', 'Asistencias']) }}. Los profesores lo hacen desde
-        {{ m.ruta(['Asistencias de Alumnos']) }} y solo ven los cursos que tienen asignados.
+        Se entra por {{ m.ruta(['Alumn@s', 'Asistencias']) }}. Los profesores lo hacen desde
+        {{ m.ruta(['Asistencias de Alumn@s']) }} y solo ven los cursos que tienen asignados.
     </p>
 {% endif %}
 
@@ -49,7 +49,7 @@
 <h2>Informes</h2>
 
 <p>
-    {% if esProfe %}El informe de asistencias{% else %}{{ m.ruta(['Alumnos', 'Informes de Asistencia']) }}{% endif %}
+    {% if esProfe %}El informe de asistencias{% else %}{{ m.ruta(['Alumn@s', 'Informes de Asistencia']) }}{% endif %}
     muestra, para un curso y un rango de fechas, el porcentaje de asistencia de cada alumno junto
     con la cantidad de presentes, ausentes y justificados.
 </p>

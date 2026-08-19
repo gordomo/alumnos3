@@ -9,7 +9,16 @@
     --sidebar-primary: #5c6f6c;
     --sidebar-secondary: #849d9a;
     --sidebar-hover-bg: #edf6f4;
-    --sidebar-active-shadow: 0 8px 18px rgba(92, 111, 108, 0.2);
+    /* El modulo seleccionado va en azul y no en el gris verdoso de la barra: es el unico
+       elemento que tiene que saltar a la vista, y el contraste de tono lo resuelve mejor que
+       oscurecer el mismo color. Van en variables propias para poder ajustar el tono sin tocar
+       el resto de la paleta. */
+    --sidebar-active-from: #2d6489;
+    --sidebar-active-to: #4d89b3;
+    --sidebar-active-shadow: 0 8px 18px rgba(45, 100, 137, 0.28);
+    --sidebar-subitem-active-bg: #e3eef6;
+    --sidebar-subitem-active-text: #234b66;
+    --sidebar-subitem-active-border: #c9dded;
 }
 
 #wrapper {
@@ -100,7 +109,7 @@
 }
 
 #sidebar-wrapper .list-group-item.active {
-    background: linear-gradient(135deg, var(--sidebar-primary), var(--sidebar-secondary)) !important;
+    background: linear-gradient(135deg, var(--sidebar-active-from), var(--sidebar-active-to)) !important;
     color: #ffffff;
     border-color: transparent;
     font-weight: 700;
@@ -140,11 +149,12 @@
     border-color: #d6e5e2;
 }
 
+/* El subitem seleccionado acompana en el mismo tono, en version clara. */
 #sidebar-wrapper .dropdown-item.active {
-    background: #e8f3f1;
-    color: #2f4b50;
+    background: var(--sidebar-subitem-active-bg);
+    color: var(--sidebar-subitem-active-text);
     font-weight: 700;
-    border-color: #d2e3df;
+    border-color: var(--sidebar-subitem-active-border);
 }
 
 #menu-toggle {
