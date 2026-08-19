@@ -671,35 +671,26 @@ class CursoController extends AbstractController
                 $cursoRepository->add($curso);
                 $entityManager->flush();
 
-                // El precio nuevo se aplica a las cuotas impagas de los inscriptos solo si el
-                // operador lo pidió: cambia lo que la gente debe, así que no puede pasar en
-                // silencio al guardar el curso.
+                // El precio del curso se aplica SIEMPRE a las cuotas impagas de sus inscriptos.
+                //
+                // No es opcional a proposito: si fuera opcional pueden convivir dos precios en el
+                // mismo curso, que es lo que venia pasando (un curso a $60.000 con trece alumnos
+                // todavia a $45.000). Y se reconcilia en cada guardado, no solo cuando el precio
+                // cambia, asi el desfasaje tampoco puede sobrevivir: alcanza con guardar el curso
+                // para dejarlo consistente. Si no hay nada desfasado, no hace nada.
                 $precioCambiado = abs($precioOriginal - (float) $curso->getPrecio()) > 0.001;
+                $resultadoPrecio = $precioCursoService->aplicar($curso);
 
-                if ($request->request->has('aplicar_precio_inscriptos')) {
-                    $resultadoPrecio = $precioCursoService->aplicar($curso);
-
-                    if ($resultadoPrecio['alumnos'] > 0) {
-                        $this->addFlash('success', sprintf(
-                            'Se aplicó el precio de $%s a %d alumn@ (s) inscript@(s): se actualizaron %d cuota(s) impaga(s). Las cuotas ya pagadas no se tocaron.',
-                            number_format($resultadoPrecio['precioActual'], 2, ',', '.'),
-                            $resultadoPrecio['alumnos'],
-                            $resultadoPrecio['cuotas']
-                        ));
-                    }
-                } elseif ($precioCambiado) {
-                    // Se avisa del desfasaje en lugar de dejarlo pasar callado: es la situación
-                    // que hacía que un aumento no llegara nunca a las cuotas.
-                    $pendiente = $precioCursoService->previsualizar($curso);
-
-                    if ($pendiente['alumnos'] > 0) {
-                        $this->addFlash('warning', sprintf(
-                            'Cambiaste el precio a $%s, pero los %d alumn@(s) ya inscript@(s) siguen con $%s en sus cuotas impagas. Para aplicárselo, volvé a editar el curso y tildá "Aplicar el precio actual a los inscript@s".',
-                            number_format($pendiente['precioActual'], 2, ',', '.'),
-                            $pendiente['alumnos'],
-                            number_format($pendiente['precioAnterior'] ?? $precioOriginal, 2, ',', '.')
-                        ));
-                    }
+                if ($resultadoPrecio['alumnos'] > 0) {
+                    $this->addFlash('warning', sprintf(
+                        '%s Se aplico el precio de $%s a %d alumn@(s) inscript@(s) y se actualizaron %d cuota(s) impaga(s), con el recargo por mora recalculado. Las cuotas ya pagadas no se tocaron.',
+                        $precioCambiado
+                            ? 'Cambiaste el precio del curso.'
+                            : 'El curso tenia alumn@s con un precio distinto del actual.',
+                        number_format($resultadoPrecio['precioActual'], 2, ',', '.'),
+                        $resultadoPrecio['alumnos'],
+                        $resultadoPrecio['cuotas']
+                    ));
                 }
 
                 // Consumir tokens después de guardar exitosamente

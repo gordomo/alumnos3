@@ -34,37 +34,24 @@
 <h2>Aumentar el precio de un curso</h2>
 
 <p>
-    El precio se <strong>copia a la inscripción</strong> de cada alumno cuando se inscribe, y las
-    cuotas se calculan con esa copia. Por eso cambiar el precio arriba no les cambia las cuotas
-    por sí solo: los alumnos que ya estaban seguirían con el precio viejo.
+    Cambiás el precio, guardás, y <strong>se le aplica a todos los inscriptos</strong>. No hay
+    nada más que tildar ni confirmar.
 </p>
-
-<p>Para aplicar un aumento:</p>
 
 <ol>
     <li>Entrá a {{ m.ruta(['Cursos', 'Listado']) }} y editá el curso.</li>
     <li>Poné el <strong>precio nuevo</strong>.</li>
-    <li>
-        Justo debajo del precio aparece un recuadro amarillo con la casilla
-        <strong>"Aplicar el precio actual a los inscript@s"</strong>. Tildala.
-    </li>
     <li>Guardá. El sistema te confirma a cuántos alumnos y cuántas cuotas afectó.</li>
 </ol>
 
-{{ m.captura('curso-aplicar-precio.png', 'La casilla para aplicar el precio, debajo del campo Precio') }}
-
 <p>
-    El recuadro te dice cuántos alumnos tiene el curso y a qué precio están hoy, así sabés a
-    quiénes va a afectar antes de confirmar. Sólo aparece si el curso tiene alumnos inscriptos:
-    en un curso vacío, o al crear uno nuevo, no hay a quién aplicárselo.
+    Debajo del precio, un recuadro te avisa cuántos alumnos tiene el curso y qué va a pasar al
+    guardar. Sólo aparece si el curso tiene inscriptos.
 </p>
 
-{{ m.nota('info', 'Si el precio ya lo habías cambiado antes',
-   'No hace falta volver a tocarlo. La casilla aparece siempre que haya alumnos con un precio
-    distinto del actual, así que entrás a editar el curso, no cambiás nada, tildás la casilla y
-    guardás. Es el caso de un aumento que se cargó hace tiempo y nunca se aplicó.') }}
+{{ m.captura('curso-aplicar-precio.png', 'El aviso debajo del campo Precio') }}
 
-<p>Qué pasa cuando lo aplicás:</p>
+<p>Qué cambia:</p>
 
 <ul>
     <li>
@@ -79,19 +66,21 @@
     </li>
 </ul>
 
+{{ m.nota('info', 'Por qué no es opcional',
+   'Todos los alumnos de un curso pagan lo mismo. Si aplicar el aumento fuera opcional, podrían
+    convivir dos precios en el mismo curso: los que se inscribieron después del aumento pagando
+    el precio nuevo, y los de antes todavía con el viejo.') }}
+
 {{ m.nota('warning', 'El que se atrasa paga el aumento y el recargo',
    'Una cuota vencida ya lleva el recargo por vencimiento, y con el aumento además sube de precio.
     O sea que el atraso se penaliza dos veces. Es el comportamiento buscado, pero conviene que las
-    familias lo sepan.') }}
+    familias lo sepan antes de que les llegue el recordatorio con el importe nuevo.') }}
 
 {{ m.nota('info', 'Si acordás otro monto, se puede cobrar otro monto',
    'Al registrar el pago, el campo <strong>Precio a Cobrar</strong> se puede editar. Si por un
     acuerdo interno le cobrás menos, escribís ese importe y la cuota queda cancelada igual, sin
-    dejar saldo pendiente.') }}
-
-{{ m.nota('warning', 'Si cambiás el precio y no lo aplicás',
-   'El sistema te avisa: te dice cuántos alumnos siguen con el precio viejo y cómo aplicárselo
-    después. El aumento nunca se aplica en silencio, porque cambia lo que la gente debe.') }}
+    dejar saldo pendiente. El aumento se aplica a todos por igual; el arreglo puntual se hace al
+    momento de cobrar.') }}
 
 <h2>El listado</h2>
 
