@@ -42,13 +42,27 @@
 <p>Para aplicar un aumento:</p>
 
 <ol>
-    <li>Editá el curso y poné el precio nuevo.</li>
+    <li>Entrá a {{ m.ruta(['Cursos', 'Listado']) }} y editá el curso.</li>
+    <li>Poné el <strong>precio nuevo</strong>.</li>
     <li>
-        Debajo del precio aparece <strong>"Aplicar el precio actual a los inscript@s"</strong>,
-        con la cantidad de alumnos que tiene el curso. Tildalo.
+        Justo debajo del precio aparece un recuadro amarillo con la casilla
+        <strong>"Aplicar el precio actual a los inscript@s"</strong>. Tildala.
     </li>
-    <li>Guardá. El sistema te dice a cuántos alumnos y cuántas cuotas afectó.</li>
+    <li>Guardá. El sistema te confirma a cuántos alumnos y cuántas cuotas afectó.</li>
 </ol>
+
+{{ m.captura('curso-aplicar-precio.png', 'La casilla para aplicar el precio, debajo del campo Precio') }}
+
+<p>
+    El recuadro te dice cuántos alumnos tiene el curso y a qué precio están hoy, así sabés a
+    quiénes va a afectar antes de confirmar. Sólo aparece si el curso tiene alumnos inscriptos:
+    en un curso vacío, o al crear uno nuevo, no hay a quién aplicárselo.
+</p>
+
+{{ m.nota('info', 'Si el precio ya lo habías cambiado antes',
+   'No hace falta volver a tocarlo. La casilla aparece siempre que haya alumnos con un precio
+    distinto del actual, así que entrás a editar el curso, no cambiás nada, tildás la casilla y
+    guardás. Es el caso de un aumento que se cargó hace tiempo y nunca se aplicó.') }}
 
 <p>Qué pasa cuando lo aplicás:</p>
 
