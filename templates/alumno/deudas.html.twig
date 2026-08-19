@@ -253,6 +253,15 @@
                                                                 {% endif %}
                                                             </td>
                                                             <td>
+                                                                {# Las cuotas de una inscripcion ya cerrada vienen de la tabla y traen id, asi
+                                                                   que se pueden cobrar de a una. La pantalla general de cobro no sirve para
+                                                                   ellas: arma los meses desde las inscripciones activas. #}
+                                                                {% if deuda.id is defined and deuda.id %}
+                                                                    <a href="{{ path('app_alumnos_pagos_por_deuda', {'id': deuda.id}) }}"
+                                                                       class="btn btn-sm btn-success" title="Cobrar esta cuota">
+                                                                        <i class="bi bi-cash-coin"></i> Cobrar
+                                                                    </a>
+                                                                {% endif %}
                                                                 <form method="post" action="{{ path('app_alumno_cancelar_deuda', {'id': alumno.id, 'cursoId': deuda.curso.id, 'mes': deuda.mes, 'ano': deuda.ano}) }}" onsubmit="return confirm('¿Está seguro de que desea perdonar/cancelar esta deuda?');" style="display: inline;">
                                                                     <input type="hidden" name="_token" value="{{ csrf_token('cancelar-deuda' ~ deuda.curso.id ~ '-' ~ deuda.mes ~ '-' ~ deuda.ano) }}">
                                                                     <button type="submit" class="btn btn-sm btn-outline-danger" title="Perdonar/Cancelar deuda">

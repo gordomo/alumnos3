@@ -95,21 +95,37 @@ class EliminarAlumnoService
         $cursosDadosDeBaja = 0;
         $deudasCanceladas = 0;
 
-        // Se hace exactamente lo mismo que la baja de un curso desde la ficha del alumno, para
-        // que el estado final sea el mismo por los dos caminos: cerrar el histórico con su
-        // fecha y motivo, cancelar las cuotas del mes actual y las futuras (no se cobran meses
-        // que no va a cursar), y sacarlo de la lista de cursos.
-        foreach ($alumno->getCurso()->toArray() as $curso) {
-            $historico = $this->historialCursosService->getHistoricoActivoPorAlumnoYCurso($alumno, $curso);
+        // Se recorren las INSCRIPCIONES ACTIVAS y no la lista de cursos del alumno.
+        //
+        // Las dos cosas pueden diferir: hay alumnos con el histórico activo y sin fila en
+        // alumno_curso. Recorriendo la lista de cursos, esas inscripciones quedaban abiertas y
+        // el sistema le seguía generando deuda a alguien dado de baja, porque el cálculo mira
+        // el histórico. La inscripción activa es la fuente de verdad acá.
+        //
+        // Por lo demás se hace lo mismo que la baja de un curso desde la ficha del alumno, para
+        // que el estado final sea igual por los dos caminos: cerrar el histórico con su fecha y
+        // motivo, cancelar las cuotas del mes actual y las futuras (no se cobran meses que no va
+        // a cursar), y sacarlo de la lista de cursos.
+        $historicosActivos = $this->entityManager->getRepository(AlumnoCursoHistorico::class)
+            ->findBy(['alumno' => $alumno, 'activo' => true]);
+
+        foreach ($historicosActivos as $historico) {
+            $curso = $historico->getCurso();
+            if (!$curso) {
+                continue;
+            }
 
             if ($this->historialCursosService->finalizarInscripcion($alumno, $curso)) {
-                if ($historico) {
-                    $historico->setMotivoBaja($motivo ?: 'baja_administrativa');
-                }
+                $historico->setMotivoBaja($motivo ?: 'baja_administrativa');
                 $cursosDadosDeBaja++;
             }
 
             $deudasCanceladas += $this->deudaService->cancelarDeudasPendientesAlumnoCurso($alumno, $curso, true);
+            $alumno->removeCurso($curso);
+        }
+
+        // Por si quedaba alguna fila en la tabla de unión sin histórico activo detrás.
+        foreach ($alumno->getCurso()->toArray() as $curso) {
             $alumno->removeCurso($curso);
         }
 

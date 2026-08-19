@@ -385,12 +385,22 @@
                         <a href="{{ path('app_alumno_edit', {'id': alumno.id}) }}" class="btn btn-sm btn-outline-secondary btn-action-icon" title="Editar" data-toggle="tooltip" data-placement="top">
                             <i class="bi bi-pencil"></i>
                         </a>
+                        {# Gestionar cursos sí desaparece para un alumno dado de baja: no se lo va a
+                           inscribir a nada. Cobrar, en cambio, tiene que seguir estando: la deuda
+                           vieja no desaparece con la baja. #}
                         {% if (alumno.activo) %}
                             <button type="button" class="btn btn-sm btn-outline-info btn-action-icon" title="Gestionar Cursos" data-toggle="tooltip" data-placement="top" data-bs-toggle="modal" data-bs-target="#cursosModal{{ alumno.id }}">
                                 <i class="bi bi-book"></i>
                             </button>
-                        
+
                             <a href="{{ path('app_alumnos_pagos_new', {'id': alumno.id}) }}" class="btn btn-sm btn-success btn-action-icon" title="Registrar Pago" data-toggle="tooltip" data-placement="top">
+                                <i class="bi bi-cash"></i>
+                            </a>
+                        {% else %}
+                            {# Al dado de baja se lo manda a Gestión de Deudas y no a la pantalla
+                               general de cobro: esa arma los meses desde las inscripciones activas,
+                               así que no le ofreceria nada. Ahí cada cuota tiene su botón. #}
+                            <a href="{{ path('app_alumno_deudas', {'id': alumno.id, 'return_url': app.request.uri}) }}" class="btn btn-sm btn-success btn-action-icon" title="Cobrar deuda pendiente" data-toggle="tooltip" data-placement="top">
                                 <i class="bi bi-cash"></i>
                             </a>
                         {% endif %}

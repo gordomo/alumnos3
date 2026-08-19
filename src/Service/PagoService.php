@@ -379,21 +379,34 @@ class PagoService
             return;
         }
         
-        $fechaPago = new \DateTime(sprintf('%d-%02d-01', $pago->getAno(), $pago->getMes()));
+        // El pago corresponde a un MES, no a un día. Se comparan los dos extremos del mes contra
+        // el rango de la inscripción: usando solo el día 1 quedaba afuera el propio mes de
+        // inscripción (un alumno que entró el 2 de marzo no matcheaba con la cuota de marzo), y
+        // entonces se creaba una inscripción nueva en vez de encontrar la suya.
+        $primerDiaDelMes = new \DateTime(sprintf('%d-%02d-01', $pago->getAno(), $pago->getMes()));
+        $ultimoDiaDelMes = (clone $primerDiaDelMes)->modify('last day of this month');
+        $fechaPago = $primerDiaDelMes;
         
-        // Buscar historial existente
-        // Usar fechaAlta y fechaBaja en lugar de fechaInicio y fechaFin
+        // La inscripción que estaba vigente ese mes, activa o no.
+        //
+        // Antes se exigía h.activo = true, y eso reinscribía al alumno: al cobrarle una cuota
+        // vieja a alguien dado de baja no se encontraba su inscripción cerrada (aunque el mes
+        // caiga dentro de su rango de alta y baja), así que se creaba una nueva y activa, y el
+        // sistema le volvía a generar deuda pese a estar de baja. El rango de fechas ya alcanza
+        // para elegir la inscripción correcta.
         $historico = $this->entityManager->getRepository(\App\Entity\AlumnoCursoHistorico::class)
             ->createQueryBuilder('h')
             ->where('h.alumno = :alumno')
             ->andWhere('h.curso = :curso')
-            ->andWhere('h.activo = :activo')
-            ->andWhere('h.fechaAlta <= :fecha')
-            ->andWhere('(h.fechaBaja IS NULL OR h.fechaBaja >= :fecha)')
+            ->andWhere('h.fechaAlta <= :finDelMes')
+            ->andWhere('(h.fechaBaja IS NULL OR h.fechaBaja >= :inicioDelMes)')
             ->setParameter('alumno', $alumno)
             ->setParameter('curso', $curso)
-            ->setParameter('activo', true)
-            ->setParameter('fecha', $fechaPago)
+            ->setParameter('inicioDelMes', $primerDiaDelMes)
+            ->setParameter('finDelMes', $ultimoDiaDelMes)
+            // Si hubiera más de una, gana la activa y después la más reciente.
+            ->orderBy('h.activo', 'DESC')
+            ->addOrderBy('h.fechaAlta', 'DESC')
             ->setMaxResults(1)
             ->getQuery()
             ->getOneOrNullResult();

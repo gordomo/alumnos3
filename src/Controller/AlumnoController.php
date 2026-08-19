@@ -809,6 +809,70 @@ class AlumnoController extends AbstractController
             }
         }
 
+        // Deudas de inscripciones ya cerradas.
+        //
+        // El calculo on-demand solo recorre inscripciones activas, asi que al alumno que se fue
+        // debiendo esta pantalla le decia "no tiene deudas pendientes" aunque siguiera debiendo.
+        // Esas cuotas existen como fila en la tabla (se materializan al cobrar o al avisar), asi
+        // que se agregan desde ahi. Traen id, que es lo que permite cobrarlas de a una.
+        $cursosYaListados = [];
+        foreach ($deudasPorCurso as $cursoId => $datos) {
+            foreach ($datos['deudas'] as $deudaListada) {
+                $cursosYaListados[$cursoId . '_' . $deudaListada['mes'] . '_' . $deudaListada['ano']] = true;
+            }
+        }
+
+        foreach ($deudaAlumnoRepository->findBy(['alumno' => $alumno]) as $deudaFila) {
+            if ($deudaFila->getMontoPendiente() <= 0 || $deudaFila->getEsCuotaInscripcionAnual()) {
+                continue;
+            }
+
+            $cursoDeuda = $deudaFila->getCurso();
+            if (!$cursoDeuda) {
+                continue;
+            }
+
+            $cursoId = $cursoDeuda->getId();
+            $clave = $cursoId . '_' . $deudaFila->getMes() . '_' . $deudaFila->getAno();
+
+            // Si el calculo on-demand ya la trajo, se respeta esa version.
+            if (isset($cursosYaListados[$clave])) {
+                continue;
+            }
+
+            if (!isset($deudasPorCurso[$cursoId])) {
+                $deudasPorCurso[$cursoId] = [
+                    'curso' => $cursoDeuda,
+                    'historico' => $deudaFila->getCursoHistorico(),
+                    'deudas' => [],
+                    // Marca que la inscripcion esta cerrada: el template ya lo usa para avisar
+                    // que el alumno no cursa mas pero sigue debiendo.
+                    'cursoActivo' => false
+                ];
+            }
+
+            $deudasPorCurso[$cursoId]['deudas'][] = [
+                'id' => $deudaFila->getId(),
+                'alumno' => $alumno,
+                'curso' => $cursoDeuda,
+                'cursoHistorico' => $deudaFila->getCursoHistorico(),
+                'mes' => (int) $deudaFila->getMes(),
+                'ano' => (int) $deudaFila->getAno(),
+                'monto' => (float) $deudaFila->getMonto(),
+                'interes' => (float) $deudaFila->getInteres(),
+                'montoPagado' => $deudaFila->getMontoPagado(),
+                'fechaCreacion' => $deudaFila->getFechaCreacion(),
+                'instituto' => $instituto,
+            ];
+        }
+
+        // Cada curso, con sus cuotas de la mas vieja a la mas nueva.
+        foreach ($deudasPorCurso as $cursoId => $datos) {
+            usort($deudasPorCurso[$cursoId]['deudas'], static function (array $a, array $b) {
+                return [$a['ano'], $a['mes']] <=> [$b['ano'], $b['mes']];
+            });
+        }
+
         $primerDiaVencimiento = 5;
         $vencimientos = $instituto->getVencimientos();
         if (count($vencimientos) > 0) {
