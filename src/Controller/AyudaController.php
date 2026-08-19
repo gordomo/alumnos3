@@ -58,6 +58,12 @@ class AyudaController extends AbstractController
             'resumen' => 'Registrar un pago, cobrar meses adelantados, cómo se calculan los recargos y qué son los saldos a favor.',
             'roles' => ['ROLE_ADMIN_INSTITUTO'],
         ],
+        'comunicaciones' => [
+            'titulo' => 'Comunicaciones',
+            'icono' => 'bi-megaphone',
+            'resumen' => 'Mandar un aviso por email a todo el instituto, a un curso o a los que deben.',
+            'roles' => ['ROLE_ADMIN_INSTITUTO'],
+        ],
         'calificaciones' => [
             'titulo' => 'Calificaciones',
             'icono' => 'bi-mortarboard',

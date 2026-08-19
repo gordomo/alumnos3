@@ -1,0 +1,75 @@
+{% extends 'ayuda/_tema.html.twig' %}
+{% import 'ayuda/_macros.html.twig' as m %}
+
+{% block contenido %}
+<p>
+    Sirve para mandar un aviso por email a varios alumn@s de una vez: que cambia el valor de la
+    cuota, que se mueve un horario, que el lunes no hay clases.
+</p>
+
+<p>Se entra por {{ m.ruta(['Comunicaciones']) }} en el menú.</p>
+
+<h2>Cómo se manda</h2>
+
+<ol>
+    <li>
+        Elegí <strong>a quiénes</strong>. Hay tres opciones, cada una con la cantidad de alumn@s
+        que alcanza:
+        <ul>
+            <li><strong>Todos los del instituto.</strong></li>
+            <li><strong>Los de un curso</strong>, eligiéndolo del desplegable.</li>
+            <li><strong>Los que tienen cuotas vencidas</strong>, para un aviso de cobranza.</li>
+        </ul>
+    </li>
+    <li><strong>Asunto</strong>: lo que van a ver como título del email.</li>
+    <li>
+        <strong>Mensaje</strong>: texto común, sin formato. Los saltos de línea se respetan.
+    </li>
+    <li>Enviar. El sistema te confirma a cuántos alumn@s salió.</li>
+</ol>
+
+<p>
+    El email sale con el <strong>nombre y el logo del instituto</strong> y arranca saludando a
+    cada alumn@ por su nombre, así que no hace falta escribir el saludo.
+</p>
+
+{{ m.nota('info', 'Va a las mismas direcciones que el resto de los avisos',
+   'Si en Configuración → Notificaciones tenés "al alumno y al tutor", la comunicación llega a las
+    dos direcciones. La pantalla te dice cuál es la configuración vigente antes de enviar.') }}
+
+<h2>Qué pasa después</h2>
+
+<p>
+    Cada envío queda registrado en {{ m.ruta(['Historial de Emails']) }}, con el tipo
+    <strong>Comunicación</strong>. Ahí podés filtrar por ese tipo y confirmar a quién le llegó y
+    a quién no.
+</p>
+
+<ul>
+    <li>Al alumn@ <strong>sin email cargado</strong> no le llega nada, y queda como fallido en el historial.</li>
+    <li>A los alumn@s <strong>dados de baja</strong> no se les manda: sólo a los activos.</li>
+</ul>
+
+{{ m.nota('warning', 'No hay deshacer',
+   'Un email enviado no se puede retirar. Leé el mensaje antes de mandarlo. Y los emails salen en
+    el momento, no en segundo plano: con muchos alumn@s la pantalla puede tardar unos segundos, no
+    la cierres hasta que confirme.') }}
+
+<h2>Avisar un cambio de precio</h2>
+
+<p>
+    Es el caso más común, y tiene un atajo. Cuando editás un curso que tiene alumn@s inscript@s,
+    debajo del precio aparece el botón <strong>"Avisar a las familias antes de guardar"</strong>.
+</p>
+
+<p>
+    Abre Comunicaciones en otra pestaña, con el curso ya elegido y el aviso redactado con el
+    precio nuevo. Lo revisás, lo editás si querés, y lo mandás. Después volvés a la pestaña del
+    curso y guardás.
+</p>
+
+{{ m.nota('info', 'El orden conviene que sea ese',
+   'Primero el aviso, después guardar. Al guardar el curso, las cuotas impagas pasan al precio
+    nuevo, y a partir de ahí los recordatorios de deuda van a pedir ese importe. Mejor que la
+    familia ya esté avisada cuando eso pase.') }}
+{% endblock %}

@@ -46,6 +46,24 @@
                                 {% endif %}
                                 Las cuotas ya pagadas y los alumn@s dados de baja no se tocan.
                             </small>
+                            {% if curso is defined and curso.id %}
+                                {# Atajo a Comunicaciones con el aviso ya redactado y el curso elegido.
+                                   Es un enlace y no un envío: el texto se revisa antes de mandarlo. #}
+                                <a class="btn btn-outline-primary btn-sm mt-2"
+                                   target="_blank"
+                                   href="{{ path('app_comunicacion_index', {
+                                       'destino': 'curso',
+                                       'curso': curso.id,
+                                       'asunto': 'Actualización del valor de la cuota de ' ~ curso.nombre,
+                                       'mensaje': 'Les informamos que el valor de la cuota mensual de ' ~ curso.nombre ~ ' se actualiza a $' ~ curso.precio ~ '.\n\nLa actualización se aplica a las cuotas que estén pendientes de pago.\n\nAnte cualquier duda quedamos a disposición.'
+                                   }) }}">
+                                    <i class="bi bi-megaphone"></i> Avisar a las familias antes de guardar
+                                </a>
+                                <small class="d-block text-muted mt-1">
+                                    Abre Comunicaciones en otra pestaña, con el aviso redactado y este curso ya
+                                    elegido. Podés editarlo antes de enviarlo.
+                                </small>
+                            {% endif %}
                         </div>
                     {% endif %}
                 </div>

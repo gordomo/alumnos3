@@ -1,0 +1,48 @@
+{# Comunicación libre del instituto: aviso de aumento, cambio de horario, lo que sea.
+   El texto lo escribe una persona, así que se muestra escapado y con los saltos de línea
+   respetados: nunca como HTML crudo. #}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f8f9fa; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #ffffff; padding: 24px; text-align: center; border-radius: 8px 8px 0 0; border-bottom: 3px solid #2d6489; }
+        .logo { max-height: 70px; margin-bottom: 10px; }
+        .instituto-name { font-size: 20px; font-weight: bold; color: #2d6489; }
+        .content { background-color: #ffffff; padding: 28px; }
+        .mensaje { font-size: 15px; color: #333; }
+        .footer { background-color: #ffffff; padding: 20px; text-align: center; border-radius: 0 0 8px 8px; border-top: 1px solid #e9ecef; }
+        .contact-info { font-size: 13px; color: #6c757d; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            {% if logoUrl %}
+                <img src="{{ logoUrl }}" alt="{{ instituto.nombre }}" class="logo">
+            {% endif %}
+            <div class="instituto-name">{{ instituto.nombre }}</div>
+        </div>
+
+        <div class="content">
+            <h2 style="color: #2d6489; margin-top: 0;">{{ asunto }}</h2>
+
+            <p>Estimado/a <strong>{{ alumno.nombre }} {{ alumno.apellido }}</strong>,</p>
+
+            <div class="mensaje">{{ mensaje|nl2br }}</div>
+        </div>
+
+        <div class="footer">
+            <p style="margin: 0 0 8px;"><strong>{{ instituto.nombre }}</strong></p>
+            <div class="contact-info">
+                {% if instituto.dir %}<p style="margin: 2px 0;">{{ instituto.dir }}</p>{% endif %}
+                {% if instituto.tel %}<p style="margin: 2px 0;">Tel: {{ instituto.tel }}</p>{% endif %}
+                {% if instituto.email %}<p style="margin: 2px 0;">{{ instituto.email }}</p>{% endif %}
+            </div>
+        </div>
+    </div>
+</body>
+</html>

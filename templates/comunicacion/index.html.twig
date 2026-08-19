@@ -1,0 +1,140 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Comunicaciones{% endblock %}
+
+{% block panelTitle %}Comunicaciones{% endblock %}
+
+{% block body %}
+<div class="container-fluid px-4 mt-4">
+    <div class="row">
+        <div class="col-lg-9">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-megaphone"></i> Enviar una comunicación</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">
+                        Un aviso por email a varios alumn@s de una vez: un cambio de precio, un cambio
+                        de horario, una clase que no se da. Cada envío queda registrado en el
+                        <a href="{{ path('app_email_log_index') }}">Historial de Emails</a>.
+                    </p>
+
+                    <form method="post" action="{{ path('app_comunicacion_enviar') }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('comunicacion_enviar') }}">
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">¿A quiénes?</label>
+
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="destino" id="destino_instituto"
+                                       value="instituto" {% if destinoPrevio != 'curso' and destinoPrevio != 'deudores' %}checked{% endif %}>
+                                <label class="form-check-label" for="destino_instituto">
+                                    Todos los alumn@s del instituto
+                                    <span class="badge bg-secondary">{{ conteos.instituto }}</span>
+                                </label>
+                            </div>
+
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="destino" id="destino_curso"
+                                       value="curso" {% if destinoPrevio == 'curso' %}checked{% endif %}>
+                                <label class="form-check-label" for="destino_curso">Los alumn@s de un curso</label>
+                            </div>
+
+                            <div class="ms-4 mb-2">
+                                <select class="form-select" name="curso" id="curso_select">
+                                    <option value="">Elegí un curso…</option>
+                                    {% for curso in cursos %}
+                                        <option value="{{ curso.id }}" {% if cursoPrevio == curso.id %}selected{% endif %}>
+                                            {{ curso.nombre }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="destino" id="destino_deudores"
+                                       value="deudores" {% if destinoPrevio == 'deudores' %}checked{% endif %}>
+                                <label class="form-check-label" for="destino_deudores">
+                                    Los alumn@s con cuotas vencidas
+                                    <span class="badge bg-warning text-dark">{{ conteos.deudores }}</span>
+                                </label>
+                            </div>
+
+                            <small class="form-text text-muted">
+                                Solo se les manda a los alumn@s activos. A los dados de baja no.
+                            </small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="asunto" class="form-label fw-semibold">Asunto</label>
+                            <input type="text" class="form-control" id="asunto" name="asunto" maxlength="150" required
+                                   value="{{ asuntoPrevio }}" placeholder="Ej: Actualización del valor de la cuota">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="mensaje" class="form-label fw-semibold">Mensaje</label>
+                            <textarea class="form-control" id="mensaje" name="mensaje" rows="9" required
+                                      placeholder="Escribí el aviso como se lo querés mandar a las familias.">{{ mensajePrevio }}</textarea>
+                            <small class="form-text text-muted">
+                                Texto común, sin formato. Los saltos de línea se respetan. El email sale con
+                                el nombre y el logo del instituto, y arranca saludando a cada alumn@ por su nombre.
+                            </small>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i>
+                            Según la configuración del instituto, ahora mismo cada aviso va
+                            {% if notificarA == 'ambos' %}
+                                <strong>al alumn@ y a su tutor</strong>.
+                            {% elseif notificarA == 'tutor' %}
+                                <strong>solo al tutor</strong>.
+                            {% else %}
+                                <strong>solo al alumn@</strong>.
+                            {% endif %}
+                            Se cambia en <a href="{{ path('instituto_config_index', {'tab': 'notificaciones'}) }}">Configuración → Notificaciones</a>.
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-lg"
+                                onclick="return confirm('¿Enviar la comunicación? Los emails salen en el momento.');">
+                            <i class="bi bi-send"></i> Enviar
+                        </button>
+                        <a href="{{ path('dashboard_index') }}" class="btn btn-secondary">Cancelar</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3">
+            <div class="card">
+                <div class="card-header bg-light"><strong>Antes de enviar</strong></div>
+                <div class="card-body small text-muted">
+                    <p>
+                        Los emails se mandan <strong>en el momento</strong>, no en segundo plano. Con
+                        muchos alumn@s la pantalla puede tardar unos segundos: no la cierres ni
+                        recargues hasta que confirme.
+                    </p>
+                    <p>
+                        Al alumn@ sin email cargado no le llega nada, y queda registrado como fallido
+                        en el historial para que lo puedas ver.
+                    </p>
+                    <p class="mb-0">
+                        No hay deshacer: un email enviado no se puede retirar. Leelo antes.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        // Elegir un curso en el desplegable implica que querés mandarle a ese curso.
+        document.getElementById('curso_select').addEventListener('change', function () {
+            if (this.value) {
+                document.getElementById('destino_curso').checked = true;
+            }
+        });
+    </script>
+{% endblock %}

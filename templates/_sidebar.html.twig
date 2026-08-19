@@ -144,6 +144,14 @@
 
             <ul class="nav nav-tabs sidebar-dropdown-ul">
                 <li class="nav-item">
+                    <a class="list-group-item list-group-item-action bg-light {% if app.request.get('_route') starts with 'app_comunicacion_' %}active{% endif %}" href="{{ path('app_comunicacion_index') }}">
+                        <i class="bi bi-megaphone"></i> Comunicaciones
+                    </a>
+                </li>
+            </ul>
+
+            <ul class="nav nav-tabs sidebar-dropdown-ul">
+                <li class="nav-item">
                     <a class="list-group-item list-group-item-action bg-light {% if app.request.get('_route') starts with 'app_email_log_' %}active{% endif %}" href="{{ path('app_email_log_index') }}">
                         <i class="bi bi-envelope-check"></i> Historial de Emails
                     </a>

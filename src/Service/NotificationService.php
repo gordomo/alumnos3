@@ -615,6 +615,93 @@ class NotificationService
     }
 
     /**
+     * Manda una comunicación libre a un alumno: un aviso de aumento, un cambio de horario, lo
+     * que el instituto necesite comunicar.
+     *
+     * Vive acá y no en EmailService porque este servicio es el que sabe a quién hay que
+     * escribirle según la configuración del instituto (alumno, tutor o los dos), quién es el
+     * remitente y cómo dejar registro en el historial de emails. EmailService tenía un
+     * sendGeneralCommunication() que no hacía nada de eso y que nunca se enchufó a ninguna
+     * pantalla.
+     *
+     * $forzarEnvio no aplica: una comunicación la escribe una persona a propósito, así que no
+     * depende de ningún switch de configuración.
+     */
+    public function enviarComunicacion(
+        Alumno $alumno,
+        string $asunto,
+        string $mensaje,
+        ?User $solicitadoPor = null
+    ): bool {
+        $instituto = $alumno->getInstituto();
+        $configuracion = $instituto->getConfiguracion();
+
+        $destinatarios = $this->resolverDestinatarios($alumno, null, $configuracion);
+        $destino = implode(', ', $destinatarios);
+
+        if (!$destinatarios) {
+            $this->registrarEmailLog(
+                $instituto, $alumno, 'comunicacion', 'Sin email', $asunto, 'fallido',
+                'No hay ninguna dirección válida para notificar según la configuración del instituto',
+                null, null, $solicitadoPor, false
+            );
+
+            return false;
+        }
+
+        $institutoEmail = $instituto->getEmail();
+        $fromEmail = 'noreply@teambuilder.com.ar';
+        if ($institutoEmail && filter_var($institutoEmail, FILTER_VALIDATE_EMAIL)) {
+            $emailDomain = substr(strrchr($institutoEmail, '@'), 1);
+            if (in_array($emailDomain, ['teambuilder.com.ar', 'dattaweb.com'], true)) {
+                $fromEmail = $institutoEmail;
+            }
+        }
+
+        try {
+            $email = (new TemplatedEmail())
+                ->from(new Address($fromEmail, $instituto->getNombre() ?? 'Instituto'))
+                ->to(...$destinatarios)
+                ->subject($asunto)
+                ->htmlTemplate('emails/comunicacion.html.twig')
+                ->context([
+                    'instituto' => $instituto,
+                    'alumno' => $alumno,
+                    'asunto' => $asunto,
+                    'mensaje' => $mensaje,
+                    'logoUrl' => $this->getLogoUrl($instituto),
+                ]);
+
+            $this->mailer->send($email);
+
+            $this->registrarEmailLog(
+                $instituto, $alumno, 'comunicacion', $destino, $asunto, 'enviado',
+                null, null, null, $solicitadoPor, false
+            );
+
+            $this->tokenService->consumeTokens(
+                $instituto,
+                'notificacion.send',
+                null,
+                'Comunicación a ' . $alumno->getNombreApellido(),
+                'Alumno',
+                $alumno->getId()
+            );
+
+            return true;
+        } catch (\Throwable $e) {
+            // Se registra y se devuelve false en lugar de cortar: en un envío masivo, que falle
+            // una dirección no puede impedir que salgan las demás.
+            $this->registrarEmailLog(
+                $instituto, $alumno, 'comunicacion', $destino, $asunto, 'fallido',
+                $e->getMessage(), null, null, $solicitadoPor, false
+            );
+
+            return false;
+        }
+    }
+
+    /**
      * Direcciones a las que va una notificación de este alumno.
      *
      * $override gana sobre todo: lo usa el reenvío manual desde el historial de emails,

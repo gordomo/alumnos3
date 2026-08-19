@@ -109,6 +109,18 @@
             border: 1px solid #ffeaa7;
         }
 
+        .badge-boletin {
+            background: #e8f5e9;
+            color: #1b5e20;
+            border: 1px solid #c8e6c9;
+        }
+
+        .badge-comunicacion {
+            background: #e3eef6;
+            color: #234b66;
+            border: 1px solid #c9dded;
+        }
+
         .filters-bar {
             background: var(--email-surface);
             border: 1px solid var(--email-border);
@@ -142,6 +154,7 @@
                     <option value="recibo" {% if filtroTipo == 'recibo' %}selected{% endif %}>Recibos</option>
                     <option value="recordatorio" {% if filtroTipo == 'recordatorio' %}selected{% endif %}>Recordatorios</option>
                     <option value="boletin" {% if filtroTipo == 'boletin' %}selected{% endif %}>Boletines de notas</option>
+                    <option value="comunicacion" {% if filtroTipo == 'comunicacion' %}selected{% endif %}>Comunicaciones</option>
                 </select>
             </div>
             <div class="col-md-4">
@@ -187,8 +200,14 @@
                             <span class="badge-tipo badge-{{ email.tipo }}">
                                 {% if email.tipo == 'recibo' %}
                                     <i class="bi bi-receipt"></i> Recibo
-                                {% else %}
+                                {% elseif email.tipo == 'recordatorio' %}
                                     <i class="bi bi-bell"></i> Recordatorio
+                                {% elseif email.tipo == 'boletin' %}
+                                    <i class="bi bi-mortarboard"></i> Boletín
+                                {% elseif email.tipo == 'comunicacion' %}
+                                    <i class="bi bi-megaphone"></i> Comunicación
+                                {% else %}
+                                    <i class="bi bi-envelope"></i> {{ email.tipo|capitalize }}
                                 {% endif %}
                             </span>
                         </td>
