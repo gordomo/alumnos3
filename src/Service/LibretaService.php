@@ -29,7 +29,8 @@ class LibretaService
         private PeriodoAcademicoRepository $periodoRepository,
         private AsistenciaAlumnosRepository $asistenciaRepository,
         private PromedioCalificacionService $promedioService,
-        private InstitutoTimezoneService $institutoTimezoneService
+        private InstitutoTimezoneService $institutoTimezoneService,
+        private TareaService $tareaService
     ) {
     }
 
@@ -46,6 +47,8 @@ class LibretaService
      *     grilla: array,
      *     sinArea: Calificacion[],
      *     asistencia: array,
+     *     tareas: array,
+     *     tareasTotal: array,
      *     resumen: array,
      *     usaGrilla: bool
      * }
@@ -122,6 +125,9 @@ class LibretaService
             'grilla' => $grilla,
             'sinArea' => $sinArea,
             'asistencia' => $this->asistenciaPorPeriodo($historico, $periodos),
+            // Pedidas y entregadas de cada período: la fila de tareas de la libreta.
+            'tareas' => $this->tareaService->resumenPorPeriodo($historico, $periodos),
+            'tareasTotal' => $this->tareaService->resumenParaHistorico($historico),
             // El resumen general sale de todas las calificaciones, con área o sin ella, así
             // que coincide con el del boletín y con el del cierre de curso.
             'resumen' => $this->promedioService->resumir($calificaciones, $criterio),

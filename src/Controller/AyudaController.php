@@ -70,6 +70,12 @@ class AyudaController extends AbstractController
             'resumen' => 'Elegir la escala, crear evaluaciones, cargar notas y enviar el boletín.',
             'roles' => ['ROLE_ADMIN_INSTITUTO', 'ROLE_PROFESOR'],
         ],
+        'tareas' => [
+            'titulo' => 'Tareas',
+            'icono' => 'bi-journal-text',
+            'resumen' => 'Pedir tareas a un curso, marcar quién las entregó y verlo en la libreta.',
+            'roles' => ['ROLE_ADMIN_INSTITUTO', 'ROLE_PROFESOR'],
+        ],
         'asistencias' => [
             'titulo' => 'Asistencias',
             'icono' => 'bi-clipboard-check',

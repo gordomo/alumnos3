@@ -194,6 +194,53 @@
             </div>
         {% endif %}
 
+        {# Tareas: pedidas y entregadas de cada período. Es el "Homework: asked / hand in" de la
+           libreta de referencia. Solo las tareas con período asignado entran en esta grilla. #}
+        {% if tareas is not empty and tareasTotal.pedidas > 0 %}
+            <h2 class="h6 text-uppercase mb-2" style="color: var(--lib-primario);">Tareas</h2>
+            <div class="table-responsive mb-4">
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="libreta-th-area" style="width: 26%;">&nbsp;</th>
+                            {% for periodo in periodos %}
+                                <th>{{ periodo.etiquetaCorta }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th>Pedidas</th>
+                            {% for periodo in periodos %}
+                                {% set dato = tareas[periodo.id]|default(null) %}
+                                <td>{{ dato and dato.pedidas > 0 ? dato.pedidas : '—' }}</td>
+                            {% endfor %}
+                        </tr>
+                        <tr>
+                            <th>Entregadas</th>
+                            {% for periodo in periodos %}
+                                {% set dato = tareas[periodo.id]|default(null) %}
+                                <td>{{ dato and dato.pedidas > 0 ? dato.entregadas : '—' }}</td>
+                            {% endfor %}
+                        </tr>
+                        <tr class="libreta-total">
+                            <th>% entregado</th>
+                            {% for periodo in periodos %}
+                                {% set dato = tareas[periodo.id]|default(null) %}
+                                <td>
+                                    {% if dato and dato.pedidas > 0 %}
+                                        {{ (dato.entregadas / dato.pedidas * 100)|round(1) }}%
+                                    {% else %}
+                                        <span class="celda-vacia">—</span>
+                                    {% endif %}
+                                </td>
+                            {% endfor %}
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+
         {% if grilla is not empty and periodos is not empty %}
             <h2 class="h6 text-uppercase mb-2" style="color: var(--lib-primario);">Calificaciones</h2>
             <div class="table-responsive mb-3">

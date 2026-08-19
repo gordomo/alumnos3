@@ -1,0 +1,102 @@
+{% extends 'base.html.twig' %}
+{% block title %}{{ esNueva ? 'Nueva tarea' : 'Editar tarea' }}{% endblock %}
+{% block panelTitle %}Tareas{% endblock %}
+
+{% block body %}
+<div class="container-fluid px-4 mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ path(rutas.index) }}">Tareas</a></li>
+            <li class="breadcrumb-item"><a href="{{ path(rutas.curso, {'id': curso.id}) }}">{{ curso.nombre }}</a></li>
+            <li class="breadcrumb-item active">{{ esNueva ? 'Nueva tarea' : tarea.titulo }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-{{ esNueva ? 'plus-circle' : 'pencil' }}"></i>
+                        {{ esNueva ? 'Nueva tarea' : 'Editar tarea' }} <small>— {{ curso.nombre }}</small>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        <input type="hidden" name="_token" value="{{ csrf_token('tarea_form' ~ (tarea.id ?? 'nueva')) }}">
+
+                        <div class="mb-3">
+                            <label for="titulo" class="form-label fw-semibold">Título <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="titulo" name="titulo" maxlength="150" required
+                                   value="{{ tarea.titulo }}" placeholder="Ej: Ejercicios de la unidad 3">
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="fecha" class="form-label fw-semibold">Fecha en que se pide <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="fecha" name="fecha" required
+                                       value="{{ tarea.fecha ? tarea.fecha|date(date_format) : '' }}" placeholder="{{ date_format }}">
+                                <small class="form-text text-muted">Es la que ubica la tarea en un período.</small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="fecha_entrega" class="form-label fw-semibold">Fecha de entrega</label>
+                                <input type="text" class="form-control" id="fecha_entrega" name="fecha_entrega"
+                                       value="{{ tarea.fechaEntrega ? tarea.fechaEntrega|date(date_format) : '' }}" placeholder="{{ date_format }}">
+                                <small class="form-text text-muted">Opcional: dejala vacía si no tiene plazo.</small>
+                            </div>
+                        </div>
+
+                        {% if periodos is not empty %}
+                            <div class="mb-3">
+                                <label for="periodo" class="form-label fw-semibold">Período</label>
+                                <select class="form-select" id="periodo" name="periodo">
+                                    <option value="">Sin período</option>
+                                    {% for periodo in periodos %}
+                                        <option value="{{ periodo.id }}" {% if tarea.periodo and tarea.periodo.id == periodo.id %}selected{% endif %}>
+                                            {{ periodo.nombre }}{% if not periodo.esExamen %} — {{ periodo.rangoTexto }}{% else %} (examen){% endif %}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <small class="form-text text-muted">
+                                    Se propone según la fecha. Sin período, la tarea no entra en la fila de tareas de la libreta.
+                                </small>
+                            </div>
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <label for="descripcion" class="form-label fw-semibold">Descripción</label>
+                            <textarea class="form-control" id="descripcion" name="descripcion" rows="4"
+                                      placeholder="Consigna, páginas, aclaraciones.">{{ tarea.descripcion }}</textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> {{ esNueva ? 'Crear' : 'Guardar' }}
+                        </button>
+                        <a href="{{ path(rutas.curso, {'id': curso.id}) }}" class="btn btn-secondary">Cancelar</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        {% if not esNueva %}
+            <div class="col-lg-4">
+                <div class="card border-danger">
+                    <div class="card-header bg-light"><strong>Eliminar</strong></div>
+                    <div class="card-body">
+                        <p class="small text-muted">
+                            Se borra la tarea y las entregas que ya se hayan cargado. No se puede recuperar.
+                        </p>
+                        <form method="post" action="{{ path(rutas.eliminar, {'id': tarea.id}) }}"
+                              onsubmit="return confirm('¿Eliminar la tarea y sus entregas?');">
+                            <input type="hidden" name="_token" value="{{ csrf_token('tarea_eliminar' ~ tarea.id) }}">
+                            <button type="submit" class="btn btn-outline-danger btn-sm">
+                                <i class="bi bi-trash"></i> Eliminar tarea
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

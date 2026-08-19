@@ -1,0 +1,92 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mis Tareas{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0"><i class="bi bi-journal-text"></i> Mis Tareas</h1>
+        <a href="{{ path('app_alumno_dashboard') }}" class="btn btn-secondary btn-sm">← Volver al panel</a>
+    </div>
+
+    {% if cursos is empty %}
+        <div class="alert alert-light border">
+            <i class="bi bi-inbox"></i> Todavía no tenés tareas cargadas.
+        </div>
+    {% else %}
+        {% for datos in cursos %}
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">{{ datos.curso.nombre }}</h5>
+                    <div>
+                        <span class="badge bg-light text-dark">
+                            {{ datos.entregadas }} de {{ datos.pedidas }} entregadas
+                        </span>
+                        {% if datos.porcentaje is not null %}
+                            {% set clase = datos.porcentaje >= 75 ? 'bg-success' : (datos.porcentaje >= 50 ? 'bg-warning text-dark' : 'bg-danger') %}
+                            <span class="badge {{ clase }}">{{ datos.porcentaje }}%</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-striped mb-0 align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Tarea</th>
+                                    <th>Se pidió</th>
+                                    <th>Entregar antes de</th>
+                                    <th>Período</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            {% for tarea in datos.tareas %}
+                                {# Las entregas vienen indexadas por id de tarea, solo las de este alumno. #}
+                                {% set entrega = datos.entregas[tarea.id]|default(null) %}
+                                {% set entregada = entrega and entrega.entregada %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ tarea.titulo }}</strong>
+                                        {% if tarea.descripcion %}
+                                            <div class="small text-muted">{{ tarea.descripcion|nl2br }}</div>
+                                        {% endif %}
+                                        {% if entrega and entrega.observaciones %}
+                                            <div class="small mt-1">
+                                                <i class="bi bi-chat-left-text"></i> {{ entrega.observaciones }}
+                                            </div>
+                                        {% endif %}
+                                    </td>
+                                    <td><small>{{ tarea.fecha|date(date_format) }}</small></td>
+                                    <td>
+                                        {% if tarea.fechaEntrega %}
+                                            <small>{{ tarea.fechaEntrega|date(date_format) }}</small>
+                                        {% else %}
+                                            <span class="text-muted">—</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if tarea.periodo %}
+                                            <span class="badge bg-light text-dark">{{ tarea.periodo.etiquetaCorta }}</span>
+                                        {% else %}
+                                            <span class="text-muted">—</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if entregada %}
+                                            <span class="badge bg-success"><i class="bi bi-check-circle-fill"></i> Entregada</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary"><i class="bi bi-dash-circle"></i> Sin entregar</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    {% endif %}
+</div>
+{% endblock %}

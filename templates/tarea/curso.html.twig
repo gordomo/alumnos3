@@ -1,0 +1,128 @@
+{% extends 'base.html.twig' %}
+{% block title %}Tareas de {{ curso.nombre }}{% endblock %}
+{% block panelTitle %}Tareas{% endblock %}
+
+{% block body %}
+<div class="container-fluid px-4 mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ path(rutas.index) }}">Tareas</a></li>
+            <li class="breadcrumb-item active">{{ curso.nombre }}</li>
+        </ol>
+    </nav>
+
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-journal-text"></i> Tareas de {{ curso.nombre }}</h5>
+            {% if puedeAdministrar %}
+                <a href="{{ path(rutas.nueva, {'id': curso.id}) }}" class="btn btn-light btn-sm">
+                    <i class="bi bi-plus-circle"></i> Nueva tarea
+                </a>
+            {% endif %}
+        </div>
+        <div class="card-body">
+            {% if tareas is empty %}
+                <p class="text-muted mb-0">
+                    Todavía no hay tareas en este curso.
+                    {% if puedeAdministrar %}Creá la primera con el botón de arriba.{% endif %}
+                </p>
+            {% else %}
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Tarea</th>
+                                <th>Período</th>
+                                <th>Pedida</th>
+                                <th>Entrega</th>
+                                <th class="text-center">Entregaron</th>
+                                <th class="text-end">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for tarea in tareas %}
+                                <tr>
+                                    <td><strong>{{ tarea.titulo }}</strong></td>
+                                    <td>
+                                        {% if tarea.periodo %}
+                                            <span class="badge {{ tarea.periodo.esExamen ? 'bg-info text-dark' : 'bg-primary' }}">
+                                                {{ tarea.periodo.etiquetaCorta }}
+                                            </span>
+                                        {% else %}
+                                            <span class="text-muted">—</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ tarea.fecha|date(date_format) }}</td>
+                                    <td>
+                                        {% if tarea.fechaEntrega %}
+                                            {{ tarea.fechaEntrega|date(date_format) }}
+                                        {% else %}
+                                            <span class="text-muted">sin plazo</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-light text-dark">
+                                            {{ tarea.contarEntregadas }} de {{ inscripciones|length }}
+                                        </span>
+                                    </td>
+                                    <td class="text-end">
+                                        <a href="{{ path(rutas.grilla, {'id': tarea.id}) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-check2-square"></i> {{ puedeAdministrar ? 'Cargar entregas' : 'Ver entregas' }}
+                                        </a>
+                                        {% if puedeAdministrar %}
+                                            <a href="{{ path(rutas.editar, {'id': tarea.id}) }}" class="btn btn-sm btn-outline-secondary" title="Editar">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if inscripciones is not empty %}
+        <div class="card">
+            <div class="card-header bg-light">
+                <strong><i class="bi bi-people"></i> Resumen por alumn@</strong>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Alumn@</th>
+                            <th class="text-center">Entregadas</th>
+                            <th class="text-center">Pedidas</th>
+                            <th class="text-center">%</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for inscripcion in inscripciones %}
+                            {% set datos = resumen[inscripcion.id]|default({'pedidas': 0, 'entregadas': 0, 'porcentaje': null}) %}
+                            <tr>
+                                <td>{{ inscripcion.alumno.apellido }}, {{ inscripcion.alumno.nombre }}</td>
+                                <td class="text-center">{{ datos.entregadas }}</td>
+                                <td class="text-center">{{ datos.pedidas }}</td>
+                                <td class="text-center">
+                                    {% if datos.porcentaje is not null %}
+                                        <span class="badge {{ datos.porcentaje >= 75 ? 'bg-success' : (datos.porcentaje >= 50 ? 'bg-warning text-dark' : 'bg-danger') }}">
+                                            {{ datos.porcentaje }}%
+                                        </span>
+                                    {% else %}
+                                        <span class="text-muted">—</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% endif %}
+
+    <a href="{{ path(rutas.index) }}" class="btn btn-secondary mt-3">← Volver</a>
+</div>
+{% endblock %}

@@ -6,7 +6,10 @@ use App\Repository\CursoRepository;
 use App\Repository\AlumnoRepository;
 use App\Repository\AsistenciaAlumnosRepository;
 use App\Repository\AlumnosPagosRepository;
+use App\Repository\AlumnoCursoHistoricoRepository;
 use App\Repository\CalificacionRepository;
+use App\Repository\TareaEntregaRepository;
+use App\Repository\TareaRepository;
 use App\Service\EscalaCalificacionService;
 use App\Service\InstitutoTimezoneService;
 use App\Service\PromedioCalificacionService;
@@ -158,5 +161,88 @@ class AlumnoDashboardController extends AbstractController
             'date_format' => $institutoTimezoneService->getDateFormatForInstituto($instituto),
         ]);
     }
-}
 
+    /**
+     * Tareas del alumno, agrupadas por curso, de solo lectura.
+     *
+     * Igual que las notas: el alumno se resuelve desde el usuario logueado, así que no hay
+     * ningún id manipulable en la URL. Se recorren todas sus inscripciones, incluidas las
+     * cerradas, porque las tareas de un curso que ya terminó siguen siendo parte de su
+     * historia.
+     *
+     * Se agrupa por curso y no por inscripción: las tareas se le piden al curso, así que si el
+     * alumno se reinscribió al mismo curso la lista sería la misma dos veces. Las entregas de
+     * todas sus inscripciones se unifican.
+     *
+     * @Route("/tareas", name="app_alumno_tareas")
+     */
+    public function tareas(
+        AlumnoCursoHistoricoRepository $historicoRepository,
+        TareaRepository $tareaRepository,
+        TareaEntregaRepository $entregaRepository,
+        InstitutoTimezoneService $institutoTimezoneService
+    ): Response {
+        $user = $this->getUser();
+        if (!$user || !$user->getAlumno()) {
+            $this->addFlash('danger', 'No se encontró información del alumno asociada a tu usuario.');
+            return $this->redirectToRoute('app_logout');
+        }
+
+        $alumno = $user->getAlumno();
+
+        $cursos = [];
+        foreach ($historicoRepository->findByAlumno($alumno) as $historico) {
+            $curso = $historico->getCurso();
+            if (!$curso) {
+                continue;
+            }
+
+            $cursoId = $curso->getId();
+            if (!isset($cursos[$cursoId])) {
+                $tareas = $tareaRepository->findParaAlumno($curso);
+                if (!$tareas) {
+                    continue;
+                }
+
+                $cursos[$cursoId] = [
+                    'curso' => $curso,
+                    'tareas' => $tareas,
+                    // Estado de cada tarea indexado por id, que es lo que lee el template.
+                    'entregas' => [],
+                    'entregadas' => 0,
+                    'pedidas' => count($tareas),
+                ];
+            }
+
+            foreach ($entregaRepository->findByHistorico($historico) as $entrega) {
+                $tarea = $entrega->getTarea();
+                if (!$tarea) {
+                    continue;
+                }
+
+                $cursos[$cursoId]['entregas'][$tarea->getId()] = $entrega;
+            }
+        }
+
+        // El total se cuenta al final, ya unificadas las entregas de todas las inscripciones.
+        foreach ($cursos as $cursoId => $datos) {
+            $entregadas = 0;
+            foreach ($datos['entregas'] as $entrega) {
+                if ($entrega->isEntregada()) {
+                    $entregadas++;
+                }
+            }
+
+            $cursos[$cursoId]['entregadas'] = $entregadas;
+            $cursos[$cursoId]['porcentaje'] = $datos['pedidas'] > 0
+                ? round(($entregadas / $datos['pedidas']) * 100, 1)
+                : null;
+        }
+
+        return $this->render('alumno_dashboard/tareas.html.twig', [
+            'alumno' => $alumno,
+            'cursos' => array_values($cursos),
+            'date_format' => $institutoTimezoneService->getDateFormatForInstituto($alumno->getInstituto()),
+        ]);
+    }
+}

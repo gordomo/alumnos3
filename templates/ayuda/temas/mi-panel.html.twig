@@ -3,9 +3,9 @@
 
 {% block contenido %}
 <p>
-    Como alumno tenés dos pantallas: <strong>Mi Dashboard</strong>, con el resumen de tu
-    situación, y <strong>Mis Notas</strong>, con tus calificaciones. Solo ves tu propia
-    información.
+    Como alumno tenés tres pantallas: <strong>Mi Dashboard</strong>, con el resumen de tu
+    situación, <strong>Mis Notas</strong>, con tus calificaciones, y <strong>Mis Tareas</strong>,
+    con lo que se pidió en cada curso. Solo ves tu propia información.
 </p>
 
 <h2>Mi Dashboard</h2>
@@ -71,5 +71,25 @@
 <p>
     Esta pantalla es de <strong>solo lectura</strong>: las notas las carga el profesor. Si
     encontrás algo que no coincide con lo que te devolvieron, hablalo con el profesor del curso.
+</p>
+
+<h2>Mis Tareas</h2>
+
+<p>
+    Se entra por {{ m.ruta(['Mis Tareas']) }}. Por cada curso ves las tareas que se pidieron,
+    con la fecha en que se pidieron, la fecha de entrega si tiene una, y si figurás como
+    <strong>entregada</strong> o <strong>sin entregar</strong>.
+</p>
+
+{{ m.captura('alumno-tareas.png', 'Mis Tareas: qué se pidió y qué figura entregado') }}
+
+<p>
+    Arriba de cada curso está el total: cuántas entregaste de cuántas se pidieron, con el
+    porcentaje. Es el mismo número que aparece en tu libreta.
+</p>
+
+<p>
+    También es de solo lectura, y quien marca las entregas es el profesor. Si entregaste algo y
+    figura como sin entregar, avisale.
 </p>
 {% endblock %}

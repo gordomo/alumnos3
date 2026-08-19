@@ -44,15 +44,19 @@
         </div>
     </div>
 
-    {% if usaCalificaciones|default(false) %}
-        <div class="row mb-4">
-            <div class="col-12">
+    <div class="row mb-4">
+        <div class="col-12">
+            {% if usaCalificaciones|default(false) %}
                 <a href="{{ path('app_alumno_notas') }}" class="btn btn-outline-primary">
                     <i class="bi bi-mortarboard"></i> Ver mis notas
                 </a>
-            </div>
+            {% endif %}
+            {# Las tareas no dependen de que el instituto use calificaciones. #}
+            <a href="{{ path('app_alumno_tareas') }}" class="btn btn-outline-primary">
+                <i class="bi bi-journal-text"></i> Ver mis tareas
+            </a>
         </div>
-    {% endif %}
+    </div>
 
     <div class="row">
         <!-- Mis Cursos -->
