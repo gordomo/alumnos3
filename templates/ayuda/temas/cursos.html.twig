@@ -31,10 +31,53 @@
 
 {{ m.captura('curso-nuevo.png', 'Formulario de creación de un curso') }}
 
-{{ m.nota('info', 'El precio se congela en la inscripción',
-   'Si más adelante subís el precio mensual del curso, los alumnos ya inscriptos siguen con el
-    precio que tenían. Eso es deliberado: evita que un aumento reescriba deudas del pasado. Para
-    actualizarle el precio a un alumno hay que hacerlo en su inscripción.') }}
+<h2>Aumentar el precio de un curso</h2>
+
+<p>
+    El precio se <strong>copia a la inscripción</strong> de cada alumno cuando se inscribe, y las
+    cuotas se calculan con esa copia. Por eso cambiar el precio arriba no les cambia las cuotas
+    por sí solo: los alumnos que ya estaban seguirían con el precio viejo.
+</p>
+
+<p>Para aplicar un aumento:</p>
+
+<ol>
+    <li>Editá el curso y poné el precio nuevo.</li>
+    <li>
+        Debajo del precio aparece <strong>"Aplicar el precio actual a los inscript@s"</strong>,
+        con la cantidad de alumnos que tiene el curso. Tildalo.
+    </li>
+    <li>Guardá. El sistema te dice a cuántos alumnos y cuántas cuotas afectó.</li>
+</ol>
+
+<p>Qué pasa cuando lo aplicás:</p>
+
+<ul>
+    <li>
+        <strong>Todas las cuotas impagas pasan al precio nuevo</strong>, incluidas las atrasadas.
+        El criterio es que el precio es el del día en que se paga.
+    </li>
+    <li>El <strong>recargo por mora</strong> se recalcula sobre el precio nuevo.</li>
+    <li><strong>Las cuotas ya pagadas no se tocan.</strong> Están cerradas.</li>
+    <li>
+        Las inscripciones <strong>dadas de baja</strong> quedan con su precio viejo: esa persona
+        ya no cursa y su inscripción terminó antes del aumento.
+    </li>
+</ul>
+
+{{ m.nota('warning', 'El que se atrasa paga el aumento y el recargo',
+   'Una cuota vencida ya lleva el recargo por vencimiento, y con el aumento además sube de precio.
+    O sea que el atraso se penaliza dos veces. Es el comportamiento buscado, pero conviene que las
+    familias lo sepan.') }}
+
+{{ m.nota('info', 'Si acordás otro monto, se puede cobrar otro monto',
+   'Al registrar el pago, el campo <strong>Precio a Cobrar</strong> se puede editar. Si por un
+    acuerdo interno le cobrás menos, escribís ese importe y la cuota queda cancelada igual, sin
+    dejar saldo pendiente.') }}
+
+{{ m.nota('warning', 'Si cambiás el precio y no lo aplicás',
+   'El sistema te avisa: te dice cuántos alumnos siguen con el precio viejo y cómo aplicárselo
+    después. El aumento nunca se aplica en silencio, porque cambia lo que la gente debe.') }}
 
 <h2>El listado</h2>
 

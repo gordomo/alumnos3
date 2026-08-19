@@ -26,6 +26,38 @@
                     </label>
                     {{ form_widget(form.precio, {'attr': {'class': 'form-control'}}) }}
                     {{ form_errors(form.precio) }}
+
+                    {# El precio se copia a la inscripción de cada alumno, así que cambiarlo acá
+                       no alcanza para que las cuotas cambien: hay que aplicarlo. Aparece cuando
+                       hay alumnos con un precio distinto del actual, tanto si se acaba de
+                       cambiar como si el desfasaje venía de antes. #}
+                    {% if precioDesfasado is defined and precioDesfasado.inscriptos > 0 %}
+                        <div class="alert alert-warning mt-2 mb-0 py-2">
+                            <div class="form-check mb-1">
+                                <input class="form-check-input" type="checkbox"
+                                       id="aplicar_precio_inscriptos" name="aplicar_precio_inscriptos" value="1">
+                                <label class="form-check-label fw-semibold" for="aplicar_precio_inscriptos">
+                                    Aplicar el precio actual a los inscript@s
+                                </label>
+                            </div>
+                            <small class="d-block text-muted">
+                                El curso tiene <strong>{{ precioDesfasado.inscriptos }}</strong>
+                                alumn@(s) inscript@(s). El precio se copia a cada inscripción, así que
+                                cambiarlo acá arriba no les cambia las cuotas por sí solo.
+                                {% if precioDesfasado.alumnos > 0 %}
+                                    Hoy {{ precioDesfasado.alumnos }} de ell@s
+                                    {% if precioDesfasado.precioAnterior %}
+                                        siguen con <strong>${{ precioDesfasado.precioAnterior|number_format(2, ',', '.') }}</strong>.
+                                    {% else %}
+                                        tienen otro precio.
+                                    {% endif %}
+                                {% endif %}
+                                Tildando esta opción, todas sus cuotas <strong>impagas</strong> —incluidas las
+                                atrasadas— pasan al precio de este formulario, con el recargo por mora
+                                recalculado. <strong>Las cuotas ya pagadas no se tocan.</strong>
+                            </small>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </div>

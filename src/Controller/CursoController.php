@@ -379,7 +379,7 @@ class CursoController extends AbstractController
     /**
      * @Route("/{id}/edit", name="app_curso_edit", methods={"GET", "POST"})
      */
-    public function edit(Request $request, Curso $curso, CursoRepository $cursoRepository, EntityManagerInterface $entityManager, \App\Service\DeudaService $deudaService): Response
+    public function edit(Request $request, Curso $curso, CursoRepository $cursoRepository, EntityManagerInterface $entityManager, \App\Service\DeudaService $deudaService, \App\Service\PrecioCursoService $precioCursoService): Response
     {
         // Obtener el instituto del usuario actual
         $instituto = $this->getUser()->getInstituto();
@@ -388,6 +388,9 @@ class CursoController extends AbstractController
             return $this->redirectToRoute('app_curso_index');
         }
         
+        // Precio antes de tocar el formulario, para saber si cambió al guardar.
+        $precioOriginal = (float) $curso->getPrecio();
+
         // Guardar fechas originales para comparar cambios
         $fechaInicioOriginal = $curso->getFechaInicio();
         $fechaFinOriginal = $curso->getFechaFin();
@@ -439,6 +442,7 @@ class CursoController extends AbstractController
                     'curso' => $curso,
                     'form' => $form,
                     'date_format' => $dateFormat,
+                    'precioDesfasado' => $precioCursoService->previsualizar($curso),
                 ]);
             }
             
@@ -474,6 +478,7 @@ class CursoController extends AbstractController
                             'curso' => $curso,
                             'form' => $form,
                             'date_format' => $dateFormat,
+                                                    'precioDesfasado' => $precioCursoService->previsualizar($curso),
                         ]);
                     }
                 }
@@ -523,6 +528,7 @@ class CursoController extends AbstractController
                                 'form' => $form,
                                 'mostrar_confirmacion' => true,
                                 'date_format' => $dateFormat,
+                                                            'precioDesfasado' => $precioCursoService->previsualizar($curso),
                             ]);
                         } else {
                             // El usuario confirmó la acción, actualizar las asistencias
@@ -627,6 +633,7 @@ class CursoController extends AbstractController
                         'form' => $form,
                         'mostrar_confirmacion_conflictos' => true,
                         'date_format' => $dateFormat,
+                                            'precioDesfasado' => $precioCursoService->previsualizar($curso),
                     ]);
                 }
                 
@@ -664,6 +671,37 @@ class CursoController extends AbstractController
                 $cursoRepository->add($curso);
                 $entityManager->flush();
 
+                // El precio nuevo se aplica a las cuotas impagas de los inscriptos solo si el
+                // operador lo pidió: cambia lo que la gente debe, así que no puede pasar en
+                // silencio al guardar el curso.
+                $precioCambiado = abs($precioOriginal - (float) $curso->getPrecio()) > 0.001;
+
+                if ($request->request->has('aplicar_precio_inscriptos')) {
+                    $resultadoPrecio = $precioCursoService->aplicar($curso);
+
+                    if ($resultadoPrecio['alumnos'] > 0) {
+                        $this->addFlash('success', sprintf(
+                            'Se aplicó el precio de $%s a %d alumn@ (s) inscript@(s): se actualizaron %d cuota(s) impaga(s). Las cuotas ya pagadas no se tocaron.',
+                            number_format($resultadoPrecio['precioActual'], 2, ',', '.'),
+                            $resultadoPrecio['alumnos'],
+                            $resultadoPrecio['cuotas']
+                        ));
+                    }
+                } elseif ($precioCambiado) {
+                    // Se avisa del desfasaje en lugar de dejarlo pasar callado: es la situación
+                    // que hacía que un aumento no llegara nunca a las cuotas.
+                    $pendiente = $precioCursoService->previsualizar($curso);
+
+                    if ($pendiente['alumnos'] > 0) {
+                        $this->addFlash('warning', sprintf(
+                            'Cambiaste el precio a $%s, pero los %d alumn@(s) ya inscript@(s) siguen con $%s en sus cuotas impagas. Para aplicárselo, volvé a editar el curso y tildá "Aplicar el precio actual a los inscript@s".',
+                            number_format($pendiente['precioActual'], 2, ',', '.'),
+                            $pendiente['alumnos'],
+                            number_format($pendiente['precioAnterior'] ?? $precioOriginal, 2, ',', '.')
+                        ));
+                    }
+                }
+
                 // Consumir tokens después de guardar exitosamente
                 $this->tokenService->consumeTokens(
                     $instituto,
@@ -690,6 +728,7 @@ class CursoController extends AbstractController
             'form' => $form,
             'mostrar_confirmacion_conflictos' => $mostrarConfirmacionConflictos,
             'date_format' => $dateFormat,
+                    'precioDesfasado' => $precioCursoService->previsualizar($curso),
         ]);
     }
 
