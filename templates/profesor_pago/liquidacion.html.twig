@@ -113,7 +113,19 @@
                                 {% endif %}
                             </td>
                             <td class="text-end">
-                                {% if liq.saldo_pendiente > 0 %}
+                                {% if liq.saldado|default(false) %}
+                                    <span class="text-success">$0,00</span>
+                                    <div>
+                                        <span class="badge bg-success" title="Un pago del mes se marcó como que salda el total">
+                                            Saldado
+                                        </span>
+                                    </div>
+                                    {% if liq.diferencia|default(0) > 0 %}
+                                        <small class="text-muted d-block">
+                                            se dejaron de pagar ${{ liq.diferencia|number_format(2, ',', '.') }}
+                                        </small>
+                                    {% endif %}
+                                {% elseif liq.saldo_pendiente > 0 %}
                                     <span class="text-danger fw-bold">${{ liq.saldo_pendiente|number_format(2, ',', '.') }}</span>
                                 {% elseif liq.saldo_pendiente < 0 %}
                                     <span class="text-warning">-${{ (liq.saldo_pendiente * -1)|number_format(2, ',', '.') }}</span>
@@ -123,7 +135,7 @@
                             </td>
                             <td class="text-center">
                                 <div class="d-flex gap-2 justify-content-center">
-                                    {% if liq.saldo_pendiente > 0 %}
+                                    {% if liq.saldo_pendiente > 0 and not liq.saldado|default(false) %}
                                         <a href="{{ path('app_profesor_pago_registrar', {'profesorId': profesor.id, 'mes': mes, 'ano': ano}) }}" 
                                            class="btn btn-sm btn-success" title="Registrar Pago">
                                             <i class="bi bi-cash-coin"></i> Pagar
@@ -165,7 +177,12 @@
                                                     <tr>
                                                         <td>{{ pago.fechaPago|date('d/m/Y') }}</td>
                                                         <td><span class="badge bg-secondary">{{ pago.metodoPago }}</span></td>
-                                                        <td class="text-end">${{ pago.monto|number_format(2, ',', '.') }}</td>
+                                                        <td class="text-end">
+                                                            ${{ pago.monto|number_format(2, ',', '.') }}
+                                                            {% if pago.saldaTotal %}
+                                                                <span class="badge bg-success">salda el total</span>
+                                                            {% endif %}
+                                                        </td>
                                                         <td>{{ pago.observacion ?? '-' }}</td>
                                                     </tr>
                                                 {% endfor %}

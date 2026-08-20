@@ -115,6 +115,38 @@
     pagó.
 </p>
 
+<h2>Pagar menos y dar el mes por cerrado</h2>
+
+<p>
+    Si acordaste pagarle menos de lo calculado y con eso la cuenta queda cerrada, escribís el
+    importe real y marcás <strong>Con este pago la liquidación del mes queda saldada</strong>.
+</p>
+
+<ul>
+    <li>El mes deja de mostrar saldo pendiente y desaparece el botón de pagar.</li>
+    <li>
+        La <strong>diferencia queda registrada y a la vista</strong> en la liquidación: "se
+        dejaron de pagar $X". No se esconde.
+    </li>
+    <li>El pago que cerró el mes queda marcado como tal, y también lo dice el recibo.</li>
+</ul>
+
+<p>
+    Antes de guardar, la pantalla te avisa cuánto se va a dejar de pagar, así que no se marca
+    por accidente.
+</p>
+
+{{ m.captura('profesor-salda-total.png', 'El pago que cierra el mes, con el aviso de la diferencia') }}
+
+{{ m.nota('info', 'Sin marcarlo, el saldo sigue vivo',
+   'Un pago por menos del total y sin la marca deja el resto como saldo pendiente, que es lo que
+    corresponde cuando todavía le debés esa plata. La marca es para el caso contrario: no se le
+    debe más nada.') }}
+
+{{ m.nota('info', 'Del lado de los alumn@s ya funciona así',
+   'Cuando registrás el pago de una cuota podés editar el importe, y la cuota queda cancelada con
+    lo que hayas cobrado. Ahí no hace falta marcar nada.') }}
+
 {{ m.nota('warning', 'La liquidación de meses cerrados se recalcula',
    'El detalle del recibo queda congelado, pero el "monto calculado" de la liquidación se vuelve
     a calcular con los valores de hoy. Si cambiás un valor hora, los meses anteriores van a

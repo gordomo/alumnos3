@@ -62,6 +62,26 @@
                             <textarea class="form-control" name="observacion" rows="3"></textarea>
                         </div>
 
+                        <div class="mb-3 p-3 border rounded bg-light">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="1"
+                                       name="salda_total" id="salda_total">
+                                <label class="form-check-label fw-semibold" for="salda_total">
+                                    Con este pago la liquidación del mes queda saldada
+                                </label>
+                            </div>
+                            <small class="text-muted d-block mt-1">
+                                Marcalo si acordaste pagar menos de lo calculado y la deuda se da por
+                                cerrada. El mes deja de mostrar saldo pendiente y la diferencia queda
+                                registrada. Si vas a pagar el total, dejalo sin marcar.
+                            </small>
+                            <div class="mt-2 small" id="aviso_diferencia" style="display: none;">
+                                <span class="badge bg-warning text-dark">
+                                    Se van a dejar de pagar $<span id="monto_diferencia">0,00</span>
+                                </span>
+                            </div>
+                        </div>
+
                         <div class="d-flex gap-2">
                             <a href="{{ path('app_profesor_pago_liquidacion', {'mes': mes, 'ano': ano}) }}" 
                                class="btn btn-secondary">
@@ -72,6 +92,32 @@
                             </button>
                         </div>
                     </form>
+
+                    <script>
+                    // Avisa cuánto se deja de pagar cuando se marca que el pago salda el total.
+                    (function () {
+                        const pendiente = {{ liquidacion.saldo_pendiente|number_format(2, '.', '') }};
+                        const monto = document.querySelector('input[name="monto"]');
+                        const salda = document.getElementById('salda_total');
+                        const aviso = document.getElementById('aviso_diferencia');
+                        const texto = document.getElementById('monto_diferencia');
+
+                        function actualizar() {
+                            const diferencia = pendiente - parseFloat(monto.value || '0');
+                            const mostrar = salda.checked && diferencia > 0.009;
+                            aviso.style.display = mostrar ? '' : 'none';
+                            if (mostrar) {
+                                texto.textContent = diferencia.toLocaleString('es-AR', {
+                                    minimumFractionDigits: 2, maximumFractionDigits: 2
+                                });
+                            }
+                        }
+
+                        monto.addEventListener('input', actualizar);
+                        salda.addEventListener('change', actualizar);
+                        actualizar();
+                    })();
+                    </script>
                 </div>
             </div>
         </div>
@@ -84,7 +130,7 @@
                 <div class="card-body">
                     {% set detalle = liquidacion.detalle_calculo %}
                     
-                    {{ include('profesor_pago/_detalle_calculo.html.twig', {'detalle': detalle}) }}
+                    {{ include('profesor_pago/_detalle_calculo.html.twig', {'detalle': detalle, 'compacto': true}) }}
 
                     <hr>
                     <div class="bg-light p-3 rounded">
@@ -99,10 +145,24 @@
                         </div>
                     {% endif %}
 
-                    <div class="mt-3 p-3 bg-danger bg-opacity-10 rounded">
-                        <p class="mb-1"><strong>Saldo Pendiente:</strong></p>
-                        <h4 class="mb-0 text-danger">${{ liquidacion.saldo_pendiente|number_format(2, ',', '.') }}</h4>
-                    </div>
+                    {% if liquidacion.saldado|default(false) %}
+                        <div class="mt-3 p-3 bg-success bg-opacity-10 rounded">
+                            <p class="mb-1"><strong>Saldo Pendiente:</strong></p>
+                            <h4 class="mb-1 text-success">$0,00</h4>
+                            <span class="badge bg-success">Saldado por el instituto</span>
+                            {% if liquidacion.diferencia|default(0) > 0 %}
+                                <div class="small text-muted mt-1">
+                                    Se dejaron de pagar ${{ liquidacion.diferencia|number_format(2, ',', '.') }}
+                                    respecto del cálculo.
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <div class="mt-3 p-3 bg-danger bg-opacity-10 rounded">
+                            <p class="mb-1"><strong>Saldo Pendiente:</strong></p>
+                            <h4 class="mb-0 text-danger">${{ liquidacion.saldo_pendiente|number_format(2, ',', '.') }}</h4>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </div>

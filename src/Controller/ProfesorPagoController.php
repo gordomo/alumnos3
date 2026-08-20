@@ -156,13 +156,25 @@ class ProfesorPagoController extends AbstractController
                 $pago->setMonto((float)$monto);
                 $pago->setMetodoPago($metodoPago);
                 $pago->setObservacion($observacion);
+                // Cierra el mes aunque el monto sea menor al calculado: es el arreglo interno.
+                $pago->setSaldaTotal($request->request->has('salda_total'));
                 $pago->setFechaPago($fechaPago ? new \DateTime($fechaPago) : $this->institutoTimezoneService->getNowForInstituto($instituto));
                 $pago->setDetalleCalculo(json_encode($liquidacion['detalle_calculo']));
 
                 $entityManager->persist($pago);
                 $entityManager->flush();
 
-                $this->addFlash('success', 'Pago registrado exitosamente.');
+                if ($pago->isSaldaTotal()) {
+                    $diferencia = $liquidacion['saldo_pendiente'] - (float) $monto;
+                    $this->addFlash('success', $diferencia > 0.009
+                        ? sprintf(
+                            'Pago registrado. La liquidación de este mes queda saldada: se dejaron de pagar $%s respecto del cálculo.',
+                            number_format($diferencia, 2, ',', '.')
+                        )
+                        : 'Pago registrado. La liquidación de este mes queda saldada.');
+                } else {
+                    $this->addFlash('success', 'Pago registrado exitosamente.');
+                }
                 return $this->redirectToRoute('app_profesor_pago_liquidacion', [
                     'mes' => $mes,
                     'ano' => $ano

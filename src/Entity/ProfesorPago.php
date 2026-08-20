@@ -74,6 +74,18 @@ class ProfesorPago
     private $detalleCalculo;
 
     /**
+     * Si con este pago la liquidación del mes queda cerrada aunque el monto sea menor al
+     * calculado.
+     *
+     * Sirve para el arreglo interno: el sistema calculó $97.000, se le pagaron $95.000 y las
+     * partes lo dan por saldado. Sin esto el saldo pendiente quedaba vivo para siempre, porque
+     * se recalcula en cada visita a la liquidación.
+     *
+     * @ORM\Column(type="boolean", options={"default": false})
+     */
+    private $saldaTotal = false;
+
+    /**
      * @ORM\Column(type="datetime")
      */
     private $fechaCreacion;
@@ -195,6 +207,17 @@ class ProfesorPago
     public function setFechaCreacion(\DateTimeInterface $fechaCreacion): self
     {
         $this->fechaCreacion = $fechaCreacion;
+        return $this;
+    }
+
+    public function isSaldaTotal(): bool
+    {
+        return (bool) $this->saldaTotal;
+    }
+
+    public function setSaldaTotal(bool $saldaTotal): self
+    {
+        $this->saldaTotal = $saldaTotal;
         return $this;
     }
 }

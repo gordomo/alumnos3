@@ -160,6 +160,9 @@
         <div class="monto-total">
             <div class="monto-label">MONTO PAGADO</div>
             <div class="monto-value">${{ pago.monto|number_format(2, ',', '.') }}</div>
+            {% if pago.saldaTotal %}
+                <div class="monto-label">CON ESTE PAGO LA LIQUIDACIÓN DEL MES QUEDA SALDADA</div>
+            {% endif %}
         </div>
 
         <div class="row">

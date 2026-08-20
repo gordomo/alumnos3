@@ -49,6 +49,11 @@
                         <div class="col-12">
                             <h6 class="text-muted">Monto</h6>
                             <h3 class="text-success mb-0">${{ pago.monto|number_format(2, ',', '.') }}</h3>
+                            {% if pago.saldaTotal %}
+                                <span class="badge bg-success mt-2">
+                                    <i class="bi bi-check-circle"></i> Con este pago la liquidación del mes quedó saldada
+                                </span>
+                            {% endif %}
                         </div>
                     </div>
 

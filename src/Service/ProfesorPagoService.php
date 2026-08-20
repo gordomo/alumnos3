@@ -395,6 +395,9 @@ class ProfesorPagoService
 
     /**
      * Resumen de liquidación de un profesor en un mes: lo calculado, lo ya pagado y el saldo.
+     *
+     * Si alguno de los pagos del mes está marcado como que salda el total, el saldo pendiente
+     * es cero por decisión del instituto, aunque se haya pagado menos que lo calculado.
      */
     public function obtenerLiquidacion(Profesor $profesor, int $mes, int $ano): array
     {
@@ -404,16 +407,29 @@ class ProfesorPagoService
             ->findByProfesorMesAno($profesor, $mes, $ano);
 
         $totalPagado = 0;
+        $saldado = false;
         foreach ($pagosRealizados as $pago) {
             $totalPagado += (float) $pago->getMonto();
+
+            if ($pago->isSaldaTotal()) {
+                $saldado = true;
+            }
         }
+
+        // Un pago marcado como "salda el total" cierra el mes. Es lo único que puede cerrarlo
+        // cuando se pagó menos que lo calculado, porque el monto calculado se vuelve a calcular
+        // en cada visita y el saldo reviviría solo.
+        $saldoPendiente = $saldado ? 0.0 : $calculo['monto'] - $totalPagado;
 
         return [
             'monto_calculado' => $calculo['monto'],
             'detalle_calculo' => $calculo['detalle'],
             'total_pagado' => $totalPagado,
             'pagos_realizados' => $pagosRealizados,
-            'saldo_pendiente' => $calculo['monto'] - $totalPagado,
+            'saldo_pendiente' => $saldoPendiente,
+            'saldado' => $saldado,
+            // Lo que se dejó de pagar respecto del cálculo, para que quede a la vista.
+            'diferencia' => $saldado ? max(0.0, $calculo['monto'] - $totalPagado) : 0.0,
         ];
     }
 }
