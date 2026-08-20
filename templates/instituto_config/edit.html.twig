@@ -1171,14 +1171,13 @@
                                                 <strong>¿A quién le llegan los emails?</strong>
                                             </label>
                                             <select class="form-select" id="notificarA" name="notificarA">
-                                                <option value="alumno" {% if configuracion.notificarA == 'alumno' %}selected{% endif %}>Solo al alumno</option>
-                                                <option value="tutor" {% if configuracion.notificarA == 'tutor' %}selected{% endif %}>Solo al tutor</option>
-                                                <option value="ambos" {% if configuracion.notificarA == 'ambos' %}selected{% endif %}>Al alumno y al tutor</option>
+                                                <option value="alumno" {% if configuracion.notificarA == 'alumno' %}selected{% endif %}>Solo al alumn@</option>
+                                                <option value="ambos" {% if configuracion.notificarA == 'ambos' %}selected{% endif %}>Al alumn@ y a su tutor</option>
                                             </select>
                                             <div class="form-text text-muted">
                                                 Aplica a los recibos de pago, los recordatorios de deuda y los boletines de notas.
-                                                Se usa el email del alumno y el del tutor cargados en su ficha; si son el mismo, se manda una sola copia.
-                                                Con <strong>Solo al tutor</strong>, un alumno sin email de tutor cargado recibe el mail en su propia dirección.
+                                                El alumn@ recibe siempre; con la segunda opción se suma el email del tutor cargado en su
+                                                ficha. Si el email del alumn@ y el del tutor son el mismo, se manda una sola copia.
                                             </div>
                                         </div>
 

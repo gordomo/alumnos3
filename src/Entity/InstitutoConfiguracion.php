@@ -89,7 +89,12 @@ class InstitutoConfiguracion
     private $textoPersonalizadoEmail;
 
     /**
-     * A quién se le manda cada notificación del alumno: 'alumno', 'tutor' o 'ambos'.
+     * A quién se le manda cada notificación del alumno: 'alumno' o 'ambos'.
+     *
+     * Existió un tercer valor, 'tutor', para avisarle solo al tutor. Se sacó porque no tiene
+     * sentido dejar al alumno afuera de un aviso que es sobre él: si se quiere que el tutor
+     * esté enterado, se le avisa a los dos. El getter traduce el valor viejo a 'ambos', que es
+     * lo que quería el instituto que lo tenía puesto.
      *
      * El default es 'alumno' porque es lo que hacía el sistema antes de que esto fuera
      * configurable, así que los institutos existentes no cambian de comportamiento.
@@ -763,14 +768,23 @@ class InstitutoConfiguracion
 
     public function getNotificarA(): string
     {
+        // 'tutor' es el valor viejo: para el instituto que lo tenía, avisarle al tutor sigue
+        // valiendo, y ahora el alumn@ también se entera.
+        if ($this->notificarA === 'tutor') {
+            return 'ambos';
+        }
+
         return $this->notificarA ?: 'alumno';
     }
 
     public function setNotificarA(?string $notificarA): self
     {
-        // Cualquier valor que no sea uno de los tres cae en 'alumno', que es el default
-        // histórico: es preferible avisarle a alguien que no avisarle a nadie.
-        $this->notificarA = in_array($notificarA, ['alumno', 'tutor', 'ambos'], true)
+        // Cualquier otro valor cae en 'alumno', que es el default histórico.
+        if ($notificarA === 'tutor') {
+            $notificarA = 'ambos';
+        }
+
+        $this->notificarA = in_array($notificarA, ['alumno', 'ambos'], true)
             ? $notificarA
             : 'alumno';
 

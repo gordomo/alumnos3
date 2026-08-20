@@ -105,14 +105,23 @@
 
 <p>
     Un solo desplegable que vale para <strong>los recibos, los recordatorios de deuda y los
-    boletines de notas</strong>: solo al alumno, solo al tutor, o a los dos. Se usan el email
-    del alumno y el del tutor cargados en su ficha.
+    boletines de notas</strong>: solo al alumn@, o al alumn@ y a su tutor. Se usan el email del
+    alumn@ y el del tutor cargados en su ficha.
 </p>
 
 <ul>
+    <li><strong>El alumn@ recibe siempre.</strong> Lo que se elige es si además se le avisa al tutor.</li>
     <li>Si las dos direcciones son la misma, se manda una sola copia.</li>
-    <li>Con <strong>solo al tutor</strong>, un alumno que no tenga email de tutor cargado recibe el mail en su propia dirección: es mejor que no le llegue a nadie.</li>
+    <li>
+        Si elegís avisarle también al tutor y algún alumn@ no tiene email de tutor cargado, a
+        ese le llega solo a su dirección.
+    </li>
 </ul>
+
+{{ m.nota('info', 'No se puede avisar solo al tutor',
+   'Antes existía esa opción y se sacó: no tiene sentido dejar al alumn@ afuera de un aviso que
+    es sobre él. Al instituto que la tenía puesta se le pasó a "al alumn@ y a su tutor", así que
+    el tutor sigue recibiendo todo.') }}
 
 <h3>Recibo al pagar</h3>
 

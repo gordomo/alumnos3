@@ -707,7 +707,7 @@ class NotificationService
      * $override gana sobre todo: lo usa el reenvío manual desde el historial de emails,
      * que apunta a una dirección concreta elegida por el operador.
      *
-     * Sin override manda la configuración del instituto: 'alumno', 'tutor' o 'ambos'.
+     * Sin override manda la configuración del instituto: 'alumno' o 'ambos'.
      * Se descartan las direcciones inválidas y las repetidas, así que un alumno cuyo email
      * es el mismo que el del tutor recibe una sola copia y no dos.
      *
@@ -729,17 +729,11 @@ class NotificationService
 
         $modo = $configuracion ? $configuracion->getNotificarA() : 'alumno';
 
-        $candidatos = [];
-        if ($modo === 'alumno' || $modo === 'ambos') {
-            $candidatos[] = $alumno->getEmail();
-        }
-        if ($modo === 'tutor' || $modo === 'ambos') {
+        // El alumn@ recibe siempre; el tutor se suma con 'ambos'. Ya no existe la opción de
+        // avisarle solo al tutor, así que no hace falta el respaldo de cuando no tenía email.
+        $candidatos = [$alumno->getEmail()];
+        if ($modo === 'ambos') {
             $candidatos[] = $alumno->getCorreTutor();
-        }
-        // Con 'tutor' y sin email de tutor cargado, se cae al del alumno: es mejor que la
-        // notificación llegue a alguien que a nadie.
-        if ($modo === 'tutor' && !$alumno->getCorreTutor()) {
-            $candidatos[] = $alumno->getEmail();
         }
 
         $destinatarios = [];
