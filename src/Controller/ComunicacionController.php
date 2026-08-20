@@ -32,6 +32,7 @@ class ComunicacionController extends AbstractController
     public const DESTINO_INSTITUTO = 'instituto';
     public const DESTINO_CURSO = 'curso';
     public const DESTINO_DEUDORES = 'deudores';
+    public const DESTINO_SELECCION = 'seleccion';
 
     public function __construct(
         private NotificationService $notificationService,
@@ -51,6 +52,12 @@ class ComunicacionController extends AbstractController
 
         return $this->render('comunicacion/index.html.twig', [
             'cursos' => $this->cursoRepository->findBy(['instituto' => $instituto], ['nombre' => 'ASC']),
+            // Para elegir alumn@s de a uno. Son los mismos activos que usa cualquier otro
+            // criterio, así que lo que se ve en la lista es lo que se puede mandar.
+            'alumnos' => $this->alumnoRepository->findBy(
+                ['instituto' => $instituto, 'activo' => true],
+                ['apellido' => 'ASC', 'nombre' => 'ASC']
+            ),
             'conteos' => $this->conteos($instituto),
             // Un atajo desde otra pantalla puede llegar con el mensaje pre-armado.
             'destinoPrevio' => $request->query->get('destino'),
@@ -96,7 +103,18 @@ class ComunicacionController extends AbstractController
             }
         }
 
-        $alumnos = $this->destinatarios($instituto, $destino, $curso);
+        $seleccionados = [];
+        if ($destino === self::DESTINO_SELECCION) {
+            $seleccionados = array_map('intval', (array) $request->request->all('alumnos'));
+
+            if (!$seleccionados) {
+                $this->addFlash('danger', 'No elegiste ningún alumn@.');
+
+                return $this->redirectToRoute('app_comunicacion_index');
+            }
+        }
+
+        $alumnos = $this->destinatarios($instituto, $destino, $curso, $seleccionados);
 
         if (!$alumnos) {
             $this->addFlash('warning', 'No hay alumn@s que cumplan ese criterio, así que no se envió nada.');
@@ -141,13 +159,24 @@ class ComunicacionController extends AbstractController
     /**
      * Alumnos que reciben la comunicación según el criterio elegido.
      *
-     * Siempre alumnos activos: a los dados de baja no se les manda un aviso del instituto.
+     * Siempre alumnos activos: a los dados de baja no se les manda un aviso del instituto, y
+     * eso vale también para la selección manual.
      *
      * @return Alumno[]
      */
-    private function destinatarios($instituto, string $destino, ?Curso $curso = null): array
+    private function destinatarios($instituto, string $destino, ?Curso $curso = null, array $seleccionados = []): array
     {
         $activos = $this->alumnoRepository->findBy(['instituto' => $instituto, 'activo' => true]);
+
+        if ($destino === self::DESTINO_SELECCION) {
+            // Los activos del instituto son la lista blanca: un id agregado a mano al POST, de
+            // otro instituto o de alguien dado de baja, no está en esta lista y se descarta.
+            $elegidos = array_flip($seleccionados);
+
+            return array_values(array_filter($activos, static function (Alumno $alumno) use ($elegidos) {
+                return isset($elegidos[$alumno->getId()]);
+            }));
+        }
 
         if ($destino === self::DESTINO_CURSO && $curso) {
             return array_values(array_filter($activos, static function (Alumno $alumno) use ($curso) {

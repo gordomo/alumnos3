@@ -27,7 +27,7 @@
 
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="destino" id="destino_instituto"
-                                       value="instituto" {% if destinoPrevio != 'curso' and destinoPrevio != 'deudores' %}checked{% endif %}>
+                                       value="instituto" {% if destinoPrevio not in ['curso', 'deudores', 'seleccion'] %}checked{% endif %}>
                                 <label class="form-check-label" for="destino_instituto">
                                     Todos los alumn@s del instituto
                                     <span class="badge bg-secondary">{{ conteos.instituto }}</span>
@@ -58,6 +58,52 @@
                                     Los alumn@s con cuotas vencidas
                                     <span class="badge bg-warning text-dark">{{ conteos.deudores }}</span>
                                 </label>
+                            </div>
+
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="destino" id="destino_seleccion"
+                                       value="seleccion" {% if destinoPrevio == 'seleccion' %}checked{% endif %}>
+                                <label class="form-check-label" for="destino_seleccion">
+                                    Alumn@s elegid@s de a uno
+                                    <span class="badge bg-primary" id="contador_seleccion">0</span>
+                                </label>
+                            </div>
+
+                            <div class="ms-4 mb-2" id="caja_seleccion">
+                                <div class="input-group input-group-sm mb-2">
+                                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                    <input type="text" class="form-control" id="filtro_alumnos"
+                                           placeholder="Buscar por nombre, apellido o email…" autocomplete="off">
+                                    <button type="button" class="btn btn-outline-secondary" id="marcar_visibles">
+                                        Marcar los que se ven
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary" id="desmarcar_todos">
+                                        Desmarcar todo
+                                    </button>
+                                </div>
+
+                                <div class="border rounded" style="max-height: 16rem; overflow-y: auto;" id="lista_alumnos">
+                                    {% for alumno in alumnos %}
+                                        <label class="d-flex align-items-center gap-2 px-2 py-1 fila-alumno mb-0"
+                                               data-busqueda="{{ (alumno.apellido ~ ' ' ~ alumno.nombre ~ ' ' ~ (alumno.email ?: ''))|lower }}">
+                                            <input class="form-check-input mt-0 check-alumno" type="checkbox"
+                                                   name="alumnos[]" value="{{ alumno.id }}">
+                                            <span>
+                                                {{ alumno.apellido }}, {{ alumno.nombre }}
+                                                {% if alumno.email %}
+                                                    <span class="text-muted small">{{ alumno.email }}</span>
+                                                {% else %}
+                                                    <span class="badge bg-warning text-dark">sin email</span>
+                                                {% endif %}
+                                            </span>
+                                        </label>
+                                    {% else %}
+                                        <p class="text-muted small m-2">No hay alumn@s activos.</p>
+                                    {% endfor %}
+                                </div>
+                                <small class="form-text text-muted" id="sin_resultados" style="display: none;">
+                                    Ningún alumn@ coincide con la búsqueda.
+                                </small>
                             </div>
 
                             <small class="form-text text-muted">
@@ -136,5 +182,77 @@
                 document.getElementById('destino_curso').checked = true;
             }
         });
+
+        // Lista de alumn@s sueltos: filtro, marcado masivo de lo filtrado y contador.
+        (function () {
+            const radioSeleccion = document.getElementById('destino_seleccion');
+            const caja = document.getElementById('caja_seleccion');
+            const filtro = document.getElementById('filtro_alumnos');
+            const contador = document.getElementById('contador_seleccion');
+            const sinResultados = document.getElementById('sin_resultados');
+            const filas = Array.from(document.querySelectorAll('.fila-alumno'));
+            const checks = Array.from(document.querySelectorAll('.check-alumno'));
+
+            function visibles() {
+                return filas.filter(f => f.style.display !== 'none');
+            }
+
+            function actualizarContador() {
+                contador.textContent = checks.filter(c => c.checked).length;
+            }
+
+            function aplicarFiltro() {
+                const texto = filtro.value.trim().toLowerCase();
+                filas.forEach(function (fila) {
+                    const coincide = texto === '' || fila.dataset.busqueda.indexOf(texto) !== -1;
+                    fila.style.display = coincide ? '' : 'none';
+                });
+                sinResultados.style.display = visibles().length === 0 && filas.length > 0 ? '' : 'none';
+            }
+
+            function habilitar() {
+                // Deshabilitar los checkboxes cuando el destino es otro evita mandar ids que no
+                // se van a usar y deja claro que la lista no está en juego.
+                const activa = radioSeleccion.checked;
+                caja.style.opacity = activa ? '1' : '0.5';
+                filtro.disabled = !activa;
+                checks.forEach(c => { c.disabled = !activa; });
+            }
+
+            filtro.addEventListener('input', aplicarFiltro);
+
+            document.getElementById('marcar_visibles').addEventListener('click', function () {
+                visibles().forEach(function (fila) {
+                    const check = fila.querySelector('.check-alumno');
+                    if (check && !check.disabled) {
+                        check.checked = true;
+                    }
+                });
+                actualizarContador();
+            });
+
+            document.getElementById('desmarcar_todos').addEventListener('click', function () {
+                checks.forEach(c => { c.checked = false; });
+                actualizarContador();
+            });
+
+            // Marcar a alguien implica que querés mandarle a los elegidos.
+            checks.forEach(function (check) {
+                check.addEventListener('change', function () {
+                    if (check.checked) {
+                        radioSeleccion.checked = true;
+                        habilitar();
+                    }
+                    actualizarContador();
+                });
+            });
+
+            document.querySelectorAll('input[name="destino"]').forEach(function (radio) {
+                radio.addEventListener('change', habilitar);
+            });
+
+            habilitar();
+            actualizarContador();
+        })();
     </script>
 {% endblock %}

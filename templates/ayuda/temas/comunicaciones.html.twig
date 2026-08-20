@@ -13,12 +13,13 @@
 
 <ol>
     <li>
-        Elegí <strong>a quiénes</strong>. Hay tres opciones, cada una con la cantidad de alumn@s
-        que alcanza:
+        Elegí <strong>a quiénes</strong>. Hay cuatro opciones, cada una con la cantidad de
+        alumn@s que alcanza:
         <ul>
             <li><strong>Todos los del instituto.</strong></li>
             <li><strong>Los de un curso</strong>, eligiéndolo del desplegable.</li>
             <li><strong>Los que tienen cuotas vencidas</strong>, para un aviso de cobranza.</li>
+            <li><strong>Alumn@s elegid@s de a uno</strong>, marcándolos en la lista.</li>
         </ul>
     </li>
     <li><strong>Asunto</strong>: lo que van a ver como título del email.</li>
@@ -32,6 +33,38 @@
     El email sale con el <strong>nombre y el logo del instituto</strong> y arranca saludando a
     cada alumn@ por su nombre, así que no hace falta escribir el saludo.
 </p>
+
+<h2>Elegir alumn@s de a uno</h2>
+
+<p>
+    Cuando el aviso es para algunas familias y no para un grupo entero, se usa
+    <strong>Alumn@s elegid@s de a uno</strong>: aparece la lista de alumn@s activos y se marcan
+    los que correspondan.
+</p>
+
+<ul>
+    <li>
+        El <strong>buscador</strong> filtra por apellido, nombre o email mientras escribís.
+    </li>
+    <li>
+        <strong>Marcar los que se ven</strong> marca todos los que quedaron después del filtro.
+        Sirve para marcar de a grupos: filtrás, marcás, cambiás el filtro y volvés a marcar. Lo
+        marcado antes no se pierde.
+    </li>
+    <li><strong>Desmarcar todo</strong> limpia la selección completa.</li>
+    <li>El número al lado de la opción es cuántos tenés marcados en total.</li>
+</ul>
+
+<p>
+    Quien no tenga email cargado aparece marcado como <strong>sin email</strong>: se lo puede
+    elegir igual, pero el envío le va a figurar como fallido en el historial.
+</p>
+
+{{ m.captura('comunicacion-seleccion.png', 'La lista de alumn@s con el buscador y el contador') }}
+
+{{ m.nota('info', 'La lista es de alumn@s activos',
+   'A los dados de baja no se les manda un aviso del instituto, así que no aparecen en la lista.
+    Si necesitás avisarle a alguien que ya no cursa, tenés que reactivarlo primero.') }}
 
 {{ m.nota('info', 'Va a las mismas direcciones que el resto de los avisos',
    'Si en Configuración → Notificaciones tenés "al alumno y al tutor", la comunicación llega a las
