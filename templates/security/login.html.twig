@@ -12,7 +12,8 @@
 <div class="wrapper">
     <div id="formContent">
         <div class="logo-container">
-            <img src="{{ asset('assets/img/logoteam.png') }}" alt="Logo" class="logo">
+            {{ include('security/_logo.html.twig', {'tamano': 56}) }}
+            <div class="logo-nombre">Team Builder Institute</div>
         </div>
 
         {% if error %}
@@ -30,10 +31,9 @@
             </div>
         {% endif %}
 
+        {# Un solo form. Antes había otro anidado adentro: el navegador descarta la etiqueta
+           interna y quedaba el cierre suelto al final. #}
         <form method="post" class="login-form" id="loginForm">
-        
-            {# Si no hay token válido, mostrar el formulario de solicitud #}
-            <form method="post" class="login-form" id="resetPasswordForm">
                 <div class="form-group">
                     <input type="email" 
                            name="email" 
@@ -59,7 +59,7 @@
                             </button>
                 </div>
 
-                <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="d-flex justify-content-between align-items-center">
                     <div class="form-check">
                         <input type="checkbox" name="_remember_me" id="remember_me" class="form-check-input">
                         <label class="form-check-label" for="remember_me">Recordarme</label>

@@ -1,0 +1,44 @@
+{#
+    Logo de Team Builder Institute.
+
+    Vive acá y no repetido en cada pantalla para que el color de la marca se cambie en un solo
+    lugar. Los ids de los degradés llevan sufijo: si el logo apareciera dos veces en la misma
+    página, dos <linearGradient> con el mismo id se pisan.
+
+    Parámetros: tamano (px, default 48), sufijo (default 'a').
+#}
+{% set sufijo = sufijo|default('a') %}
+            <span class="landing-header-logo" aria-label="Team Builder Institute">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="{{ tamano|default(48) }}" height="{{ tamano|default(48) }}">
+                    <defs>
+                        <linearGradient id="logo-azul-{{ sufijo }}" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#2f7ef0"/>
+                            <stop offset="100%" style="stop-color:#1b4f9c"/>
+                        </linearGradient>
+                        <linearGradient id="logo-ambar-{{ sufijo }}" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" style="stop-color:#f59e0b"/>
+                            <stop offset="100%" style="stop-color:#d98806"/>
+                        </linearGradient>
+                    </defs>
+                    <rect x="8" y="28" width="48" height="28" rx="4" fill="url(#logo-azul-{{ sufijo }})"/>
+                    <rect x="16" y="36" width="32" height="2" rx="1" fill="rgba(255,255,255,0.3)"/>
+                    <rect x="16" y="42" width="24" height="2" rx="1" fill="rgba(255,255,255,0.2)"/>
+                    <path d="M20 20 L38 8 L38 28 L20 40 Z" fill="url(#logo-ambar-{{ sufijo }})"/>
+                    <path d="M38 8 L56 20 L56 40 L38 28 Z" fill="rgba(217,136,6,0.85)"/>
+                    <path d="M20 20 L38 8 L56 20 L38 28 Z" fill="rgba(245,158,11,0.95)"/>
+                    <g transform="translate(48, 20)">
+                        <circle r="12" fill="url(#logo-azul-{{ sufijo }})"/>
+                        <g fill="url(#logo-azul-{{ sufijo }})">
+                            <rect x="-2" y="-14" width="4" height="6"/>
+                            <rect x="-2" y="-14" width="4" height="6" transform="rotate(45)"/>
+                            <rect x="-2" y="-14" width="4" height="6" transform="rotate(90)"/>
+                            <rect x="-2" y="-14" width="4" height="6" transform="rotate(135)"/>
+                            <rect x="-2" y="-14" width="4" height="6" transform="rotate(180)"/>
+                            <rect x="-2" y="-14" width="4" height="6" transform="rotate(225)"/>
+                            <rect x="-2" y="-14" width="4" height="6" transform="rotate(270)"/>
+                            <rect x="-2" y="-14" width="4" height="6" transform="rotate(315)"/>
+                        </g>
+                        <circle r="5" fill="white"/>
+                    </g>
+                </svg>
+            </span>

@@ -1,8 +1,25 @@
+/*
+ * Login, registro y recuperación de contraseña.
+ *
+ * Usa los mismos tokens de color que la landing: el azul de marca para las acciones y el gris
+ * neutro para los bordes. El tono legible es el que se usa sobre blanco, porque el azul puro
+ * con texto blanco no llega al contraste que pide AA.
+ */
+:root {
+    --auth-primary: #2f7ef0;
+    --auth-primary-legible: #1b6ae0;
+    --auth-primary-dark: #1b5fc4;
+    --auth-primary-darker: #123a7a;
+    --auth-borde: #d7dee8;
+    --auth-texto: #1f2d3d;
+    --auth-texto-suave: #5a6672;
+}
+
 html, body {
-    background-color: #5e706e;
-    height: 100%;
+    /* El mismo degradé azul del fondo de la landing, sin animación: acá no hace falta. */
+    background: linear-gradient(160deg, #071c3f 0%, #123a7a 45%, #1b5fc4 100%);
+    min-height: 100%;
     margin: 0;
-    overflow: hidden;
 }
 
 .wrapper {
@@ -14,12 +31,12 @@ html, body {
 }
 
 #formContent {
-    background-color: #e8edec;
-    padding: 2rem;
-    border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(92, 111, 108, 0.1);
+    background-color: #ffffff;
+    padding: 2.5rem;
+    border-radius: 18px;
+    box-shadow: 0 18px 45px rgba(7, 28, 63, 0.35);
     width: 100%;
-    max-width: 400px;
+    max-width: 430px;
     position: relative;
     z-index: 1;
 }
@@ -27,13 +44,17 @@ html, body {
 .logo-container {
     text-align: center;
     margin-bottom: 2rem;
-    margin-right: -2rem;
-    margin-left: -2rem;
 }
 
-.logo {
-    max-width: 100%;
-    height: auto;
+.logo-nombre {
+    margin-top: 0.6rem;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--auth-texto);
+}
+
+.logo-container .landing-header-logo {
+    display: inline-flex;
 }
 
 .login-form {
@@ -49,8 +70,8 @@ html, body {
 .form-control {
     width: 100%;
     padding: 0.75rem 1rem;
-    border: 2px solid #849d9a;
-    border-radius: 5px;
+    border: 1px solid var(--auth-borde);
+    border-radius: 8px;
     font-size: 1rem;
     transition: all 0.3s ease;
     background-color: #ffffff;
@@ -58,17 +79,17 @@ html, body {
 }
 
 .form-control:focus {
-    border-color: #5c6f6c;
-    box-shadow: 0 0 0 0.2rem rgba(92, 111, 108, 0.25);
+    border-color: var(--auth-primary);
+    box-shadow: 0 0 0 0.2rem rgba(47, 126, 240, 0.22);
     outline: none;
 }
 
 .form-control::placeholder {
-    color: #849d9a;
+    color: #9aa6b4;
 }
 
 .btn-primary {
-    background-color: #d4a373;
+    background: linear-gradient(135deg, var(--auth-primary-legible), var(--auth-primary-dark));
     border: none;
     color: #ffffff;
     padding: 0.75rem 1.5rem;
@@ -82,9 +103,9 @@ html, body {
 }
 
 .btn-primary:hover {
-    background-color: #c49262;
+    background: linear-gradient(135deg, var(--auth-primary), var(--auth-primary-dark));
     transform: translateY(-1px);
-    box-shadow: 0 4px 6px rgba(92, 111, 108, 0.2);
+    box-shadow: 0 6px 14px rgba(27, 95, 196, 0.35);
 }
 
 .btn-primary:active {
@@ -92,15 +113,15 @@ html, body {
 }
 
 .forgot-password {
-    color: #5c6f6c;
+    color: var(--auth-primary-legible);
     text-decoration: none;
     font-size: 0.9rem;
     transition: color 0.3s ease;
 }
 
 .forgot-password:hover {
-    color: #d4a373;
-    text-decoration: none;
+    color: var(--auth-primary-dark);
+    text-decoration: underline;
 }
 
 .alert {
@@ -139,13 +160,13 @@ html, body {
 .form-check-input {
     width: 1rem;
     height: 1rem;
-    border: 2px solid #849d9a;
+    border: 1px solid var(--auth-borde);
     border-radius: 3px;
     cursor: pointer;
 }
 
 .form-check-label {
-    color: #5c6f6c;
+    color: var(--auth-texto-suave);
     font-size: 0.9rem;
 }
 

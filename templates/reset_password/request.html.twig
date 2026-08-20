@@ -11,7 +11,8 @@
 <div class="wrapper">
     <div id="formContent">
         <div class="logo-container">
-            <img src="{{ asset('assets/img/logoteam.png') }}" alt="Logo" class="logo">
+            {{ include('security/_logo.html.twig', {'tamano': 56}) }}
+            <div class="logo-nombre">Team Builder Institute</div>
         </div>
 
         {% for flash_error in app.flashes('reset_password_error') %}

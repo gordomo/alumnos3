@@ -407,6 +407,95 @@
         }
 
         /* Promo Banner */
+        .seccion-subtitulo {
+            text-align: center;
+            color: #6c757d;
+            max-width: 62ch;
+            margin: -1rem auto 2.5rem;
+        }
+
+        .funcionalidad {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr);
+            align-items: center;
+            gap: 2.5rem;
+            padding: 2rem 0;
+            border-top: 1px solid #eef1f5;
+        }
+
+        /* Las filas alternan lado para que la vista no baje siempre por el mismo carril. */
+        .funcionalidad--invertida .funcionalidad-texto { order: 2; }
+        .funcionalidad--invertida .funcionalidad-captura { order: 1; }
+
+        .funcionalidad-icono {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: var(--primary-soft);
+            color: var(--primary-legible);
+            font-size: 1.35rem;
+            margin-bottom: 0.9rem;
+        }
+
+        .funcionalidad-texto h3 {
+            color: var(--text-color);
+            font-size: 1.5rem;
+            margin-bottom: 0.6rem;
+        }
+
+        .funcionalidad-texto p {
+            color: #5a6672;
+            line-height: 1.65;
+            margin: 0;
+        }
+
+        .funcionalidad-captura .ventana {
+            border-radius: 12px;
+            overflow: hidden;
+            background: #fff;
+            border: 1px solid #e3e8ef;
+            box-shadow: 0 16px 40px rgba(18, 58, 122, 0.16);
+        }
+
+        .funcionalidad-captura .ventana-barra {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.5rem 0.7rem;
+            background: #eef1f5;
+            border-bottom: 1px solid #dfe4ea;
+        }
+
+        .funcionalidad-captura .punto {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: #c7ced8;
+        }
+
+        .funcionalidad-captura img {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+
+        @media (max-width: 900px) {
+            .funcionalidad {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+                text-align: center;
+            }
+
+            /* En una columna el texto va siempre primero: la captura sola no se explica. */
+            .funcionalidad--invertida .funcionalidad-texto { order: 1; }
+            .funcionalidad--invertida .funcionalidad-captura { order: 2; }
+
+            .funcionalidad-texto p { text-align: left; }
+        }
+
         .promo-banner {
             gap: 0.6rem;
             width: 100%;
@@ -736,13 +825,37 @@
         .auth-section {
             background: white;
             border-radius: 15px;
-            padding: 2.25rem;
+            padding: 2.5rem;
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            /* Un formulario de seis campos a 1400px de ancho no se lee: se acota y se centra.
-               Antes el ancho lo daban las pestañas de login/registro, que ya no están. */
+            /* Ocupa el mismo ancho que las demás secciones. Los campos van en dos columnas
+               adentro: un formulario de una sola columna a todo el ancho no se lee. */
             width: 100%;
-            max-width: 560px;
             margin: 0 auto 2rem;
+        }
+
+        .auth-form form {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0 1.5rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        /* La dirección, el logo y el botón ocupan el ancho completo del formulario. */
+        .auth-form .form-group--ancho,
+        .auth-form form > button {
+            grid-column: 1 / -1;
+        }
+
+        .auth-form form > button {
+            justify-self: center;
+            min-width: 260px;
+        }
+
+        @media (max-width: 700px) {
+            .auth-form form {
+                grid-template-columns: 1fr;
+            }
         }
 
         .auth-encabezado {
@@ -1044,40 +1157,7 @@
     <!-- Header principal -->
     <header class="landing-header">
         <a href="{{ path('app_start') }}" class="landing-header-brand" data-no-loading>
-            <span class="landing-header-logo" aria-label="Team Builder Institute">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="48" height="48">
-                    <defs>
-                        <linearGradient id="logo-teal" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" style="stop-color:#2f7ef0"/>
-                            <stop offset="100%" style="stop-color:#1b4f9c"/>
-                        </linearGradient>
-                        <linearGradient id="logo-accent" x1="0%" y1="0%" x2="100%" y2="0%">
-                            <stop offset="0%" style="stop-color:#f59e0b"/>
-                            <stop offset="100%" style="stop-color:#d98806"/>
-                        </linearGradient>
-                    </defs>
-                    <rect x="8" y="28" width="48" height="28" rx="4" fill="url(#logo-teal)"/>
-                    <rect x="16" y="36" width="32" height="2" rx="1" fill="rgba(255,255,255,0.3)"/>
-                    <rect x="16" y="42" width="24" height="2" rx="1" fill="rgba(255,255,255,0.2)"/>
-                    <path d="M20 20 L38 8 L38 28 L20 40 Z" fill="url(#logo-accent)"/>
-                    <path d="M38 8 L56 20 L56 40 L38 28 Z" fill="rgba(196,146,98,0.85)"/>
-                    <path d="M20 20 L38 8 L56 20 L38 28 Z" fill="rgba(212,163,115,0.95)"/>
-                    <g transform="translate(48, 20)">
-                        <circle r="12" fill="url(#logo-teal)"/>
-                        <g fill="url(#logo-teal)">
-                            <rect x="-2" y="-14" width="4" height="6"/>
-                            <rect x="-2" y="-14" width="4" height="6" transform="rotate(45)"/>
-                            <rect x="-2" y="-14" width="4" height="6" transform="rotate(90)"/>
-                            <rect x="-2" y="-14" width="4" height="6" transform="rotate(135)"/>
-                            <rect x="-2" y="-14" width="4" height="6" transform="rotate(180)"/>
-                            <rect x="-2" y="-14" width="4" height="6" transform="rotate(225)"/>
-                            <rect x="-2" y="-14" width="4" height="6" transform="rotate(270)"/>
-                            <rect x="-2" y="-14" width="4" height="6" transform="rotate(315)"/>
-                        </g>
-                        <circle r="5" fill="white"/>
-                    </g>
-                </svg>
-            </span>
+            {{ include('security/_logo.html.twig', {'tamano': 48}) }}
             <div class="landing-header-text">
                 <span class="landing-header-name">Team Builder Institute</span>
                 <span class="landing-header-tagline">Gestión inteligente para institutos</span>
@@ -1121,9 +1201,8 @@
                 <div class="ventana-barra">
                     <span class="punto"></span><span class="punto"></span><span class="punto"></span>
                 </div>
-                <img src="{{ asset('assets/landing/producto-agenda.png') }}"
-                     alt="Agenda del instituto: clases, evaluaciones, vencimientos y feriados en un calendario"
-                     loading="lazy">
+                <img src="{{ asset('assets/landing/producto-dashboard.png') }}"
+                     alt="Panel del instituto: deudores, adeudado del mes, cobrado del mes y del año, y la deuda por curso">
             </div>
         </div>
     </div>
@@ -1176,6 +1255,62 @@
             </div>
         </div>
     </div>
+    <!-- Funcionalidades con captura -->
+    <div class="features-section" id="capturas-section">
+        <h2>Así se ve por dentro</h2>
+        <p class="seccion-subtitulo">
+            Nada de esto se carga dos veces: lo que registrás en un lugar aparece donde tiene que aparecer.
+        </p>
+
+        <div class="funcionalidad">
+            <div class="funcionalidad-texto">
+                <span class="funcionalidad-icono"><i class="bi bi-cash-coin"></i></span>
+                <h3>Cobrá sin perder el hilo</h3>
+                <p>Registrás el pago y el sistema cancela la cuota, aplica el recargo si venció, emite el recibo y lo manda por email. Cada pago queda con su método, su mes y su comprobante, y el historial completo a un clic.</p>
+            </div>
+            <div class="funcionalidad-captura">
+                <div class="ventana">
+                    <div class="ventana-barra">
+                        <span class="punto"></span><span class="punto"></span><span class="punto"></span>
+                    </div>
+                    <img src="{{ asset('assets/landing/producto-pagos.png') }}" alt="Historial de pagos con su método, mes y recibo" loading="lazy">
+                </div>
+            </div>
+        </div>
+
+        <div class="funcionalidad funcionalidad--invertida">
+            <div class="funcionalidad-texto">
+                <span class="funcionalidad-icono"><i class="bi bi-mortarboard"></i></span>
+                <h3>La libreta se arma sola</h3>
+                <p>El profesor carga las notas, toma asistencia y marca las tareas entregadas. La libreta junta las tres cosas por trimestre, calcula los promedios por área y dice si el alumn@ aprueba. Se imprime o se manda por email.</p>
+            </div>
+            <div class="funcionalidad-captura">
+                <div class="ventana">
+                    <div class="ventana-barra">
+                        <span class="punto"></span><span class="punto"></span><span class="punto"></span>
+                    </div>
+                    <img src="{{ asset('assets/landing/producto-libreta.png') }}" alt="Libreta con asistencia, tareas y notas por trimestre" loading="lazy">
+                </div>
+            </div>
+        </div>
+
+        <div class="funcionalidad">
+            <div class="funcionalidad-texto">
+                <span class="funcionalidad-icono"><i class="bi bi-calendar3"></i></span>
+                <h3>Todo lo que se viene, en un lugar</h3>
+                <p>Las clases salen de los horarios de cada curso, las evaluaciones y las entregas de lo que ya cargaste, y los vencimientos de tu configuración. Vos solo agregás los feriados y los actos: un feriado además tapa la clase de ese día.</p>
+            </div>
+            <div class="funcionalidad-captura">
+                <div class="ventana">
+                    <div class="ventana-barra">
+                        <span class="punto"></span><span class="punto"></span><span class="punto"></span>
+                    </div>
+                    <img src="{{ asset('assets/landing/producto-agenda.png') }}" alt="Agenda del mes con clases, evaluaciones, vencimientos y feriados" loading="lazy">
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Promo Banner -->
     <div class="promo-banner">
         <i class="bi bi-tag-fill"></i>
@@ -1327,7 +1462,7 @@
                            maxlength="25">
                 </div>
 
-                <div class="form-group">
+                <div class="form-group form-group--ancho">
                     <textarea name="dir" 
                               class="form-control" 
                               rows="2"
@@ -1346,7 +1481,7 @@
                     </small>
                 </div>
 
-                <div class="form-group">
+                <div class="form-group form-group--ancho">
                     <label style="display: block; margin-bottom: 0.5rem; color: var(--text-color); font-size: 0.9rem;">
                         Logo del Instituto (opcional)
                     </label>
