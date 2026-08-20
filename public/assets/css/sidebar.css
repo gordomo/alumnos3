@@ -13,8 +13,8 @@
        elemento que tiene que saltar a la vista, y el contraste de tono lo resuelve mejor que
        oscurecer el mismo color. Van en variables propias para poder ajustar el tono sin tocar
        el resto de la paleta. */
-    --sidebar-active-from: #2d6489;
-    --sidebar-active-to: #4d89b3;
+    --sidebar-active-from: #2f7ef0
+    --sidebar-active-to: #2368ce
     --sidebar-active-shadow: 0 8px 18px rgba(45, 100, 137, 0.28);
     --sidebar-subitem-active-bg: #e3eef6;
     --sidebar-subitem-active-text: #234b66;
