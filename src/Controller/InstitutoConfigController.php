@@ -242,6 +242,16 @@ class InstitutoConfigController extends AbstractController
                 return $this->redirectToRoute('instituto_config_index', ['tab' => 'descuentos']);
                 }
                 
+            } elseif ($section === 'pagos') {
+                // Base sobre la que se calcula el porcentaje que cobra un profesor por un curso.
+                // El setter descarta cualquier valor que no sea cobrado/facturado.
+                $configuracion->setBasePorcentajeProfesor($request->request->get('base_porcentaje_profesor'));
+
+                $entityManager->persist($configuracion);
+                $entityManager->flush();
+                $this->addFlash('success', 'La configuración de pagos se ha actualizado correctamente.');
+
+                return $this->redirectToRoute('instituto_config_index', ['tab' => 'pagos']);
             } elseif ($section === 'notificaciones') {
                 // Configuración de notificaciones
                 $configuracion->setEnviarFacturasRecibos($request->request->has('enviarFacturasRecibos'));

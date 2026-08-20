@@ -739,6 +739,50 @@
                         <!-- Pestaña: Pagos y Vencimientos -->
                         <div class="tab-pane fade" id="edit-pagos" role="tabpanel" aria-labelledby="edit-pagos-tab">
                             <div class="card mb-4">
+                                <div class="card-header bg-warning text-dark">
+                                    <h5 class="mb-0"><i class="bi bi-person-workspace"></i> Pago a profesores</h5>
+                                </div>
+                                <div class="card-body">
+                                    <form method="post" action="{{ path('instituto_config_edit') }}">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('config_edit_pagos') }}">
+                                        <input type="hidden" name="section" value="pagos">
+
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label for="base_porcentaje_profesor" class="form-label">
+                                                    Cuando un profesor cobra un porcentaje del curso, calcularlo sobre
+                                                </label>
+                                                <select class="form-select" id="base_porcentaje_profesor" name="base_porcentaje_profesor">
+                                                    <option value="cobrado" {% if configuracion.basePorcentajeProfesor == 'cobrado' %}selected{% endif %}>
+                                                        Lo efectivamente cobrado del curso en el mes
+                                                    </option>
+                                                    <option value="facturado" {% if configuracion.basePorcentajeProfesor == 'facturado' %}selected{% endif %}>
+                                                        Lo facturado del mes (inscriptos × precio), cobrado o no
+                                                    </option>
+                                                </select>
+                                                <div class="form-text">
+                                                    Con <strong>lo cobrado</strong> nunca pagás comisión por una cuota que no
+                                                    entró. Con <strong>lo facturado</strong> le pagás al profesor por todos
+                                                    sus inscriptos aunque el instituto todavía no haya cobrado.
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="alert alert-light border small mb-3">
+                                            <i class="bi bi-info-circle"></i>
+                                            La modalidad de cada profesor (por hora, fijo mensual, porcentaje) se define en
+                                            su ficha, y la excepción por curso en
+                                            <a href="{{ path('app_profesor_pago_liquidacion') }}">Liquidación → Pago por curso</a>.
+                                        </div>
+
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="bi bi-save"></i> Guardar
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <div class="card mb-4">
                                 <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
                                     <h5 class="mb-0">
                                         <i class="bi bi-calendar-event"></i> Vencimientos e Intereses

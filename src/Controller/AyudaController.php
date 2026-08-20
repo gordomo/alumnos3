@@ -47,9 +47,15 @@ class AyudaController extends AbstractController
             'roles' => ['ROLE_ADMIN_INSTITUTO'],
         ],
         'alumnos' => [
-            'titulo' => 'Alumnos e inscripciones',
+            'titulo' => 'Alumn@s e inscripciones',
             'icono' => 'bi-people',
             'resumen' => 'Dar de alta un alumno, inscribirlo a cursos y entender desde cuándo se le genera deuda.',
+            'roles' => ['ROLE_ADMIN_INSTITUTO'],
+        ],
+        'profesores' => [
+            'titulo' => 'Profesores y su liquidación',
+            'icono' => 'bi-person-workspace',
+            'resumen' => 'Cómo se le paga a cada profesor: por hora, fijo, porcentaje o distinto en cada curso.',
             'roles' => ['ROLE_ADMIN_INSTITUTO'],
         ],
         'pagos' => [

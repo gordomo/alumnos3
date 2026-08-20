@@ -94,6 +94,13 @@
                                     'combinado': 'Combinado'
                                 } %}
                                 <span class="badge bg-info">{{ tipos[profesor.tipoPago] ?? 'Por Hora' }}</span>
+                                {% set conReglaPropia = liq.detalle_calculo.cursos|default([])|filter(c => c.origen_regla|default('profesor') == 'curso')|length %}
+                                {% if conReglaPropia > 0 %}
+                                    <br>
+                                    <small class="text-muted" title="Estos cursos se liquidan con su propia regla">
+                                        {{ conReglaPropia }} curso(s) con regla propia
+                                    </small>
+                                {% endif %}
                             </td>
                             <td class="text-end">
                                 <strong>${{ liq.monto_calculado|number_format(2, ',', '.') }}</strong>
@@ -127,6 +134,10 @@
                                             title="Ver Detalle">
                                         <i class="bi bi-eye"></i> Detalle
                                     </button>
+                                    <a href="{{ path('app_profesor_pago_reglas', {'profesorId': profesor.id}) }}"
+                                       class="btn btn-sm btn-outline-secondary" title="Pago por curso">
+                                        <i class="bi bi-sliders"></i> Pago por curso
+                                    </a>
                                 </div>
                             </td>
                         </tr>
@@ -135,101 +146,7 @@
                                 <div class="p-3">
                                     <h6>Detalle de Cálculo</h6>
                                     
-                                    {% if liq.detalle_calculo.tipo_pago == 'por_hora' %}
-                                        <table class="table table-sm table-bordered">
-                                            <thead>
-                                                <tr>
-                                                    <th>Curso</th>
-                                                    <th class="text-end">Clases Programadas</th>
-                                                    <th class="text-end">Ausencias</th>
-                                                    <th class="text-end">Clases Dadas</th>
-                                                    <th class="text-end">Duración</th>
-                                                    <th class="text-end">Total Horas</th>
-                                                    <th class="text-end">Precio/Hora</th>
-                                                    <th class="text-end">Viático</th>
-                                                    <th class="text-end">Subtotal</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {% for curso in liq.detalle_calculo.cursos %}
-                                                    <tr>
-                                                        <td>{{ curso.curso }}</td>
-                                                        <td class="text-end">{{ curso.clases_programadas }}</td>
-                                                        <td class="text-end">{{ curso.ausencias }}</td>
-                                                        <td class="text-end"><strong>{{ curso.cantidad_asistencias }}</strong></td>
-                                                        <td class="text-end">{{ curso.duracion_curso|format_duracion }}</td>
-                                                        <td class="text-end">{{ curso.horas_trabajadas|format_duracion }}</td>
-                                                        <td class="text-end">${{ curso.precio_hora|number_format(2, ',', '.') }}</td>
-                                                        <td class="text-end">${{ curso.viatico|number_format(2, ',', '.') }}</td>
-                                                        <td class="text-end"><strong>${{ curso.monto|number_format(2, ',', '.') }}</strong></td>
-                                                    </tr>
-                                                {% endfor %}
-                                            </tbody>
-                                        </table>
-                                    
-                                    {% elseif liq.detalle_calculo.tipo_pago == 'fijo_mensual' %}
-                                        <p><strong>Monto Fijo Mensual:</strong> ${{ liq.detalle_calculo.monto_fijo|number_format(2, ',', '.') }}</p>
-                                    
-                                    {% elseif liq.detalle_calculo.tipo_pago == 'porcentaje' %}
-                                        <table class="table table-sm table-bordered">
-                                            <thead>
-                                                <tr>
-                                                    <th>Curso</th>
-                                                    <th class="text-end">Alumn@s</th>
-                                                    <th class="text-end">Precio Curso</th>
-                                                    <th class="text-end">Total Curso</th>
-                                                    <th class="text-end">Porcentaje</th>
-                                                    <th class="text-end">Subtotal</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {% for curso in liq.detalle_calculo.cursos %}
-                                                    <tr>
-                                                        <td>{{ curso.curso }}</td>
-                                                        <td class="text-end">{{ curso.cantidad_alumnos }}</td>
-                                                        <td class="text-end">${{ curso.precio_curso|number_format(2, ',', '.') }}</td>
-                                                        <td class="text-end">${{ curso.total_curso|number_format(2, ',', '.') }}</td>
-                                                        <td class="text-end">{{ curso.porcentaje }}%</td>
-                                                        <td class="text-end"><strong>${{ curso.monto|number_format(2, ',', '.') }}</strong></td>
-                                                    </tr>
-                                                {% endfor %}
-                                            </tbody>
-                                        </table>
-                                    
-                                    {% elseif liq.detalle_calculo.tipo_pago == 'combinado' %}
-                                        <div class="mb-3">
-                                            <p><strong>Monto Fijo Mensual:</strong> ${{ liq.detalle_calculo.monto_fijo|number_format(2, ',', '.') }}</p>
-                                        </div>
-                                        <h6>Porcentaje Adicional:</h6>
-                                        <table class="table table-sm table-bordered">
-                                            <thead>
-                                                <tr>
-                                                    <th>Curso</th>
-                                                    <th class="text-end">Alumn@s</th>
-                                                    <th class="text-end">Precio Curso</th>
-                                                    <th class="text-end">Total Curso</th>
-                                                    <th class="text-end">Porcentaje</th>
-                                                    <th class="text-end">Subtotal</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {% for curso in liq.detalle_calculo.cursos %}
-                                                    <tr>
-                                                        <td>{{ curso.curso }}</td>
-                                                        <td class="text-end">{{ curso.cantidad_alumnos }}</td>
-                                                        <td class="text-end">${{ curso.precio_curso|number_format(2, ',', '.') }}</td>
-                                                        <td class="text-end">${{ curso.total_curso|number_format(2, ',', '.') }}</td>
-                                                        <td class="text-end">{{ curso.porcentaje }}%</td>
-                                                        <td class="text-end"><strong>${{ curso.monto|number_format(2, ',', '.') }}</strong></td>
-                                                    </tr>
-                                                {% endfor %}
-                                                <tr class="table-info">
-                                                    <td colspan="5" class="text-end"><strong>Subtotal Porcentaje:</strong></td>
-                                                    <td class="text-end"><strong>${{ liq.detalle_calculo.monto_porcentaje|number_format(2, ',', '.') }}</strong></td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    {% endif %}
+                                    {{ include('profesor_pago/_detalle_calculo.html.twig', {'detalle': liq.detalle_calculo}) }}
 
                                     {% if liq.pagos_realizados is not empty %}
                                         <hr>

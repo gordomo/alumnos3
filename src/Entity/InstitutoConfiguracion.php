@@ -207,6 +207,15 @@ class InstitutoConfiguracion
     private $criterioAprobacionNotas = self::CRITERIO_PROMEDIO;
 
     /**
+     * Sobre qué se calcula el porcentaje que se le paga a un profesor por un curso:
+     * - 'cobrado'   : la plata que realmente entró ese mes por ese curso (default)
+     * - 'facturado' : alumnos inscriptos por el precio del curso, cobrado o no
+     *
+     * @ORM\Column(type="string", length=20, options={"default": "cobrado"})
+     */
+    private $basePorcentajeProfesor = self::BASE_COBRADO;
+
+    /**
      * @ORM\OneToMany(targetEntity=ConceptoCalificacion::class, mappedBy="configuracion", cascade={"persist"})
      * @ORM\OrderBy({"orden" = "ASC"})
      */
@@ -272,6 +281,14 @@ class InstitutoConfiguracion
 
     public const CRITERIO_PROMEDIO = 'promedio';
     public const CRITERIO_TODAS = 'todas';
+
+    public const BASE_COBRADO = 'cobrado';
+    public const BASE_FACTURADO = 'facturado';
+
+    public const BASES_PORCENTAJE_PROFESOR = [
+        self::BASE_COBRADO => 'Lo efectivamente cobrado',
+        self::BASE_FACTURADO => 'Lo facturado del mes',
+    ];
 
     public function __construct()
     {
@@ -362,6 +379,25 @@ class InstitutoConfiguracion
     {
         $this->notasInfluyenAprobacion = $notasInfluyenAprobacion;
         return $this;
+    }
+
+    public function getBasePorcentajeProfesor(): string
+    {
+        return $this->basePorcentajeProfesor ?: self::BASE_COBRADO;
+    }
+
+    public function setBasePorcentajeProfesor(?string $base): self
+    {
+        $this->basePorcentajeProfesor = in_array($base, [self::BASE_COBRADO, self::BASE_FACTURADO], true)
+            ? $base
+            : self::BASE_COBRADO;
+
+        return $this;
+    }
+
+    public function pagaPorcentajeSobreCobrado(): bool
+    {
+        return $this->getBasePorcentajeProfesor() === self::BASE_COBRADO;
     }
 
     public function getCriterioAprobacionNotas(): string

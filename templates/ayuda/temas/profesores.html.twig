@@ -1,0 +1,131 @@
+{% extends 'ayuda/_tema.html.twig' %}
+{% import 'ayuda/_macros.html.twig' as m %}
+
+{% block contenido %}
+<p>
+    A un profesor se le puede pagar por hora, un fijo mensual, un porcentaje de lo que produce
+    el curso, o una combinación. La liquidación se arma sola con las asistencias y los pagos que
+    ya están cargados.
+</p>
+
+<h2>La modalidad de cada profesor</h2>
+
+<p>
+    Se define al editar el profesor, en {{ m.ruta(['Profesores', 'Listado']) }}. Es la modalidad
+    que se aplica a <strong>todos</strong> sus cursos:
+</p>
+
+<ul>
+    <li>
+        <strong>Por hora</strong>: se cuentan las clases del mes según los horarios del curso, se
+        multiplican por la duración de cada horario y por el valor hora. Se suma el viático por
+        cada clase dictada.
+    </li>
+    <li><strong>Fijo mensual</strong>: un importe por mes, sin importar cuántas clases haya.</li>
+    <li>
+        <strong>Porcentaje</strong>: un porcentaje del total mensual de cada uno de sus cursos.
+    </li>
+    <li><strong>Combinado</strong>: el fijo mensual más el porcentaje de sus cursos.</li>
+</ul>
+
+{{ m.nota('info', 'El fijo mensual se paga una vez, no por curso',
+   'Un profesor con fijo mensual de $100.000 y tres cursos cobra $100.000, no $300.000. Si además
+    tiene porcentaje, el porcentaje sí se calcula curso por curso y se suma.') }}
+
+<h2>Cuando un curso se paga distinto</h2>
+
+<p>
+    Un profesor puede cobrar por hora en un curso y un porcentaje en otro. Eso se carga en
+    {{ m.ruta(['Pagos a profesores', 'Liquidación', 'Pago por curso']) }}.
+</p>
+
+<ol>
+    <li>Prendé <strong>usar</strong> en el curso que se paga distinto.</li>
+    <li>Elegí la <strong>modalidad</strong> de ese curso.</li>
+    <li>Cargá el valor que corresponda: valor hora, porcentaje, o monto fijo del curso.</li>
+    <li>Guardá.</li>
+</ol>
+
+{{ m.captura('profesor-reglas-pago.png', 'Pago por curso: una regla por cada curso del profesor') }}
+
+<p>
+    El curso <strong>sin</strong> regla prendida se liquida con la modalidad de la ficha del
+    profesor, que es lo que pasa por default. En valor hora y viático, dejar el campo vacío
+    también significa "usá el de la ficha"; poner cero significa que en ese curso no se paga ese
+    concepto.
+</p>
+
+{{ m.nota('info', 'Apagar una regla no la borra',
+   'Queda guardada con los valores que tenía, así que se puede volver a prender más adelante sin
+    cargarla de nuevo. Mientras está apagada, el curso se liquida con la ficha del profesor.') }}
+
+<h2>Sobre qué se calcula el porcentaje</h2>
+
+<p>
+    Lo elige el instituto en {{ m.ruta(['Configuración', 'Pagos y Vencimientos', 'Pago a profesores']) }}:
+</p>
+
+<ul>
+    <li>
+        <strong>Lo efectivamente cobrado</strong> (por default): el porcentaje se aplica a la
+        plata que realmente entró por ese curso ese mes. Si una familia no pagó, no se paga
+        comisión por ella.
+    </li>
+    <li>
+        <strong>Lo facturado</strong>: inscriptos por el precio del curso, cobrado o no. Le pagás
+        al profesor por todos sus alumn@s aunque todavía no hayas cobrado.
+    </li>
+</ul>
+
+{{ m.nota('warning', 'Es una decisión de plata, no un detalle técnico',
+   'Con "lo facturado" el instituto puede terminar pagando comisión por cuotas que nunca cobró.
+    Con "lo cobrado" el profesor cobra más tarde, cuando la familia paga. Conviene acordarlo con
+    los profesores antes de cambiarlo.') }}
+
+<h2>La liquidación del mes</h2>
+
+<p>
+    {{ m.ruta(['Pagos a profesores', 'Liquidación']) }} muestra, para el mes elegido, cuánto le
+    corresponde a cada profesor, cuánto se le pagó ya y el saldo. El botón
+    <strong>Detalle</strong> abre el desglose curso por curso, con la modalidad que se le aplicó
+    a cada uno y la cuenta que se hizo.
+</p>
+
+{{ m.captura('profesor-liquidacion.png', 'Liquidación del mes con el detalle de cálculo abierto') }}
+
+<p>
+    Los cursos que se liquidaron con su propia regla aparecen marcados con
+    <strong>regla del curso</strong>, así se ve de un vistazo cuáles no siguen la ficha.
+</p>
+
+<h2>Registrar el pago</h2>
+
+<ol>
+    <li>En la liquidación, botón <strong>Pagar</strong> del profesor.</li>
+    <li>
+        El monto viene propuesto con el saldo pendiente. Se puede editar: si acordaste otro
+        importe, escribís ese.
+    </li>
+    <li>Elegí la fecha y el método de pago, y guardá.</li>
+</ol>
+
+<p>
+    El recibo del pago guarda el <strong>detalle del cálculo del momento</strong>. Si después
+    cambiás el valor hora o el porcentaje, ese recibo sigue mostrando la cuenta con la que se
+    pagó.
+</p>
+
+{{ m.nota('warning', 'La liquidación de meses cerrados se recalcula',
+   'El detalle del recibo queda congelado, pero el "monto calculado" de la liquidación se vuelve
+    a calcular con los valores de hoy. Si cambiás un valor hora, los meses anteriores van a
+    mostrar otro número y puede aparecer un saldo que no existe. Conviene registrar el pago del
+    mes antes de tocar los valores.') }}
+
+<h2>Ausencias y reemplazos</h2>
+
+<p>
+    En la modalidad por hora, las clases en las que el profesor figura ausente se descuentan de
+    las horas del mes. Se descuenta la duración del horario de ese día, así que un curso con
+    lunes de una hora y miércoles de dos descuenta bien según el día que faltó.
+</p>
+{% endblock %}

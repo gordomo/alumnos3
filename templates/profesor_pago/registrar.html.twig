@@ -84,53 +84,7 @@
                 <div class="card-body">
                     {% set detalle = liquidacion.detalle_calculo %}
                     
-                    {% if detalle.tipo_pago == 'por_hora' %}
-                        <p class="mb-2"><strong>Tipo:</strong> Por Hora</p>
-                        {% for curso in detalle.cursos %}
-                            <div class="mb-3 pb-3 border-bottom">
-                                <p class="mb-1"><strong>{{ curso.curso }}</strong></p>
-                                <p class="mb-1 small">Clases programadas: {{ curso.clases_programadas }}</p>
-                                <p class="mb-1 small">Ausencias: {{ curso.ausencias }}</p>
-                                <p class="mb-1 small">Clases dadas: {{ curso.cantidad_asistencias }}</p>
-                                <p class="mb-1 small">{{ curso.cantidad_asistencias }} clases × {{ curso.duracion_curso|format_duracion }} = {{ curso.horas_trabajadas|format_duracion }}</p>
-                                <p class="mb-1 small">{{ curso.horas_trabajadas|format_duracion }} × ${{ curso.precio_hora|number_format(2, ',', '.') }} = ${{ (curso.horas_trabajadas * curso.precio_hora)|number_format(2, ',', '.') }}</p>
-                                <p class="mb-1 small">Viático: ${{ curso.viatico|number_format(2, ',', '.') }}</p>
-                                <p class="mb-0"><strong>Subtotal: ${{ curso.monto|number_format(2, ',', '.') }}</strong></p>
-                            </div>
-                        {% endfor %}
-                    
-                    {% elseif detalle.tipo_pago == 'fijo_mensual' %}
-                        <p class="mb-2"><strong>Tipo:</strong> Fijo Mensual</p>
-                        <p class="mb-0"><strong>Monto: ${{ detalle.monto_fijo|number_format(2, ',', '.') }}</strong></p>
-                    
-                    {% elseif detalle.tipo_pago == 'porcentaje' %}
-                        <p class="mb-2"><strong>Tipo:</strong> Porcentaje</p>
-                        {% for curso in detalle.cursos %}
-                            <div class="mb-3 pb-3 border-bottom">
-                                <p class="mb-1"><strong>{{ curso.curso }}</strong></p>
-                                <p class="mb-1 small">{{ curso.cantidad_alumnos }} alumnos × ${{ curso.precio_curso|number_format(2, ',', '.') }}</p>
-                                <p class="mb-1 small">Total: ${{ curso.total_curso|number_format(2, ',', '.') }}</p>
-                                <p class="mb-1 small">{{ curso.porcentaje }}% = <strong>${{ curso.monto|number_format(2, ',', '.') }}</strong></p>
-                            </div>
-                        {% endfor %}
-                    
-                    {% elseif detalle.tipo_pago == 'combinado' %}
-                        <p class="mb-2"><strong>Tipo:</strong> Combinado</p>
-                        <div class="mb-3">
-                            <p class="mb-1"><strong>Fijo Mensual:</strong> ${{ detalle.monto_fijo|number_format(2, ',', '.') }}</p>
-                        </div>
-                        <div class="mb-3">
-                            <p class="mb-2"><strong>Porcentaje Adicional:</strong></p>
-                            {% for curso in detalle.cursos %}
-                                <div class="mb-2 pb-2 border-bottom">
-                                    <p class="mb-1 small"><strong>{{ curso.curso }}</strong></p>
-                                    <p class="mb-1 small">{{ curso.cantidad_alumnos }} alumnos × ${{ curso.precio_curso|number_format(2, ',', '.') }}</p>
-                                    <p class="mb-0 small">{{ curso.porcentaje }}% = ${{ curso.monto|number_format(2, ',', '.') }}</p>
-                                </div>
-                            {% endfor %}
-                            <p class="mb-0"><strong>Subtotal %: ${{ detalle.monto_porcentaje|number_format(2, ',', '.') }}</strong></p>
-                        </div>
-                    {% endif %}
+                    {{ include('profesor_pago/_detalle_calculo.html.twig', {'detalle': detalle}) }}
 
                     <hr>
                     <div class="bg-light p-3 rounded">

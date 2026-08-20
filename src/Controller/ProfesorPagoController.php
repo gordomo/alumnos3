@@ -4,8 +4,11 @@ namespace App\Controller;
 
 use App\Entity\ProfesorPago;
 use App\Entity\Profesor;
+use App\Entity\ProfesorCursoPago;
 use App\Repository\ProfesorRepository;
 use App\Repository\ProfesorPagoRepository;
+use App\Repository\ProfesorCursoPagoRepository;
+use App\Service\ProfesorCursoPagoService;
 use App\Service\ProfesorPagoService;
 use App\Service\InstitutoTimezoneService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -185,6 +188,71 @@ class ProfesorPagoController extends AbstractController
             'fecha_actual_instituto' => $fechaActualInstituto,
             'app_date_format' => $app_date_format,
             'metodos_pago' => $metodosPago
+        ]);
+    }
+
+
+    /**
+     * Reglas de pago por curso de un profesor.
+     *
+     * Un profesor puede cobrar de forma distinta en cada curso, y eso es lo que se carga acá.
+     * El curso que no tenga regla prendida se liquida con la configuración del profesor, que es
+     * lo que pasa por default.
+     *
+     * @Route("/reglas/{profesorId}", name="app_profesor_pago_reglas", methods={"GET", "POST"})
+     */
+    public function reglas(
+        Request $request,
+        int $profesorId,
+        ProfesorRepository $profesorRepository,
+        ProfesorCursoPagoRepository $reglaRepository,
+        ProfesorCursoPagoService $reglaService
+    ): Response {
+        $instituto = $this->getUser()->getInstituto();
+        $profesor = $profesorRepository->find($profesorId);
+
+        if (!$profesor || $profesor->getInstituto() !== $instituto) {
+            throw $this->createNotFoundException('Profesor no encontrado');
+        }
+
+        $cursos = $profesor->getCursos()->toArray();
+
+        if ($request->isMethod('POST')) {
+            if (!$this->isCsrfTokenValid('reglas_pago_' . $profesor->getId(), $request->request->get('_token'))) {
+                $this->addFlash('danger', 'El formulario expiró. Volvé a intentarlo.');
+
+                return $this->redirectToRoute('app_profesor_pago_reglas', ['profesorId' => $profesor->getId()]);
+            }
+
+            $resultado = $reglaService->guardarReglas(
+                $profesor,
+                $cursos,
+                $request->request->all('modalidad'),
+                $request->request->all('valores'),
+                $request->request->all('regla_activa')
+            );
+
+            $this->addFlash('success', sprintf(
+                'Reglas guardadas: %d activa(s)%s.',
+                $resultado['guardadas'],
+                $resultado['apagadas'] > 0 ? sprintf(', %d desactivada(s)', $resultado['apagadas']) : ''
+            ));
+
+            if ($resultado['incompletas']) {
+                $this->addFlash('warning', sprintf(
+                    'Estas reglas quedaron sin el valor que necesitan y se van a liquidar con la configuración del profesor: %s.',
+                    implode(', ', $resultado['incompletas'])
+                ));
+            }
+
+            return $this->redirectToRoute('app_profesor_pago_reglas', ['profesorId' => $profesor->getId()]);
+        }
+
+        return $this->render('profesor_pago/reglas.html.twig', [
+            'profesor' => $profesor,
+            'cursos' => $cursos,
+            'reglas' => $reglaRepository->findByProfesorIndexadoPorCurso($profesor),
+            'modalidades' => ProfesorCursoPago::MODALIDADES,
         ]);
     }
 

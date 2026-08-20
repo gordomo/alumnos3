@@ -1,0 +1,106 @@
+{#
+    Desglose de una liquidación: una fila por curso, con la modalidad que se le aplicó.
+
+    Antes había cuatro variantes de esta tabla, una por tipo de pago del profesor, porque la
+    modalidad era una sola para todos sus cursos. Ahora cada curso puede tener la suya, así que
+    la fila decide cómo mostrarse.
+
+    Espera la variable `detalle`. Tolera los detalles guardados antes de este cambio, donde la
+    fila del curso no trae `modalidad`: en ese caso se deduce del tipo de pago del profesor.
+#}
+{% set d = detalle %}
+{% set fijoProfesor = d.monto_fijo|default(0) %}
+
+{% if fijoProfesor > 0 %}
+    <p class="mb-2">
+        <strong>Fijo mensual del profesor:</strong>
+        ${{ fijoProfesor|number_format(2, ',', '.') }}
+    </p>
+{% endif %}
+
+{% if d.cursos|default([]) is not empty %}
+    <div class="table-responsive">
+        <table class="table table-sm table-bordered mb-0">
+            <thead>
+                <tr>
+                    <th>Curso</th>
+                    <th>Modalidad</th>
+                    <th>Cómo se calculó</th>
+                    <th class="text-end">Subtotal</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for c in d.cursos %}
+                {% set modalidad = c.modalidad|default(d.tipo_pago == 'combinado' ? 'porcentaje' : d.tipo_pago) %}
+                <tr>
+                    <td>
+                        {{ c.curso }}
+                        {% if c.origen_regla|default('profesor') == 'curso' %}
+                            <span class="badge bg-info text-dark" title="Este curso tiene su propia regla de pago">
+                                regla del curso
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if modalidad == 'porcentaje' %}
+                            Porcentaje
+                        {% elseif modalidad == 'fijo_mensual' %}
+                            Fijo por el curso
+                        {% else %}
+                            Por hora
+                        {% endif %}
+                    </td>
+                    <td class="small">
+                        {% if modalidad == 'porcentaje' %}
+                            {{ c.porcentaje }}% de ${{ c.total_curso|number_format(2, ',', '.') }}
+                            <div class="text-muted">
+                                {{ c.cantidad_alumnos }} alumn@s · precio ${{ c.precio_curso|number_format(2, ',', '.') }}
+                                {% if c.cobrado is defined %}
+                                    · cobrado ${{ c.cobrado|number_format(2, ',', '.') }}
+                                    · facturado ${{ c.facturado|number_format(2, ',', '.') }}
+                                {% endif %}
+                            </div>
+                        {% elseif modalidad == 'fijo_mensual' %}
+                            Monto acordado para este curso
+                        {% else %}
+                            {{ c.cantidad_asistencias }} de {{ c.clases_programadas }} clases ·
+                            {{ c.horas_trabajadas|format_duracion }} ·
+                            ${{ c.precio_hora|number_format(2, ',', '.') }} la hora
+                            <div class="text-muted">
+                                {% if c.ausencias > 0 %}{{ c.ausencias }} ausencia(s) descontada(s){% else %}sin ausencias{% endif %}
+                                {% if c.viatico > 0 %} · viáticos ${{ c.viatico|number_format(2, ',', '.') }}{% endif %}
+                            </div>
+                        {% endif %}
+                    </td>
+                    <td class="text-end"><strong>${{ c.monto|number_format(2, ',', '.') }}</strong></td>
+                </tr>
+            {% endfor %}
+                <tr class="table-light">
+                    <td colspan="3" class="text-end"><strong>Subtotal cursos:</strong></td>
+                    <td class="text-end">
+                        {# Se suma de las filas y no de una clave del detalle: los detalles
+                           guardados antes de este cambio no traen ningún total de cursos. #}
+                        <strong>${{ d.cursos|reduce((total, c) => total + c.monto, 0)|number_format(2, ',', '.') }}</strong>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    {% if d.base_porcentaje is defined %}
+        {% set hayPorcentaje = d.cursos|filter(c => (c.modalidad|default(d.tipo_pago)) == 'porcentaje')|length > 0 %}
+        {% if hayPorcentaje %}
+            <p class="small text-muted mt-2 mb-0">
+                El porcentaje se calcula sobre
+                {% if d.base_porcentaje == 'cobrado' %}
+                    <strong>lo efectivamente cobrado</strong> del curso en el mes.
+                {% else %}
+                    <strong>lo facturado</strong> del mes, cobrado o no.
+                {% endif %}
+                Se cambia en Configuración.
+            </p>
+        {% endif %}
+    {% endif %}
+{% elseif fijoProfesor <= 0 %}
+    <p class="text-muted mb-0">No hay cursos para liquidar en este mes.</p>
+{% endif %}
