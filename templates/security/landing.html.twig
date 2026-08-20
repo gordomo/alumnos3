@@ -113,7 +113,7 @@
             /* Queda a la vista mientras se baja. El top no es 0 para que siga flotando con
                aire arriba, como en el resto de la página. */
             position: sticky;
-            top: 0.75rem;
+            top: 0rem;
             z-index: 60;
             transition: background-color 0.25s ease, box-shadow 0.25s ease, padding 0.25s ease;
         }
@@ -124,6 +124,7 @@
             background: rgba(7, 28, 63, 0.92);
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
             padding: 0.6rem 1rem;
+            border-radius: 0;
         }
 
         /* Sin esto el header tapa el título de la sección a la que se salta. */
