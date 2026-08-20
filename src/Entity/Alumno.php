@@ -239,7 +239,12 @@ class Alumno
         return $this->f_nac;
     }
 
-    public function setFNac(\DateTimeInterface $f_nac): self
+    /**
+     * Admite null porque la columna es nullable: un alumno puede no tener la fecha cargada, y
+     * en la importación desde planilla es lo normal. Con el tipo no nullable, guardar un alumno
+     * sin fecha era un TypeError.
+     */
+    public function setFNac(?\DateTimeInterface $f_nac): self
     {
         $this->f_nac = $f_nac;
 

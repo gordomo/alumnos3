@@ -54,6 +54,64 @@
     el sistema no le va a generar deuda de marzo ni abril. Si en cambio la fecha de alta es marzo,
     esas cuotas aparecen como deuda desde el primer día.') }}
 
+<h2>Importar muchos de una vez</h2>
+
+<p>
+    Para cargar una lista completa está {{ m.ruta(['Alumn@s', 'Listado', 'Importar desde Excel']) }}.
+    Son dos pasos y el primero no escribe nada.
+</p>
+
+<ol>
+    <li>
+        <strong>Descargá la plantilla</strong>. Trae los encabezados exactos que el sistema
+        espera, una fila de ejemplo, y una hoja con las instrucciones y la lista de tus cursos.
+    </li>
+    <li>Cargá tus alumn@s ahí, uno por fila.</li>
+    <li>
+        <strong>Subila.</strong> El sistema te muestra fila por fila qué va a pasar: cuáles se
+        importan, cuáles se importan con avisos y cuáles se saltan, con el motivo de cada una.
+    </li>
+    <li>Recién ahí confirmás.</li>
+</ol>
+
+{{ m.captura('import-previsualizar.png', 'La revisión previa, fila por fila, antes de escribir nada') }}
+
+<p>Lo que conviene saber:</p>
+
+<ul>
+    <li>
+        <strong>El orden de las columnas no importa.</strong> Cada una se reconoce por el nombre
+        de su encabezado, así que podés reordenarlas, borrar las que no uses o agregar columnas
+        propias: las que no reconoce las ignora y te dice cuáles.
+    </li>
+    <li>
+        Obligatorias: <strong>apellido, nombre, DNI y email</strong>. Sin alguna de esas, la fila
+        se saltea.
+    </li>
+    <li>
+        El <strong>DNI</strong> va de 6 a 8 números, sin puntos. No puede repetirse: si ya existe
+        en el sistema o está dos veces en la planilla, esa fila se saltea y te decimos cuál es.
+    </li>
+    <li>
+        La <strong>fecha de nacimiento</strong> se escribe 15/03/2010, y también se acepta una
+        celda con formato de fecha de Excel. Si no se entiende, el alumn@ se importa igual pero
+        sin fecha.
+    </li>
+    <li>
+        Si completás <strong>Curso</strong>, el nombre tiene que coincidir con el del sistema. Si
+        coincide, el alumn@ queda <strong>inscripto de verdad</strong> con fecha de hoy y se le
+        empiezan a generar las cuotas. Si no coincide, se importa sin inscribirlo y te avisamos.
+    </li>
+</ul>
+
+{{ m.nota('warning', 'Importar no se puede deshacer de un golpe',
+   'No hay un botón para revertir una importación: habría que borrar los alumn@s uno por uno. Por
+    eso la revisión previa está antes y conviene leerla, sobre todo la columna de la derecha.') }}
+
+{{ m.nota('info', 'Si el instituto cobra cuota de inscripción anual',
+   'Al inscribir por planilla se le genera igual que en el alta manual, así que después de importar
+    puede aparecer esa deuda. Es lo esperado.') }}
+
 <h2>El listado de alumnos</h2>
 
 <p>

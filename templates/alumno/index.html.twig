@@ -297,26 +297,11 @@
                 <li class="nav-item">
                     <a class="nav-link {% if activo == '0' %} active {% endif %}" href="{{ path('app_alumno_index', {'activo': 0}) }}">Inactivos</a>
                 </li>
-                {# <li class="nav-item">
-                    <a class="btn btn-warning importar" href="#">
-                        Importar
-                        <i class="bi bi-file-earmark-spreadsheet"></i>
-                    </a>
-                    <div class="excel">
-                        <form action="{{ path('app_excel_import_alumnos') }}" enctype="multipart/form-data" method="POST">
-                            <input type="hidden" name="_token" value="{{ csrf_token('import_alumnos') }}">
-                            <input type="file" id="file" name="file" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel">
-                            <input type="submit">
-                        </form>
-                    </div>
-                </li>
                 <li class="nav-item">
-                    {% if totalAgregados != '' %}
-                        <div class="alert alert-primary" role="alert" style="padding: 0.4rem 1rem;">
-                            Se agregaron {{ totalAgregados }} alumnos correctamente
-                        </div>
-                    {% endif %}
-                </li>#}
+                    <a class="btn btn-outline-primary" href="{{ path('app_importar_alumnos') }}">
+                        <i class="bi bi-file-earmark-spreadsheet"></i> Importar desde Excel
+                    </a>
+                </li>
                 <li class="nav-item" >
                     <select class="form-select" aria-label="Cursos" name="cursoSelected" id="filtroCursos">
                         <option value="0">Filtrar por Cursos</option>

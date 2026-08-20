@@ -1,0 +1,112 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Importar alumn@s{% endblock %}
+
+{% block panelTitle %}Importar alumn@s desde una planilla{% endblock %}
+
+{% block body %}
+<div class="container-fluid px-4 mt-3" style="padding-bottom: 3rem;">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ path('app_alumno_index') }}">Alumn@s</a></li>
+            <li class="breadcrumb-item active">Importar</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-lg-7">
+            <div class="card mb-3">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-file-earmark-spreadsheet"></i> Subir la planilla</h5>
+                </div>
+                <div class="card-body">
+                    <ol class="mb-3">
+                        <li class="mb-2">
+                            <strong>Descargá la plantilla</strong> y cargá ahí a tus alumn@s. Trae los
+                            encabezados que el sistema espera y una hoja con las instrucciones.
+                            <div class="mt-2">
+                                {# data-no-loading: es una descarga, no una navegación. Sin esto el
+                                   spinner global queda girando para siempre. #}
+                                <a href="{{ path('app_importar_alumnos_plantilla') }}" class="btn btn-sm btn-success"
+                                   data-no-loading>
+                                    <i class="bi bi-download"></i> Descargar plantilla (.xlsx)
+                                </a>
+                            </div>
+                        </li>
+                        <li class="mb-2">
+                            <strong>Subila acá.</strong> Te vamos a mostrar fila por fila qué va a pasar
+                            <strong>antes</strong> de guardar nada.
+                        </li>
+                        <li>Revisás y confirmás.</li>
+                    </ol>
+
+                    <form method="post" action="{{ path('app_importar_alumnos_analizar') }}" enctype="multipart/form-data">
+                        <input type="hidden" name="_token" value="{{ csrf_token('importar_alumnos') }}">
+
+                        <div class="mb-3">
+                            <label for="archivo" class="form-label fw-semibold">Planilla</label>
+                            <input type="file" class="form-control" id="archivo" name="archivo" required
+                                   accept=".xlsx,.xls,.csv">
+                            <div class="form-text">Formatos .xlsx, .xls o .csv, hasta 10 MB.</div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-search"></i> Revisar la planilla
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="card mb-3">
+                <div class="card-header bg-light"><strong>Las columnas</strong></div>
+                <div class="card-body">
+                    <p class="small text-muted mb-2">
+                        El <strong>orden no importa</strong>: cada columna se reconoce por el nombre de
+                        su encabezado. Las que no uses podés dejarlas vacías o borrarlas, menos las
+                        obligatorias.
+                    </p>
+                    <div class="table-responsive" style="max-height: 22rem; overflow-y: auto;">
+                        <table class="table table-sm mb-0">
+                            <tbody>
+                            {% for columna in columnas %}
+                                <tr>
+                                    <td>
+                                        {{ columna.titulo }}
+                                        {% if columna.requerida %}
+                                            <span class="badge bg-danger">obligatoria</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-muted small">{{ columna.ejemplo }}</td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header bg-light"><strong>Qué tener en cuenta</strong></div>
+                <div class="card-body small text-muted">
+                    <p>
+                        El <strong>DNI no puede repetirse</strong>, ni dentro de la planilla ni contra
+                        los alumn@s que ya están cargados. La fila que choque se rechaza y te decimos
+                        cuál.
+                    </p>
+                    <p>
+                        Si pones un <strong>curso</strong>, el nombre tiene que coincidir con el del
+                        sistema. Si no coincide, el alumn@ se importa igual pero sin inscribirlo, y te
+                        avisamos.
+                    </p>
+                    <p class="mb-0">
+                        Cuando el curso coincide, el alumn@ queda <strong>inscripto de verdad</strong>:
+                        se le empiezan a generar las cuotas desde la fecha de importación.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

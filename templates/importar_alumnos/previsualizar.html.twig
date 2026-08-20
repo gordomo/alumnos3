@@ -1,0 +1,129 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Revisar la importación{% endblock %}
+
+{% block panelTitle %}Revisar antes de importar{% endblock %}
+
+{% block body %}
+<div class="container-fluid px-4 mt-3" style="padding-bottom: 3rem;">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ path('app_alumno_index') }}">Alumn@s</a></li>
+            <li class="breadcrumb-item"><a href="{{ path('app_importar_alumnos') }}">Importar</a></li>
+            <li class="breadcrumb-item active">Revisar</li>
+        </ol>
+    </nav>
+
+    {% set resumen = analisis.resumen %}
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <p class="mb-2">
+                Leímos <strong>{{ nombreArchivo }}</strong>.
+                <strong>Todavía no se guardó nada.</strong>
+            </p>
+
+            <div class="d-flex gap-3 flex-wrap">
+                <span class="badge bg-success fs-6">{{ resumen.importables }} se van a importar</span>
+                {% if resumen.con_aviso > 0 %}
+                    <span class="badge fs-6" style="background: #ffc107; color: #212529;">{{ resumen.con_aviso }} con avisos</span>
+                {% endif %}
+                {% if resumen.rechazadas > 0 %}
+                    <span class="badge bg-danger fs-6">{{ resumen.rechazadas }} se van a saltar</span>
+                {% endif %}
+            </div>
+
+            {% if analisis.columnasIgnoradas is not empty %}
+                <p class="small text-muted mt-3 mb-0">
+                    Columnas que no reconocimos y vamos a ignorar:
+                    <strong>{{ analisis.columnasIgnoradas|join(', ') }}</strong>.
+                </p>
+            {% endif %}
+        </div>
+
+        <div class="card-footer d-flex gap-2">
+            {% if resumen.importables > 0 %}
+                <form method="post" action="{{ path('app_importar_alumnos_confirmar') }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('importar_alumnos_confirmar') }}">
+                    <button type="submit" class="btn btn-primary"
+                            onclick="return confirm('¿Importar {{ resumen.importables }} alumn@(s)?');">
+                        <i class="bi bi-check2-circle"></i> Importar {{ resumen.importables }} alumn@(s)
+                    </button>
+                </form>
+            {% else %}
+                <span class="text-danger align-self-center">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    No hay ninguna fila importable. Corregí la planilla y volvé a subirla.
+                </span>
+            {% endif %}
+
+            <form method="post" action="{{ path('app_importar_alumnos_cancelar') }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('importar_alumnos_cancelar') }}">
+                <button type="submit" class="btn btn-secondary">Cancelar</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Fila</th>
+                        <th>Alumn@</th>
+                        <th>DNI</th>
+                        <th>Email</th>
+                        <th>Curso</th>
+                        <th>Qué va a pasar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for fila in analisis.filas %}
+                    <tr class="{% if fila.estado == 'error' %}table-danger{% elseif fila.estado == 'aviso' %}table-warning{% endif %}">
+                        <td>{{ fila.numero }}</td>
+                        <td>
+                            {{ fila.datos.apellido|default('—') }}{% if fila.datos.nombre|default('') %}, {{ fila.datos.nombre }}{% endif %}
+                        </td>
+                        <td>{{ fila.datos.dni|default('—') }}</td>
+                        <td class="small">{{ fila.datos.email|default('—') }}</td>
+                        <td class="small">
+                            {% if fila.datos.curso|default('') %}
+                                {{ fila.datos.curso }}
+                                {% if fila.datos.curso_encontrado %}
+                                    <i class="bi bi-check-circle-fill text-success" title="El curso existe"></i>
+                                {% endif %}
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="small">
+                            {% if fila.estado == 'error' %}
+                                <span class="badge bg-danger">No se importa</span>
+                            {% elseif fila.estado == 'aviso' %}
+                                <span class="badge" style="background: #ffc107; color: #212529;">Se importa con avisos</span>
+                            {% else %}
+                                <span class="badge bg-success">Se importa</span>
+                            {% endif %}
+
+                            {% if fila.motivos is not empty %}
+                                <ul class="mb-0 mt-1 ps-3">
+                                    {% for motivo in fila.motivos %}
+                                        <li>{{ motivo }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">
+                            La planilla no tiene ninguna fila con datos.
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
