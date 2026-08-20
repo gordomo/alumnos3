@@ -28,13 +28,16 @@ use Doctrine\ORM\EntityManagerInterface;
  * - El viático se paga por clase dictada. Antes se sumaba una sola vez por curso y por mes,
  *   sin importar cuántas clases hubiera. Esto sube lo que se le paga a un profesor con viático
  *   cargado, así que conviene revisarlo antes de la primera liquidación.
+ * - Los días marcados como feriado o receso en la agenda no se cuentan como clase dictada. Un
+ *   instituto que no cargue feriados no ve ninguna diferencia.
  */
 class ProfesorPagoService
 {
     public function __construct(
         private EntityManagerInterface $entityManager,
         private AsistenciaProfesoresRepository $asistenciaProfesoresRepository,
-        private ProfesorCursoPagoRepository $reglaRepository
+        private ProfesorCursoPagoRepository $reglaRepository,
+        private FeriadoService $feriadoService
     ) {
     }
 
@@ -164,11 +167,18 @@ class ProfesorPagoService
 
         $ausenciasPorDia = $this->ausenciasPorDiaDeSemana($profesor, $curso, $inicioMes, $finMes);
 
+        // Los días de feriado o receso no se dictaron, así que no se pagan. Es la misma lista
+        // que usa la agenda para tapar la clase, para que las dos pantallas digan lo mismo.
+        $feriados = $curso->getInstituto()
+            ? $this->feriadoService->diasFeriados($curso->getInstituto(), $inicioMes, $finMes, $curso)
+            : [];
+
         $horarios = $curso->getHorarios();
         $clasesProgramadas = 0;
         $clasesDictadas = 0;
         $horas = 0.0;
         $ausenciasContadas = 0;
+        $clasesFeriado = 0;
 
         if (count($horarios) > 0) {
             foreach ($horarios as $horario) {
@@ -180,12 +190,21 @@ class ProfesorPagoService
                 $duracion = (float) ($horario->getDuracion() ?? 0);
                 $fechas = $this->fechasDelMesEnDia($curso, $inicioMes, $finMes, $numeroDia);
 
-                $ausenciasDelDia = min($ausenciasPorDia[$numeroDia] ?? 0, count($fechas));
-                $dictadas = count($fechas) - $ausenciasDelDia;
+                $enFeriado = 0;
+                foreach ($fechas as $fecha) {
+                    if (isset($feriados[$fecha->format('Y-m-d')])) {
+                        $enFeriado++;
+                    }
+                }
+
+                $conClase = count($fechas) - $enFeriado;
+                $ausenciasDelDia = min($ausenciasPorDia[$numeroDia] ?? 0, $conClase);
+                $dictadas = $conClase - $ausenciasDelDia;
 
                 $clasesProgramadas += count($fechas);
                 $clasesDictadas += $dictadas;
                 $ausenciasContadas += $ausenciasDelDia;
+                $clasesFeriado += $enFeriado;
                 $horas += $dictadas * $duracion;
             }
         } else {
@@ -201,6 +220,7 @@ class ProfesorPagoService
         return [
             'clases_programadas' => $clasesProgramadas,
             'ausencias' => $ausenciasContadas,
+            'clases_feriado' => $clasesFeriado,
             'cantidad_asistencias' => $clasesDictadas,
             // Se mantiene por compatibilidad con las pantallas que la muestran.
             'duracion_curso' => $clasesDictadas > 0 ? round($horas / $clasesDictadas, 4) : 0,

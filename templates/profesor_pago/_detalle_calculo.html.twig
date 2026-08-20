@@ -38,6 +38,9 @@
         ${{ c.precio_hora|number_format(2, ',', '.') }} la hora
         <div class="text-muted">
             {% if c.ausencias > 0 %}{{ c.ausencias }} ausencia(s) descontada(s){% else %}sin ausencias{% endif %}
+            {% if c.clases_feriado|default(0) > 0 %}
+                · {{ c.clases_feriado }} sin dictar por feriado
+            {% endif %}
             {% if c.viatico > 0 %} · viáticos ${{ c.viatico|number_format(2, ',', '.') }}{% endif %}
         </div>
     {% endif %}

@@ -153,11 +153,22 @@
     mostrar otro número y puede aparecer un saldo que no existe. Conviene registrar el pago del
     mes antes de tocar los valores.') }}
 
-<h2>Ausencias y reemplazos</h2>
+<h2>Ausencias, feriados y reemplazos</h2>
 
 <p>
     En la modalidad por hora, las clases en las que el profesor figura ausente se descuentan de
     las horas del mes. Se descuenta la duración del horario de ese día, así que un curso con
     lunes de una hora y miércoles de dos descuenta bien según el día que faltó.
 </p>
+
+<p>
+    Los días marcados como <strong>feriado o receso</strong> en {{ m.ruta(['Agenda']) }} tampoco se
+    pagan: esa clase no se dictó. El detalle del cálculo lo dice, por ejemplo
+    <em>"3 de 5 clases · 2 sin dictar por feriado"</em>, así que se ve por qué el mes da menos que
+    otro.
+</p>
+
+{{ m.nota('info', 'Es la misma lista que usa la agenda',
+   'El feriado se carga una sola vez y sirve para las dos cosas: tapa la clase en el calendario y
+    no se la paga al profesor. Un feriado asociado a un curso puntual afecta solo a ese curso.') }}
 {% endblock %}

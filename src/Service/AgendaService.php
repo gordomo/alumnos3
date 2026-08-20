@@ -53,7 +53,8 @@ class AgendaService
         private EvaluacionRepository $evaluacionRepository,
         private TareaRepository $tareaRepository,
         private EventoAgendaRepository $eventoRepository,
-        private DeudaCalculatorService $deudaCalculator
+        private DeudaCalculatorService $deudaCalculator,
+        private FeriadoService $feriadoService
     ) {
     }
 
@@ -73,7 +74,7 @@ class AgendaService
         $permitidas = $this->fuentesVisibles($contexto);
         $pedidas = $fuentes === null ? $permitidas : array_values(array_intersect($fuentes, $permitidas));
 
-        $feriados = $this->diasFeriados($contexto['instituto'], $desde, $hasta);
+        $feriados = $this->feriadoService->diasFeriados($contexto['instituto'], $desde, $hasta);
 
         $eventos = [];
 
@@ -187,30 +188,6 @@ class AgendaService
     }
 
     /**
-     * Los días que caen dentro de un feriado o receso, indexados por Y-m-d.
-     *
-     * @return array<string, EventoAgenda>
-     */
-    private function diasFeriados(Instituto $instituto, \DateTimeInterface $desde, \DateTimeInterface $hasta): array
-    {
-        $dias = [];
-
-        foreach ($this->eventoRepository->findFeriadosEnRango($instituto, $desde, $hasta) as $feriado) {
-            $dia = \DateTime::createFromFormat('Y-m-d', $feriado->getFechaInicio()->format('Y-m-d'));
-            $ultimo = $feriado->getFechaFinEfectiva()->format('Y-m-d');
-
-            // Un receso puede empezar antes del rango pedido: igual se recorre desde su inicio,
-            // que es lo que asegura que los días de este mes queden marcados.
-            while ($dia && $dia->format('Y-m-d') <= $ultimo) {
-                $dias[$dia->format('Y-m-d')] = $feriado;
-                $dia->modify('+1 day');
-            }
-        }
-
-        return $dias;
-    }
-
-    /**
      * Una clase por cada día que el curso se dicta dentro del rango.
      *
      * Se recorre horario por horario, no el campo viejo de días y hora única del curso: un curso
@@ -242,6 +219,9 @@ class AgendaService
 
                     if ($coincideDia && $dentroDelCurso) {
                         $feriado = $feriados[$fecha] ?? null;
+                        if ($feriado && !$this->feriadoService->aplicaAlCurso($feriado, $curso)) {
+                            $feriado = null;
+                        }
 
                         $eventos[] = [
                             'title' => ($feriado ? '(sin clase) ' : '') . $curso->getNombre(),
