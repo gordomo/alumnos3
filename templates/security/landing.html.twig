@@ -105,10 +105,39 @@
             padding: 0.85rem 1rem;
             margin-bottom: 1.25rem;
             border-radius: 16px;
-            background: rgba(16, 43, 41, 0.45);
+            background: rgba(7, 28, 63, 0.5);
             border: 1px solid rgba(255, 255, 255, 0.18);
             box-shadow: 0 14px 36px rgba(0, 0, 0, 0.2);
             backdrop-filter: blur(10px);
+
+            /* Queda a la vista mientras se baja. El top no es 0 para que siga flotando con
+               aire arriba, como en el resto de la página. */
+            position: sticky;
+            top: 0.75rem;
+            z-index: 60;
+            transition: background-color 0.25s ease, box-shadow 0.25s ease, padding 0.25s ease;
+        }
+
+        /* Al pasar sobre las secciones blancas el fondo translúcido no alcanza: cuando se
+           empieza a bajar se opaca y se compacta. */
+        .landing-header.esta-fijo {
+            background: rgba(7, 28, 63, 0.92);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+            padding: 0.6rem 1rem;
+        }
+
+        /* Sin esto el header tapa el título de la sección a la que se salta. */
+        #features-section,
+        #capturas-section,
+        #pricing-section,
+        #auth-section {
+            scroll-margin-top: 6rem;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .landing-header {
+                transition: none;
+            }
         }
 
         .landing-header-brand {
@@ -207,6 +236,7 @@
 
         .auth-wrapper {
             width: 100%;
+            margin-top: 255px;
         }
 
         /* Hero Section */
@@ -790,11 +820,14 @@
 
         /* CTA Section */
         .cta-section {
-            text-align: center;
-            padding: 2rem 0;
-            color: white;
-            margin-bottom: 2rem;
-            background-color: var(--secondary-color);
+                width: 100%;
+                text-align: center;
+                right: 0;
+                position: absolute;
+                padding: 2rem 0;
+                color: white;
+                margin-bottom: 2rem;
+                background-color: var(--secondary-color);
         }
 
         .cta-text {
@@ -1414,97 +1447,100 @@
                 </div>
             </div>
         </div>
-    </div>
-
-    <!-- CTA Section -->
-    <div class="cta-section">
-        <div class="cta-text">¡Comienza hoy mismo!</div>
-        <div class="cta-subtext">Regístrate gratis y comienza a gestionar tu instituto</div>
-        <div class="cta-badge">Sin tarjeta de crédito • Configuración en minutos • Sin costo de instalación</div>
-    </div>
-
-    <!-- Auth Section -->
-    <div class="auth-wrapper" id="auth-section">
-        <div class="auth-section" id="auth-form-card">
-        <div class="auth-encabezado">
-            <h2>Creá tu instituto</h2>
-            <p>
-                Empezá gratis, sin tarjeta. Si ya tenés cuenta,
-                <a href="{{ path('app_login') }}">iniciá sesión</a>.
-            </p>
+        <!-- CTA Section -->
+        <div class="cta-section">
+            <div class="cta-text">¡Comienza hoy mismo!</div>
+            <div class="cta-subtext">Regístrate gratis y comienza a gestionar tu instituto</div>
+            <div class="cta-badge">Sin tarjeta de crédito • Configuración en minutos • Sin costo de instalación</div>
         </div>
 
-        <!-- Register Form -->
-        <div id="registerForm" class="auth-form active">
+        <!-- Auth Section -->
+        <div class="auth-wrapper" id="auth-section">
+            <div class="auth-section" id="auth-form-card">
+            <div class="auth-encabezado">
+                <h2>Creá tu instituto</h2>
+                <p>
+                    Empezá gratis, sin tarjeta. Si ya tenés cuenta,
+                    <a href="{{ path('app_login') }}">iniciá sesión</a>.
+                </p>
+            </div>
 
-            <form method="post" action="{{ path('app_register') }}" enctype="multipart/form-data">
-                <div class="form-group">
-                    <input type="text" 
-                           name="nombre" 
-                           class="form-control" 
-                           placeholder="Nombre del Instituto"
-                           required>
-                </div>
+            <!-- Register Form -->
+            <div id="registerForm" class="auth-form active">
 
-                <div class="form-group">
-                    <input type="email" 
-                           name="email" 
-                           class="form-control" 
-                           placeholder="Email del Instituto"
-                           required>
-                </div>
+                <form method="post" action="{{ path('app_register') }}" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <input type="text" 
+                            name="nombre" 
+                            class="form-control" 
+                            placeholder="Nombre del Instituto"
+                            required>
+                    </div>
 
-                <div class="form-group">
-                    <input type="tel" 
-                           name="tel" 
-                           class="form-control" 
-                           placeholder="Teléfono (opcional)"
-                           maxlength="25">
-                </div>
+                    <div class="form-group">
+                        <input type="email" 
+                            name="email" 
+                            class="form-control" 
+                            placeholder="Email del Instituto"
+                            required>
+                    </div>
 
-                <div class="form-group form-group--ancho">
-                    <textarea name="dir" 
-                              class="form-control" 
-                              rows="2"
-                              placeholder="Dirección (opcional)"></textarea>
-                </div>
+                    <div class="form-group">
+                        <input type="tel" 
+                            name="tel" 
+                            class="form-control" 
+                            placeholder="Teléfono (opcional)"
+                            maxlength="25">
+                    </div>
 
-                <div class="form-group">
-                    <input type="password" 
-                           name="password" 
-                           class="form-control" 
-                           placeholder="Contraseña"
-                           required
-                           minlength="6">
-                    <small style="color: #6c757d; font-size: 0.85rem; display: block; margin-top: 0.25rem;">
-                        Mínimo 6 caracteres
-                    </small>
-                </div>
+                    <div class="form-group form-group--ancho">
+                        <textarea name="dir" 
+                                class="form-control" 
+                                rows="2"
+                                placeholder="Dirección (opcional)"></textarea>
+                    </div>
 
-                <div class="form-group form-group--ancho">
-                    <label style="display: block; margin-bottom: 0.5rem; color: var(--text-color); font-size: 0.9rem;">
-                        Logo del Instituto (opcional)
-                    </label>
-                    <input type="file" 
-                           name="logo" 
-                           class="form-control" 
-                           accept="image/jpeg,image/png">
-                    <small style="color: #6c757d; font-size: 0.85rem; display: block; margin-top: 0.25rem;">
-                        Formatos: JPG, PNG. Máximo 1MB
-                    </small>
-                </div>
+                    <div class="form-group">
+                        <input type="password" 
+                            name="password" 
+                            class="form-control" 
+                            placeholder="Contraseña"
+                            required
+                            minlength="6">
+                        <small style="color: #6c757d; font-size: 0.85rem; display: block; margin-top: 0.25rem;">
+                            Mínimo 6 caracteres
+                        </small>
+                    </div>
 
-                <input type="hidden" name="timezone" id="register_timezone" value="">
+                    <div class="form-group form-group--ancho">
+                        <label style="display: block; margin-bottom: 0.5rem; color: var(--text-color); font-size: 0.9rem;">
+                            Logo del Instituto (opcional)
+                        </label>
+                        <input type="file" 
+                            name="logo" 
+                            class="form-control" 
+                            accept="image/jpeg,image/png">
+                        <small style="color: #6c757d; font-size: 0.85rem; display: block; margin-top: 0.25rem;">
+                            Formatos: JPG, PNG. Máximo 1MB
+                        </small>
+                    </div>
 
-                <input type="hidden" name="_csrf_token" value="{{ csrf_token('register') }}">
+                    <input type="hidden" name="timezone" id="register_timezone" value="">
 
-                <button class="btn btn-primary" type="submit">
-                    Crear Cuenta
-                </button>
-            </form>
-        </div>
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token('register') }}">
+
+                    <button class="btn btn-primary" type="submit">
+                        Crear Cuenta
+                    </button>
+                </form>
+            </div>
+            </div>
         </div>
     </div>
+
+    
+
+    
 </div>
 
 <button type="button" class="back-to-top-btn" id="backToTopButton" aria-label="Volver arriba">
@@ -1512,6 +1548,21 @@
 </button>
 
 <script>
+    // Header fijo: se le agrega la clase al bajar para que el fondo se opaque.
+    (function () {
+        const header = document.querySelector('.landing-header');
+        if (!header) {
+            return;
+        }
+
+        function alScrollear() {
+            header.classList.toggle('esta-fijo', window.scrollY > 40);
+        }
+
+        window.addEventListener('scroll', alScrollear, { passive: true });
+        alScrollear();
+    })();
+
     function scrollToAuthForm(event) {
         if (event) event.preventDefault();
         const card = document.getElementById('auth-form-card');
