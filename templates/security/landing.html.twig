@@ -211,8 +211,11 @@
 
         /* Hero Section */
         .hero-section {
-            text-align: center;
-            padding: 3rem 1.5rem;
+            display: grid;
+            grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.3fr);
+            align-items: center;
+            gap: 2rem;
+            padding: 3rem 2.25rem;
             color: white;
             margin-bottom: 2rem;
             border-radius: 24px;
@@ -220,6 +223,61 @@
             border: 1px solid rgba(255, 255, 255, 0.22);
             box-shadow: 0 18px 45px rgba(0, 0, 0, 0.22);
             backdrop-filter: blur(9px);
+        }
+
+        /* Marco de ventana alrededor de la captura del producto. */
+        .hero-producto {
+            margin-right: -1.25rem;
+        }
+
+        @media (max-width: 900px) {
+            .hero-producto {
+                margin-right: 0;
+            }
+        }
+
+        .hero-producto .ventana {
+            border-radius: 12px;
+            overflow: hidden;
+            background: #fff;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+            border: 1px solid rgba(255, 255, 255, 0.35);
+        }
+
+        .hero-producto .ventana-barra {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.55rem 0.75rem;
+            background: #eef1f5;
+            border-bottom: 1px solid #dfe4ea;
+        }
+
+        .hero-producto .punto {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #c7ced8;
+        }
+
+        .hero-producto img {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+
+        @media (max-width: 900px) {
+            .hero-section {
+                grid-template-columns: 1fr;
+                text-align: center;
+                padding: 2.5rem 1.5rem;
+            }
+
+            /* En pantalla chica la captura no se lee: se muestra debajo y más contenida. */
+            .hero-producto {
+                max-width: 520px;
+                margin: 0 auto;
+            }
         }
 
         .hero-kicker {
@@ -239,30 +297,34 @@
         }
 
         .hero-section h1 {
-            font-size: clamp(2.1rem, 6vw, 4rem);
+            font-size: clamp(2rem, 3.6vw, 3.1rem);
             font-weight: 800;
             margin-bottom: 1rem;
             text-shadow: 0 2px 10px rgba(0,0,0,0.2);
-            line-height: 1.1;
+            line-height: 1.12;
             letter-spacing: -0.02em;
-            max-width: 900px;
-            margin-left: auto;
-            margin-right: auto;
         }
 
         .hero-section p {
             font-size: 1.1rem;
-            margin: 0 auto 2rem;
+            margin: 0 0 2rem;
             opacity: 0.96;
             line-height: 1.6;
-            max-width: 760px;
+            max-width: 46ch;
+        }
+
+        @media (max-width: 900px) {
+            .hero-section p {
+                margin-left: auto;
+                margin-right: auto;
+            }
         }
 
         .login-button-hero {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            min-width: 210px;
+            min-width: 190px;
             height: 50px;
             background: linear-gradient(135deg, var(--primary-legible), var(--primary-dark));
             color: white;
@@ -298,21 +360,28 @@
         .hero-buttons {
             display: flex;
             gap: 1rem;
-            justify-content: center;
+            /* Alineados con el titulo, no centrados: el hero es a dos columnas. */
+            justify-content: flex-start;
             align-items: center;
             flex-wrap: wrap;
             margin-top: 1rem;
+        }
+
+        @media (max-width: 900px) {
+            .hero-buttons {
+                justify-content: center;
+            }
         }
 
         .register-button-hero {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            min-width: 210px;
+            min-width: 190px;
             height: 50px;
             background: rgba(255, 255, 255, 0.08);
             color: white;
-            padding: 0.9rem 2.2rem;
+            padding: 0.9rem 1.8rem;
             border-radius: 50px;
             font-size: 1rem;
             font-weight: 700;
@@ -363,6 +432,8 @@
         /* Features Section */
         .features-section {
             background: white;
+            /* La segunda seccion de este tipo (precios) usa el celeste suave: alternar los
+               fondos le da ritmo a la pagina, que antes eran todas tarjetas blancas iguales. */
             border-radius: 15px;
             padding: 3rem 2rem;
             margin-bottom: 2rem;
@@ -623,16 +694,6 @@
                 padding: 1.25rem;
             }
 
-            .auth-tabs {
-                margin-bottom: 1.5rem;
-            }
-
-            .auth-tab {
-                padding: 0.75rem;
-                font-size: 0.9rem;
-            }
-
-
             .features-section > div[style*="font-size: 3rem"] {
                 font-size: 2rem !important;
             }
@@ -675,47 +736,35 @@
         .auth-section {
             background: white;
             border-radius: 15px;
-            padding: 2rem;
+            padding: 2.25rem;
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            /* Un formulario de seis campos a 1400px de ancho no se lee: se acota y se centra.
+               Antes el ancho lo daban las pestañas de login/registro, que ya no están. */
             width: 100%;
-            margin: 0 auto;
+            max-width: 560px;
+            margin: 0 auto 2rem;
         }
 
-        .auth-tabs {
-            display: flex;
-            border-bottom: 2px solid #e9ecef;
-            margin-bottom: 2rem;
-        }
-
-        .auth-tab {
-            flex: 1;
-            padding: 1rem;
+        .auth-encabezado {
             text-align: center;
-            cursor: pointer;
-            border: none;
-            background: none;
+            margin-bottom: 1.75rem;
+        }
+
+        .auth-encabezado h2 {
+            color: var(--text-color);
+            font-size: 1.6rem;
+            margin-bottom: 0.35rem;
+        }
+
+        .auth-encabezado p {
             color: #6c757d;
+            font-size: 0.95rem;
+            margin: 0;
+        }
+
+        .auth-encabezado a {
+            color: var(--primary-legible);
             font-weight: 600;
-            transition: all 0.3s;
-            position: relative;
-        }
-
-        .auth-tab.active {
-            color: var(--primary-color);
-        }
-
-        .auth-tab.active::after {
-            content: '';
-            position: absolute;
-            bottom: -2px;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: var(--primary-color);
-        }
-
-        .auth-tab:hover {
-            color: var(--primary-color);
         }
 
         .auth-form {
@@ -802,6 +851,47 @@
         }
 
         /* Ventajas Section - Rediseño */
+        .incluido-bloque {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-darker) 100%);
+            border-radius: 15px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .incluido-bloque h3 {
+            color: #fff;
+            text-align: center;
+            font-size: 1.9rem;
+            font-weight: 700;
+            /* Sin la sombra del texto: sobre un fondo saturado dejaba el titulo borroso. */
+            margin-bottom: 1.75rem;
+        }
+
+        .incluido-lista {
+            list-style: none;
+            padding: 0;
+            margin: 0 auto;
+            max-width: 780px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 0.75rem 2rem;
+        }
+
+        .incluido-lista li {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 1.02rem;
+        }
+
+        .incluido-lista i {
+            color: #7dd3a7;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
         .ventajas-section {
             margin-bottom: 2rem;
         }
@@ -997,7 +1087,7 @@
             <a href="#features-section" class="landing-header-link" data-no-loading>Funciones</a>
             <a href="#pricing-section" class="landing-header-link" data-no-loading>Precios</a>
             {% if is_home is not defined or is_home %}
-            <a href="#auth-section" class="landing-header-link landing-header-link--primary" data-no-loading onclick="scrollToAuthForm('login', event)">Comenzar</a>
+            <a href="{{ path('app_login') }}" class="landing-header-link landing-header-link--primary">Comenzar</a>
             {% else %}
             <a href="{{ path('app_start') }}" class="landing-header-link landing-header-link--primary" data-no-loading>Comenzar</a>
             {% endif %}
@@ -1008,19 +1098,34 @@
 
     <!-- Hero Section -->
     <div class="hero-section">
-        <span class="hero-kicker"><i class="bi bi-stars"></i> Plataforma completa en la nube</span>
-        <h1>Gestiona tu instituto con una experiencia moderna y simple</h1>
-        <p>Centraliza alumnos, profesores, asistencia, cursos y pagos en un solo sistema. Menos tareas manuales, más tiempo para crecer.</p>
-        {% if is_home is not defined or is_home %}
-        <div class="hero-buttons">
-            <a href="#auth-section" class="login-button-hero" data-no-loading onclick="scrollToAuthForm('login', event)">
-                <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
-            </a>
-            <a href="#auth-section" class="register-button-hero" data-no-loading onclick="scrollToAuthForm('register', event)">
-                <i class="bi bi-person-plus-fill"></i> Regístrate
-            </a>
+        <div class="hero-texto">
+            <h1>Gestiona tu instituto con una experiencia moderna y simple</h1>
+            <p>Centraliza alumnos, profesores, asistencia, cursos y pagos en un solo sistema. Menos tareas manuales, más tiempo para crecer.</p>
+            {% if is_home is not defined or is_home %}
+            <div class="hero-buttons">
+                <a href="{{ path('app_login') }}" class="login-button-hero">
+                    <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
+                </a>
+                <a href="#auth-section" class="register-button-hero" data-no-loading onclick="scrollToAuthForm(event)">
+                    <i class="bi bi-person-plus-fill"></i> Regístrate
+                </a>
+            </div>
+            {% endif %}
         </div>
-        {% endif %}
+
+        {# Una captura del sistema de verdad: es lo que responde "¿cómo se ve?" sin que haya que
+           registrarse para averiguarlo. El marco imita una ventana para que se lea como producto
+           y no como un dibujo. #}
+        <div class="hero-producto" aria-hidden="true">
+            <div class="ventana">
+                <div class="ventana-barra">
+                    <span class="punto"></span><span class="punto"></span><span class="punto"></span>
+                </div>
+                <img src="{{ asset('assets/landing/producto-agenda.png') }}"
+                     alt="Agenda del instituto: clases, evaluaciones, vencimientos y feriados en un calendario"
+                     loading="lazy">
+            </div>
+        </div>
     </div>
 
     <!-- Features Section -->
@@ -1077,7 +1182,7 @@
         <span>Promoción activa hasta junio 2026</span>
     </div>
     <!-- Pricing Section -->
-    <div class="features-section" id="pricing-section" style="margin-bottom: 2rem;">
+    <div class="features-section" id="pricing-section" style="margin-bottom: 2rem; background: var(--primary-soft);">
         <h2 style="text-align: center; color: var(--text-color); margin-bottom: 1rem;">
             <i class="bi bi-cash-stack" style="color: var(--accent-color); margin-right: 0.5rem;"></i>
             Precio Fijo por Alumno: Simple y Transparente
@@ -1136,34 +1241,20 @@
             </div>
         </div>
 
-        <div style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); border-radius: 15px; padding: 2.5rem; margin-bottom: 2rem; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
-            <h3 style="color: white; margin-bottom: 2rem; font-size: 2rem; text-align: center; font-weight: 700; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">
-                ¿Qué está incluido?
-            </h3>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; font-size: 1rem;">
-                <div style="padding: 1rem; background: rgba(255, 255, 255, 0.95); border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); text-align: center;">
-                    <span style="color: #2c3e50; font-weight: 600;">Registro ilimitado de pagos</span>
-                </div>
-                <div style="padding: 1rem; background: rgba(255, 255, 255, 0.95); border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); text-align: center;">
-                    <span style="color: #2c3e50; font-weight: 600;">Gestión completa de alumnos</span>
-                </div>
-                <div style="padding: 1rem; background: rgba(255, 255, 255, 0.95); border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); text-align: center;">
-                    <span style="color: #2c3e50; font-weight: 600;">Creación ilimitada de cursos</span>
-                </div>
-                <div style="padding: 1rem; background: rgba(255, 255, 255, 0.95); border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); text-align: center;">
-                    <span style="color: #2c3e50; font-weight: 600;">Notificaciones por email</span>
-                </div>
-                <div style="padding: 1rem; background: rgba(255, 255, 255, 0.95); border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); text-align: center;">
-                    <span style="color: #2c3e50; font-weight: 600;">Control de asistencia</span>
-                </div>
-                <div style="padding: 1rem; background: rgba(255, 255, 255, 0.95); border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); text-align: center;">
-                    <span style="color: #2c3e50; font-weight: 600;">Reportes y estadísticas</span>
-                </div>
-            </div>
+        <div class="incluido-bloque">
+            <h3>¿Qué está incluido?</h3>
+            <ul class="incluido-lista">
+                <li><i class="bi bi-check-circle-fill"></i> Registro ilimitado de pagos</li>
+                <li><i class="bi bi-check-circle-fill"></i> Gestión completa de alumn@s</li>
+                <li><i class="bi bi-check-circle-fill"></i> Creación ilimitada de cursos</li>
+                <li><i class="bi bi-check-circle-fill"></i> Notificaciones por email</li>
+                <li><i class="bi bi-check-circle-fill"></i> Control de asistencia</li>
+                <li><i class="bi bi-check-circle-fill"></i> Calificaciones y libretas</li>
+                <li><i class="bi bi-check-circle-fill"></i> Agenda del instituto</li>
+                <li><i class="bi bi-check-circle-fill"></i> Reportes y estadísticas</li>
+            </ul>
         </div>
 
-        <!-- Ventajas - Rediseño con tarjetas -->
-        <div class="ventajas-section">
             <h3 class="ventajas-title">¿Por qué nuestro modelo te conviene?</h3>
             <div class="ventajas-grid">
                 <div class="ventaja-card">
@@ -1200,84 +1291,16 @@
     <!-- Auth Section -->
     <div class="auth-wrapper" id="auth-section">
         <div class="auth-section" id="auth-form-card">
-        <div class="auth-tabs">
-            <button class="auth-tab active" onclick="showTab('login', this)">Iniciar Sesión</button>
-            <button class="auth-tab" onclick="showTab('register', this)">Registrarse</button>
-        </div>
-
-        <!-- Login Form -->
-        <div id="loginForm" class="auth-form active">
-            {% if error %}
-                <div class="alert alert-danger">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
-            {% endif %}
-
-            {% for message in app.flashes('success') %}
-                <div class="alert alert-success">{{ message }}</div>
-            {% endfor %}
-
-            {% for message in app.flashes('error') %}
-                <div class="alert alert-danger">{{ message }}</div>
-            {% endfor %}
-
-            {% if app.user %}
-                <div class="alert alert-info">
-                    Ya estás conectado como {{ app.user.username }}, 
-                    <a href="{{ path('app_logout') }}" class="alert-link">Cerrar sesión</a>
-                </div>
-            {% endif %}
-
-            <form method="post" action="{{ path('app_login') }}">
-                <div class="form-group">
-                    <input type="email" 
-                           value="{{ last_username ?? (app.request.query.get('email') ?: '') }}" 
-                           name="email" 
-                           id="inputEmail" 
-                           class="form-control" 
-                           placeholder="Correo electrónico"
-                           autocomplete="email" 
-                           required 
-                           autofocus>
-                </div>
-
-                <div class="form-group">
-                    <div style="position: relative;">
-                        <input type="password" 
-                               name="password" 
-                               id="inputPassword" 
-                               class="form-control" 
-                               placeholder="Contraseña"
-                               autocomplete="current-password" 
-                               required
-                               style="padding-right: 45px;">
-                        <button type="button" 
-                                id="togglePassword" 
-                                style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #6c757d; cursor: pointer; padding: 5px; font-size: 1.2rem; z-index: 10;"
-                                aria-label="Mostrar/Ocultar contraseña">
-                            <i class="bi bi-eye"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="form-options">
-                    <label style="display: flex; align-items: center; gap: 0.5rem;">
-                        <input type="checkbox" name="_remember_me" style="width: auto;">
-                        <span>Recordarme</span>
-                    </label>
-                    <a href="{{ path('app_reset_password') }}" class="forgot-password">
-                        ¿Olvidaste tu contraseña?
-                    </a>
-                </div>
-
-                <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
-
-                <button class="btn btn-primary" type="submit">
-                    Ingresar
-                </button>
-            </form>
+        <div class="auth-encabezado">
+            <h2>Creá tu instituto</h2>
+            <p>
+                Empezá gratis, sin tarjeta. Si ya tenés cuenta,
+                <a href="{{ path('app_login') }}">iniciá sesión</a>.
+            </p>
         </div>
 
         <!-- Register Form -->
-        <div id="registerForm" class="auth-form">
+        <div id="registerForm" class="auth-form active">
 
             <form method="post" action="{{ path('app_register') }}" enctype="multipart/form-data">
                 <div class="form-group">
@@ -1354,42 +1377,11 @@
 </button>
 
 <script>
-    function showTab(tab, element) {
-        // Ocultar todos los formularios
-        document.querySelectorAll('.auth-form').forEach(form => {
-            form.classList.remove('active');
-        });
-        
-        // Remover active de todos los tabs
-        document.querySelectorAll('.auth-tab').forEach(btn => {
-            btn.classList.remove('active');
-        });
-        
-        // Mostrar el formulario seleccionado
-        document.getElementById(tab + 'Form').classList.add('active');
-        
-        // Activar el tab seleccionado
-        if (element) {
-            element.classList.add('active');
-        }
-    }
-
-    function scrollToAuthForm(tab, event) {
+    function scrollToAuthForm(event) {
         if (event) event.preventDefault();
-        const authFormCard = document.getElementById('auth-form-card');
-        if (authFormCard) {
-            const loginTab = document.querySelector('.auth-tab:first-child');
-            const registerTab = document.querySelector('.auth-tab:last-child');
-            const tabElement = tab === 'register' ? registerTab : loginTab;
-            if (tabElement) {
-                console.log(tabElement);
-                showTab(tab, tabElement);
-            }
-            
-            setTimeout(() => {
-                authFormCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                //window.scrollBy({ top: 500, behavior: 'smooth' });
-            }, 10);
+        const card = document.getElementById('auth-form-card');
+        if (card) {
+            card.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
     }
 
@@ -1453,29 +1445,6 @@
             }, 100);
         {% endif %}
 
-        {% if app.flashes('success') %}
-            const loginTab = document.querySelector('.auth-tab:first-child');
-            if (loginTab) {
-                showTab('login', loginTab);
-                // Solo hacer scroll si NO estamos en la home
-                {% if is_home is not defined or is_home == false %}
-                    setTimeout(() => {
-                        const authSection = document.getElementById('auth-section');
-                        if (authSection) {
-                            authSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                        }
-                    }, 100);
-                {% endif %}
-            }
-        {% endif %}
-        
-        {% if app.flashes('error') and not error %}
-            // Si hay error pero no es de login, mostrar tab de registro
-            const registerTab = document.querySelector('.auth-tab:last-child');
-            if (registerTab) {
-                showTab('register', registerTab);
-            }
-        {% endif %}
     });
 
     // Funcionalidad para mostrar/ocultar contraseña en login
