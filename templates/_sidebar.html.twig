@@ -31,6 +31,11 @@
                         <i class="bi bi-journal-text"></i> Mis Tareas
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a class="list-group-item list-group-item-action bg-light {% if app.request.get('_route') starts with 'app_agenda_alumno' %}active{% endif %}" href="{{ path('app_agenda_alumno_index') }}">
+                        <i class="bi bi-calendar3"></i> Mi Agenda
+                    </a>
+                </li>
             </ul>
         {% endif %}
 
@@ -39,6 +44,11 @@
                 <li class="nav-item">
                     <a class="list-group-item list-group-item-action bg-light {% if app.request.get('_route') == 'app_profesor_dashboard' %}active{% endif %}" href="{{ path('app_profesor_dashboard') }}">
                         <i class="bi bi-bar-chart"></i> Mis Cursos
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="list-group-item list-group-item-action bg-light {% if app.request.get('_route') starts with 'app_agenda_profesor' %}active{% endif %}" href="{{ path('app_agenda_profesor_index') }}">
+                        <i class="bi bi-calendar3"></i> Mi Agenda
                     </a>
                 </li>
                 <li class="nav-item">
@@ -80,13 +90,22 @@
             </ul>
 
             <ul class="nav nav-tabs sidebar-dropdown-ul">
+                <li class="nav-item">
+                    <a class="list-group-item list-group-item-action bg-light {% if app.request.get('_route') starts with 'app_agenda_' %}active{% endif %}" href="{{ path('app_agenda_index') }}">
+                        <i class="bi bi-calendar3"></i> Agenda
+                    </a>
+                </li>
+            </ul>
+
+            <ul class="nav nav-tabs sidebar-dropdown-ul">
                 <li class="nav-item dropdown dropend">
                     <a class="list-group-item list-group-item-action bg-light dropdown-toggle {% if app.request.get('_route') starts with 'app_curso_' %}active{% endif %}" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">
                         <i class="bi bi-book"></i> Cursos
                     </a>
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item {% if app.request.get('_route') == 'app_curso_index' %}active{% endif %}" href="{{ path('app_curso_index') }}">Listado</a></li>
-                        <li><a class="dropdown-item {% if app.request.get('_route') == 'app_curso_calendario' %}active{% endif %}" href="{{ path('app_curso_calendario') }}">Calendario</a></li>
+                        {# El calendario de cursos es la agenda: el mismo contenido y además todo lo demás. #}
+                        <li><a class="dropdown-item" href="{{ path('app_agenda_index') }}">Calendario</a></li>
                     </ul>
                 </li>
             </ul>

@@ -1,0 +1,141 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ esNuevo ? 'Nuevo evento' : 'Editar evento' }}{% endblock %}
+
+{% block panelTitle %}{{ esNuevo ? 'Nuevo evento de agenda' : 'Editar evento de agenda' }}{% endblock %}
+
+{% block body %}
+<div class="container-fluid px-4 mt-3" style="padding-bottom: 3rem;">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ path('app_agenda_index') }}">Agenda</a></li>
+            <li class="breadcrumb-item"><a href="{{ path('app_agenda_eventos_listado') }}">Eventos cargados</a></li>
+            <li class="breadcrumb-item active">{{ esNuevo ? 'Nuevo' : evento.titulo }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <form method="post">
+                <input type="hidden" name="_token" value="{{ csrf_token('evento_agenda') }}">
+
+                <div class="card">
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="titulo" class="form-label fw-semibold">Título <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="titulo" name="titulo" maxlength="150" required
+                                   value="{{ evento.titulo }}" placeholder="Ej: Feriado — Día de la Independencia">
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="tipo" class="form-label fw-semibold">Tipo</label>
+                                <select class="form-select" id="tipo" name="tipo">
+                                    {% for valor, datos in tipos %}
+                                        <option value="{{ valor }}" {% if evento.tipo == valor %}selected{% endif %}>
+                                            {{ datos.etiqueta }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="form-text">
+                                    <strong>Feriado o receso</strong> además tapa las clases de esos días en la agenda.
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="visibilidad" class="form-label fw-semibold">Quién lo ve</label>
+                                <select class="form-select" id="visibilidad" name="visibilidad">
+                                    {% for valor, etiqueta in visibilidades %}
+                                        <option value="{{ valor }}" {% if evento.visibilidad == valor %}selected{% endif %}>
+                                            {{ etiqueta }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="form-text">La administración lo ve siempre.</div>
+                            </div>
+                        </div>
+
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" name="con_horario" id="con_horario"
+                                   value="1" {% if not evento.todoElDia %}checked{% endif %}>
+                            <label class="form-check-label" for="con_horario">Tiene horario (si no, es de todo el día)</label>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="fecha_inicio" class="form-label fw-semibold">Desde <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="fecha_inicio" name="fecha_inicio" required
+                                       value="{{ evento.fechaInicio ? evento.fechaInicio|date('Y-m-d') : '' }}">
+                            </div>
+                            <div class="col-md-6 mb-3 campo-hora">
+                                <label for="hora_inicio" class="form-label fw-semibold">Hora de inicio</label>
+                                <input type="time" class="form-control" id="hora_inicio" name="hora_inicio"
+                                       value="{{ evento.fechaInicio and not evento.todoElDia ? evento.fechaInicio|date('H:i') : '' }}">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="fecha_fin" class="form-label fw-semibold">Hasta</label>
+                                <input type="date" class="form-control" id="fecha_fin" name="fecha_fin"
+                                       value="{{ evento.fechaFin ? evento.fechaFin|date('Y-m-d') : '' }}">
+                                <div class="form-text">Dejalo vacío si es de un solo día.</div>
+                            </div>
+                            <div class="col-md-6 mb-3 campo-hora">
+                                <label for="hora_fin" class="form-label fw-semibold">Hora de fin</label>
+                                <input type="time" class="form-control" id="hora_fin" name="hora_fin"
+                                       value="{{ evento.fechaFin and not evento.todoElDia ? evento.fechaFin|date('H:i') : '' }}">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="curso" class="form-label fw-semibold">Curso</label>
+                            <select class="form-select" id="curso" name="curso">
+                                <option value="">Todo el instituto</option>
+                                {% for curso in cursos %}
+                                    <option value="{{ curso.id }}"
+                                        {% if evento.curso and evento.curso.id == curso.id %}selected{% endif %}>
+                                        {{ curso.nombre }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">
+                                Si lo asociás a un curso, solo lo ven quienes cursan o dictan ese curso.
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="descripcion" class="form-label fw-semibold">Descripción</label>
+                            <textarea class="form-control" id="descripcion" name="descripcion" rows="4">{{ evento.descripcion }}</textarea>
+                        </div>
+                    </div>
+
+                    <div class="card-footer d-flex justify-content-between">
+                        <a href="{{ path('app_agenda_eventos_listado') }}" class="btn btn-secondary">← Volver</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> {{ esNuevo ? 'Agregar a la agenda' : 'Guardar cambios' }}
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Los campos de hora solo tienen sentido si el evento tiene horario.
+(function () {
+    const conHorario = document.getElementById('con_horario');
+    const campos = document.querySelectorAll('.campo-hora');
+
+    function aplicar() {
+        campos.forEach(function (campo) {
+            campo.style.display = conHorario.checked ? '' : 'none';
+        });
+    }
+
+    conHorario.addEventListener('change', aplicar);
+    aplicar();
+})();
+</script>
+{% endblock %}

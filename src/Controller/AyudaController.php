@@ -40,6 +40,12 @@ class AyudaController extends AbstractController
             'resumen' => 'Datos del instituto, vencimientos e intereses, descuentos, métodos de pago y criterios de aprobación.',
             'roles' => ['ROLE_ADMIN_INSTITUTO'],
         ],
+        'agenda' => [
+            'titulo' => 'Agenda',
+            'icono' => 'bi-calendar3',
+            'resumen' => 'El calendario con las clases, las evaluaciones, las entregas, los vencimientos y los eventos del instituto.',
+            'roles' => ['ROLE_ADMIN_INSTITUTO', 'ROLE_PROFESOR', 'ROLE_ALUMNO'],
+        ],
         'cursos' => [
             'titulo' => 'Cursos',
             'icono' => 'bi-journal-bookmark',

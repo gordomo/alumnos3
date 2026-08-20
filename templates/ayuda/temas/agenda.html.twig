@@ -1,0 +1,128 @@
+{% extends 'ayuda/_tema.html.twig' %}
+{% import 'ayuda/_macros.html.twig' as m %}
+
+{% block contenido %}
+{% set esAdmin = is_granted('ROLE_ADMIN_INSTITUTO') %}
+{% set esAlumno = is_granted('ROLE_ALUMNO') and not esAdmin %}
+
+<p>
+    La agenda junta en un calendario todas las fechas que importan: las clases, las evaluaciones,
+    las entregas de tareas{% if not esAlumno and esAdmin %}, los vencimientos de las cuotas{% elseif esAlumno %}, cuándo te vence la cuota{% endif %}
+    y los eventos que carga el instituto.
+</p>
+
+<p>
+    Se entra por {{ m.ruta([esAdmin ? 'Agenda' : 'Mi Agenda']) }} en el menú.
+    {% if not esAdmin %}Ves solo lo que te corresponde a vos.{% endif %}
+</p>
+
+{{ m.captura('agenda-mes.png', 'La agenda del mes, con las fuentes arriba') }}
+
+<h2>Los filtros de arriba</h2>
+
+<p>
+    Cada tilde prende o apaga una fuente, y el color del cuadradito es el que después tiene el
+    evento en el calendario. Se pueden apagar las clases para ver solo lo importante del mes, por
+    ejemplo.
+</p>
+
+<p>
+    Arriba a la derecha se cambia entre <strong>Mes</strong>, <strong>Semana</strong> y
+    <strong>Lista</strong>. La vista de lista es la más cómoda para leer qué se viene sin ir
+    día por día.
+</p>
+
+<p>Clic en cualquier evento abre el detalle: de qué es, de qué curso, y la información que tenga.</p>
+
+<h2>De dónde sale cada cosa</h2>
+
+<ul>
+    <li>
+        <strong>Clases</strong>: de los horarios del curso, entre su fecha de inicio y la de fin.
+        Cada día se dibuja en <em>su</em> horario, así que un curso que tiene lunes a la tarde y
+        jueves a la mañana se ve como es.
+    </li>
+    <li><strong>Evaluaciones</strong>: de la fecha de cada evaluación cargada.</li>
+    <li>
+        <strong>Entregas de tareas</strong>: de la fecha de entrega. La tarea que no tiene plazo
+        no aparece, porque no hay día donde ponerla.
+    </li>
+    {% if esAdmin %}
+        <li>
+            <strong>Vencimientos</strong>: de los días de vencimiento configurados, con el
+            recargo que se aplica después de cada uno.
+        </li>
+    {% elseif esAlumno %}
+        <li>
+            <strong>Vencimientos</strong>: los meses en los que <strong>todavía debés</strong> la
+            cuota, el día que vence y el recargo que se te aplica si pagás después. El mes que ya
+            pagaste no aparece.
+        </li>
+    {% endif %}
+    <li><strong>Eventos del instituto</strong>: lo que se carga a mano, que es lo único que se escribe acá.</li>
+</ul>
+
+{{ m.nota('info', 'No se carga nada dos veces',
+   'Todo lo anterior sale de lo que ya está en el sistema. Si cambiás el horario de un curso o la
+    fecha de una tarea, la agenda lo refleja sin tocar nada más.') }}
+
+{% if esAdmin %}
+<h2>Cargar un evento</h2>
+
+<p>
+    Es para lo que no vive en ninguna otra pantalla: un feriado, el acto de fin de año, una
+    reunión de padres, una mesa de examen.
+</p>
+
+<ol>
+    <li>{{ m.ruta(['Agenda', 'Nuevo evento']) }}.</li>
+    <li><strong>Título</strong>: lo que se va a leer en el calendario.</li>
+    <li>
+        <strong>Tipo</strong>. Define el color y, en el caso de <strong>Feriado o receso</strong>,
+        además tapa las clases de esos días.
+    </li>
+    <li>
+        <strong>Quién lo ve</strong>: todos, solo profesores, solo alumn@s, o solo administración.
+        La administración lo ve siempre.
+    </li>
+    <li>
+        <strong>Desde</strong> y, si dura varios días, <strong>hasta</strong>. Si además tiene
+        hora, prendé <em>tiene horario</em>.
+    </li>
+    <li>
+        <strong>Curso</strong>, opcional. Asociarlo a un curso hace que solo lo vean quienes
+        cursan o dictan ese curso: sirve para la mesa de examen de una materia.
+    </li>
+</ol>
+
+{{ m.captura('agenda-eventos.png', 'Los eventos cargados, con su tipo y quién los ve') }}
+
+<h3>El feriado tapa la clase</h3>
+
+<p>
+    Un día marcado como feriado o receso deja la clase en el calendario pero apagada y con el
+    título <strong>(sin clase)</strong>. Se hace así a propósito y no escondiéndola: el día
+    aparece igual, con el motivo, y se entiende por qué no hay asistencia tomada.
+</p>
+
+<p>
+    Un receso se carga como un solo evento con fecha de inicio y de fin, y tapa todas las clases
+    de esos días.
+</p>
+
+{{ m.nota('info', 'Desde y hasta',
+   'Un evento de un solo día se carga sin fecha de fin. La fecha de fin es para los rangos, como
+    el receso de invierno.') }}
+
+<p>
+    Los eventos cargados se editan y se borran desde
+    {{ m.ruta(['Agenda', 'Eventos cargados']) }}.
+</p>
+{% endif %}
+
+{% if esAlumno %}
+{{ m.nota('info', 'Solo lo tuyo',
+   'La agenda muestra las clases de los cursos en los que estás inscript@ hoy, tus evaluaciones y
+    tus entregas. No ves los cursos de otros ni la información de otros alumn@s.') }}
+{% endif %}
+{% endblock %}

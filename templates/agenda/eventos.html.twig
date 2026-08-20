@@ -1,0 +1,93 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Eventos de la agenda{% endblock %}
+
+{% block panelTitle %}Eventos de la agenda{% endblock %}
+
+{% block body %}
+<div class="container-fluid px-4 mt-3" style="padding-bottom: 3rem;">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ path('app_agenda_index') }}">Agenda</a></li>
+            <li class="breadcrumb-item active">Eventos cargados</li>
+        </ol>
+    </nav>
+
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <strong>Eventos que cargó el instituto</strong>
+            <a href="{{ path('app_agenda_evento_nuevo') }}" class="btn btn-sm btn-primary">
+                <i class="bi bi-plus-circle"></i> Nuevo evento
+            </a>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Cuándo</th>
+                        <th>Evento</th>
+                        <th>Tipo</th>
+                        <th>Quién lo ve</th>
+                        <th class="text-end">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for evento in eventos %}
+                    {% set pasado = evento.fechaFinEfectiva < hoy %}
+                    <tr {% if pasado %}class="text-muted"{% endif %}>
+                        <td class="text-nowrap">
+                            {{ evento.fechaInicio|date('d/m/Y') }}
+                            {% if not evento.todoElDia %}
+                                <span class="small">{{ evento.fechaInicio|date('H:i') }}</span>
+                            {% endif %}
+                            {% if evento.fechaFin and evento.fechaFin|date('Y-m-d') != evento.fechaInicio|date('Y-m-d') %}
+                                <div class="small">al {{ evento.fechaFin|date('d/m/Y') }}</div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <strong>{{ evento.titulo }}</strong>
+                            {% if evento.curso %}
+                                <span class="badge bg-light text-dark">{{ evento.curso.nombre }}</span>
+                            {% endif %}
+                            {% if evento.descripcion %}
+                                <div class="small text-muted">{{ evento.descripcion|slice(0, 90) }}{% if evento.descripcion|length > 90 %}…{% endif %}</div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge" style="background: {{ evento.tipoColor }}">
+                                <i class="bi {{ evento.tipoIcono }}"></i> {{ evento.tipoEtiqueta }}
+                            </span>
+                        </td>
+                        <td class="small">{{ evento.visibilidadEtiqueta }}</td>
+                        <td class="text-end text-nowrap">
+                            <a href="{{ path('app_agenda_evento_editar', {'id': evento.id}) }}"
+                               class="btn btn-sm btn-outline-secondary" title="Editar">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <form method="post" action="{{ path('app_agenda_evento_eliminar', {'id': evento.id}) }}"
+                                  style="display: inline;"
+                                  onsubmit="return confirm('¿Eliminar «{{ evento.titulo|e('js') }}» de la agenda?');">
+                                <input type="hidden" name="_token" value="{{ csrf_token('eliminar_evento_' ~ evento.id) }}">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center py-4 text-muted">
+                            <i class="bi bi-calendar-plus" style="font-size: 1.8rem;"></i>
+                            <p class="mt-2 mb-0">
+                                Todavía no cargaste ningún evento. Los feriados, actos y reuniones se cargan acá.
+                            </p>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

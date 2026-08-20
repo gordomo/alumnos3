@@ -61,6 +61,35 @@ class TareaRepository extends ServiceEntityRepository
     }
 
     /**
+     * Tareas de un conjunto de cursos con fecha de entrega dentro de un rango, para la agenda.
+     *
+     * Solo las que tienen plazo: una tarea sin fecha de entrega no es un compromiso con fecha y
+     * no tiene dónde ubicarse en el calendario.
+     *
+     * @param Curso[] $cursos
+     * @return Tarea[]
+     */
+    public function findConEntregaEnRango(array $cursos, \DateTimeInterface $desde, \DateTimeInterface $hasta): array
+    {
+        if (!$cursos) {
+            return [];
+        }
+
+        return $this->createQueryBuilder('t')
+            ->innerJoin('t.curso', 'c')->addSelect('c')
+            ->andWhere('t.curso IN (:cursos)')
+            ->andWhere('t.fechaEntrega IS NOT NULL')
+            ->andWhere('t.fechaEntrega >= :desde')
+            ->andWhere('t.fechaEntrega <= :hasta')
+            ->setParameter('cursos', $cursos)
+            ->setParameter('desde', $desde)
+            ->setParameter('hasta', $hasta)
+            ->orderBy('t.fechaEntrega', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
      * Cuántas tareas tiene cada curso del instituto, para el listado.
      *
      * @return array<int, int> cantidad por id de curso

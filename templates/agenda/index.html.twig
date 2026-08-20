@@ -1,0 +1,167 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Agenda{% endblock %}
+
+{% block panelTitle %}Agenda{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet" />
+    <style>
+        .agenda-filtros .form-check { margin-right: 1.25rem; }
+        .agenda-color {
+            display: inline-block; width: .75rem; height: .75rem;
+            border-radius: 2px; margin-right: .35rem; vertical-align: middle;
+        }
+        #calendario { background: #fff; padding: 1rem; border-radius: 14px; }
+        .fc-event { cursor: pointer; }
+    </style>
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid px-4 mt-3" style="padding-bottom: 3rem;">
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                <div class="agenda-filtros d-flex flex-wrap align-items-center">
+                    {% for clave in fuentes %}
+                        {% set fuente = catalogoFuentes[clave] %}
+                        <div class="form-check">
+                            <input class="form-check-input filtro-fuente" type="checkbox" value="{{ clave }}"
+                                   id="fuente_{{ clave }}" checked>
+                            <label class="form-check-label" for="fuente_{{ clave }}">
+                                <span class="agenda-color" style="background: {{ fuente.color }}"></span>
+                                <i class="bi {{ fuente.icono }}"></i> {{ fuente.etiqueta }}
+                            </label>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                {% if puedeCargarEventos %}
+                    <div class="d-flex gap-2">
+                        <a href="{{ path('app_agenda_eventos_listado') }}" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-list-ul"></i> Eventos cargados
+                        </a>
+                        <a href="{{ path('app_agenda_evento_nuevo') }}" class="btn btn-sm btn-primary">
+                            <i class="bi bi-plus-circle"></i> Nuevo evento
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div id="calendario"></div>
+</div>
+
+<div class="modal fade" id="modalEvento" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalEventoTitulo">Evento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-1"><strong>Cuándo:</strong> <span id="modalEventoCuando">-</span></p>
+                <p class="mb-1"><strong>Qué es:</strong> <span id="modalEventoFuente">-</span></p>
+                <p class="mb-1" id="modalEventoCursoFila"><strong>Curso:</strong> <span id="modalEventoCurso">-</span></p>
+                <p class="mb-0" id="modalEventoDetalleFila"><span id="modalEventoDetalle"></span></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/es.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const etiquetas = {{ catalogoFuentes|json_encode|raw }};
+        const urlEventos = '{{ path(rutas.eventos) }}';
+        const modal = new bootstrap.Modal(document.getElementById('modalEvento'));
+
+        function fuentesElegidas() {
+            return Array.from(document.querySelectorAll('.filtro-fuente:checked')).map(c => c.value);
+        }
+
+        const calendario = new FullCalendar.Calendar(document.getElementById('calendario'), {
+            locale: 'es',
+            initialView: 'dayGridMonth',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,listMonth'
+            },
+            buttonText: { today: 'Hoy', month: 'Mes', week: 'Semana', list: 'Lista' },
+            height: 'auto',
+            // Sin esto la vista de mes muestra "8" en lugar de "08:00".
+            eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
+            // Un día con muchas clases se colapsa en "+N más" en lugar de estirar la fila.
+            dayMaxEvents: 4,
+            moreLinkText: function (cantidad) { return '+' + cantidad + ' más'; },
+            allDaySlot: true,
+            nowIndicator: true,
+            // Se le piden al servidor solo los eventos del rango visible, con las fuentes
+            // que estén tildadas: cambiar de mes no trae el año entero.
+            events: function (info, exito, error) {
+                const params = new URLSearchParams({
+                    start: info.startStr,
+                    end: info.endStr
+                });
+                fuentesElegidas().forEach(f => params.append('fuentes[]', f));
+
+                fetch(urlEventos + '?' + params.toString(), { headers: { 'Accept': 'application/json' } })
+                    .then(r => r.ok ? r.json() : Promise.reject(r.status))
+                    .then(exito)
+                    .catch(error);
+            },
+            eventClick: function (info) {
+                if (typeof hideLoading === 'function') { hideLoading(); }
+                info.jsEvent.preventDefault();
+
+                const props = info.event.extendedProps || {};
+                const fuente = etiquetas[props.fuente];
+
+                document.getElementById('modalEventoTitulo').textContent = info.event.title;
+                document.getElementById('modalEventoCuando').textContent = info.event.start
+                    ? info.event.start.toLocaleString('es-AR', {
+                        weekday: 'long', day: 'numeric', month: 'long',
+                        hour: info.event.allDay ? undefined : '2-digit',
+                        minute: info.event.allDay ? undefined : '2-digit'
+                      })
+                    : '-';
+                document.getElementById('modalEventoFuente').textContent = props.tipo || (fuente ? fuente.etiqueta : '-');
+
+                const filaCurso = document.getElementById('modalEventoCursoFila');
+                if (props.curso) {
+                    document.getElementById('modalEventoCurso').textContent = props.curso;
+                    filaCurso.style.display = '';
+                } else {
+                    filaCurso.style.display = 'none';
+                }
+
+                const filaDetalle = document.getElementById('modalEventoDetalleFila');
+                if (props.detalle) {
+                    document.getElementById('modalEventoDetalle').textContent = props.detalle;
+                    filaDetalle.style.display = '';
+                } else {
+                    filaDetalle.style.display = 'none';
+                }
+
+                modal.show();
+            }
+        });
+
+        calendario.render();
+
+        document.querySelectorAll('.filtro-fuente').forEach(function (check) {
+            check.addEventListener('change', function () { calendario.refetchEvents(); });
+        });
+    });
+    </script>
+{% endblock %}

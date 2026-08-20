@@ -83,6 +83,32 @@ class EvaluacionRepository extends ServiceEntityRepository
      *
      * @return Evaluacion[]
      */
+    /**
+     * Evaluaciones de un conjunto de cursos que caen en un rango de fechas, para la agenda.
+     *
+     * @param Curso[] $cursos
+     * @return Evaluacion[]
+     */
+    public function findEnRangoPorCursos(array $cursos, \DateTimeInterface $desde, \DateTimeInterface $hasta): array
+    {
+        if (!$cursos) {
+            return [];
+        }
+
+        return $this->createQueryBuilder('e')
+            ->innerJoin('e.curso', 'c')->addSelect('c')
+            ->leftJoin('e.area', 'a')->addSelect('a')
+            ->andWhere('e.curso IN (:cursos)')
+            ->andWhere('e.fecha >= :desde')
+            ->andWhere('e.fecha <= :hasta')
+            ->setParameter('cursos', $cursos)
+            ->setParameter('desde', $desde)
+            ->setParameter('hasta', $hasta)
+            ->orderBy('e.fecha', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
     public function findByInstituto(Instituto $instituto): array
     {
         return $this->createQueryBuilder('e')

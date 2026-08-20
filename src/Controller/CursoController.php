@@ -275,90 +275,22 @@ class CursoController extends AbstractController
     }
 
     /**
+     * El calendario de cursos ahora es la agenda.
+     *
+     * La pantalla vieja armaba los eventos con los campos legacy del curso (un único horario de
+     * inicio y fin para todos sus días), así que un curso con lunes a la tarde y jueves a la
+     * mañana se dibujaba todo a la misma hora. La agenda lo arma horario por horario, y además
+     * muestra evaluaciones, entregas, vencimientos y los eventos del instituto.
+     *
+     * La ruta se mantiene para que los enlaces y favoritos viejos sigan funcionando.
+     *
      * @Route("/calendario", name="app_curso_calendario", methods={"GET"})
      */
-    public function calendario(CursoRepository $cursoRepository): Response
+    public function calendario(): Response
     {
-        $instituto = $this->getUser()->getInstituto();
-        $cursos = $cursoRepository->findBy(['instituto' => $instituto]);
-        $eventos = [];
-        $cursosSinHorario = [];
-
-        foreach ($cursos as $curso) {
-            if (!$curso->getHorarioInicio() || !$curso->getHorarioFin() || !$curso->getFechaInicio() || !$curso->getFechaFin()) {
-                $cursosSinHorario[] = $curso;
-                continue;
-            }
-
-            try {
-                $fechaInicio = $curso->getFechaInicio();
-                $fechaFin = $curso->getFechaFin();
-                $horaInicio = $curso->getHorarioInicio();
-                $horaFin = $curso->getHorarioFin();
-                $dias = $curso->getDias();
-
-                // Crear un array de días de la semana (0 = Domingo, 1 = Lunes, etc.)
-                $diasSemana = [
-                    'Domingo' => 0,
-                    'Lunes' => 1,
-                    'Martes' => 2,
-                    'Miercoles' => 3,
-                    'Jueves' => 4,
-                    'Viernes' => 5,
-                    'Sabado' => 6
-                ];
-
-                // Convertir los días seleccionados a números
-                $diasSeleccionados = array_map(function($dia) use ($diasSemana) {
-                    return $diasSemana[$dia];
-                }, $dias);
-
-                // Generar eventos para cada día seleccionado en el rango de fechas
-                $fechaActual = clone $fechaInicio;
-                while ($fechaActual <= $fechaFin) {
-                    $diaSemana = (int)$fechaActual->format('w');
-                    
-                    if (in_array($diaSemana, $diasSeleccionados)) {
-                        // Construir string de profesores para el calendario
-                        $profesores = $curso->getProfesores();
-                        $profesorStr = '';
-                        if ($profesores->count() > 0) {
-                            $primerProfesor = $profesores->first();
-                            $profesorStr = $primerProfesor->getNombre() . ' ' . $primerProfesor->getApellido();
-                            if ($profesores->count() > 1) {
-                                $profesorStr .= ' (+' . ($profesores->count() - 1) . ' más)';
-                            }
-                        } else {
-                            $profesorStr = 'Sin profesor';
-                        }
-                        
-                        $evento = [
-                            'title' => $curso->getNombre(),
-                            'start' => $fechaActual->format('Y-m-d') . 'T' . $horaInicio->format('H:i:s'),
-                            'end' => $fechaActual->format('Y-m-d') . 'T' . $horaFin->format('H:i:s'),
-                            'extendedProps' => [
-                                'profesor' => $profesorStr,
-                                'profesores' => $profesores->map(function($p) { return $p->getNombre() . ' ' . $p->getApellido(); })->toArray(), // Lista completa para el tooltip
-                                'duracion' => $curso->getDuracion(),
-                                'precio' => $curso->getPrecio()
-                            ]
-                        ];
-                        $eventos[] = $evento;
-                    }
-                    
-                    $fechaActual->modify('+1 day');
-                }
-            } catch (\Exception $e) {
-                // Si hay algún error al procesar el curso, lo agregamos a la lista de cursos sin horario
-                $cursosSinHorario[] = $curso;
-            }
-        }
-
-        return $this->render('curso/calendario.html.twig', [
-            'eventos' => json_encode($eventos),
-            'cursosSinHorario' => $cursosSinHorario
-        ]);
+        return $this->redirectToRoute('app_agenda_index');
     }
+
 
     /**
      * @Route("/{id}", name="app_curso_show", methods={"GET"})
