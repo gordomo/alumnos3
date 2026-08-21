@@ -17,7 +17,7 @@
 
 html, body {
     /* El mismo degradé azul del fondo de la landing, sin animación: acá no hace falta. */
-    background: linear-gradient(160deg, #071c3f 0%, #123a7a 45%, #1b5fc4 100%);
+    background: linear-gradient(160deg, #071c3f 0%, #123a7a 45%, #1b5fc4 100%) !important;
     min-height: 100%;
     margin: 0;
 }
