@@ -32,113 +32,111 @@
 
 <!-- Modal de advertencia de eliminación -->
 {% if deleteWarning is defined and deleteWarning %}
+{% set sePuedeEliminar = deleteWarning.sePuedeEliminar is defined ? deleteWarning.sePuedeEliminar : true %}
+
+{# Singular y plural: "1 inscripciones" se lee mal. #}
+{% set etiquetas = {
+    'inscripciones': ['inscripción', 'inscripciones'],
+    'asistencias': ['asistencia', 'asistencias'],
+    'calificaciones': ['nota', 'notas'],
+    'deudas': ['cuota', 'cuotas'],
+    'pagos': ['pago', 'pagos'],
+    'saldosFavor': ['saldo a favor', 'saldos a favor'],
+    'emails': ['email enviado', 'emails enviados']
+} %}
+
+{# Un renglón con lo que tiene cargado, en lugar de una tabla de siete filas: para decidir
+   alcanza con saber que hay datos y cuántos. #}
+{% set detalle = [] %}
+{% for clave, formas in etiquetas %}
+    {% set cantidad = deleteWarning.resumen[clave]|default(0) %}
+    {% if cantidad > 0 %}
+        {% set detalle = detalle|merge([cantidad ~ ' ' ~ (cantidad == 1 ? formas[0] : formas[1])]) %}
+    {% endif %}
+{% endfor %}
+
+{# modal-dialog-scrollable: el cuerpo scrollea solo y el pie con los botones queda siempre a
+   la vista. Sin eso, y con el modal-body que faltaba, el panel crecía más alto que la pantalla
+   y los botones quedaban fuera. #}
 <div class="modal fade show" id="deleteWarningModal" tabindex="-1" aria-labelledby="deleteWarningModalLabel" aria-hidden="false" style="display: block;">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
-            <div class="modal-header bg-warning text-dark">
+            <div class="modal-header {{ sePuedeEliminar ? 'bg-danger text-white' : 'bg-warning text-dark' }}">
                 <h5 class="modal-title" id="deleteWarningModalLabel">
-                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                    Advertencia: El alumno tiene relaciones activas
+                    {% if sePuedeEliminar %}
+                        <i class="bi bi-trash me-2"></i>¿Borrar a {{ alumno.nombreApellido }}?
+                    {% else %}
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>No se puede borrar a {{ alumno.nombreApellido }}
+                    {% endif %}
                 </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" onclick="window.location.reload();"></button>
+                <button type="button" class="btn-close {{ sePuedeEliminar ? 'btn-close-white' : '' }}"
+                        aria-label="Cerrar" onclick="window.location.reload();"></button>
             </div>
-                <div class="alert alert-warning">
-                    <strong>El alumno <em>{{ alumno.nombreApellido }}</em> tiene información asociada.</strong>
-                    Si confirmás, se borra todo junto con el alumno y no se puede recuperar.
-                </div>
 
-                {% if deleteWarning.cursos|length > 0 %}
-                    <div class="mb-3">
-                        <h6><i class="bi bi-book me-2"></i>Cursos en los que está inscripto</h6>
-                        {% for curso in deleteWarning.cursos %}
-                            <span class="badge bg-secondary">{{ curso }}</span>
-                        {% endfor %}
-                    </div>
-                {% endif %}
-
-                {% set etiquetas = {
-                    'inscripciones': 'Inscripciones (historial de cursos)',
-                    'asistencias': 'Registros de asistencia',
-                    'calificaciones': 'Notas cargadas',
-                    'deudas': 'Cuotas registradas',
-                    'pagos': 'Pagos registrados',
-                    'saldosFavor': 'Saldos a favor',
-                    'emails': 'Emails enviados (recibos, recordatorios, boletines)'
-                } %}
-
-                <div class="table-responsive mb-3">
-                    <table class="table table-sm table-bordered mb-0">
-                        <thead class="table-warning">
-                            <tr>
-                                <th>Se va a borrar</th>
-                                <th class="text-end" style="width: 120px;">Cantidad</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for clave, etiqueta in etiquetas %}
-                                {% set cantidad = deleteWarning.resumen[clave]|default(0) %}
-                                {% if cantidad > 0 %}
-                                    <tr>
-                                        <td>{{ etiqueta }}</td>
-                                        <td class="text-end"><strong>{{ cantidad }}</strong></td>
-                                    </tr>
-                                {% endif %}
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-
-                {% set sePuedeEliminar = deleteWarning.sePuedeEliminar is defined ? deleteWarning.sePuedeEliminar : true %}
-                {% if not sePuedeEliminar %}
-                    <div class="alert alert-danger">
-                        <i class="bi bi-exclamation-octagon-fill me-2"></i>
-                        <strong>Este alumno no se puede borrar.</strong>
-                        Tiene <strong>{{ deleteWarning.resumen.pagos }}</strong> pago(s) registrado(s), y borrarlo
-                        cambiaría hacia atrás lo cobrado en meses que ya cerraste.
-                    </div>
-                    <div class="alert alert-info mb-0">
-                        <strong><i class="bi bi-box-arrow-right me-2"></i>La alternativa: darlo de baja.</strong>
-                        <ul class="mb-2 mt-2">
-                            <li>Se lo da de baja de todos sus cursos, con la fecha de hoy.</li>
-                            <li>Deja de generársele deuda nueva.</li>
-                            <li>No recibe más recordatorios ni cuota de inscripción.</li>
-                            <li>Sale de los listados y del dashboard.</li>
-                            <li>Se conserva todo: pagos, notas, asistencias y su historial de cursos.</li>
-                        </ul>
-                        Si tiene deuda pendiente, se le puede seguir cobrando desde Pagos. Y si vuelve,
-                        lo reactivás y lo reinscribís sin perder nada.
-                    </div>
-                {% endif %}
-
+            <div class="modal-body">
                 {% if sePuedeEliminar %}
-                    <div class="alert alert-danger">
-                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                        <strong>¿Seguro que querés eliminar este alumno?</strong><br>
-                        Se borra todo lo listado arriba y no se puede recuperar. Si en realidad se fue del
-                        instituto, conviene darlo de baja en lugar de borrarlo.
+                    <p class="mb-2">
+                        Se borra junto con el alumno y <strong>no se puede recuperar</strong>.
+                    </p>
+                    {% if detalle is not empty %}
+                        <p class="mb-3">Tiene cargado: {{ detalle|join(' · ') }}.</p>
+                    {% endif %}
+                    <p class="small text-muted mb-0">
+                        Si se fue del instituto, conviene <strong>darlo de baja</strong>: sale de los
+                        listados igual, pero se conserva su historial.
+                    </p>
+                {% else %}
+                    <p class="mb-3">
+                        {% set pagos = deleteWarning.resumen.pagos %}
+                        Tiene <strong>{{ pagos }} {{ pagos == 1 ? 'pago registrado' : 'pagos registrados' }}</strong>.
+                        Borrarlo cambiaría hacia atrás lo cobrado en meses que ya cerraste.
+                    </p>
+
+                    <div class="alert alert-info mb-3">
+                        <strong>Dale de baja en su lugar.</strong>
+                        Sale de los listados y del dashboard, deja de generársele deuda y no recibe más
+                        recordatorios. Se conserva todo: pagos, notas, asistencias e historial. Si tiene
+                        deuda, se le sigue cobrando desde Pagos, y si vuelve lo reactivás sin perder nada.
                     </div>
+
+                    {% if deleteWarning.cursos|length > 0 %}
+                        <p class="small mb-1">
+                            Se le da de baja de:
+                            {% for curso in deleteWarning.cursos %}
+                                <span class="badge bg-secondary">{{ curso }}</span>
+                            {% endfor %}
+                        </p>
+                    {% endif %}
+
+                    {% if detalle is not empty %}
+                        <p class="small text-muted mb-0">Se conserva: {{ detalle|join(' · ') }}.</p>
+                    {% endif %}
                 {% endif %}
             </div>
+
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="window.location.reload();">
-                    <i class="bi bi-x-circle"></i> Cancelar
+                <button type="button" class="btn btn-secondary" onclick="window.location.reload();">
+                    Cancelar
                 </button>
+
+                <form method="post" action="{{ path('app_alumno_desactivar', {'id': alumno.id}) }}" style="display: inline;">
+                    <input type="hidden" name="_token" value="{{ csrf_token('desactivar' ~ alumno.id) }}">
+                    <input type="hidden" name="motivo" value="Baja administrativa">
+                    <button type="submit" class="btn {{ sePuedeEliminar ? 'btn-outline-secondary' : 'btn-warning' }}"
+                            onclick="window.showLoading();">
+                        <i class="bi bi-box-arrow-right"></i> Dar de baja
+                    </button>
+                </form>
+
                 {% if sePuedeEliminar %}
                     <form method="post" action="{{ path('app_alumno_delete', {'id': alumno.id}) }}" style="display: inline;">
                         <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ alumno.id) }}">
                         <input type="hidden" name="force_delete" value="1">
                         <button type="submit" class="btn btn-danger" onclick="window.showLoading();">
-                            <i class="bi bi-trash"></i> Sí, eliminar de todas formas
+                            <i class="bi bi-trash"></i> Borrar definitivamente
                         </button>
                     </form>
                 {% endif %}
-                <form method="post" action="{{ path('app_alumno_desactivar', {'id': alumno.id}) }}" style="display: inline;">
-                    <input type="hidden" name="_token" value="{{ csrf_token('desactivar' ~ alumno.id) }}">
-                    <input type="hidden" name="motivo" value="Baja administrativa">
-                    <button type="submit" class="btn btn-warning" onclick="window.showLoading();">
-                        <i class="bi bi-box-arrow-right"></i> Dar de baja y marcar inactivo
-                    </button>
-                </form>
             </div>
         </div>
     </div>
@@ -146,9 +144,9 @@
 <div class="modal-backdrop fade show"></div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Cerrar modal al hacer clic fuera
-    document.getElementById('deleteWarningModal').addEventListener('click', function(e) {
+document.addEventListener('DOMContentLoaded', function () {
+    // Clic fuera del panel: se recarga para limpiar la advertencia de la sesión.
+    document.getElementById('deleteWarningModal').addEventListener('click', function (e) {
         if (e.target === this) {
             window.location.reload();
         }
