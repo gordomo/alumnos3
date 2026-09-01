@@ -1,0 +1,112 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mis Asistencias{% endblock %}
+
+{% block body %}
+<div class="container mt-4" style="padding-bottom: 3rem;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0"><i class="bi bi-clipboard-check"></i> Mis Asistencias</h1>
+        <a href="{{ path('app_alumno_dashboard') }}" class="btn btn-secondary btn-sm">← Volver al panel</a>
+    </div>
+
+    {% if cursos is empty %}
+        <div class="alert alert-light border">
+            <i class="bi bi-inbox"></i> Todavía no hay asistencias tomadas en tus cursos.
+        </div>
+    {% else %}
+        {% for datos in cursos %}
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <h5 class="mb-0">{{ datos.curso.nombre }}</h5>
+                    <div>
+                        <span class="badge bg-light text-dark">
+                            {{ datos.presentes }} de {{ datos.total }} clases
+                        </span>
+                        {% if datos.porcentaje is not null %}
+                            {% set clase = datos.porcentaje >= 75 ? 'bg-success' : (datos.porcentaje >= 50 ? 'text-dark' : 'bg-danger') %}
+                            <span class="badge {{ clase }}"
+                                  {% if datos.porcentaje >= 50 and datos.porcentaje < 75 %}style="background: #ffc107;"{% endif %}>
+                                {{ datos.porcentaje }}% de asistencia
+                            </span>
+                        {% endif %}
+                        {% if datos.ausentes > 0 %}
+                            <span class="badge bg-danger">{{ datos.ausentes }} ausencia(s)</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <h6 class="text-muted">Mes por mes</h6>
+                    <div class="table-responsive mb-3">
+                        <table class="table table-sm mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Mes</th>
+                                    <th class="text-center">Presentes</th>
+                                    <th class="text-center">Ausentes</th>
+                                    <th class="text-center">%</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            {% for mes in datos.porMes %}
+                                {% set totalMes = mes.presentes + mes.ausentes %}
+                                <tr>
+                                    <td class="text-capitalize">{{ mes.etiqueta }}</td>
+                                    <td class="text-center">{{ mes.presentes }}</td>
+                                    <td class="text-center">
+                                        {% if mes.ausentes > 0 %}
+                                            <span class="text-danger fw-semibold">{{ mes.ausentes }}</span>
+                                        {% else %}
+                                            0
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        {{ totalMes > 0 ? (mes.presentes / totalMes * 100)|round(1) ~ '%' : '—' }}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <details>
+                        <summary class="text-muted" style="cursor: pointer;">
+                            Ver las {{ datos.registros|length }} clases una por una
+                        </summary>
+                        <div class="table-responsive mt-2">
+                            <table class="table table-sm table-striped mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Fecha</th>
+                                        <th>Estado</th>
+                                        <th>Observación</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                {% for registro in datos.registros %}
+                                    <tr>
+                                        <td class="text-nowrap">{{ registro.fecha|date(date_format) }}</td>
+                                        <td>
+                                            {% if registro.presente %}
+                                                <span class="badge bg-success"><i class="bi bi-check-lg"></i> Presente</span>
+                                            {% else %}
+                                                <span class="badge bg-danger"><i class="bi bi-x-lg"></i> Ausente</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="small">{{ registro.observaciones ?: '—' }}</td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </details>
+                </div>
+            </div>
+        {% endfor %}
+
+        <p class="small text-muted">
+            La asistencia la toma el profesor en cada clase. Si ves algo que no coincide, hablalo con él.
+        </p>
+    {% endif %}
+</div>
+{% endblock %}

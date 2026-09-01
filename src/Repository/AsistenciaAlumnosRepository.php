@@ -89,6 +89,33 @@ class AsistenciaAlumnosRepository extends ServiceEntityRepository
      *
      * @return array<int, array{presentes: int, ausentes: int}> indexado por numero de mes
      */
+    /**
+     * Las asistencias de un alumno en un curso, de la más nueva a la más vieja.
+     *
+     * Para la pantalla en la que el alumn@ ve su propia asistencia: ahí importa el detalle,
+     * no solo el conteo.
+     *
+     * @return AsistenciaAlumnos[]
+     */
+    public function findByAlumnoYCurso(
+        \App\Entity\Alumno $alumno,
+        \App\Entity\Curso $curso,
+        \DateTimeInterface $desde,
+        \DateTimeInterface $hasta
+    ): array {
+        return $this->createQueryBuilder('a')
+            ->andWhere('a.alumno = :alumno')
+            ->andWhere('a.curso = :curso')
+            ->andWhere('a.fecha BETWEEN :desde AND :hasta')
+            ->setParameter('alumno', $alumno)
+            ->setParameter('curso', $curso)
+            ->setParameter('desde', $desde)
+            ->setParameter('hasta', $hasta)
+            ->orderBy('a.fecha', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
     public function contarPorMes(
         \App\Entity\Alumno $alumno,
         \App\Entity\Curso $curso,

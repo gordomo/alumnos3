@@ -245,4 +245,101 @@ class AlumnoDashboardController extends AbstractController
             'date_format' => $institutoTimezoneService->getDateFormatForInstituto($alumno->getInstituto()),
         ]);
     }
+
+    /**
+     * Las asistencias del alumn@, por curso.
+     *
+     * En el panel se ven las últimas diez y nada más. Acá está el detalle: el porcentaje de cada
+     * curso, el resumen mes por mes y la lista de clases con los ausentes marcados. Los números
+     * salen del mismo repositorio que usa la libreta, así que no pueden decir cosas distintas.
+     *
+     * El alumn@ se resuelve desde el usuario logueado, así que no hay ningún id manipulable.
+     *
+     * @Route("/asistencias", name="app_alumno_asistencias")
+     */
+    public function asistencias(
+        AlumnoCursoHistoricoRepository $historicoRepository,
+        AsistenciaAlumnosRepository $asistenciaRepository,
+        InstitutoTimezoneService $institutoTimezoneService
+    ): Response {
+        $user = $this->getUser();
+        if (!$user || !$user->getAlumno()) {
+            $this->addFlash('danger', 'No se encontró información del alumno asociada a tu usuario.');
+            return $this->redirectToRoute('app_logout');
+        }
+
+        $alumno = $user->getAlumno();
+        $hoy = $institutoTimezoneService->getNowForInstituto($alumno->getInstituto());
+
+        $meses = [1 => 'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+                  'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+
+        // Se agrupa por curso y no por inscripción: si el alumn@ se reinscribió al mismo curso,
+        // la asistencia es una sola historia y no dos listas separadas.
+        $cursosDelAlumno = [];
+        foreach ($historicoRepository->findByAlumno($alumno) as $historico) {
+            if ($historico->getCurso()) {
+                $cursosDelAlumno[$historico->getCurso()->getId()] = $historico->getCurso();
+            }
+        }
+
+        $cursos = [];
+        foreach ($cursosDelAlumno as $curso) {
+            // Todo lo que se le haya tomado en ese curso: los registros solo existen para las
+            // clases en las que estuvo inscript@, así que no hace falta acotar por fechas.
+            $registros = $asistenciaRepository->findByAlumnoYCurso(
+                $alumno,
+                $curso,
+                new \DateTime('2000-01-01'),
+                (clone $hoy)->modify('+1 year')
+            );
+
+            if (!$registros) {
+                continue;
+            }
+
+            $presentes = 0;
+            $ausentes = 0;
+            $porMes = [];
+
+            foreach ($registros as $registro) {
+                $clave = $registro->getFecha()->format('Y-m');
+
+                if (!isset($porMes[$clave])) {
+                    $porMes[$clave] = [
+                        'etiqueta' => $meses[(int) $registro->getFecha()->format('n')] . ' ' . $registro->getFecha()->format('Y'),
+                        'presentes' => 0,
+                        'ausentes' => 0,
+                    ];
+                }
+
+                if ($registro->getPresente()) {
+                    $presentes++;
+                    $porMes[$clave]['presentes']++;
+                } else {
+                    $ausentes++;
+                    $porMes[$clave]['ausentes']++;
+                }
+            }
+
+            krsort($porMes);
+            $total = $presentes + $ausentes;
+
+            $cursos[] = [
+                'curso' => $curso,
+                'registros' => $registros,
+                'porMes' => $porMes,
+                'presentes' => $presentes,
+                'ausentes' => $ausentes,
+                'total' => $total,
+                'porcentaje' => $total > 0 ? round(($presentes / $total) * 100, 1) : null,
+            ];
+        }
+
+        return $this->render('alumno_dashboard/asistencias.html.twig', [
+            'alumno' => $alumno,
+            'cursos' => $cursos,
+            'date_format' => $institutoTimezoneService->getDateFormatForInstituto($alumno->getInstituto()),
+        ]);
+    }
 }

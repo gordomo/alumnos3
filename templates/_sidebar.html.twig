@@ -27,6 +27,11 @@
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a class="list-group-item list-group-item-action bg-light {% if app.request.get('_route') == 'app_alumno_asistencias' %}active{% endif %}" href="{{ path('app_alumno_asistencias') }}">
+                        <i class="bi bi-clipboard-check"></i> Mis Asistencias
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a class="list-group-item list-group-item-action bg-light {% if app.request.get('_route') == 'app_alumno_tareas' %}active{% endif %}" href="{{ path('app_alumno_tareas') }}">
                         <i class="bi bi-journal-text"></i> Mis Tareas
                     </a>
@@ -64,6 +69,11 @@
             </ul>
 
             <ul class="nav nav-tabs sidebar-dropdown-ul">
+                <li class="nav-item">
+                    <a class="list-group-item list-group-item-action bg-light {% if app.request.get('_route') starts with 'app_profesor_pagos_propios' %}active{% endif %}" href="{{ path('app_profesor_pagos_propios') }}">
+                        <i class="bi bi-cash-coin"></i> Mis Pagos
+                    </a>
+                </li>
                 <li class="nav-item">
                     <a class="list-group-item list-group-item-action bg-light {% if app.request.get('_route') starts with 'app_tarea_profesor' %}active{% endif %}" href="{{ path('app_tarea_profesor_index') }}">
                         <i class="bi bi-journal-text"></i> Tareas

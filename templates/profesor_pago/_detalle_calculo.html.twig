@@ -129,7 +129,7 @@
                 {% else %}
                     <strong>lo facturado</strong> del mes, cobrado o no.
                 {% endif %}
-                Se cambia en Configuración.
+                {% if is_granted('ROLE_ADMIN_INSTITUTO') %}Se cambia en Configuración.{% endif %}
             </p>
         {% endif %}
     {% endif %}

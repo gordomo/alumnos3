@@ -1,0 +1,125 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mis pagos{% endblock %}
+
+{% block panelTitle %}Mis pagos{% endblock %}
+
+{% block body %}
+{% set meses = {1:'Enero',2:'Febrero',3:'Marzo',4:'Abril',5:'Mayo',6:'Junio',7:'Julio',8:'Agosto',9:'Septiembre',10:'Octubre',11:'Noviembre',12:'Diciembre'} %}
+
+<div class="container-fluid px-4 mt-3" style="padding-bottom: 3rem;">
+    <div class="card mb-3">
+        <div class="card-body">
+            <form method="get" class="row g-2 align-items-end">
+                <div class="col-auto">
+                    <label for="mes" class="form-label small mb-1">Mes</label>
+                    <select name="mes" id="mes" class="form-select form-select-sm">
+                        {% for numero, nombre in meses %}
+                            <option value="{{ numero }}" {% if mes == numero %}selected{% endif %}>{{ nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <label for="ano" class="form-label small mb-1">Año</label>
+                    <select name="ano" id="ano" class="form-select form-select-sm">
+                        {% for numero in (anoActual - 3)..(anoActual + 1) %}
+                            <option value="{{ numero }}" {% if ano == numero %}selected{% endif %}>{{ numero }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-sm btn-primary">
+                        <i class="bi bi-search"></i> Ver
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-4 mb-2">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Te corresponde por {{ meses[mes] }} {{ ano }}</div>
+                    <div class="fs-4 fw-bold">${{ liquidacion.monto_calculado|number_format(2, ',', '.') }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-2">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Ya te pagaron</div>
+                    <div class="fs-4 fw-bold text-success">${{ liquidacion.total_pagado|number_format(2, ',', '.') }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-2">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Queda pendiente</div>
+                    {% if liquidacion.saldo_pendiente > 0.01 %}
+                        <div class="fs-4 fw-bold text-danger">${{ liquidacion.saldo_pendiente|number_format(2, ',', '.') }}</div>
+                    {% elseif liquidacion.saldo_pendiente < -0.01 %}
+                        <div class="fs-4 fw-bold" style="color: #c2650a;">
+                            ${{ (liquidacion.saldo_pendiente * -1)|number_format(2, ',', '.') }} de más
+                        </div>
+                    {% else %}
+                        <div class="fs-4 fw-bold text-success">Saldado</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header"><strong>Cómo se calculó</strong></div>
+        <div class="card-body">
+            {{ include('profesor_pago/_detalle_calculo.html.twig', {'detalle': liquidacion.detalle_calculo}) }}
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header"><strong>Pagos que recibiste en {{ meses[mes] }} {{ ano }}</strong></div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Método</th>
+                        <th class="text-end">Monto</th>
+                        <th>Observación</th>
+                        <th class="text-end">Recibo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for pago in liquidacion.pagos_realizados %}
+                    <tr>
+                        <td class="text-nowrap">{{ pago.fechaPago|date(app_date_format|default('d/m/Y')) }}</td>
+                        <td><span class="badge bg-secondary">{{ pago.metodoPago|capitalize }}</span></td>
+                        <td class="text-end fw-semibold">${{ pago.monto|number_format(2, ',', '.') }}</td>
+                        <td class="small">{{ pago.observacion ?: '—' }}</td>
+                        <td class="text-end">
+                            <a href="{{ path('app_profesor_pagos_propios_recibo', {'id': pago.id}) }}"
+                               class="btn btn-sm btn-outline-secondary" target="_blank">
+                                <i class="bi bi-printer"></i> Ver
+                            </a>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-4">
+                            Todavía no hay pagos registrados de este mes.
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <p class="small text-muted mt-2">
+        Los montos los calcula el sistema con las clases dictadas y la modalidad que tenés acordada.
+        Si algo no coincide, hablalo con la administración del instituto.
+    </p>
+</div>
+{% endblock %}
