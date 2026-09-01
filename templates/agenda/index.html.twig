@@ -28,7 +28,7 @@
                         {% set fuente = catalogoFuentes[clave] %}
                         <div class="form-check">
                             <input class="form-check-input filtro-fuente" type="checkbox" value="{{ clave }}"
-                                   id="fuente_{{ clave }}" checked>
+                                   id="fuente_{{ clave }}" {% if clave in fuentesPorDefecto %}checked{% endif %}>
                             <label class="form-check-label" for="fuente_{{ clave }}">
                                 <span class="agenda-color" style="background: {{ fuente.color }}"></span>
                                 <i class="bi {{ fuente.icono }}"></i> {{ fuente.etiqueta }}
@@ -50,6 +50,16 @@
             </div>
         </div>
     </div>
+
+    {% if puedeCargarEventos %}
+        <p class="small text-muted mb-2">
+            <i class="bi bi-hand-index"></i>
+            Clic en un día (o arrastrá sobre varios) para agendar algo ahí. Lo que agregues se puede
+            mover arrastrándolo. Los horarios de los cursos están en
+            <a href="{{ path('app_curso_calendario') }}">Cursos → Calendario</a>; acá se prenden con
+            el tilde de <em>Clases</em> si los querés ver encima.
+        </p>
+    {% endif %}
 
     <div id="calendario"></div>
 </div>
@@ -106,6 +116,35 @@
             moreLinkText: function (cantidad) { return '+' + cantidad + ' más'; },
             allDaySlot: true,
             nowIndicator: true,
+
+            {% if puedeCargarEventos %}
+            // Agendar con un clic en el día, en lugar de ir a buscar el formulario. El rango que
+            // se selecciona arrastrando viaja como fecha de inicio y fin.
+            selectable: true,
+            select: function (info) {
+                const desde = info.startStr.slice(0, 10);
+                // En FullCalendar el fin de una selección de días completos es exclusivo: el
+                // último día seleccionado es el anterior.
+                const fin = new Date(info.end.getTime() - 86400000);
+                const hasta = fin.toISOString().slice(0, 10);
+
+                let url = '{{ path('app_agenda_evento_nuevo') }}?fecha=' + desde;
+                if (hasta > desde) {
+                    url += '&fechaFin=' + hasta;
+                }
+
+                window.location.href = url;
+            },
+
+            // Solo los eventos propios traen editable: true desde el servidor, así que las
+            // clases, los exámenes y los vencimientos no se pueden arrastrar.
+            editable: true,
+            eventStartEditable: true,
+            eventDurationEditable: true,
+
+            eventDrop: function (info) { moverEvento(info); },
+            eventResize: function (info) { moverEvento(info); },
+            {% endif %}
             // Se le piden al servidor solo los eventos del rango visible, con las fuentes
             // que estén tildadas: cambiar de mes no trae el año entero.
             events: function (info, exito, error) {
@@ -156,6 +195,45 @@
                 modal.show();
             }
         });
+
+        {% if puedeCargarEventos %}
+        // Guarda la fecha nueva de un evento arrastrado. Si el servidor no lo acepta, el evento
+        // vuelve a donde estaba en lugar de quedar mostrando algo que no se guardó.
+        function moverEvento(info) {
+            const id = info.event.extendedProps.eventoId;
+            if (!id) {
+                info.revert();
+                return;
+            }
+
+            const datos = new URLSearchParams({
+                _token: '{{ csrf_token('mover_evento') }}',
+                inicio: info.event.start.toISOString(),
+                todo_el_dia: info.event.allDay ? '1' : '0'
+            });
+
+            if (info.event.end) {
+                datos.append('fin', info.event.end.toISOString());
+            }
+
+            // El id va como marca en la ruta generada y se reemplaza acá: el path termina en
+            // /mover, así que no alcanza con pegarle el número al final.
+            const url = '{{ path('app_agenda_evento_mover', {'id': '__ID__'}) }}'.replace('__ID__', id);
+
+            fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' },
+                body: datos.toString()
+            })
+                .then(r => r.ok ? r.json() : Promise.reject(r.status))
+                .then(function (respuesta) {
+                    if (!respuesta.ok) {
+                        info.revert();
+                    }
+                })
+                .catch(function () { info.revert(); });
+        }
+        {% endif %}
 
         calendario.render();
 

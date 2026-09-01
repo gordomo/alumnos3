@@ -104,8 +104,7 @@
                     </a>
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item {% if app.request.get('_route') == 'app_curso_index' %}active{% endif %}" href="{{ path('app_curso_index') }}">Listado</a></li>
-                        {# El calendario de cursos es la agenda: el mismo contenido y además todo lo demás. #}
-                        <li><a class="dropdown-item" href="{{ path('app_agenda_index') }}">Calendario</a></li>
+                        <li><a class="dropdown-item {% if app.request.get('_route') starts with 'app_curso_calendario' %}active{% endif %}" href="{{ path('app_curso_calendario') }}">Calendario</a></li>
                     </ul>
                 </li>
             </ul>

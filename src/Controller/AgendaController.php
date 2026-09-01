@@ -59,7 +59,16 @@ class AgendaController extends AbstractAgendaController
     ): Response {
         $evento = new EventoAgenda();
         $evento->setInstituto($this->getUser()->getInstituto());
-        $evento->setFechaInicio($institutoTimezoneService->getNowForInstituto($this->getUser()->getInstituto()));
+
+        // La agenda manda ?fecha (y ?fechaFin si se arrastró sobre varios días) al hacer clic en
+        // un día: el formulario abre con esa fecha puesta en lugar de con la de hoy.
+        $desde = $this->fechaDelFormulario($request->query->get('fecha'), null);
+        $evento->setFechaInicio($desde ?: $institutoTimezoneService->getNowForInstituto($this->getUser()->getInstituto()));
+
+        $hasta = $this->fechaDelFormulario($request->query->get('fechaFin'), null);
+        if ($desde && $hasta && $hasta > $desde) {
+            $evento->setFechaFin($hasta);
+        }
 
         return $this->formulario($request, $evento, $cursoRepository, $entityManager, $validator, true);
     }
@@ -102,6 +111,66 @@ class AgendaController extends AbstractAgendaController
         $this->addFlash('success', sprintf('Se eliminó "%s" de la agenda.', $titulo));
 
         return $this->redirectToRoute('app_agenda_eventos_listado');
+    }
+
+    /**
+     * Mueve un evento arrastrado en el calendario.
+     *
+     * Contesta JSON porque lo llama el propio calendario sin recargar la página. Si algo no
+     * cierra devuelve ok:false y el calendario deja el evento donde estaba.
+     *
+     * @Route("/evento/{id}/mover", name="app_agenda_evento_mover", methods={"POST"})
+     */
+    public function mover(
+        Request $request,
+        EventoAgenda $evento,
+        EntityManagerInterface $entityManager
+    ): JsonResponse {
+        if ($evento->getInstituto() !== $this->getUser()->getInstituto()) {
+            return new JsonResponse(['ok' => false, 'error' => 'No encontrado'], 404);
+        }
+
+        if (!$this->isCsrfTokenValid('mover_evento', (string) $request->request->get('_token'))) {
+            return new JsonResponse(['ok' => false, 'error' => 'Token inválido'], 400);
+        }
+
+        $inicio = $this->fechaISO($request->request->get('inicio'));
+        if (!$inicio) {
+            return new JsonResponse(['ok' => false, 'error' => 'Fecha no válida'], 400);
+        }
+
+        $todoElDia = $request->request->get('todo_el_dia') === '1';
+        $fin = $this->fechaISO($request->request->get('fin'));
+
+        // En un evento de todo el día el fin que manda el calendario es exclusivo: se le resta
+        // un día para guardar el último día real, que es como lo espera el resto del sistema.
+        if ($fin && $todoElDia) {
+            $fin = (clone $fin)->modify('-1 day');
+        }
+
+        if ($fin && $fin < $inicio) {
+            $fin = null;
+        }
+
+        $evento->setTodoElDia($todoElDia);
+        $evento->setFechaInicio($inicio);
+        $evento->setFechaFin($fin);
+        $entityManager->flush();
+
+        return new JsonResponse(['ok' => true]);
+    }
+
+    private function fechaISO($valor): ?\DateTime
+    {
+        if (!is_string($valor) || trim($valor) === '') {
+            return null;
+        }
+
+        try {
+            return new \DateTime($valor);
+        } catch (\Exception $e) {
+            return null;
+        }
     }
 
     /**

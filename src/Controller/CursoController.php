@@ -275,20 +275,72 @@ class CursoController extends AbstractController
     }
 
     /**
-     * El calendario de cursos ahora es la agenda.
+     * Calendario de cursos: la grilla de horarios y nada más.
      *
-     * La pantalla vieja armaba los eventos con los campos legacy del curso (un único horario de
-     * inicio y fin para todos sus días), así que un curso con lunes a la tarde y jueves a la
-     * mañana se dibujaba todo a la misma hora. La agenda lo arma horario por horario, y además
-     * muestra evaluaciones, entregas, vencimientos y los eventos del instituto.
+     * Es una pantalla distinta de la agenda a propósito. Acá se contesta "quién usa el aula el
+     * martes a las 18" y "se me solapan dos cursos", así que solo se dibujan las clases y la
+     * vista que abre por default es la semanal, que es donde se ven los solapamientos. Lo que el
+     * instituto anota (feriados, actos, reuniones) vive en la agenda.
      *
-     * La ruta se mantiene para que los enlaces y favoritos viejos sigan funcionando.
+     * Los eventos los arma AgendaService pidiéndole solo la fuente de clases: es el mismo cálculo
+     * que usa la agenda, horario por horario. La pantalla vieja usaba los campos legacy del curso
+     * (un único horario de inicio y fin para todos sus días), así que un curso con lunes a la
+     * tarde y jueves a la mañana se dibujaba todo a la misma hora.
      *
      * @Route("/calendario", name="app_curso_calendario", methods={"GET"})
      */
-    public function calendario(): Response
+    public function calendario(CursoRepository $cursoRepository): Response
     {
-        return $this->redirectToRoute('app_agenda_index');
+        $instituto = $this->getUser()->getInstituto();
+
+        // Un curso sin horarios cargados no puede aparecer en la grilla: se los lista aparte
+        // para que se entienda por qué faltan.
+        $sinHorario = [];
+        foreach ($cursoRepository->findByInstituto($instituto) as $curso) {
+            if (count($curso->getHorarios()) === 0) {
+                $sinHorario[] = $curso;
+            }
+        }
+
+        return $this->render('curso/calendario.html.twig', [
+            'cursosSinHorario' => $sinHorario,
+        ]);
+    }
+
+    /**
+     * Las clases del rango que el calendario tiene a la vista.
+     *
+     * @Route("/calendario/eventos", name="app_curso_calendario_eventos", methods={"GET"})
+     */
+    public function calendarioEventos(Request $request, \App\Service\AgendaService $agendaService): JsonResponse
+    {
+        $desde = $this->fechaDeLaConsulta($request->query->get('start'));
+        $hasta = $this->fechaDeLaConsulta($request->query->get('end'));
+
+        if (!$desde || !$hasta || $hasta < $desde) {
+            $desde = new \DateTime('first day of this month 00:00:00');
+            $hasta = new \DateTime('last day of this month 23:59:59');
+        }
+
+        return new JsonResponse($agendaService->eventos(
+            $this->getUser(),
+            $desde,
+            $hasta,
+            [\App\Service\AgendaService::FUENTE_CLASE]
+        ));
+    }
+
+    private function fechaDeLaConsulta($valor): ?\DateTime
+    {
+        if (!is_string($valor) || trim($valor) === '') {
+            return null;
+        }
+
+        try {
+            return new \DateTime($valor);
+        } catch (\Exception $e) {
+            return null;
+        }
     }
 
 

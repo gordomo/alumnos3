@@ -16,6 +16,28 @@
     {% if not esAdmin %}Ves solo lo que te corresponde a vos.{% endif %}
 </p>
 
+{% if esAdmin %}
+{{ m.nota('info', 'La agenda no es el calendario de cursos',
+   'La agenda es para lo que vos anotás: feriados, actos, reuniones, mesas de examen. La grilla de
+    horarios de los cursos tiene su propia pantalla en Cursos → Calendario, y por eso acá las
+    clases arrancan apagadas. Si las querés ver encima, las prendés con el tilde de Clases.') }}
+
+<h2>Agendar algo</h2>
+
+<ol>
+    <li>
+        <strong>Clic en el día</strong> en el que querés agendar. Si dura varios días, arrastrá
+        sobre ellos. Se abre el formulario con esas fechas ya puestas.
+    </li>
+    <li>Poné el título, el tipo y quién lo ve, y guardá.</li>
+    <li>
+        Después lo podés <strong>mover arrastrándolo</strong> a otro día. Solo se mueven las cosas
+        que cargaste vos: las clases, las evaluaciones y los vencimientos no se arrastran, porque
+        salen de otras pantallas.
+    </li>
+</ol>
+{% endif %}
+
 {{ m.captura('agenda-mes.png', 'La agenda del mes, con las fuentes arriba') }}
 
 <h2>Los filtros de arriba</h2>
@@ -40,7 +62,8 @@
     <li>
         <strong>Clases</strong>: de los horarios del curso, entre su fecha de inicio y la de fin.
         Cada día se dibuja en <em>su</em> horario, así que un curso que tiene lunes a la tarde y
-        jueves a la mañana se ve como es.
+        jueves a la mañana se ve como es.{% if esAdmin %} Arrancan apagadas: su pantalla es
+        {{ m.ruta(['Cursos', 'Calendario']) }}.{% endif %}
     </li>
     <li><strong>Evaluaciones</strong>: de la fecha de cada evaluación cargada.</li>
     <li>
@@ -67,15 +90,14 @@
     fecha de una tarea, la agenda lo refleja sin tocar nada más.') }}
 
 {% if esAdmin %}
-<h2>Cargar un evento</h2>
+<h2>Los datos del evento</h2>
 
 <p>
-    Es para lo que no vive en ninguna otra pantalla: un feriado, el acto de fin de año, una
-    reunión de padres, una mesa de examen.
+    También se llega al formulario desde {{ m.ruta(['Agenda', 'Nuevo evento']) }}, sin pasar por el
+    calendario.
 </p>
 
 <ol>
-    <li>{{ m.ruta(['Agenda', 'Nuevo evento']) }}.</li>
     <li><strong>Título</strong>: lo que se va a leer en el calendario.</li>
     <li>
         <strong>Tipo</strong>. Define el color y, en el caso de <strong>Feriado o receso</strong>,

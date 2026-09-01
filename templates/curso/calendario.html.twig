@@ -1,0 +1,125 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Calendario de cursos{% endblock %}
+
+{% block panelTitle %}Calendario de cursos{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet" />
+    <style>
+        #calendario-cursos { background: #fff; padding: 1rem; border-radius: 14px; }
+        .fc-event { cursor: default; }
+    </style>
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid px-4 mt-3" style="padding-bottom: 3rem;">
+    <div class="card mb-3">
+        <div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <p class="mb-0 small text-muted">
+                La grilla de horarios de todos los cursos. Sirve para ver quién usa el aula y para
+                detectar dos cursos en el mismo horario.
+                Lo que el instituto anota —feriados, actos, reuniones— va en
+                <a href="{{ path('app_agenda_index') }}">Agenda</a>.
+            </p>
+            <a href="{{ path('app_curso_index') }}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-list-ul"></i> Listado de cursos
+            </a>
+        </div>
+    </div>
+
+    {% if cursosSinHorario is not empty %}
+        <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle"></i>
+            {{ cursosSinHorario|length }} curso(s) no aparecen porque no tienen horarios cargados:
+            {% for curso in cursosSinHorario %}
+                <a href="{{ path('app_curso_edit', {'id': curso.id}) }}" class="badge bg-secondary text-decoration-none">
+                    {{ curso.nombre }}
+                </a>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div id="calendario-cursos"></div>
+</div>
+
+<div class="modal fade" id="modalClase" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalClaseTitulo">Curso</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-1"><strong>Cuándo:</strong> <span id="modalClaseCuando">-</span></p>
+                <p class="mb-0" id="modalClaseDetalleFila"><strong>Profesor:</strong> <span id="modalClaseDetalle"></span></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/es.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const modal = new bootstrap.Modal(document.getElementById('modalClase'));
+
+        const calendario = new FullCalendar.Calendar(document.getElementById('calendario-cursos'), {
+            locale: 'es',
+            // Semana por default: es la vista donde se ven los solapamientos de horario.
+            initialView: 'timeGridWeek',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'timeGridWeek,dayGridMonth,listWeek'
+            },
+            buttonText: { today: 'Hoy', month: 'Mes', week: 'Semana', list: 'Lista' },
+            height: 'auto',
+            allDaySlot: false,
+            slotMinTime: '07:00:00',
+            slotMaxTime: '23:00:00',
+            nowIndicator: true,
+            eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
+            events: function (info, exito, error) {
+                const params = new URLSearchParams({ start: info.startStr, end: info.endStr });
+
+                fetch('{{ path('app_curso_calendario_eventos') }}?' + params.toString(), { headers: { 'Accept': 'application/json' } })
+                    .then(r => r.ok ? r.json() : Promise.reject(r.status))
+                    .then(exito)
+                    .catch(error);
+            },
+            eventClick: function (info) {
+                if (typeof hideLoading === 'function') { hideLoading(); }
+                info.jsEvent.preventDefault();
+
+                const props = info.event.extendedProps || {};
+                document.getElementById('modalClaseTitulo').textContent = info.event.title;
+                document.getElementById('modalClaseCuando').textContent = info.event.start
+                    ? info.event.start.toLocaleString('es-AR', {
+                        weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit'
+                      })
+                    : '-';
+
+                const fila = document.getElementById('modalClaseDetalleFila');
+                if (props.detalle) {
+                    document.getElementById('modalClaseDetalle').textContent = props.detalle;
+                    fila.style.display = '';
+                } else {
+                    fila.style.display = 'none';
+                }
+
+                modal.show();
+            }
+        });
+
+        calendario.render();
+    });
+    </script>
+{% endblock %}

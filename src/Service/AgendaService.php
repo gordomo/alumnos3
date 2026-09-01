@@ -108,6 +108,30 @@ class AgendaService
     }
 
     /**
+     * Qué fuentes arrancan prendidas al abrir la agenda.
+     *
+     * Al administrador no se le prenden las clases: los horarios de los cursos tienen su propia
+     * pantalla en Cursos → Calendario, y verlos también acá tapaba lo que el instituto anota,
+     * que es para lo que existe la agenda. Las puede prender con el tilde igual.
+     *
+     * El profesor y el alumn@ no tienen pantalla de calendario, así que para ellos las clases
+     * siguen prendidas: es el contenido principal de su agenda.
+     *
+     * @return string[]
+     */
+    public function fuentesPorDefectoPara(User $user): array
+    {
+        $contexto = $this->contexto($user);
+        $visibles = $this->fuentesVisibles($contexto);
+
+        if ($contexto['rol'] === 'admin') {
+            return array_values(array_filter($visibles, static fn(string $f) => $f !== self::FUENTE_CLASE));
+        }
+
+        return $visibles;
+    }
+
+    /**
      * Quién está mirando y sobre qué cursos.
      *
      * @return array{instituto: ?Instituto, rol: string, cursos: Curso[], alumno: ?Alumno, profesor: ?Profesor}
@@ -407,6 +431,8 @@ class AgendaService
                 'allDay' => $evento->isTodoElDia(),
                 'backgroundColor' => $color,
                 'borderColor' => $color,
+                // Lo único que se puede mover arrastrando: lo que el instituto cargó a mano.
+                'editable' => true,
                 'extendedProps' => [
                     'fuente' => self::FUENTE_EVENTO,
                     'tipo' => $evento->getTipoEtiqueta(),

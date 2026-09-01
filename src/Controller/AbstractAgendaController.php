@@ -34,6 +34,7 @@ abstract class AbstractAgendaController extends AbstractController
 
         return $this->render('agenda/index.html.twig', [
             'fuentes' => $this->agendaService->fuentesVisiblesPara($user),
+            'fuentesPorDefecto' => $this->agendaService->fuentesPorDefectoPara($user),
             'catalogoFuentes' => AgendaService::FUENTES,
             'rutas' => $this->rutas(),
             'puedeCargarEventos' => $this->isGranted('ROLE_ADMIN_INSTITUTO'),

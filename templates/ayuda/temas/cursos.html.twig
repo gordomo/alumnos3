@@ -104,14 +104,20 @@
 <h2>El calendario</h2>
 
 <p>
-    Los cursos se ven ubicados en el calendario desde {{ m.ruta(['Agenda']) }}, que además muestra
-    las evaluaciones, las entregas de tareas, los vencimientos y los eventos del instituto. Sirve
-    para detectar solapamientos de aula o de profesor antes de que sean un problema.
+    {{ m.ruta(['Cursos', 'Calendario']) }} muestra <strong>solo los horarios de los cursos</strong>,
+    cada día en su horario real. Abre en vista semanal, que es donde se ven de una los
+    solapamientos de aula o de profesor.
 </p>
 
 <p>
-    El acceso viejo por <em>Cursos → Calendario</em> lleva a la misma pantalla.
+    Si algún curso no aparece, arriba se listan los que <strong>no tienen horarios cargados</strong>,
+    con un enlace para editarlos.
 </p>
+
+{{ m.nota('info', 'El calendario y la agenda son dos cosas distintas',
+   'El calendario es la grilla de los cursos y se llena solo. La agenda es para lo que el
+    instituto anota: feriados, actos, reuniones, mesas de examen. Si querés ver los horarios
+    encima de la agenda, ahí se prenden con el tilde de Clases.') }}
 
 <h2>Cerrar un curso</h2>
 
