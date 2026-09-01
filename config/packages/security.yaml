@@ -53,6 +53,10 @@ security:
         - { path: ^/logout$, roles: PUBLIC_ACCESS }
         - { path: ^/register$, roles: PUBLIC_ACCESS }
         - { path: ^/reset-password, roles: PUBLIC_ACCESS }
+        # Acceso de la familia por enlace: es público a propósito, no hay sesión. Lo que autoriza
+        # es el token de la URL, que el controller valida contra un alumno y nada más. Va acá
+        # arriba porque si cayera en la regla por defecto ^/ pediría login y el enlace no serviría.
+        - { path: ^/familia/, roles: PUBLIC_ACCESS }
         - { path: ^/assets/, roles: PUBLIC_ACCESS }
         - { path: ^/css/, roles: PUBLIC_ACCESS }
         - { path: ^/js/, roles: PUBLIC_ACCESS }

@@ -255,6 +255,47 @@ class AlumnoController extends AbstractController
 
 
     /**
+     * Genera o regenera el enlace de solo lectura de la familia.
+     *
+     * Regenerar es la forma de revocar: el token anterior deja de servir en el momento. El enlace
+     * viaja después en los emails que ya se le mandan al tutor.
+     *
+     * @Route("/{id}/enlace-familia", name="app_alumno_enlace_familia", methods={"POST"})
+     */
+    public function enlaceFamilia(Request $request, Alumno $alumno, EntityManagerInterface $entityManager): Response
+    {
+        if ($alumno->getInstituto() !== $this->getUser()->getInstituto()) {
+            throw $this->createNotFoundException('Alumno no encontrado');
+        }
+
+        if (!$this->isCsrfTokenValid('enlace_familia_' . $alumno->getId(), (string) $request->request->get('_token'))) {
+            $this->addFlash('danger', 'El formulario expiró. Volvé a intentarlo.');
+
+            return $this->redirectToRoute('app_alumno_show', ['id' => $alumno->getId()]);
+        }
+
+        if ($request->request->has('quitar')) {
+            $alumno->setTokenTutor(null);
+            $entityManager->flush();
+            $this->addFlash('success', 'El enlace se desactivó. Quien lo tenga ya no puede entrar.');
+
+            return $this->redirectToRoute('app_alumno_show', ['id' => $alumno->getId()]);
+        }
+
+        $eraNuevo = $alumno->getTokenTutor() === null;
+
+        // 32 bytes al azar en hexadecimal: 64 caracteres, imposible de adivinar.
+        $alumno->setTokenTutor(bin2hex(random_bytes(32)));
+        $entityManager->flush();
+
+        $this->addFlash('success', $eraNuevo
+            ? 'Enlace generado. Se lo vamos a incluir en los próximos emails que reciba la familia.'
+            : 'Enlace regenerado. El anterior dejó de funcionar.');
+
+        return $this->redirectToRoute('app_alumno_show', ['id' => $alumno->getId()]);
+    }
+
+    /**
      * @Route("/{id}", name="app_alumno_show", methods={"GET"})
      */
     public function show(Alumno $alumno, AlumnoRepository $alumnoRepository, EmailLogRepository $emailLogRepository): Response

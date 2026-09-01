@@ -1,0 +1,172 @@
+{#
+    Vista de la familia. NO extiende base.html.twig a propósito: no hay usuario logueado, así que
+    la barra lateral, el menú y el botón de cerrar sesión no tienen sentido acá.
+#}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>{{ alumno.nombreApellido }} — {{ instituto.nombre }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <style>
+        body { background: #f4f7fb; }
+        .familia-header {
+            background: linear-gradient(135deg, #1b6ae0, #123a7a);
+            color: #fff;
+            padding: 1.75rem 0;
+        }
+        .familia-contenido { max-width: 880px; margin: 0 auto; padding: 0 1rem 3rem; }
+        .card { border: 1px solid #e3e8ef; border-radius: 12px; }
+        .card + .card { margin-top: 1rem; }
+        .etiqueta { font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; color: #6c757d; }
+    </style>
+</head>
+<body>
+    <div class="familia-header">
+        <div class="familia-contenido">
+            <div class="etiqueta" style="color: rgba(255,255,255,.75);">{{ instituto.nombre }}</div>
+            <h1 class="h3 mb-1">{{ alumno.nombreApellido }}</h1>
+            <p class="mb-0 small" style="color: rgba(255,255,255,.85);">
+                Resumen para la familia · {{ hoy|date(date_format) }}
+            </p>
+        </div>
+    </div>
+
+    <div class="familia-contenido mt-3">
+        {% if deudas is not empty %}
+            <div class="card">
+                <div class="card-body">
+                    <div class="etiqueta mb-2">Cuotas pendientes</div>
+                    <ul class="mb-2">
+                        {% for deuda in deudas %}
+                            <li>
+                                {{ deuda.mes }}/{{ deuda.ano }}
+                                {% if deuda.curso %}— {{ deuda.curso.nombre }}{% endif %}
+                                <strong>${{ deuda.monto|number_format(2, ',', '.') }}</strong>
+                                {% if deuda.interes > 0 %}
+                                    <span class="text-danger small">
+                                        + ${{ deuda.interes|number_format(2, ',', '.') }} de recargo
+                                    </span>
+                                {% endif %}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                    <p class="small text-muted mb-0">
+                        Para pagar o consultar, hablá con la administración del instituto.
+                    </p>
+                </div>
+            </div>
+        {% endif %}
+
+        {% if asistencia is not empty %}
+            <div class="card">
+                <div class="card-body">
+                    <div class="etiqueta mb-2">Asistencia</div>
+                    <div class="table-responsive">
+                        <table class="table table-sm mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Curso</th>
+                                    <th class="text-center">Presentes</th>
+                                    <th class="text-center">Ausentes</th>
+                                    <th class="text-center">%</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            {% for fila in asistencia %}
+                                <tr>
+                                    <td>{{ fila.curso }}</td>
+                                    <td class="text-center">{{ fila.presentes }}</td>
+                                    <td class="text-center">
+                                        {% if fila.ausentes > 0 %}
+                                            <span class="text-danger fw-semibold">{{ fila.ausentes }}</span>
+                                        {% else %}0{% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        {% if fila.porcentaje is not null %}
+                                            <span class="badge {{ fila.porcentaje >= 75 ? 'bg-success' : (fila.porcentaje >= 50 ? 'bg-warning text-dark' : 'bg-danger') }}">
+                                                {{ fila.porcentaje }}%
+                                            </span>
+                                        {% else %}—{% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        {% for datos in cursos %}
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                        <div>
+                            <div class="etiqueta">Curso</div>
+                            <h2 class="h5 mb-0">{{ datos.curso.nombre }}</h2>
+                        </div>
+                        <div class="text-end">
+                            {% if not datos.activo %}
+                                <span class="badge bg-secondary">terminado</span>
+                            {% endif %}
+                            {% if datos.resumenNotas and datos.resumenNotas.promedio is not null %}
+                                <span class="badge bg-primary">
+                                    Promedio {{ datos.resumenNotas.promedio|number_format(2, ',', '.') }}
+                                </span>
+                            {% endif %}
+                            {% if datos.tareasPedidas > 0 %}
+                                <span class="badge bg-light text-dark">
+                                    Tareas: {{ datos.tareasEntregadas }} de {{ datos.tareasPedidas }}
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {% if datos.materiales is not empty %}
+                        <div class="etiqueta mt-3 mb-1">Materiales de consulta</div>
+                        <ul class="list-unstyled mb-0">
+                            {% for material in datos.materiales %}
+                                <li class="mb-1">
+                                    <i class="bi {{ material.tipoIcono }}"></i>
+                                    {% if material.urlSegura %}
+                                        <a href="{{ material.urlSegura }}" target="_blank" rel="noopener noreferrer">{{ material.titulo }}</a>
+                                    {% else %}
+                                        {{ material.titulo }}
+                                    {% endif %}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+
+                    {% if datos.clases is not empty %}
+                        <div class="etiqueta mt-3 mb-1">Últimas clases</div>
+                        <ul class="list-unstyled mb-0 small">
+                            {% for clase in datos.clases %}
+                                <li class="mb-1">
+                                    <strong>{{ clase.fecha|date(date_format) }}</strong> — {{ clase.tema }}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+            </div>
+        {% else %}
+            <div class="card">
+                <div class="card-body text-muted">
+                    Todavía no hay cursos cargados para {{ alumno.nombre }}.
+                </div>
+            </div>
+        {% endfor %}
+
+        <p class="small text-muted mt-3">
+            Esta página es solo para consultar y se abre con el enlace que te enviamos por email.
+            No hace falta usuario ni contraseña. Si querés que dejemos de enviarlo o si el enlace
+            llegó a alguien que no debía, avisale al instituto y lo cambiamos.
+        </p>
+    </div>
+</body>
+</html>

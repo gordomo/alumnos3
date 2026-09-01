@@ -1,0 +1,17 @@
+{# Enlace de solo lectura para la familia. Se muestra solo si el alumn@ tiene uno generado. #}
+{% if enlaceFamilia is defined and enlaceFamilia %}
+    <div style="margin: 24px 0; padding: 16px; background-color: #eaf2fe; border-radius: 8px;">
+        <p style="margin: 0 0 10px; color: #1f2d3d; font-size: 15px;">
+            <strong>Podés seguir a {{ alumno.nombre }} desde acá</strong>
+        </p>
+        <p style="margin: 0 0 12px; color: #4a5563; font-size: 14px; line-height: 1.5;">
+            Asistencias, notas, tareas, qué se dio en clase y los materiales de consulta.
+            No hace falta usuario ni contraseña.
+        </p>
+        <a href="{{ enlaceFamilia }}"
+           style="display: inline-block; padding: 10px 18px; background-color: #1b6ae0; color: #ffffff;
+                  text-decoration: none; border-radius: 6px; font-size: 14px;">
+            Ver el resumen
+        </a>
+    </div>
+{% endif %}

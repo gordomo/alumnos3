@@ -110,6 +110,7 @@ class NotificationService
                     'pago' => $pago,
                     'alumno' => $alumno,
                     'logoUrl' => $logoUrl,
+                    'enlaceFamilia' => $this->enlaceFamilia($alumno),
                     'textoPersonalizado' => $configuracion ? $configuracion->getTextoPersonalizadoEmail() : null,
                 ]);
             
@@ -211,6 +212,7 @@ class NotificationService
                     'calificaciones' => $calificaciones,
                     'resumen' => $resumen,
                     'logoUrl' => $this->getLogoUrl($instituto),
+                    'enlaceFamilia' => $this->enlaceFamilia($alumno),
                     'dateFormat' => $this->institutoTimezoneService->getDateFormatForInstituto($instituto),
                     'textoPersonalizado' => $configuracion ? $configuracion->getTextoPersonalizadoEmail() : null,
                 ]);
@@ -293,6 +295,7 @@ class NotificationService
                     'alumno' => $alumno,
                     'deuda' => $deuda,
                     'logoUrl' => $logoUrl,
+                    'enlaceFamilia' => $this->enlaceFamilia($alumno),
                     // Cuando el recordatorio sale del proceso automático, el alumno recibe uno
                     // solo aunque deba varias cuotas, así que el mail tiene que decir cuántas.
                     'resumenVencidas' => $resumenVencidas,
@@ -670,6 +673,7 @@ class NotificationService
                     'asunto' => $asunto,
                     'mensaje' => $mensaje,
                     'logoUrl' => $this->getLogoUrl($instituto),
+                    'enlaceFamilia' => $this->enlaceFamilia($alumno),
                 ]);
 
             $this->mailer->send($email);
@@ -761,6 +765,25 @@ class NotificationService
         
         // Construir la URL completa del logo
         return $this->baseUrl . '/uploads/logos/' . $instituto->getLogo();
+    }
+
+    /**
+     * El enlace de solo lectura de la familia, si el alumn@ tiene uno generado.
+     *
+     * Se arma con el generador de rutas y no pegando strings, así que en producción sale con el
+     * dominio de APP_URL y desde el cron también.
+     */
+    private function enlaceFamilia(Alumno $alumno): ?string
+    {
+        if (!$alumno->getTokenTutor()) {
+            return null;
+        }
+
+        return $this->urlGenerator->generate(
+            'app_familia',
+            ['token' => $alumno->getTokenTutor()],
+            UrlGeneratorInterface::ABSOLUTE_URL
+        );
     }
 
     /**

@@ -46,6 +46,32 @@ class Alumno
     private $email;
 
     /**
+     * Token del enlace de la familia.
+     *
+     * Es lo que autoriza la vista de solo lectura de /familia/{token}: el tutor no tiene usuario
+     * ni contraseña, entra por el enlace que le llega en los emails. Se puede regenerar, que es
+     * la forma de revocar el anterior.
+     *
+     * @ORM\Column(type="string", length=64, unique=true, nullable=true)
+     */
+    private $tokenTutor;
+
+    /**
+     * @ORM\Column(type="datetime", nullable=true)
+     */
+    private $tokenTutorCreadoEn;
+
+    /**
+     * @ORM\Column(type="datetime", nullable=true)
+     */
+    private $tokenTutorUltimoAcceso;
+
+    /**
+     * @ORM\Column(type="integer", options={"default": 0})
+     */
+    private $tokenTutorAccesos = 0;
+
+    /**
      * @ORM\Column(type="text", nullable=true)
      */
     private $l_nac;
@@ -871,6 +897,47 @@ class Alumno
     public function setUser(?User $user): self
     {
         $this->user = $user;
+        return $this;
+    }
+
+    public function getTokenTutor(): ?string
+    {
+        return $this->tokenTutor;
+    }
+
+    public function setTokenTutor(?string $tokenTutor): self
+    {
+        $this->tokenTutor = $tokenTutor;
+        $this->tokenTutorCreadoEn = $tokenTutor ? new \DateTime() : null;
+        $this->tokenTutorUltimoAcceso = null;
+        $this->tokenTutorAccesos = 0;
+
+        return $this;
+    }
+
+    public function getTokenTutorCreadoEn(): ?\DateTimeInterface
+    {
+        return $this->tokenTutorCreadoEn;
+    }
+
+    public function getTokenTutorUltimoAcceso(): ?\DateTimeInterface
+    {
+        return $this->tokenTutorUltimoAcceso;
+    }
+
+    public function getTokenTutorAccesos(): int
+    {
+        return (int) $this->tokenTutorAccesos;
+    }
+
+    /**
+     * Deja registrado que alguien entró con el enlace.
+     */
+    public function registrarAccesoTutor(): self
+    {
+        $this->tokenTutorUltimoAcceso = new \DateTime();
+        $this->tokenTutorAccesos = $this->getTokenTutorAccesos() + 1;
+
         return $this;
     }
 }

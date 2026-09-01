@@ -112,6 +112,68 @@
 
     <div class="card shadow mb-4">
         <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Enlace para la familia</h6>
+        </div>
+        <div class="card-body">
+            <p class="small text-muted">
+                Un enlace de solo lectura con las asistencias, las notas, las tareas y lo que se dio
+                en clase. La familia entra sin usuario ni contraseña, y se lo incluimos en los emails
+                que ya recibe.
+            </p>
+
+            {% if alumno.tokenTutor %}
+                <div class="input-group mb-2">
+                    <input type="text" class="form-control" id="enlaceFamilia" readonly
+                           value="{{ url('app_familia', {'token': alumno.tokenTutor}) }}">
+                    <button type="button" class="btn btn-outline-secondary" onclick="copiarEnlaceFamilia(this)">
+                        <i class="bi bi-clipboard"></i> Copiar
+                    </button>
+                    <a href="{{ path('app_familia', {'token': alumno.tokenTutor}) }}" target="_blank"
+                       class="btn btn-outline-secondary" data-no-loading>
+                        <i class="bi bi-box-arrow-up-right"></i> Abrir
+                    </a>
+                </div>
+
+                <p class="small text-muted">
+                    Generado el {{ alumno.tokenTutorCreadoEn|date('d/m/Y H:i') }}.
+                    {% if alumno.tokenTutorAccesos > 0 %}
+                        Se abrió {{ alumno.tokenTutorAccesos }} vez(ces), la última el
+                        {{ alumno.tokenTutorUltimoAcceso|date('d/m/Y H:i') }}.
+                    {% else %}
+                        Todavía no se abrió.
+                    {% endif %}
+                </p>
+
+                <div class="d-flex gap-2">
+                    <form method="post" action="{{ path('app_alumno_enlace_familia', {'id': alumno.id}) }}"
+                          onsubmit="return confirm('¿Generar un enlace nuevo? El actual deja de funcionar.');">
+                        <input type="hidden" name="_token" value="{{ csrf_token('enlace_familia_' ~ alumno.id) }}">
+                        <button type="submit" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-arrow-repeat"></i> Generar uno nuevo
+                        </button>
+                    </form>
+                    <form method="post" action="{{ path('app_alumno_enlace_familia', {'id': alumno.id}) }}"
+                          onsubmit="return confirm('¿Desactivar el enlace? La familia deja de poder entrar.');">
+                        <input type="hidden" name="_token" value="{{ csrf_token('enlace_familia_' ~ alumno.id) }}">
+                        <input type="hidden" name="quitar" value="1">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                            <i class="bi bi-x-circle"></i> Desactivar
+                        </button>
+                    </form>
+                </div>
+            {% else %}
+                <form method="post" action="{{ path('app_alumno_enlace_familia', {'id': alumno.id}) }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('enlace_familia_' ~ alumno.id) }}">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-link-45deg"></i> Generar el enlace
+                    </button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
             <h6 class="m-0 font-weight-bold text-primary">Información del Tutor</h6>
         </div>
         <div class="card-body">
@@ -282,4 +344,25 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        function copiarEnlaceFamilia(boton) {
+            const campo = document.getElementById('enlaceFamilia');
+            campo.select();
+
+            // navigator.clipboard no existe sin https: se deja el fallback de siempre.
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(campo.value);
+            } else {
+                document.execCommand('copy');
+            }
+
+            const original = boton.innerHTML;
+            boton.innerHTML = '<i class="bi bi-check2"></i> Copiado';
+            setTimeout(function () { boton.innerHTML = original; }, 1500);
+        }
+    </script>
 {% endblock %}

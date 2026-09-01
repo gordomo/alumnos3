@@ -83,6 +83,8 @@
             <p style="margin-top: 20px;">{{ textoPersonalizado|nl2br }}</p>
         {% endif %}
 
+        {{ include('emails/_enlace_familia.html.twig') }}
+
         <div class="footer">
             {{ instituto.nombre }}<br>
             Este es un mensaje automático, por favor no responder a esta dirección.

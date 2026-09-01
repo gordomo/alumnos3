@@ -35,6 +35,8 @@
             <div class="mensaje">{{ mensaje|nl2br }}</div>
         </div>
 
+        {{ include('emails/_enlace_familia.html.twig') }}
+
         <div class="footer">
             <p style="margin: 0 0 8px;"><strong>{{ instituto.nombre }}</strong></p>
             <div class="contact-info">
