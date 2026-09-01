@@ -1,0 +1,183 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ curso.nombre }} — diario y materiales{% endblock %}
+
+{% block panelTitle %}{{ curso.nombre }}{% endblock %}
+
+{% block body %}
+<div class="container-fluid px-4 mt-3" style="padding-bottom: 3rem;">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ path(rutas.index) }}">Diario y materiales</a></li>
+            <li class="breadcrumb-item active">{{ curso.nombre }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-lg-7 mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-journal-text"></i> Qué se dio en clase</h5>
+                </div>
+
+                <div class="card-body border-bottom">
+                    <form method="post" action="{{ path(rutas.guardarClase, {'id': curso.id}) }}" class="row g-2">
+                        <input type="hidden" name="_token" value="{{ csrf_token('diario_clase_' ~ curso.id) }}">
+
+                        <div class="col-md-4">
+                            <label for="fecha" class="form-label small mb-1">Fecha <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control form-control-sm" id="fecha" name="fecha" required
+                                   value="{{ hoy|date('Y-m-d') }}">
+                        </div>
+                        <div class="col-md-8">
+                            <label for="tema" class="form-label small mb-1">Tema <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control form-control-sm" id="tema" name="tema" required
+                                   maxlength="200" placeholder="Ej: Acordes de séptima, ejercicios 1 a 4">
+                        </div>
+                        <div class="col-12">
+                            <label for="detalle" class="form-label small mb-1">Detalle (opcional)</label>
+                            <textarea class="form-control form-control-sm" id="detalle" name="detalle" rows="2"
+                                      placeholder="Lo que quieras dejar anotado: páginas, consignas, lo que quedó pendiente."></textarea>
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-sm btn-primary">
+                                <i class="bi bi-plus-circle"></i> Guardar la clase
+                            </button>
+                            <span class="small text-muted ms-2">
+                                Si ya cargaste esa fecha, se actualiza.
+                            </span>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 7rem;">Fecha</th>
+                                <th>Tema</th>
+                                <th class="text-end" style="width: 4rem;"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for clase in clases %}
+                            <tr>
+                                <td class="text-nowrap">{{ clase.fecha|date('d/m/Y') }}</td>
+                                <td>
+                                    <strong>{{ clase.tema }}</strong>
+                                    {% if clase.detalle %}
+                                        <div class="small text-muted">{{ clase.detalle|nl2br }}</div>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <form method="post" action="{{ path(rutas.eliminarClase, {'id': clase.id}) }}"
+                                          onsubmit="return confirm('¿Eliminar la clase del {{ clase.fecha|date('d/m/Y') }}?');">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('eliminar_clase_' ~ clase.id) }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="3" class="text-center text-muted py-4">
+                                    Todavía no hay clases registradas en este curso.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5 mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-paperclip"></i> Materiales de consulta</h5>
+                </div>
+
+                <div class="card-body border-bottom">
+                    <form method="post" action="{{ path(rutas.guardarMaterial, {'id': curso.id}) }}" class="row g-2">
+                        <input type="hidden" name="_token" value="{{ csrf_token('diario_material_' ~ curso.id) }}">
+
+                        <div class="col-12">
+                            <label for="titulo" class="form-label small mb-1">Título <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control form-control-sm" id="titulo" name="titulo" required
+                                   maxlength="150" placeholder="Ej: Apunte de la unidad 3">
+                        </div>
+                        <div class="col-12">
+                            <label for="url" class="form-label small mb-1">Enlace <span class="text-danger">*</span></label>
+                            <input type="url" class="form-control form-control-sm" id="url" name="url" required
+                                   placeholder="https://...">
+                            <div class="form-text">
+                                Se guarda el enlace, no el archivo: sirve Drive, YouTube o donde ya lo tengas.
+                            </div>
+                        </div>
+                        <div class="col-md-7">
+                            <label for="tipo" class="form-label small mb-1">Tipo</label>
+                            <select class="form-select form-select-sm" id="tipo" name="tipo">
+                                {% for valor, datos in tiposMaterial %}
+                                    <option value="{{ valor }}">{{ datos.etiqueta }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-5 d-flex align-items-end">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="visible" id="visible" value="1" checked>
+                                <label class="form-check-label small" for="visible">Lo ven los alumn@s</label>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <label for="descripcion" class="form-label small mb-1">Descripción (opcional)</label>
+                            <textarea class="form-control form-control-sm" id="descripcion" name="descripcion" rows="2"></textarea>
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-sm btn-primary">
+                                <i class="bi bi-plus-circle"></i> Agregar material
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <ul class="list-group list-group-flush">
+                {% for material in materiales %}
+                    <li class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-start gap-2">
+                            <div>
+                                <i class="bi {{ material.tipoIcono }}"></i>
+                                {% if material.urlSegura %}
+                                    <a href="{{ material.urlSegura }}" target="_blank" rel="noopener noreferrer">{{ material.titulo }}</a>
+                                {% else %}
+                                    {{ material.titulo }}
+                                    <span class="badge bg-danger">enlace no válido</span>
+                                {% endif %}
+                                {% if not material.visible %}
+                                    <span class="badge bg-secondary">oculto</span>
+                                {% endif %}
+                                <div class="small text-muted">
+                                    {{ material.tipoEtiqueta }}
+                                    {% if material.descripcion %} · {{ material.descripcion }}{% endif %}
+                                </div>
+                            </div>
+                            <form method="post" action="{{ path(rutas.eliminarMaterial, {'id': material.id}) }}"
+                                  onsubmit="return confirm('¿Eliminar «{{ material.titulo|e('js') }}»?');">
+                                <input type="hidden" name="_token" value="{{ csrf_token('eliminar_material_' ~ material.id) }}">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </li>
+                {% else %}
+                    <li class="list-group-item text-center text-muted py-4">
+                        Todavía no hay materiales en este curso.
+                    </li>
+                {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

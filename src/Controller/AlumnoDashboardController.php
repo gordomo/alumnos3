@@ -8,6 +8,8 @@ use App\Repository\AsistenciaAlumnosRepository;
 use App\Repository\AlumnosPagosRepository;
 use App\Repository\AlumnoCursoHistoricoRepository;
 use App\Repository\CalificacionRepository;
+use App\Repository\ClaseDictadaRepository;
+use App\Repository\MaterialCursoRepository;
 use App\Repository\TareaEntregaRepository;
 use App\Repository\TareaRepository;
 use App\Service\EscalaCalificacionService;
@@ -337,6 +339,65 @@ class AlumnoDashboardController extends AbstractController
         }
 
         return $this->render('alumno_dashboard/asistencias.html.twig', [
+            'alumno' => $alumno,
+            'cursos' => $cursos,
+            'date_format' => $institutoTimezoneService->getDateFormatForInstituto($alumno->getInstituto()),
+        ]);
+    }
+
+    /**
+     * Mis Cursos: qué se dio en clase y de dónde estudiar.
+     *
+     * Junta las dos cosas que el instituto pidió para alumn@s y tutores —contenidos dictados y
+     * materiales de consulta— en una sola pantalla, porque se consultan juntas: el que faltó
+     * quiere saber qué se perdió y dónde leerlo.
+     *
+     * Solo los materiales visibles: el profesor puede tener alguno apagado mientras lo prepara.
+     *
+     * @Route("/cursos", name="app_alumno_cursos")
+     */
+    public function cursos(
+        AlumnoCursoHistoricoRepository $historicoRepository,
+        ClaseDictadaRepository $claseRepository,
+        MaterialCursoRepository $materialRepository,
+        InstitutoTimezoneService $institutoTimezoneService
+    ): Response {
+        $user = $this->getUser();
+        if (!$user || !$user->getAlumno()) {
+            $this->addFlash('danger', 'No se encontró información del alumno asociada a tu usuario.');
+            return $this->redirectToRoute('app_logout');
+        }
+
+        $alumno = $user->getAlumno();
+
+        // Por curso y no por inscripción: si se reinscribió al mismo curso, el diario es uno.
+        $cursosDelAlumno = [];
+        foreach ($historicoRepository->findByAlumno($alumno) as $historico) {
+            $curso = $historico->getCurso();
+            if (!$curso) {
+                continue;
+            }
+
+            if (!isset($cursosDelAlumno[$curso->getId()])) {
+                $cursosDelAlumno[$curso->getId()] = ['curso' => $curso, 'activo' => false];
+            }
+
+            if ($historico->isActivo()) {
+                $cursosDelAlumno[$curso->getId()]['activo'] = true;
+            }
+        }
+
+        $cursos = [];
+        foreach ($cursosDelAlumno as $datos) {
+            $cursos[] = [
+                'curso' => $datos['curso'],
+                'activo' => $datos['activo'],
+                'clases' => $claseRepository->findByCurso($datos['curso'], 30),
+                'materiales' => $materialRepository->findByCurso($datos['curso'], true),
+            ];
+        }
+
+        return $this->render('alumno_dashboard/cursos.html.twig', [
             'alumno' => $alumno,
             'cursos' => $cursos,
             'date_format' => $institutoTimezoneService->getDateFormatForInstituto($alumno->getInstituto()),

@@ -22,6 +22,11 @@
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a class="list-group-item list-group-item-action bg-light {% if app.request.get('_route') == 'app_alumno_cursos' %}active{% endif %}" href="{{ path('app_alumno_cursos') }}">
+                        <i class="bi bi-book"></i> Mis Cursos
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a class="list-group-item list-group-item-action bg-light {% if app.request.get('_route') == 'app_alumno_notas' %}active{% endif %}" href="{{ path('app_alumno_notas') }}">
                         <i class="bi bi-mortarboard"></i> Mis Notas
                     </a>
@@ -70,6 +75,11 @@
 
             <ul class="nav nav-tabs sidebar-dropdown-ul">
                 <li class="nav-item">
+                    <a class="list-group-item list-group-item-action bg-light {% if app.request.get('_route') starts with 'app_diario_profesor' %}active{% endif %}" href="{{ path('app_diario_profesor_index') }}">
+                        <i class="bi bi-journal-text"></i> Clases y Materiales
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a class="list-group-item list-group-item-action bg-light {% if app.request.get('_route') starts with 'app_profesor_pagos_propios' %}active{% endif %}" href="{{ path('app_profesor_pagos_propios') }}">
                         <i class="bi bi-cash-coin"></i> Mis Pagos
                     </a>
@@ -115,6 +125,7 @@
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item {% if app.request.get('_route') == 'app_curso_index' %}active{% endif %}" href="{{ path('app_curso_index') }}">Listado</a></li>
                         <li><a class="dropdown-item {% if app.request.get('_route') starts with 'app_curso_calendario' %}active{% endif %}" href="{{ path('app_curso_calendario') }}">Calendario</a></li>
+                        <li><a class="dropdown-item {% if app.request.get('_route') starts with 'app_diario' and not (app.request.get('_route') starts with 'app_diario_profesor') %}active{% endif %}" href="{{ path('app_diario_index') }}">Clases y Materiales</a></li>
                     </ul>
                 </li>
             </ul>

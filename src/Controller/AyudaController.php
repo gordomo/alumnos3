@@ -52,6 +52,12 @@ class AyudaController extends AbstractController
             'resumen' => 'Crear un curso, asignarle horarios y profesores, y cerrarlo al final del período.',
             'roles' => ['ROLE_ADMIN_INSTITUTO'],
         ],
+        'diario' => [
+            'titulo' => 'Clases y materiales',
+            'icono' => 'bi-journal-text',
+            'resumen' => 'Anotar qué se dio en cada clase y dejar los materiales de consulta del curso.',
+            'roles' => ['ROLE_ADMIN_INSTITUTO', 'ROLE_PROFESOR'],
+        ],
         'alumnos' => [
             'titulo' => 'Alumn@s e inscripciones',
             'icono' => 'bi-people',

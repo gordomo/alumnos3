@@ -1,0 +1,60 @@
+{% extends 'ayuda/_tema.html.twig' %}
+{% import 'ayuda/_macros.html.twig' as m %}
+
+{% block contenido %}
+{% set esProfe = is_granted('ROLE_PROFESOR') and not is_granted('ROLE_ADMIN_INSTITUTO') %}
+
+<p>
+    Dos cosas que se cargan en el mismo momento —al terminar la clase— y que el alumn@ y su
+    familia consultan juntas: <strong>qué se dio</strong> y <strong>de dónde estudiarlo</strong>.
+</p>
+
+<p>
+    Se entra por
+    {% if esProfe %}{{ m.ruta(['Clases y Materiales']) }}{% else %}{{ m.ruta(['Cursos', 'Clases y Materiales']) }}{% endif %},
+    se elige el curso, y ahí están las dos cosas en la misma pantalla.
+</p>
+
+<h2>Qué se dio en clase</h2>
+
+<ol>
+    <li>La <strong>fecha</strong> viene con el día de hoy puesta.</li>
+    <li>El <strong>tema</strong>: una línea con lo que se dio. Es lo que va a leer el alumn@.</li>
+    <li>
+        El <strong>detalle</strong>, opcional: las páginas, la consigna, lo que quedó pendiente.
+    </li>
+</ol>
+
+{{ m.nota('info', 'Una clase por día',
+   'Si cargás una fecha que ya tenía clase anotada, se actualiza en lugar de duplicarse. Así se
+    puede corregir el tema sin borrar nada.') }}
+
+<h2>Materiales de consulta</h2>
+
+<p>
+    Se guarda el <strong>enlace</strong>, no el archivo: sirve un documento de Drive, un video de
+    YouTube, un PDF donde ya lo tengan subido. Eso evita límites de tamaño y que el material
+    quede duplicado en dos lugares.
+</p>
+
+<ul>
+    <li><strong>Título</strong>: cómo lo va a ver el alumn@.</li>
+    <li><strong>Enlace</strong>: tiene que empezar con <em>http</em> o <em>https</em>.</li>
+    <li><strong>Tipo</strong>: apunte, video, sitio u otro. Solo cambia el ícono.</li>
+    <li>
+        <strong>Lo ven los alumn@s</strong>: destildado queda guardado pero oculto, para ir
+        preparándolo antes de publicarlo.
+    </li>
+</ul>
+
+<h2>Cómo lo ve el alumn@</h2>
+
+<p>
+    En {{ m.ruta(['Mis Cursos']) }} ve, por cada curso, los materiales visibles y las últimas 30
+    clases con su tema. El que faltó se entera de qué se perdió sin tener que preguntar.
+</p>
+
+{{ m.nota('info', 'Los materiales ocultos no se ven',
+   'El alumn@ ve solamente los que tienen el tilde de "lo ven los alumn@s". Las clases, en
+    cambio, se ven todas: si no querés que algo se vea, no lo anotes ahí.') }}
+{% endblock %}

@@ -1,0 +1,84 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mis Cursos{% endblock %}
+
+{% block body %}
+<div class="container mt-4" style="padding-bottom: 3rem;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0"><i class="bi bi-book"></i> Mis Cursos</h1>
+        <a href="{{ path('app_alumno_dashboard') }}" class="btn btn-secondary btn-sm">← Volver al panel</a>
+    </div>
+
+    {% if cursos is empty %}
+        <div class="alert alert-light border">
+            <i class="bi bi-inbox"></i> Todavía no estás inscript@ en ningún curso.
+        </div>
+    {% else %}
+        {% for datos in cursos %}
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">{{ datos.curso.nombre }}</h5>
+                    {% if not datos.activo %}
+                        <span class="badge bg-light text-dark">curso terminado</span>
+                    {% endif %}
+                </div>
+
+                <div class="card-body">
+                    <h6 class="text-muted"><i class="bi bi-paperclip"></i> Materiales de consulta</h6>
+                    {% if datos.materiales is empty %}
+                        <p class="small text-muted">Todavía no hay materiales en este curso.</p>
+                    {% else %}
+                        <ul class="list-unstyled mb-3">
+                            {% for material in datos.materiales %}
+                                <li class="mb-2">
+                                    <i class="bi {{ material.tipoIcono }}"></i>
+                                    {% if material.urlSegura %}
+                                        <a href="{{ material.urlSegura }}" target="_blank" rel="noopener noreferrer">
+                                            {{ material.titulo }}
+                                        </a>
+                                    {% else %}
+                                        {{ material.titulo }}
+                                    {% endif %}
+                                    <span class="small text-muted">· {{ material.tipoEtiqueta }}</span>
+                                    {% if material.descripcion %}
+                                        <div class="small text-muted">{{ material.descripcion }}</div>
+                                    {% endif %}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+
+                    <h6 class="text-muted"><i class="bi bi-journal-text"></i> Qué se dio en clase</h6>
+                    {% if datos.clases is empty %}
+                        <p class="small text-muted mb-0">El profesor todavía no cargó el detalle de las clases.</p>
+                    {% else %}
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 7rem;">Fecha</th>
+                                        <th>Tema</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                {% for clase in datos.clases %}
+                                    <tr>
+                                        <td class="text-nowrap">{{ clase.fecha|date(date_format) }}</td>
+                                        <td>
+                                            {{ clase.tema }}
+                                            {% if clase.detalle %}
+                                                <div class="small text-muted">{{ clase.detalle|nl2br }}</div>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+    {% endif %}
+</div>
+{% endblock %}
