@@ -1,0 +1,148 @@
+/*
+ * Estilos compartidos de las pantallas de calendario (Agenda y Cursos → Calendario).
+ *
+ * FullCalendar 5 se pinta por variables CSS propias (--fc-*), así que no hace falta pelearle:
+ * se le pasan los tonos del sistema y el resto se acomoda solo.
+ *
+ * Vive en un archivo y no en cada template porque las dos pantallas tienen que verse igual.
+ */
+.calendario-panel {
+    background: #fff;
+    padding: 1rem;
+    border-radius: 14px;
+}
+
+/* FullCalendar agrega sus clases (.fc, .fc-theme-standard) a este mismo div, así que las
+   variables van acá y no en un descendiente. */
+.calendario-panel {
+    --fc-border-color: #dde6f4;
+    --fc-page-bg-color: #ffffff;
+    --fc-neutral-bg-color: #f4f8ff;
+    /* El día de hoy: azul suave en lugar del amarillo pálido del tema por defecto. */
+    --fc-today-bg-color: #eaf2fe;
+    --fc-list-event-hover-bg-color: #f4f8ff;
+    --fc-highlight-color: rgba(47, 126, 240, 0.14);
+}
+
+/* Encabezado de los días: azul del sistema en lugar del gris. */
+.calendario-panel .fc-col-header-cell {
+    background: #1b6ae0;
+    border-color: #1b6ae0;
+    padding: 0.55rem 0;
+}
+
+.calendario-panel .fc-col-header-cell-cushion {
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.92rem;
+    letter-spacing: 0.02em;
+    /* Los nombres de los días son <a>: sin esto van subrayados. */
+    text-decoration: none;
+    padding: 0.35rem 0.5rem;
+}
+
+/* Números de los días: sin subrayado y en el azul oscuro del texto. */
+.calendario-panel .fc-daygrid-day-number {
+    text-decoration: none;
+    color: #1f2d3d;
+    font-weight: 500;
+    padding: 0.4rem 0.5rem;
+}
+
+.calendario-panel .fc-day-other .fc-daygrid-day-number {
+    color: #aab4c2;
+    font-weight: 400;
+}
+
+/* Hoy, con el número en un círculo lleno. */
+.calendario-panel .fc-day-today .fc-daygrid-day-number {
+    background: #1b6ae0;
+    color: #fff;
+    border-radius: 999px;
+    min-width: 1.75rem;
+    text-align: center;
+    margin: 0.25rem;
+    padding: 0.25rem 0.4rem;
+}
+
+.calendario-panel .fc-day-today .fc-col-header-cell-cushion {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+/* Barra de botones: los mismos azules que el resto del sistema. */
+.calendario-panel .fc-button-primary {
+    background: #1b6ae0;
+    border-color: #1b6ae0;
+    box-shadow: none;
+}
+
+.calendario-panel .fc-button-primary:hover {
+    background: #1b5fc4;
+    border-color: #1b5fc4;
+}
+
+.calendario-panel .fc-button-primary:disabled,
+.calendario-panel .fc-button-primary.fc-button-active {
+    background: #123a7a;
+    border-color: #123a7a;
+}
+
+.calendario-panel .fc-button-primary:focus,
+.calendario-panel .fc-button-primary:not(:disabled):active:focus {
+    box-shadow: 0 0 0 0.2rem rgba(47, 126, 240, 0.3);
+}
+
+.calendario-panel .fc-toolbar-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #1f2d3d;
+    /* Solo la primera letra en mayúscula: con capitalize quedaba "Septiembre De 2026". */
+    text-transform: lowercase;
+}
+
+.calendario-panel .fc-toolbar-title::first-letter {
+    text-transform: uppercase;
+}
+
+.calendario-panel .fc-event {
+    cursor: pointer;
+    border-radius: 5px;
+    padding: 1px 3px;
+    font-size: 0.82rem;
+}
+
+.calendario-panel .fc-daygrid-event-dot {
+    border-color: currentColor;
+}
+
+/* Ojo: no poner min-height en .fc-daygrid-day-frame para pantalla grande. FullCalendar le pone
+   min-height: 100% para que la celda se estire hasta el alto de la fila, y pisarlo con un valor
+   en rem deja las celdas bajas aunque la fila sea alta. El alto de la vista de mes lo calcula
+   ajustarAlto() en el JS de la agenda. */
+
+.calendario-panel .fc-more-link {
+    color: #1b6ae0;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+@media (max-width: 767px) {
+    .calendario-panel {
+        padding: 0.5rem;
+    }
+
+    .calendario-panel .fc-toolbar {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .calendario-panel .fc-col-header-cell-cushion {
+        font-size: 0.78rem;
+        padding: 0.3rem 0.15rem;
+    }
+
+    .calendario-panel .fc-daygrid-day-frame {
+        min-height: 3.5rem;
+    }
+}

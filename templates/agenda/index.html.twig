@@ -7,14 +7,13 @@
 {% block stylesheets %}
     {{ parent() }}
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="{{ asset('assets/css/calendario.css') }}">
     <style>
         .agenda-filtros .form-check { margin-right: 1.25rem; }
         .agenda-color {
             display: inline-block; width: .75rem; height: .75rem;
             border-radius: 2px; margin-right: .35rem; vertical-align: middle;
         }
-        #calendario { background: #fff; padding: 1rem; border-radius: 14px; }
-        .fc-event { cursor: pointer; }
     </style>
 {% endblock %}
 
@@ -61,7 +60,7 @@
         </p>
     {% endif %}
 
-    <div id="calendario"></div>
+    <div id="calendario" class="calendario-panel"></div>
 </div>
 
 <div class="modal fade" id="modalEvento" tabindex="-1">
@@ -95,6 +94,15 @@
         const urlEventos = '{{ path(rutas.eventos) }}';
         const modal = new bootstrap.Modal(document.getElementById('modalEvento'));
 
+        // 900px es donde siete nombres de día completos todavía entran sin cortarse.
+        function anchoComodo() {
+            return window.innerWidth >= 900;
+        }
+
+        function formatoDelDia() {
+            return anchoComodo() ? { weekday: 'long' } : { weekday: 'short' };
+        }
+
         function fuentesElegidas() {
             return Array.from(document.querySelectorAll('.filtro-fuente:checked')).map(c => c.value);
         }
@@ -108,10 +116,17 @@
                 right: 'dayGridMonth,timeGridWeek,listMonth'
             },
             buttonText: { today: 'Hoy', month: 'Mes', week: 'Semana', list: 'Lista' },
+
+            // Nombre del día completo si la pantalla da, abreviado si no.
+            dayHeaderFormat: formatoDelDia(),
+            // El alto se calcula a mano en ajustarAlto(): aspectRatio no alcanza porque las
+            // filas del mes cambian de 5 a 6 según el mes.
             height: 'auto',
             // Sin esto la vista de mes muestra "8" en lugar de "08:00".
             eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
             // Un día con muchas clases se colapsa en "+N más" en lugar de estirar la fila.
+            // Sin la sexta semana vacía cuando el mes no la necesita.
+            fixedWeekCount: false,
             dayMaxEvents: 4,
             moreLinkText: function (cantidad) { return '+' + cantidad + ' más'; },
             allDaySlot: true,
@@ -159,6 +174,8 @@
                     .then(exito)
                     .catch(error);
             },
+            datesSet: function () { ajustarAlto(); },
+
             eventClick: function (info) {
                 if (typeof hideLoading === 'function') { hideLoading(); }
                 info.jsEvent.preventDefault();
@@ -235,7 +252,33 @@
         }
         {% endif %}
 
+        // Celdas cuadradas en la vista de mes: el alto se saca del ancho de la columna por la
+        // cantidad de semanas que tenga el mes. En pantalla chica se deja el alto por contenido,
+        // porque una celda cuadrada de 50px no muestra nada.
+        function ajustarAlto() {
+            if (calendario.view.type !== 'dayGridMonth' || !anchoComodo()) {
+                calendario.setOption('height', 'auto');
+                return;
+            }
+
+            const panel = document.getElementById('calendario');
+            const filas = panel.querySelectorAll('.fc-daygrid-body tbody tr').length || 6;
+            const anchoColumna = panel.clientWidth / 7;
+            const alrededor = panel.querySelector('.fc-header-toolbar').offsetHeight
+                + (panel.querySelector('.fc-col-header') ? panel.querySelector('.fc-col-header').offsetHeight : 40)
+                + 40;
+
+            calendario.setOption('height', Math.round(anchoColumna * filas + alrededor));
+        }
+
         calendario.render();
+        ajustarAlto();
+
+        // Al cambiar el tamaño de la ventana se rehacen las tres opciones que dependen del ancho.
+        window.addEventListener('resize', function () {
+            calendario.setOption('dayHeaderFormat', formatoDelDia());
+            ajustarAlto();
+        });
 
         document.querySelectorAll('.filtro-fuente').forEach(function (check) {
             check.addEventListener('change', function () { calendario.refetchEvents(); });

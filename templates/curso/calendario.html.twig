@@ -7,10 +7,7 @@
 {% block stylesheets %}
     {{ parent() }}
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet" />
-    <style>
-        #calendario-cursos { background: #fff; padding: 1rem; border-radius: 14px; }
-        .fc-event { cursor: default; }
-    </style>
+    <link rel="stylesheet" href="{{ asset('assets/css/calendario.css') }}">
 {% endblock %}
 
 {% block body %}
@@ -41,7 +38,7 @@
         </div>
     {% endif %}
 
-    <div id="calendario-cursos"></div>
+    <div id="calendario-cursos" class="calendario-panel"></div>
 </div>
 
 <div class="modal fade" id="modalClase" tabindex="-1">
@@ -81,7 +78,10 @@
                 right: 'timeGridWeek,dayGridMonth,listWeek'
             },
             buttonText: { today: 'Hoy', month: 'Mes', week: 'Semana', list: 'Lista' },
+            dayHeaderFormat: window.innerWidth >= 900 ? { weekday: 'long', day: 'numeric' } : { weekday: 'short', day: 'numeric' },
             height: 'auto',
+            // Sin la sexta semana vacía cuando el mes no la necesita.
+            fixedWeekCount: false,
             allDaySlot: false,
             slotMinTime: '07:00:00',
             slotMaxTime: '23:00:00',
