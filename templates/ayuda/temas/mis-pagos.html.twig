@@ -1,0 +1,55 @@
+{% extends 'ayuda/_tema.html.twig' %}
+{% import 'ayuda/_macros.html.twig' as m %}
+
+{% block contenido %}
+<p>
+    En {{ m.ruta(['Mis Pagos']) }} ves, mes por mes, lo que te corresponde por tus cursos, lo que
+    el instituto ya te pagó y el saldo. Es de solo lectura: los pagos los registra la
+    administración.
+</p>
+
+<h2>Los tres números de arriba</h2>
+
+<ul>
+    <li><strong>Te corresponde</strong>: lo que da el cálculo del mes elegido.</li>
+    <li><strong>Ya te pagaron</strong>: la suma de los pagos registrados de ese mes.</li>
+    <li>
+        <strong>Queda pendiente</strong>: la diferencia. Si dice <em>de más</em>, te pagaron por
+        encima de lo calculado, y suele ser porque hubo un arreglo o un adelanto.
+    </li>
+</ul>
+
+<h2>Cómo se llega a ese número</h2>
+
+<p>
+    Abajo está el desglose, curso por curso, con la modalidad que se le aplicó a cada uno y la
+    cuenta que se hizo. Según lo que tengas acordado, cada curso puede ir:
+</p>
+
+<ul>
+    <li>
+        <strong>Por hora</strong>: las clases dictadas del mes por la duración de cada una y por tu
+        valor hora, más el viático por clase si tenés uno cargado.
+    </li>
+    <li><strong>Porcentaje</strong>: un porcentaje de lo que produjo el curso ese mes.</li>
+    <li><strong>Fijo por el curso</strong>: un monto acordado, sin importar las clases.</li>
+</ul>
+
+{{ m.nota('info', 'Lo que no se dictó no se paga',
+   'Las clases en las que figurás ausente se descuentan, y también los días marcados como feriado
+    o receso en la agenda. El detalle lo dice, por ejemplo "3 de 5 clases · 2 sin dictar por
+    feriado", así que se puede ver por qué un mes da menos que otro.') }}
+
+<h2>Los recibos</h2>
+
+<p>
+    Cada pago tiene su recibo, que se abre en una pestaña nueva y se puede imprimir o guardar como
+    PDF. El recibo guarda la cuenta <strong>del momento en que se pagó</strong>: si después cambia
+    tu valor hora, ese recibo sigue mostrando lo que se te pagó y con qué números.
+</p>
+
+{{ m.nota('info', 'Si algo no coincide',
+   'Los montos los calcula el sistema con las clases y la modalidad que tenés acordada. Si ves algo
+    que no cierra, hablalo con la administración del instituto: desde acá no se puede modificar
+    nada.') }}
+{% endblock %}

@@ -100,6 +100,12 @@ class AyudaController extends AbstractController
             'resumen' => 'Tomar asistencia de una clase, corregirla después y ver los informes.',
             'roles' => ['ROLE_ADMIN_INSTITUTO', 'ROLE_PROFESOR'],
         ],
+        'mis-pagos' => [
+            'titulo' => 'Mis pagos',
+            'icono' => 'bi-cash-coin',
+            'resumen' => 'Lo que te corresponde por mes, lo que ya te pagaron y tus recibos.',
+            'roles' => ['ROLE_PROFESOR'],
+        ],
         'mi-panel' => [
             'titulo' => 'Mi panel',
             'icono' => 'bi-person-circle',

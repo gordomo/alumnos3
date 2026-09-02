@@ -142,6 +142,10 @@ class ImportarAlumnosController extends AbstractController
      */
     public function cancelar(Request $request): Response
     {
+        if (!$this->isCsrfTokenValid('importar_alumnos_cancelar', (string) $request->request->get('_token'))) {
+            return $this->redirectToRoute('app_importar_alumnos');
+        }
+
         $ruta = $this->rutaEnSesion($request);
         if ($ruta) {
             @unlink($ruta);
