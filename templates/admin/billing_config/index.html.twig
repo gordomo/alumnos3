@@ -1,77 +1,150 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Configuración de Facturación{% endblock %}
+{% block title %}Configuración de la suscripción{% endblock %}
 
-{% block panelTitle %}
-    Configuración de Facturación 
-    <a href="{{ path('admin_billing_config_new') }}" class="btn btn-success btn-sm">
-        <i class="bi bi-plus-circle"></i> Nueva Configuración
-    </a>
-{% endblock %}
+{% block panelTitle %}Configuración de la suscripción{% endblock %}
 
 {% block body %}
 <div class="container-fluid mt-4">
-    <div class="row">
-        <div class="col-12">
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">
-                        <i class="bi bi-cash-stack"></i> Precio por Alumno - Configuración de Facturación
-                    </h5>
+    <form method="post">
+        <input type="hidden" name="_token" value="{{ csrf_token('billing_config') }}">
+
+        <div class="row g-4">
+            <div class="col-lg-6">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-primary text-white">
+                        <i class="bi bi-cash-stack"></i> Precio
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label" for="price_per_student_monthly">Precio por alumn@ activ@ por mes</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" step="0.01" min="0.01" class="form-control" required
+                                       id="price_per_student_monthly" name="price_per_student_monthly"
+                                       value="{{ config.pricePerStudentMonthly }}">
+                            </div>
+                            <div class="form-text">
+                                Es el valor por defecto. Cada instituto puede tener su propio precio y un mínimo
+                                mensual desde su ficha, y ese pisa a este.
+                            </div>
+                        </div>
+                        <div class="mb-0">
+                            <label class="form-label" for="description">Nota interna (opcional)</label>
+                            <input type="text" class="form-control" id="description" name="description"
+                                   value="{{ config.description }}" maxlength="255">
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body">
-                    {% if configs|length > 0 %}
-                        <div class="table-responsive">
-                            <table class="table table-striped table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>ID</th>
-                                        <th>Clave</th>
-                                        <th>Precio por Alumno/Mes</th>
-                                        <th>Descripción</th>
-                                        <th>Última Actualización</th>
-                                        <th>Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for config in configs %}
-                                        <tr>
-                                            <td>{{ config.id }}</td>
-                                            <td><code>{{ config.configKey }}</code></td>
-                                            <td>
-                                                <strong class="text-success" style="font-size: 1.2rem;">
-                                                    ${{ config.pricePerStudentMonthly|number_format(2, ',', '.') }}
-                                                </strong>
-                                            </td>
-                                            <td>{{ config.description ?? '-' }}</td>
-                                            <td>{{ config.updatedAt|date((app_date_format|default('d/m/Y')) ~ ' H:i') }}</td>
-                                            <td>
-                                                <a href="{{ path('admin_billing_config_show', {'id': config.id}) }}" 
-                                                   class="btn btn-sm btn-outline-info btn-action-icon" 
-                                                   title="Ver detalles">
-                                                    <i class="bi bi-eye"></i>
-                                                </a>
-                                                <a href="{{ path('admin_billing_config_edit', {'id': config.id}) }}" 
-                                                   class="btn btn-sm btn-outline-primary btn-action-icon" 
-                                                   title="Editar">
-                                                    <i class="bi bi-pencil"></i>
-                                                </a>
-                                                {{ include('admin/billing_config/_delete_form.html.twig', {'config': config}) }}
-                                            </td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-primary text-white">
+                        <i class="bi bi-calendar-check"></i> Plazos y bloqueo
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <label class="form-label" for="dia_vencimiento">Día de vencimiento</label>
+                                <input type="number" min="1" max="28" class="form-control" required
+                                       id="dia_vencimiento" name="dia_vencimiento" value="{{ config.diaVencimiento }}">
+                                <div class="form-text">Del mes siguiente al facturado.</div>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label" for="dias_aviso_previo">Aviso previo</label>
+                                <div class="input-group">
+                                    <input type="number" min="0" max="30" class="form-control" required
+                                           id="dias_aviso_previo" name="dias_aviso_previo" value="{{ config.diasAvisoPrevio }}">
+                                    <span class="input-group-text">días</span>
+                                </div>
+                                <div class="form-text">Antes de vencer aparece el banner.</div>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label" for="dias_gracia">Gracia hasta modo consulta</label>
+                                <div class="input-group">
+                                    <input type="number" min="0" max="60" class="form-control" required
+                                           id="dias_gracia" name="dias_gracia" value="{{ config.diasGracia }}">
+                                    <span class="input-group-text">días</span>
+                                </div>
+                                <div class="form-text">Vencida la factura, sigue todo igual estos días.</div>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label" for="dias_hasta_bloqueo">Bloqueo total</label>
+                                <div class="input-group">
+                                    <input type="number" min="1" max="120" class="form-control" required
+                                           id="dias_hasta_bloqueo" name="dias_hasta_bloqueo" value="{{ config.diasHastaBloqueo }}">
+                                    <span class="input-group-text">días</span>
+                                </div>
+                                <div class="form-text">Desde el vencimiento. Tiene que ser mayor a la gracia.</div>
+                            </div>
                         </div>
-                    {% else %}
-                        <div class="alert alert-info text-center">
-                            <i class="bi bi-info-circle"></i> No hay configuraciones de facturación. 
-                            <a href="{{ path('admin_billing_config_new') }}" class="alert-link">Crear una nueva configuración</a>
+
+                        <div class="alert alert-light border mt-3 mb-0 small">
+                            Con estos valores: aviso {{ config.diasAvisoPrevio }} día(s) antes de vencer,
+                            a los {{ config.diasGracia }} día(s) de atraso el instituto pasa a
+                            <strong>modo consulta</strong> (puede ver todo pero no cargar nada, salvo pagos de alumn@s)
+                            y a los {{ config.diasHastaBloqueo }} día(s) queda con el
+                            <strong>panel bloqueado</strong>. Profesor@s, alumn@s y familias nunca se bloquean.
                         </div>
-                    {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-primary text-white">
+                        <i class="bi bi-bank"></i> Datos para transferencia
+                    </div>
+                    <div class="card-body">
+                        <label class="form-label" for="datos_transferencia">Se muestran tal cual al instituto</label>
+                        <textarea class="form-control" rows="6" id="datos_transferencia" name="datos_transferencia"
+                                  placeholder="Banco&#10;CBU:&#10;Alias:&#10;Titular:&#10;CUIT:">{{ config.datosTransferencia }}</textarea>
+                        <div class="form-text">
+                            Si está vacío, en la pantalla de suscripción se le dice al instituto que nos escriba
+                            para pedir los datos.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-primary text-white">
+                        <i class="bi bi-credit-card"></i> Mercado Pago
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label" for="mp_access_token">Access Token</label>
+                            <input type="text" class="form-control font-monospace" id="mp_access_token"
+                                   name="mp_access_token" value="{{ config.mpAccessToken }}"
+                                   placeholder="APP_USR-... o TEST-...">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="mp_public_key">Public Key</label>
+                            <input type="text" class="form-control font-monospace" id="mp_public_key"
+                                   name="mp_public_key" value="{{ config.mpPublicKey }}"
+                                   placeholder="APP_USR-... o TEST-...">
+                        </div>
+                        <div class="alert {{ config.mercadoPagoConfigurado ? 'alert-success' : 'alert-warning' }} mb-0 small">
+                            {% if config.mercadoPagoConfigurado %}
+                                Configurado. La pestaña de Mercado Pago queda habilitada en la pantalla de suscripción.
+                            {% else %}
+                                Sin credenciales: al instituto se le muestra Mercado Pago como "en preparación" y
+                                paga por transferencia o efectivo.
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+
+        <div class="mt-4 mb-5">
+            <button class="btn btn-primary"><i class="bi bi-save"></i> Guardar configuración</button>
+            {% if config.updatedAt %}
+                <span class="text-muted ms-2 small">Última modificación: {{ config.updatedAt|date('d/m/Y H:i') }}</span>
+            {% endif %}
+        </div>
+    </form>
 </div>
 {% endblock %}

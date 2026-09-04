@@ -119,6 +119,13 @@
                     </div>
                 </div>
                 {% endif %}
+
+                {# Aviso de la suscripción: aparece en todas las pantallas del administrador del
+                   instituto cuando hay algo que decir, y no aparece si está al día. #}
+                {% if app.user %}
+                    {{ include('components/_banner_suscripcion.html.twig') }}
+                {% endif %}
+
                 <div class="row g-0">
                     <div class="container">
                         {% block body %}{% endblock %}

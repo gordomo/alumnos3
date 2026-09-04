@@ -8,6 +8,8 @@ use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
+use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Validator\Constraints\File;
 
@@ -54,6 +56,29 @@ class InstitutoType extends AbstractType
                         'mimeTypesMessage' => 'Por favor sube una imagen válida (JPG o PNG)',
                     ])
                 ],
+            ])
+            // Condiciones de la suscripción. Son opcionales: vacías, el instituto usa el precio
+            // global y no tiene mínimo.
+            ->add('precioPorAlumno', NumberType::class, [
+                'label' => 'Precio por alumn@',
+                'required' => false,
+                'scale' => 2,
+                'html5' => true,
+                'attr' => ['step' => '0.01', 'min' => '0'],
+                'help' => 'Vacío = se usa el precio global.',
+            ])
+            ->add('minimoMensual', NumberType::class, [
+                'label' => 'Mínimo mensual',
+                'required' => false,
+                'scale' => 2,
+                'html5' => true,
+                'attr' => ['step' => '0.01', 'min' => '0'],
+                'help' => 'Nunca se factura menos que esto.',
+            ])
+            ->add('suscripcionExenta', CheckboxType::class, [
+                'label' => 'Exento de suscripción',
+                'required' => false,
+                'help' => 'No se le factura ni se le limita nunca el acceso.',
             ])
         ;
     }

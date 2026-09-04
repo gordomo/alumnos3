@@ -1,0 +1,57 @@
+{#
+    Banner de la suscripción. Se muestra en todas las pantallas del administrador del instituto
+    cuando hay algo que avisar, y desaparece solo cuando está al día.
+
+    Los estados vienen de SuscripcionService, el mismo que decide el bloqueo.
+#}
+{% set s = suscripcion() %}
+{% if s %}
+    {% set estilos = {
+        'por_vencer':   {'clase': 'alert-warning',  'icono': 'bi-clock-history'},
+        'en_revision':  {'clase': 'alert-info',     'icono': 'bi-hourglass-split'},
+        'vencida':      {'clase': 'alert-danger',   'icono': 'bi-exclamation-triangle-fill'},
+        'solo_lectura': {'clase': 'alert-danger',   'icono': 'bi-lock-fill'},
+        'bloqueada':    {'clase': 'alert-danger',   'icono': 'bi-slash-circle-fill'}
+    } %}
+    {% set e = estilos[s.estado]|default({'clase': 'alert-warning', 'icono': 'bi-info-circle'}) %}
+
+    <div class="alert {{ e.clase }} d-flex justify-content-between align-items-center flex-wrap gap-2 mx-4 mt-3 mb-0"
+         role="alert">
+        <div>
+            <i class="bi {{ e.icono }}"></i>
+
+            {% if s.estado == 'por_vencer' %}
+                <strong>Tu suscripción vence
+                    {% if s.dias == 0 %}hoy{% elseif s.dias == 1 %}mañana{% else %}en {{ s.dias }} días{% endif %}.</strong>
+                Son ${{ s.total|number_format(2, ',', '.') }}.
+            {% elseif s.estado == 'en_revision' %}
+                <strong>Estamos verificando tu pago.</strong>
+                En cuanto lo confirmemos te va a figurar como pagado. No hace falta que hagas nada.
+            {% elseif s.estado == 'vencida' %}
+                <strong>Tu suscripción está vencida
+                    {% if s.atraso == 1 %}desde ayer{% else %}hace {{ s.atraso }} días{% endif %}.</strong>
+                Debés ${{ s.total|number_format(2, ',', '.') }}.
+                {% if s.limiteSoloLectura %}
+                    Si no se regulariza antes del {{ s.limiteSoloLectura|date('d/m/Y') }}, el sistema
+                    pasa a modo consulta.
+                {% endif %}
+            {% elseif s.estado == 'solo_lectura' %}
+                <strong>El sistema está en modo consulta por la suscripción impaga.</strong>
+                Podés ver todo y seguir registrando los pagos de tus alumn@s, pero no dar de alta ni
+                enviar comunicaciones.
+                {% if s.limiteBloqueo %}
+                    El {{ s.limiteBloqueo|date('d/m/Y') }} se bloquea el panel.
+                {% endif %}
+            {% elseif s.estado == 'bloqueada' %}
+                <strong>El panel está bloqueado por la suscripción impaga</strong>
+                de ${{ s.total|number_format(2, ',', '.') }}.
+            {% endif %}
+        </div>
+
+        {% if s.estado != 'en_revision' %}
+            <a href="{{ path('billing_invoice_index') }}" class="btn btn-sm btn-dark text-nowrap">
+                Ver mi suscripción
+            </a>
+        {% endif %}
+    </div>
+{% endif %}

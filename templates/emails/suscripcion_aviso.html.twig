@@ -1,0 +1,71 @@
+{% extends 'emails/base_email.html.twig' %}
+
+{% block title %}{{ asunto }}{% endblock %}
+
+{% block content %}
+    <h2>Hola {{ instituto.nombre }}</h2>
+
+    {% set f = suscripcion.factura %}
+
+    {% if suscripcion.estado == 'por_vencer' %}
+        <p>
+            Tu suscripción a Team Builder vence
+            {% if suscripcion.dias == 1 %}mañana{% else %}en {{ suscripcion.dias }} días{% endif %}
+            {% if f and f.dueDate %}({{ f.dueDate|date('d/m/Y') }}){% endif %}.
+        </p>
+        <p>El total a pagar es <strong>${{ suscripcion.total|number_format(2, ',', '.') }}</strong>.</p>
+        <p>
+            Si pagás antes de esa fecha, no hace falta que hagas nada más: entrás al sistema, subís
+            el comprobante y nosotros lo confirmamos.
+        </p>
+
+    {% elseif suscripcion.estado == 'vencida' %}
+        <p>
+            Tu suscripción venció {% if f and f.dueDate %}el {{ f.dueDate|date('d/m/Y') }}{% endif %}
+            y quedó un saldo de <strong>${{ suscripcion.total|number_format(2, ',', '.') }}</strong>.
+        </p>
+        {% if suscripcion.limiteSoloLectura %}
+            <p>
+                Por ahora podés seguir usando el sistema con normalidad. Si no se regulariza antes
+                del <strong>{{ suscripcion.limiteSoloLectura|date('d/m/Y') }}</strong>, el sistema
+                pasa a modo consulta: vas a poder ver todo pero no cargar información nueva.
+            </p>
+        {% endif %}
+
+    {% elseif suscripcion.estado == 'solo_lectura' %}
+        <p>
+            Como la suscripción sigue impaga (saldo
+            <strong>${{ suscripcion.total|number_format(2, ',', '.') }}</strong>,
+            {{ suscripcion.atraso }} días de atraso), tu sistema quedó en <strong>modo consulta</strong>:
+            podés ver toda la información y registrar pagos de alumn@s, pero no cargar datos nuevos.
+        </p>
+        {% if suscripcion.limiteBloqueo %}
+            <p>
+                El <strong>{{ suscripcion.limiteBloqueo|date('d/m/Y') }}</strong> se bloquea el acceso
+                al panel de administración.
+            </p>
+        {% endif %}
+        <p>Se reactiva solo, en cuanto confirmamos el pago.</p>
+
+    {% elseif suscripcion.estado == 'bloqueada' %}
+        <p>
+            Tu acceso al panel de administración está <strong>bloqueado</strong> por una deuda de
+            <strong>${{ suscripcion.total|number_format(2, ',', '.') }}</strong>
+            ({{ suscripcion.atraso }} días de atraso).
+        </p>
+        <p>
+            Tus datos están intactos y profesor@s, alumn@s y familias siguen entrando con normalidad.
+            En cuanto confirmemos el pago, el panel vuelve a funcionar.
+        </p>
+    {% endif %}
+
+    <p style="text-align: center;">
+        <a href="{{ url('billing_invoice_index') }}" class="button">Ver mi suscripción y pagar</a>
+    </p>
+
+    <p>Cualquier duda, respondenos este correo y lo vemos.</p>
+{% endblock %}
+
+{% block footer %}
+    <p><small>Team Builder &mdash; gestión de institutos.</small></p>
+{% endblock %}

@@ -71,8 +71,22 @@ class BillingService
             throw new \RuntimeException("Ya existe una factura para el período {$month}/{$year} del instituto {$instituto->getNombre()}");
         }
 
+        // Un instituto exento no se factura: es el de demostración, una prueba gratuita o un
+        // acuerdo especial. Antes había que cancelarle la factura a mano cada mes.
+        if ($instituto->isSuscripcionExenta()) {
+            throw new \RuntimeException("El instituto {$instituto->getNombre()} está exento de facturación");
+        }
+
         $activeStudents = $this->getActiveStudentsCount($instituto);
-        $pricePerStudent = $this->getPricePerStudentMonthly();
+
+        // Sin alumnos activos no hay nada que cobrar. Antes se emitían facturas en $0 que
+        // ensuciaban el listado y encima podían llegar a bloquear al instituto por no pagarlas.
+        if ($activeStudents === 0 && !$instituto->getMinimoMensual()) {
+            throw new \RuntimeException("El instituto {$instituto->getNombre()} no tiene alumnos activos en {$month}/{$year}");
+        }
+
+        // El precio propio del instituto si tiene, y si no el global.
+        $pricePerStudent = $instituto->getPrecioPorAlumno() ?? $this->getPricePerStudentMonthly();
 
         $invoice = new BillingInvoice();
         $invoice->setInstituto($instituto);
@@ -81,6 +95,22 @@ class BillingService
         $invoice->setActiveStudentsCount($activeStudents);
         $invoice->setPricePerStudent($pricePerStudent);
         $invoice->calculateTotal();
+
+        // Mínimo mensual: si el cálculo por alumnos queda por debajo, se cobra el mínimo.
+        $minimo = $instituto->getMinimoMensual();
+        if ($minimo !== null && $invoice->getTotalAmount() < $minimo) {
+            $invoice->setTotalAmount($minimo);
+        }
+
+        // El vencimiento, que es lo que después permite avisar y calcular el atraso. La factura
+        // es del mes ya cerrado, así que vence en el mes siguiente al del período.
+        $config = $this->billingConfigRepository->getOrCreatePriceConfig();
+        $invoice->setDueDate(new \DateTime(sprintf(
+            '%d-%02d-%02d',
+            $month === 12 ? $year + 1 : $year,
+            $month === 12 ? 1 : $month + 1,
+            $config->getDiaVencimiento()
+        )));
 
         $this->entityManager->persist($invoice);
         $this->entityManager->flush();

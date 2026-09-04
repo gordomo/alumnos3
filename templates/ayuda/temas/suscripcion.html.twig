@@ -1,0 +1,94 @@
+{% extends 'ayuda/_tema.html.twig' %}
+{% import 'ayuda/_macros.html.twig' as m %}
+
+{% block contenido %}
+<p>
+    El uso del sistema se paga por mes, según la cantidad de alumn@s que tuviste activ@s. Todo lo
+    de la suscripción está en {{ m.ruta(['Suscripción']) }}: cuánto te toca pagar, cómo pagarlo y
+    las facturas de los meses anteriores.
+</p>
+
+<h2>Cómo se calcula</h2>
+
+<p>
+    Se factura por <strong>mes cerrado</strong>: el 1° de cada mes se emite la factura del mes
+    anterior, con la cantidad de alumn@s que estuvieron activ@s en ese período, multiplicada por
+    el precio por alumn@ que tenés acordado.
+</p>
+
+<p>
+    En la pantalla de suscripción, el panel <strong>Cómo se calcula</strong> te muestra cuántos
+    alumn@s activ@s tenés hoy y el estimado del mes que viene. Si das de baja alumn@s, el mes
+    siguiente pagás menos: la factura ya emitida no cambia.
+</p>
+
+{{ m.nota('info', 'Alumn@s activ@s',
+    'Cuentan los que están activos, no los que tienen inscripciones abiertas. Si dejaste
+     alumn@s inactiv@s pero con la inscripción sin cerrar, no se te cobran, aunque conviene
+     cerrarles la inscripción para que no les siga generando deuda a ell@s.') }}
+
+<h2>Cómo pagar</h2>
+
+<p>Hay tres formas, en la pestaña <strong>Cómo pagar</strong>:</p>
+
+<ul>
+    <li>
+        <strong>Transferencia</strong>: transferís a la cuenta que figura ahí, subís el
+        comprobante y nosotros lo confirmamos. El comprobante es obligatorio (JPG, PNG o PDF,
+        hasta 5 MB).
+    </li>
+    <li>
+        <strong>Efectivo</strong>: avisás que pagaste y lo confirmamos de nuestro lado. Acá el
+        comprobante es opcional.
+    </li>
+    <li>
+        <strong>Mercado Pago</strong>: cuando está habilitado, pagás desde el mismo sistema.
+    </li>
+</ul>
+
+<p>
+    Mientras esperamos confirmar tu pago, la factura queda <strong>en revisión</strong>. En ese
+    estado no se te limita nada: la demora es nuestra, no tuya.
+</p>
+
+<h2>Qué pasa si no se paga</h2>
+
+<p>El sistema no se corta de golpe. Va avisando y limitando de a poco:</p>
+
+<ol>
+    <li>
+        <strong>Unos días antes de vencer</strong> aparece un cartel amarillo arriba de la
+        pantalla con el monto y la fecha, y te llega un email.
+    </li>
+    <li>
+        <strong>Vencida</strong>: el cartel se pone rojo y te dice hasta qué día tenés para
+        regularizar. Todo sigue funcionando igual.
+    </li>
+    <li>
+        <strong>Modo consulta</strong>: podés entrar y ver toda la información, pero no cargar
+        nada nuevo. La única excepción son los <strong>pagos de alumn@s</strong>, que se pueden
+        seguir registrando: no tiene sentido que dejes de cobrarle a las familias.
+    </li>
+    <li>
+        <strong>Panel bloqueado</strong>: el panel de administración te lleva directo a la
+        pantalla de suscripción hasta que se regularice.
+    </li>
+</ol>
+
+{{ m.nota('warning', 'Profesor@s, alumn@s y familias nunca se bloquean',
+    'Pase lo que pase con la suscripción, ell@s siguen entrando con normalidad: notas,
+     asistencias, tareas y el enlace de familia funcionan igual. La limitación es solo para el
+     panel de administración.') }}
+
+{{ m.nota('success', 'Se reactiva solo',
+    'En cuanto confirmamos el pago, el sistema vuelve a la normalidad sin que tengas que hacer
+     nada. Tus datos nunca se tocan.') }}
+
+<h2>Facturas anteriores</h2>
+
+<p>
+    Abajo de la pantalla está la lista de todas tus facturas con el período, la cantidad de
+    alumn@s, el importe, la fecha de vencimiento y el estado. De cada una podés ver el detalle y
+    descargar el <strong>PDF</strong>.
+</p>
+{% endblock %}

@@ -109,6 +109,17 @@ class AdminBillingInvoiceController extends AbstractController
             'paid' => (int)(clone $baseQb)->andWhere('bi.status = :status')->setParameter('status', 'paid')->select('COUNT(bi.id)')->getQuery()->getSingleScalarResult(),
             'rejected' => (int)(clone $baseQb)->andWhere('bi.status = :status')->setParameter('status', 'rejected')->select('COUNT(bi.id)')->getQuery()->getSingleScalarResult(),
             'pending' => (int)(clone $baseQb)->andWhere('bi.status = :status')->setParameter('status', 'pending')->select('COUNT(bi.id)')->getQuery()->getSingleScalarResult(),
+            // Vencidas: pendientes con la fecha de vencimiento pasada. Son las que hay que reclamar.
+            'vencidas' => (int)(clone $baseQb)
+                ->andWhere('bi.status = :status')->setParameter('status', 'pending')
+                ->andWhere('bi.dueDate IS NOT NULL AND bi.dueDate < :hoy')
+                ->setParameter('hoy', new \DateTime('today'))
+                ->select('COUNT(bi.id)')->getQuery()->getSingleScalarResult(),
+            // Lo que falta entrar: incluye las que están esperando que revisemos un comprobante.
+            'a_cobrar' => (float)(clone $baseQb)
+                ->andWhere('bi.status IN (:estados)')
+                ->setParameter('estados', ['pending', 'pending_approval'])
+                ->select('COALESCE(SUM(bi.totalAmount), 0)')->getQuery()->getSingleScalarResult(),
         ];
 
         return $this->render('admin/billing_invoice/index.html.twig', [

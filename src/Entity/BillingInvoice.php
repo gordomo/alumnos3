@@ -64,6 +64,31 @@ class BillingInvoice
     private ?\DateTimeInterface $paidAt = null;
 
     /**
+     * Cuándo vence esta factura.
+     *
+     * Es la pieza que faltaba: sin fecha de vencimiento no se puede avisar "regularizá antes
+     * de tal día" ni calcular el atraso para el bloqueo. Se calcula al emitirla con el día
+     * configurado en BillingConfig.
+     *
+     * @ORM\Column(type="date", nullable=true)
+     */
+    private ?\DateTimeInterface $dueDate = null;
+
+    /**
+     * Con qué dijo el instituto que pagó: transferencia, efectivo o mercadopago.
+     *
+     * @ORM\Column(type="string", length=20, nullable=true)
+     */
+    private ?string $paymentMethod = null;
+
+    /**
+     * Referencia del pago en Mercado Pago, para poder rastrearlo desde el panel de MP.
+     *
+     * @ORM\Column(type="string", length=100, nullable=true)
+     */
+    private ?string $mpPaymentId = null;
+
+    /**
      * @ORM\Column(type="datetime", nullable=true)
      */
     private ?\DateTimeInterface $paymentRequestedAt = null;
@@ -378,5 +403,99 @@ class BillingInvoice
     {
         $this->approvedAt = $approvedAt;
         return $this;
+    }
+
+    public function getDueDate(): ?\DateTimeInterface
+    {
+        return $this->dueDate;
+    }
+
+    public function setDueDate(?\DateTimeInterface $dueDate): self
+    {
+        $this->dueDate = $dueDate;
+        return $this;
+    }
+
+    public function getPaymentMethod(): ?string
+    {
+        return $this->paymentMethod;
+    }
+
+    public function setPaymentMethod(?string $metodo): self
+    {
+        $this->paymentMethod = in_array($metodo, ['transferencia', 'efectivo', 'mercadopago'], true)
+            ? $metodo
+            : null;
+
+        return $this;
+    }
+
+    public function getPaymentMethodEtiqueta(): ?string
+    {
+        return [
+            'transferencia' => 'Transferencia',
+            'efectivo' => 'Efectivo',
+            'mercadopago' => 'Mercado Pago',
+        ][$this->paymentMethod] ?? null;
+    }
+
+    public function getMpPaymentId(): ?string
+    {
+        return $this->mpPaymentId;
+    }
+
+    public function setMpPaymentId(?string $id): self
+    {
+        $this->mpPaymentId = $id;
+        return $this;
+    }
+
+    /**
+     * Días de atraso, contados desde el vencimiento. 0 si todavía no venció o no tiene fecha.
+     */
+    public function getDiasDeAtraso(?\DateTimeInterface $hoy = null): int
+    {
+        $hoy = $hoy ?: new \DateTime('today');
+
+        if (!$this->dueDate || $this->isPaid() || $this->isCancelled()) {
+            return 0;
+        }
+
+        // Se compara por día y no por hora: con la hora incluida, una factura vencida ayer daba
+        // 0 días de atraso porque no habían pasado 24 horas todavía, y el estado quedaba mal.
+        $vence = new \DateTime($this->dueDate->format('Y-m-d'));
+        $ahora = new \DateTime($hoy->format('Y-m-d'));
+
+        if ($ahora <= $vence) {
+            return 0;
+        }
+
+        return (int) $vence->diff($ahora)->days;
+    }
+
+    /**
+     * Cuántos días faltan para el vencimiento. Negativo si ya venció.
+     */
+    public function getDiasParaVencer(?\DateTimeInterface $hoy = null): ?int
+    {
+        $hoy = $hoy ?: new \DateTime('today');
+
+        if (!$this->dueDate) {
+            return null;
+        }
+
+        $vence = new \DateTime($this->dueDate->format('Y-m-d'));
+        $ahora = new \DateTime($hoy->format('Y-m-d'));
+        $diff = (int) $ahora->diff($vence)->days;
+
+        return $vence >= $ahora ? $diff : -$diff;
+    }
+
+    /**
+     * Si el instituto ya hizo algo con esta factura y está esperando que la revisemos.
+     */
+    public function esperandoRevision(): bool
+    {
+        return $this->isPendingApproval();
     }
 }

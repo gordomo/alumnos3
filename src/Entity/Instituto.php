@@ -88,6 +88,34 @@ class Instituto
 
     // Métodos de inicialización y getters/setters
 
+    /**
+     * Precio por alumno de este instituto. Null usa el precio global de BillingConfig.
+     *
+     * Existe para poder acordar un precio distinto con un instituto sin tocar el de los demás.
+     *
+     * @ORM\Column(type="decimal", precision=10, scale=2, nullable=true)
+     */
+    private $precioPorAlumno;
+
+    /**
+     * Mínimo mensual: si el cálculo por alumnos da menos que esto, se cobra esto.
+     *
+     * Null es sin mínimo.
+     *
+     * @ORM\Column(type="decimal", precision=10, scale=2, nullable=true)
+     */
+    private $minimoMensual;
+
+    /**
+     * Un instituto exento no se factura ni se bloquea nunca.
+     *
+     * Sirve para el instituto de demostración, para una prueba gratuita o para un acuerdo
+     * especial, sin tener que andar cancelando facturas a mano cada mes.
+     *
+     * @ORM\Column(type="boolean", options={"default": false})
+     */
+    private $suscripcionExenta = false;
+
     public function __construct()
     {
         $this->usuarios = new ArrayCollection();
@@ -353,4 +381,36 @@ class Instituto
         return $this;
     }
 
+    public function getPrecioPorAlumno(): ?float
+    {
+        return $this->precioPorAlumno === null ? null : (float) $this->precioPorAlumno;
+    }
+
+    public function setPrecioPorAlumno($precio): self
+    {
+        $this->precioPorAlumno = ($precio === null || $precio === '') ? null : $precio;
+        return $this;
+    }
+
+    public function getMinimoMensual(): ?float
+    {
+        return $this->minimoMensual === null ? null : (float) $this->minimoMensual;
+    }
+
+    public function setMinimoMensual($minimo): self
+    {
+        $this->minimoMensual = ($minimo === null || $minimo === '') ? null : $minimo;
+        return $this;
+    }
+
+    public function isSuscripcionExenta(): bool
+    {
+        return (bool) $this->suscripcionExenta;
+    }
+
+    public function setSuscripcionExenta(bool $exenta): self
+    {
+        $this->suscripcionExenta = $exenta;
+        return $this;
+    }
 }

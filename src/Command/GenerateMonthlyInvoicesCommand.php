@@ -73,6 +73,22 @@ class GenerateMonthlyInvoicesCommand extends Command
                     $activeStudents = $this->billingService->getActiveStudentsCount($instituto);
                     $estimatedCost = $this->billingService->getEstimatedNextMonthCost($instituto);
 
+                    // Los que no corresponde facturar se saltean acá y se cuentan como omitidos.
+                    // Si se dejaran para que el servicio los rechace, aparecerían en rojo como
+                    // errores y en una corrida mensual eso hace ruido.
+                    $motivoOmision = null;
+                    if ($instituto->isSuscripcionExenta()) {
+                        $motivoOmision = 'está exento de facturación';
+                    } elseif ($activeStudents === 0 && !$instituto->getMinimoMensual()) {
+                        $motivoOmision = 'no tiene alumnos activos';
+                    }
+
+                    if ($motivoOmision) {
+                        $io->text(sprintf('Salteando %s - %s', $instituto->getNombre(), $motivoOmision));
+                        $skippedCount++;
+                        continue;
+                    }
+
                     if ($isDryRun) {
                         $io->text(sprintf(
                             'Instituto: %s - Alumnos activos: %d - Costo estimado: $%s',
@@ -117,7 +133,7 @@ class GenerateMonthlyInvoicesCommand extends Command
             } else {
                 $io->success("Facturas generadas: {$generatedCount}");
                 if ($skippedCount > 0) {
-                    $io->warning("Facturas omitidas (ya existían): {$skippedCount}");
+                    $io->warning("Facturas omitidas (ya existían, exentos o sin alumnos): {$skippedCount}");
                 }
                 if (count($errors) > 0) {
                     $io->error("Errores encontrados: " . count($errors));

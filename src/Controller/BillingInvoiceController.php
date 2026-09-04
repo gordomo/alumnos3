@@ -21,8 +21,12 @@ class BillingInvoiceController extends AbstractController
     private BillingService $billingService;
     private SluggerInterface $slugger;
 
-    public function __construct(BillingService $billingService, SluggerInterface $slugger)
-    {
+    public function __construct(
+        BillingService $billingService,
+        SluggerInterface $slugger,
+        private \App\Service\SuscripcionService $suscripcionService,
+        private \App\Repository\BillingConfigRepository $billingConfigRepository
+    ) {
         $this->billingService = $billingService;
         $this->slugger = $slugger;
     }
@@ -39,20 +43,15 @@ class BillingInvoiceController extends AbstractController
             return $this->redirectToRoute('dashboard_index');
         }
 
-        $pendingInvoices = $this->billingService->getPendingInvoices($instituto);
-        $billingHistory = $this->billingService->getBillingHistory($instituto, 24);
-        $billingStats = $this->billingService->getInstitutoBillingStats($instituto);
-        $activeStudents = $this->billingService->getActiveStudentsCount($instituto);
-        $estimatedNextMonth = $this->billingService->getEstimatedNextMonthCost($instituto);
-
         return $this->render('billing_invoice/index.html.twig', [
-            'pendingInvoices' => $pendingInvoices,
-            'billingHistory' => $billingHistory,
-            'billingStats' => $billingStats,
             'instituto' => $instituto,
-            'activeStudents' => $activeStudents,
-            'estimatedNextMonth' => $estimatedNextMonth,
-            'billingService' => $this->billingService,
+            // El estado manda: de él salen el encabezado, el aviso y qué se puede hacer.
+            'suscripcion' => $this->suscripcionService->estado($instituto),
+            'historial' => $this->billingService->getBillingHistory($instituto, 24),
+            'alumnosActivos' => $this->billingService->getActiveStudentsCount($instituto),
+            'precioPorAlumno' => $this->suscripcionService->precioPorAlumno($instituto),
+            'proximoMes' => $this->suscripcionService->montoEstimado($instituto),
+            'config' => $this->billingConfigRepository->getOrCreatePriceConfig(),
         ]);
     }
 
@@ -125,43 +124,62 @@ class BillingInvoiceController extends AbstractController
             return $this->redirectToRoute('billing_invoice_show', ['id' => $billingInvoice->getId()]);
         }
 
-        // Verificar que se haya subido un comprobante
-        $proofFile = $request->files->get('payment_proof');
-        if (!$proofFile) {
-            $this->addFlash('danger', 'Debes subir un comprobante de pago.');
-            return $this->redirectToRoute('billing_invoice_show', ['id' => $billingInvoice->getId()]);
+        // Con qué dice que pagó. Determina si el comprobante es obligatorio.
+        $metodo = (string) $request->request->get('payment_method', 'transferencia');
+        if (!in_array($metodo, ['transferencia', 'efectivo'], true)) {
+            $metodo = 'transferencia';
         }
 
-        // Validar el archivo
+        $proofFile = $request->files->get('payment_proof');
+
+        // En transferencia el comprobante es obligatorio; en efectivo no siempre hay uno, así
+        // que se acepta la declaración y la confirmamos nosotros.
+        if (!$proofFile && $metodo === 'transferencia') {
+            $this->addFlash('danger', 'Para una transferencia necesitamos el comprobante.');
+            return $this->redirectToRoute('billing_invoice_index');
+        }
+
+        // Validar el archivo, si vino uno.
         $allowedMimes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
-        if (!in_array($proofFile->getMimeType(), $allowedMimes)) {
+        if ($proofFile && !in_array($proofFile->getMimeType(), $allowedMimes)) {
             $this->addFlash('danger', 'El archivo debe ser una imagen (JPG, PNG) o PDF.');
             return $this->redirectToRoute('billing_invoice_show', ['id' => $billingInvoice->getId()]);
         }
 
         // Validar tamaño (máximo 5MB)
-        if ($proofFile->getSize() > 5 * 1024 * 1024) {
+        if ($proofFile && $proofFile->getSize() > 5 * 1024 * 1024) {
             $this->addFlash('danger', 'El archivo es demasiado grande. Máximo 5MB.');
             return $this->redirectToRoute('billing_invoice_show', ['id' => $billingInvoice->getId()]);
         }
 
         try {
-            // Generar nombre único para el archivo
-            $originalFilename = pathinfo($proofFile->getClientOriginalName(), PATHINFO_FILENAME);
-            $safeFilename = $this->slugger->slug($originalFilename);
-            $newFilename = 'invoice-' . $billingInvoice->getId() . '-' . $safeFilename . '-' . uniqid() . '.' . $proofFile->guessExtension();
+            if ($proofFile) {
+                // Nombre generado por el servidor: el original lo controla quien sube el archivo.
+                $originalFilename = pathinfo($proofFile->getClientOriginalName(), PATHINFO_FILENAME);
+                $safeFilename = $this->slugger->slug($originalFilename);
+                $newFilename = 'invoice-' . $billingInvoice->getId() . '-' . $safeFilename . '-' . uniqid() . '.' . $proofFile->guessExtension();
 
-            // Crear directorio si no existe
-            $proofsDirectory = $this->getParameter('payment_proofs_directory');
-            if (!is_dir($proofsDirectory)) {
-                mkdir($proofsDirectory, 0755, true);
+                $proofsDirectory = $this->getParameter('payment_proofs_directory');
+                if (!is_dir($proofsDirectory)) {
+                    mkdir($proofsDirectory, 0755, true);
+                }
+
+                $proofFile->move($proofsDirectory, $newFilename);
+                $billingInvoice->setPaymentProofPath($newFilename);
             }
 
-            // Mover el archivo
-            $proofFile->move($proofsDirectory, $newFilename);
+            $billingInvoice->setPaymentMethod($metodo);
 
-            // Actualizar la factura con el comprobante y cambiar estado
-            $billingInvoice->setPaymentProofPath($newFilename);
+            // El comentario del instituto se agrega a las notas sin borrar lo que ya hubiera.
+            $comentario = trim((string) $request->request->get('notas'));
+            if ($comentario !== '') {
+                $billingInvoice->setNotes(trim(($billingInvoice->getNotes() ?? '') . "\n" . sprintf(
+                    '[%s] %s: %s',
+                    (new \DateTime())->format('d/m/Y'),
+                    $metodo,
+                    $comentario
+                )));
+            }
             $billingInvoice->setPaymentRequestedAt(new \DateTime());
             $billingInvoice->setStatus('pending_approval');
             // Limpiar datos de rechazo si existían

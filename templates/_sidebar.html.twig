@@ -174,7 +174,8 @@
             <ul class="nav nav-tabs sidebar-dropdown-ul">
                 <li class="nav-item">
                     <a class="list-group-item list-group-item-action bg-light {% if app.request.get('_route') starts with 'billing_invoice_' %}active{% endif %}" href="{{ path('billing_invoice_index') }}">
-                        <i class="bi bi-receipt"></i> Facturas
+                        <i class="bi bi-patch-check"></i> Suscripción
+                        {% if suscripcion() %}<span class="badge bg-danger rounded-pill ms-1">!</span>{% endif %}
                     </a>
                 </li>
             </ul>
@@ -223,7 +224,7 @@
             <ul class="nav nav-tabs sidebar-dropdown-ul">
                 <li class="nav-item">
                     <a class="list-group-item list-group-item-action bg-light {% if app.request.get('_route') starts with 'admin_billing_invoice_' %}active{% endif %}" href="{{ path('admin_billing_invoice_index') }}">
-                        <i class="bi bi-receipt-cutoff"></i> Gestión de Facturas
+                        <i class="bi bi-receipt-cutoff"></i> Cobranzas
                     </a>
                 </li>
             </ul>
@@ -240,7 +241,7 @@
             <ul class="nav nav-tabs sidebar-dropdown-ul">
                 <li class="nav-item">
                     <a class="list-group-item list-group-item-action bg-light {% if app.request.get('_route') starts with 'admin_billing_config_' %}active{% endif %}" href="{{ path('admin_billing_config_index') }}">
-                        <i class="bi bi-cash-stack"></i> Configuración de Facturación
+                        <i class="bi bi-sliders"></i> Config. suscripción
                     </a>
                 </li>
             </ul>

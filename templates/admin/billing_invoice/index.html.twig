@@ -1,10 +1,8 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Gestión de Facturas{% endblock %}
+{% block title %}Cobranzas{% endblock %}
 
-{% block panelTitle %}
-    Gestión de Facturas
-{% endblock %}
+{% block panelTitle %}Cobranzas{% endblock %}
 
 {% block body %}
 <div class="container-fluid mt-4">
@@ -27,7 +25,7 @@
                     <label for="status" class="form-label">Estado</label>
                     <select name="status" id="status" class="form-select">
                         <option value="all" {% if selectedStatus == 'all' or selectedStatus is empty %}selected{% endif %}>Todas</option>
-                        <option value="pending_approval" {% if selectedStatus == 'pending_approval' %}selected{% endif %}>Pendientes de Aprobación</option>
+                        <option value="pending_approval" {% if selectedStatus == 'pending_approval' %}selected{% endif %}>En revisión</option>
                         <option value="pending" {% if selectedStatus == 'pending' %}selected{% endif %}>Pendientes</option>
                         <option value="paid" {% if selectedStatus == 'paid' %}selected{% endif %}>Pagadas</option>
                         <option value="rejected" {% if selectedStatus == 'rejected' %}selected{% endif %}>Rechazadas</option>
@@ -46,36 +44,44 @@
     </div>
 
     <!-- Estadísticas -->
-    <div class="row mb-4">
+    <div class="row g-3 mb-4">
         <div class="col-md-3">
-            <div class="card text-white bg-warning">
+            <a href="{{ path('admin_billing_invoice_index', {'status': 'pending_approval'}) }}" class="text-decoration-none">
+                <div class="card border-warning h-100">
+                    <div class="card-body">
+                        <div class="text-uppercase text-muted small">Esperan que revisemos</div>
+                        <div class="display-6 mb-0 text-warning">{{ stats.pending_approval }}</div>
+                        <div class="small text-muted">comprobantes declarados</div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a href="{{ path('admin_billing_invoice_index', {'status': 'pending'}) }}" class="text-decoration-none">
+                <div class="card border-danger h-100">
+                    <div class="card-body">
+                        <div class="text-uppercase text-muted small">Vencidas sin pagar</div>
+                        <div class="display-6 mb-0 text-danger">{{ stats.vencidas }}</div>
+                        <div class="small text-muted">de {{ stats.pending }} pendiente(s)</div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-primary h-100">
                 <div class="card-body">
-                    <h5 class="card-title">Pendientes de Aprobación</h5>
-                    <h2 class="mb-0">{{ stats.pending_approval }}</h2>
+                    <div class="text-uppercase text-muted small">A cobrar</div>
+                    <div class="h3 mb-0 text-primary">${{ stats.a_cobrar|number_format(2, ',', '.') }}</div>
+                    <div class="small text-muted">pendientes + en revisión</div>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card text-white bg-info">
+            <div class="card border-success h-100">
                 <div class="card-body">
-                    <h5 class="card-title">Pendientes</h5>
-                    <h2 class="mb-0">{{ stats.pending }}</h2>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card text-white bg-success">
-                <div class="card-body">
-                    <h5 class="card-title">Pagadas</h5>
-                    <h2 class="mb-0">{{ stats.paid }}</h2>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card text-white bg-danger">
-                <div class="card-body">
-                    <h5 class="card-title">Rechazadas</h5>
-                    <h2 class="mb-0">{{ stats.rejected }}</h2>
+                    <div class="text-uppercase text-muted small">Pagadas</div>
+                    <div class="display-6 mb-0 text-success">{{ stats.paid }}</div>
+                    <div class="small text-muted">{{ stats.rejected }} rechazada(s)</div>
                 </div>
             </div>
         </div>
@@ -97,33 +103,50 @@
                                 <th>Período</th>
                                 <th>Alumn@s</th>
                                 <th>Monto</th>
+                                <th>Vence</th>
                                 <th>Estado</th>
-                                <th>Fecha de Creación</th>
+                                <th>Método</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for invoice in invoices %}
-                                <tr>
+                                <tr class="{% if invoice.isPendingApproval %}table-warning{% elseif invoice.isPending and invoice.diasDeAtraso > 0 %}table-danger{% endif %}">
                                     <td>#{{ invoice.id }}</td>
                                     <td>{{ invoice.instituto.nombre }}</td>
                                     <td>{{ invoice.getFormattedPeriod() }}</td>
                                     <td>{{ invoice.activeStudentsCount }}</td>
                                     <td>${{ invoice.totalAmount|number_format(2, ',', '.') }}</td>
                                     <td>
+                                        {% if invoice.dueDate %}
+                                            {{ invoice.dueDate|date('d/m/Y') }}
+                                            {% if invoice.isPending and invoice.diasDeAtraso > 0 %}
+                                                <span class="d-block small text-danger">{{ invoice.diasDeAtraso }} día(s) de atraso</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="text-muted">&mdash;</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
                                         {% if invoice.isPaid %}
                                             <span class="badge bg-success">Pagada</span>
                                         {% elseif invoice.isPendingApproval %}
-                                            <span class="badge bg-warning">Pendiente de Aprobación</span>
+                                            <span class="badge bg-warning text-dark">En revisión</span>
                                         {% elseif invoice.isPending %}
-                                            <span class="badge bg-info">Pendiente</span>
+                                            <span class="badge bg-secondary">Pendiente</span>
                                         {% elseif invoice.isRejected %}
                                             <span class="badge bg-danger">Rechazada</span>
                                         {% else %}
                                             <span class="badge bg-secondary">Cancelada</span>
                                         {% endif %}
                                     </td>
-                                    <td>{{ invoice.createdAt|date((app_date_format|default('d/m/Y')) ~ ' H:i') }}</td>
+                                    <td>
+                                        {% if invoice.paymentMethod %}
+                                            {{ invoice.paymentMethodEtiqueta }}
+                                        {% else %}
+                                            <span class="text-muted">&mdash;</span>
+                                        {% endif %}
+                                    </td>
                                     <td>
                                         <a href="{{ path('admin_billing_invoice_show', {'id': invoice.id}) }}" class="btn btn-sm btn-primary">
                                             <i class="bi bi-eye"></i> Ver

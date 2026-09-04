@@ -19,6 +19,31 @@
             </div>
         {% endfor %}
     </div>
+    <fieldset class="border rounded p-3 mb-3">
+        <legend class="float-none w-auto px-2 fs-6 text-muted">Suscripción</legend>
+        <div class="row g-3">
+            <div class="col-md-4">
+                {{ form_label(form.precioPorAlumno, 'Precio por alumn@', {'label_attr': {'class': 'form-label'}}) }}
+                {{ form_widget(form.precioPorAlumno, {'attr': {'class': 'form-control'}}) }}
+                <div class="form-text">{{ form_help(form.precioPorAlumno) }}</div>
+                <small class="form-error text-danger">{{ form_errors(form.precioPorAlumno) }}</small>
+            </div>
+            <div class="col-md-4">
+                {{ form_label(form.minimoMensual, 'Mínimo mensual', {'label_attr': {'class': 'form-label'}}) }}
+                {{ form_widget(form.minimoMensual, {'attr': {'class': 'form-control'}}) }}
+                <div class="form-text">{{ form_help(form.minimoMensual) }}</div>
+                <small class="form-error text-danger">{{ form_errors(form.minimoMensual) }}</small>
+            </div>
+            <div class="col-md-4 d-flex align-items-center">
+                <div class="form-check mt-4">
+                    {{ form_widget(form.suscripcionExenta, {'attr': {'class': 'form-check-input'}}) }}
+                    {{ form_label(form.suscripcionExenta, 'Exento de suscripción', {'label_attr': {'class': 'form-check-label'}}) }}
+                    <div class="form-text">{{ form_help(form.suscripcionExenta) }}</div>
+                </div>
+            </div>
+        </div>
+    </fieldset>
+
     <div class="row mb-3">
         <div class="col text-end">
             {{ include('components/back_button.html.twig', {'default_path': path('admin_instituto_index')}) }}
