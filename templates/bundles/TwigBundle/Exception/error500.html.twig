@@ -1,0 +1,9 @@
+{% extends 'bundles/TwigBundle/Exception/_error_base.html.twig' %}
+
+{% block titulo %}Error del sistema{% endblock %}
+{% block codigo %}500{% endblock %}
+{% block encabezado %}Algo se rompió de nuestro lado{% endblock %}
+{% block detalle %}
+    No pudimos completar lo que estabas haciendo. Si te vuelve a pasar, escribinos contando en
+    qué pantalla estabas y lo revisamos.
+{% endblock %}

@@ -1,0 +1,87 @@
+{#
+  Base de las páginas de error que ve el usuario final (403 y 404 en producción).
+
+  No extiende base.html.twig a propósito: base.html.twig arma el menú y el banner de
+  suscripción, y todo eso puede volver a fallar justo cuando ya estamos manejando un error. Se
+  sirve sola, con los estilos embebidos y sin ningún CDN.
+
+  El botón "volver" tiene que apuntar a algo que el usuario realmente pueda abrir: si lo mandamos
+  a una pantalla que también le está prohibida, queda dando vueltas entre errores.
+#}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block titulo %}Error{% endblock %} · Team Builder</title>
+    <style>
+        :root { color-scheme: light; }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1rem;
+            background: #f5f7fa;
+            color: #1f2937;
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        }
+        .caja {
+            width: 100%;
+            max-width: 30rem;
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: .75rem;
+            padding: 2.5rem 2rem;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, .06);
+        }
+        .codigo { font-size: 3rem; font-weight: 700; color: #2f7ef0; line-height: 1; margin: 0; }
+        h1 { font-size: 1.375rem; margin: .75rem 0 .5rem; }
+        p { margin: 0 0 1.75rem; color: #4b5563; line-height: 1.55; }
+        .boton {
+            display: inline-block;
+            padding: .625rem 1.25rem;
+            border-radius: .375rem;
+            background: #2f7ef0;
+            color: #fff;
+            font-weight: 500;
+            text-decoration: none;
+        }
+        .boton:hover { background: #2569cc; }
+        .marca {
+            font-size: .75rem;
+            font-weight: 700;
+            letter-spacing: .14em;
+            text-transform: uppercase;
+            color: #9ca3af;
+            margin-bottom: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="caja">
+        {# El logo se pone como texto y no como imagen: si el error viene de que los assets no
+           cargan, una imagen rota dentro de la pantalla de error queda peor que nada. #}
+        <div class="marca">Team Builder</div>
+        <p class="codigo">{% block codigo %}{% endblock %}</p>
+        <h1>{% block encabezado %}{% endblock %}</h1>
+        <p>{% block detalle %}{% endblock %}</p>
+
+        {# La primera que corresponda al rol de quien está mirando. #}
+        {% if is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_ADMIN') %}
+            <a href="{{ path('admin_instituto_index') }}" class="boton">Volver a Institutos</a>
+        {% elseif is_granted('ROLE_ADMIN_INSTITUTO') %}
+            <a href="{{ path('dashboard_index') }}" class="boton">Volver al panel</a>
+        {% elseif is_granted('ROLE_PROFESOR') %}
+            <a href="{{ path('app_profesor_dashboard') }}" class="boton">Volver a mi panel</a>
+        {% elseif is_granted('ROLE_ALUMNO') %}
+            <a href="{{ path('app_alumno_dashboard') }}" class="boton">Volver a mi panel</a>
+        {% else %}
+            <a href="{{ path('app_start') }}" class="boton">Ir al inicio</a>
+        {% endif %}
+    </div>
+</body>
+</html>

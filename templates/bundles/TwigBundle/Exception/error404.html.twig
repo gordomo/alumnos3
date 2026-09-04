@@ -1,1 +1,8 @@
-nooooooo terrible
+{% extends 'bundles/TwigBundle/Exception/_error_base.html.twig' %}
+
+{% block titulo %}Página no encontrada{% endblock %}
+{% block codigo %}404{% endblock %}
+{% block encabezado %}Esta página no existe{% endblock %}
+{% block detalle %}
+    Puede que el enlace esté mal escrito o que lo que buscabas se haya borrado.
+{% endblock %}
