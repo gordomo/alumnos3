@@ -34,8 +34,9 @@
                 <div class="form-text">{{ form_help(form.minimoMensual) }}</div>
                 <small class="form-error text-danger">{{ form_errors(form.minimoMensual) }}</small>
             </div>
-            <div class="col-md-4 d-flex align-items-center">
-                <div class="form-check mt-4">
+            <div class="col-md-4">
+                <span class="form-label d-block invisible" aria-hidden="true">&nbsp;</span>
+                <div class="form-check">
                     {{ form_widget(form.suscripcionExenta, {'attr': {'class': 'form-check-input'}}) }}
                     {{ form_label(form.suscripcionExenta, 'Exento de suscripción', {'label_attr': {'class': 'form-check-label'}}) }}
                     <div class="form-text">{{ form_help(form.suscripcionExenta) }}</div>

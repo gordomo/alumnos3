@@ -69,9 +69,9 @@ php bin/console doctrine:migrations:migrate --no-interaction
 ```
 
 La única que debería **ejecutarse** en este despliegue es
-`Version20260731110150` (las tablas de calificaciones). Es aditiva: crea
-`evaluacion`, `calificacion` y `concepto_calificacion`, y agrega columnas a
-`instituto_configuracion` y `alumno_curso_historico`, todas con `DEFAULT`.
+`Version20260901160000` (la suscripción de los institutos). Es aditiva y sin
+riesgo: agrega columnas nullable o con `DEFAULT` a `billing_config`,
+`billing_invoice` e `instituto`. No toca ni una fila existente.
 
 ### 5. Verificar el schema
 
@@ -99,43 +99,58 @@ chown -R www-data:www-data var/
 
 ```bash
 php bin/console lint:container
-php bin/console debug:router | grep -cE "evaluacion|calificaciones"   # esperado: 18
-php bin/console debug:router | grep -c "^  [a-z_]"                        # esperado: 136
+php bin/console app:avisar-suscripciones --dry-run --todos
 ```
+
+El segundo no manda ningún mail: lista los institutos que estarían en algún
+escalón de la suscripción. Si tira excepción, el estado no se calcula bien.
 
 Y a mano, con un usuario admin de instituto:
 
 - Dashboard, listado de alumnos, cursos, profesores, pagos, configuración → 200.
-- `/instituto/evaluaciones/` → debe mostrar "el instituto todavía no usa
-  calificaciones" (la feature nace apagada).
-- Asistencias de alumnos y de profesores: guardar y confirmar que persiste.
+- `/instituto/facturas/` → la pantalla de suscripción, con el estado y las
+  pestañas de pago.
+- Con el super admin: `/admin/billing-config/` y editar un instituto, para ver
+  el bloque "Suscripción" de la ficha.
 
 ---
 
 ## Qué cambia para los usuarios
 
-**Nada, hasta que se configure.** Todos los institutos quedan con
-`modo_calificacion = 'ninguno'`, así que la sección de notas está oculta para
-profesores y alumnos, y el cierre de curso sigue decidiéndose solo por asistencia y
-pago.
+**Para los institutos que están al día, nada.** El banner y el bloqueo solo
+aparecen cuando hay una factura vencida, y para eso la factura necesita fecha de
+vencimiento.
 
-Para activarla en un instituto: **Configuración del Instituto → Configuración
-Académica → Escala de Calificación**. El interruptor "las notas influyen en la
-aprobación" es aparte y también nace apagado.
+Las facturas que ya existen **no tienen** fecha de vencimiento (la columna nace
+vacía), así que después del deploy **ninguna limita a nadie**: se siguen viendo
+como pendientes y nada más. Recién las que se emitan de acá en adelante llevan
+vencimiento y entran en la escalera.
 
-Sí cambia, sin necesidad de configurar nada:
+Lo que sí cambia al entrar:
 
-- Las tarjetas Hoy/Semana/Mes/Año de pagos ahora muestran números (antes daban 0).
-- Se pueden pagar hasta 12 meses adelantados.
-- Los badges de curso dicen la verdad: "N cuotas vencidas" donde antes decía
-  "Curso pagado completo".
-- Cobrar una cuota vencida con recargo ya no genera saldo a favor espurio.
-- En la pantalla de asistencias de profesores, marcar una falta ahora es un botón
-  (antes era un link). Mismo lugar, mismo comportamiento.
-- Se eliminaron dos pantallas duplicadas sin uso: `/admin/user` y
-  `/instituto/deuda`. La gestión de usuarios sigue en `/instituto/user`.
+- "Mis Facturas" pasa a llamarse **Suscripción**, con el estado, cómo pagar
+  (transferencia, efectivo, Mercado Pago) y cómo se calcula el monto.
+- Para el super admin, "Gestión de Facturas" pasa a ser **Cobranzas**, y la
+  configuración de facturación es una sola pantalla de ajustes en lugar de un
+  CRUD que dejaba crear filas duplicadas.
+- Cada instituto puede tener su propio precio por alumn@, un mínimo mensual y
+  la marca de exento, desde su ficha.
 
----
+Antes de emitir la primera factura con vencimiento conviene:
+
+1. Cargar los **datos de transferencia** en `/admin/billing-config/`. Si quedan
+   vacíos, al instituto se le dice que nos escriba para pedirlos.
+2. Revisar los cuatro plazos: vencimiento, aviso previo, gracia y bloqueo.
+3. Marcar como **exentos** los institutos que no se facturan, y cancelar las
+   facturas viejas de institutos de prueba: si no, el total "a cobrar" de
+   Cobranzas no significa nada.
+4. Programar el aviso diario en el cron:
+
+   ```
+   0 9 * * * cd /www/wwwroot/innovateglobal.es && docker compose exec -T app php bin/console app:avisar-suscripciones
+   ```
+
+   Manda un mail el día que el instituto cambia de escalón, no todos los días.
 
 ## Pendiente que este despliegue NO resuelve
 
@@ -163,8 +178,8 @@ git checkout <commit-anterior>
 php bin/console cache:clear
 ```
 
-Las tablas nuevas quedan pero no molestan: sin el código, nada las consulta. Si hace
-falta volver el schema, `doctrine:migrations:migrate prev` revierte solo la de
-calificaciones (es aditiva, así que su `down()` es seguro). El baseline
+Las columnas nuevas quedan pero no molestan: sin el código, nada las consulta. Si
+hace falta volver el schema, `doctrine:migrations:migrate prev` revierte solo la de
+la suscripción (es aditiva, así que su `down()` es seguro). El baseline
 `Version20250101000000` tiene el `down()` vacío a propósito: revertirlo borraría las
 tablas centrales con todos los datos.
