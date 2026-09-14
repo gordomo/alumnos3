@@ -102,16 +102,15 @@
                                             <td>{{ saldo.curso ? saldo.curso.nombre : '—' }}</td>
                                             <td>
                                                 {{ saldo.descripcion|default('—') }}
-                                                {# El pago de origen se muestra aparte para que los saldos viejos, cuya
-                                                   descripción era genérica, igual se puedan rastrear. #}
+                                                {# El pago de origen se enlaza aparte: los saldos viejos tienen una
+                                                   descripción genérica y esto es lo único que permite rastrearlos. #}
                                                 {% if saldo.pagoOrigen %}
-                                                    <div class="small text-muted mt-1">
-                                                        <i class="bi bi-arrow-return-right"></i>
-                                                        Viene del pago de ${{ saldo.pagoOrigen.monto|number_format(2, ',', '.') }}
-                                                        registrado el {{ saldo.pagoOrigen.fecha|date('d/m/Y') }}
-                                                        {% if saldo.pagoOrigen.montoRestante is not null %}
-                                                            · sobraron ${{ saldo.pagoOrigen.montoRestante|number_format(2, ',', '.') }}
-                                                        {% endif %}
+                                                    <div class="small mt-1">
+                                                        <a href="{{ path('app_alumnos_pagos_show', {'id': saldo.pagoOrigen.id}) }}">
+                                                            <i class="bi bi-arrow-return-right"></i>
+                                                            Ver el pago del {{ saldo.pagoOrigen.fecha|date('d/m/Y') }}
+                                                            por ${{ saldo.pagoOrigen.monto|number_format(2, ',', '.') }}
+                                                        </a>
                                                     </div>
                                                 {% endif %}
                                             </td>
