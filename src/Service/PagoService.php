@@ -141,7 +141,7 @@ class PagoService
             $saldoFavor->setMonto(number_format($montoRestante, 2, '.', ''));
             $saldoFavor->setMontoDisponible(number_format($montoRestante, 2, '.', ''));
             $saldoFavor->setTipo(SaldoFavor::TIPO_SOBREPAGO);
-            $saldoFavor->setDescripcion('Saldo a favor generado automáticamente por sobrepago');
+            $saldoFavor->setDescripcion($this->describirSobrepago($pago, $aplicaciones, $montoRestante));
             $saldoFavor->setPagoOrigen($pago);
             if ($pago->getCurso()) {
                 $saldoFavor->setCurso($pago->getCurso());
@@ -156,6 +156,47 @@ class PagoService
             'montoRestante' => $montoRestante,
             'pago' => $pago
         ];
+    }
+
+    /**
+     * Explica en una línea por qué quedó saldo a favor.
+     *
+     * Antes todas las filas decían "generado automáticamente por sobrepago", y desde la pantalla
+     * de saldos era imposible saber de qué pago venía ni por qué había sobrado: el instituto veía
+     * plata a favor de la nada. Acá se deja escrito el pago que lo originó, cuánto se imputó a
+     * cuotas y cuánto sobró.
+     *
+     * @param PagoDeudaAplicacion[] $aplicaciones
+     */
+    private function describirSobrepago(AlumnosPagos $pago, array $aplicaciones, float $sobrante): string
+    {
+        $meses = [
+            1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril',
+            5 => 'Mayo', 6 => 'Junio', 7 => 'Julio', 8 => 'Agosto',
+            9 => 'Septiembre', 10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre',
+        ];
+
+        $periodo = ($meses[$pago->getMes()] ?? $pago->getMes()) . ' ' . $pago->getAno();
+        $plata = static fn(float $n) => '$' . number_format($n, 2, ',', '.');
+
+        $imputado = 0.0;
+        foreach ($aplicaciones as $aplicacion) {
+            $imputado += (float) $aplicacion->getMontoAplicado();
+        }
+
+        $texto = 'Pago de ' . $plata((float) $pago->getMonto()) . ' de ' . $periodo;
+        if ($pago->getCurso()) {
+            $texto .= ' (' . $pago->getCurso()->getNombre() . ')';
+        }
+
+        if ($imputado > 0) {
+            $texto .= ': ' . $plata($imputado) . ' se imputaron a cuotas pendientes y sobraron '
+                . $plata($sobrante) . '.';
+        } else {
+            $texto .= ': no había cuotas pendientes para imputarlo, así que quedó entero a favor.';
+        }
+
+        return $texto;
     }
 
     /**

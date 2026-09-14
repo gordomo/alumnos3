@@ -42,6 +42,35 @@
                         </div>
                     {% endif %}
 
+                    <details class="mb-3">
+                        <summary class="text-primary" style="cursor: pointer;">
+                            <i class="bi bi-question-circle"></i> ¿De dónde sale un saldo a favor?
+                        </summary>
+                        <div class="mt-2 ps-3 border-start border-3">
+                            <p class="mb-2">
+                                Es plata del alumn@ que todavía no está imputada a ninguna cuota. Aparece de tres formas:
+                            </p>
+                            <ul class="mb-2">
+                                <li>
+                                    <strong>Sobrepago</strong>: se registró un pago mayor a lo que el alumn@ debía en ese
+                                    momento. El sistema imputa lo que puede a las cuotas pendientes y <strong>la diferencia
+                                    queda acá</strong>, no se pierde.
+                                </li>
+                                <li>
+                                    <strong>Nota de crédito</strong>: la cargás vos a mano, por ejemplo por un descuento
+                                    acordado o una clase que no se dio.
+                                </li>
+                                <li>
+                                    <strong>Cancelación</strong>: queda cuando se anula una deuda que ya estaba paga.
+                                </li>
+                            </ul>
+                            <p class="mb-0">
+                                El saldo <strong>no se aplica solo</strong>: queda disponible hasta que lo imputes con el
+                                botón <em>Aplicar</em> a la cuota que elijas. Así el instituto decide a qué mes va.
+                            </p>
+                        </div>
+                    </details>
+
                     {% if saldos|length > 0 %}
                         <div class="table-responsive">
                             <table class="table table-striped table-hover align-middle">
@@ -71,7 +100,21 @@
                                                 {% endif %}
                                             </td>
                                             <td>{{ saldo.curso ? saldo.curso.nombre : '—' }}</td>
-                                            <td>{{ saldo.descripcion|default('—') }}</td>
+                                            <td>
+                                                {{ saldo.descripcion|default('—') }}
+                                                {# El pago de origen se muestra aparte para que los saldos viejos, cuya
+                                                   descripción era genérica, igual se puedan rastrear. #}
+                                                {% if saldo.pagoOrigen %}
+                                                    <div class="small text-muted mt-1">
+                                                        <i class="bi bi-arrow-return-right"></i>
+                                                        Viene del pago de ${{ saldo.pagoOrigen.monto|number_format(2, ',', '.') }}
+                                                        registrado el {{ saldo.pagoOrigen.fecha|date('d/m/Y') }}
+                                                        {% if saldo.pagoOrigen.montoRestante is not null %}
+                                                            · sobraron ${{ saldo.pagoOrigen.montoRestante|number_format(2, ',', '.') }}
+                                                        {% endif %}
+                                                    </div>
+                                                {% endif %}
+                                            </td>
                                             <td class="text-end">${{ saldo.monto|number_format(2, ',', '.') }}</td>
                                             <td class="text-end">
                                                 {% if saldo.montoDisponible > 0 %}

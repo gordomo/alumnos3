@@ -15,7 +15,10 @@ class AppDateFormatExtension extends AbstractExtension implements GlobalsInterfa
 {
     public function __construct(
         private InstitutoTimezoneService $institutoTimezoneService,
-        private ?\Symfony\Bundle\SecurityBundle\Security $security = null
+        // Security vive en Security\Core en Symfony 5.4; el de SecurityBundle no existe todavía.
+        // Con el otro tipo, el parámetro quedaba siempre en null y estos globals nunca tomaban
+        // el formato ni la zona horaria del instituto.
+        private ?\Symfony\Component\Security\Core\Security $security = null
     ) {
     }
 
