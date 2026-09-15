@@ -13,8 +13,6 @@ services:
         autowire: true      # Automatically injects dependencies in your services.
         autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
         public: false
-        bind:
-            $kernel: '@kernel'
 
     # makes classes in src/ available to be used as services
     # this creates a service per class whose id is the fully-qualified class name
@@ -24,15 +22,26 @@ services:
             - '../src/DependencyInjection/'
             - '../src/Entity/'
             - '../src/Kernel.php'
+            # Las fixtures dependen de doctrine/doctrine-fixtures-bundle, que es una dependencia de
+            # desarrollo. Sin esta exclusión, un "composer install --no-dev" deja el contenedor sin
+            # poder compilar ("class Doctrine\Bundle\FixturesBundle\Fixture not found") y el sitio
+            # se cae entero. El esqueleto de Symfony la trae por defecto; acá faltaba.
+            - '../src/DataFixtures/'
+            # SeedDatabaseCommand recibe el seeder, así que arrastra la misma dependencia dev.
+            - '../src/Command/SeedDatabaseCommand.php'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
 
-    App\Command\SeedDatabaseCommand:
-        tags: ['console.command']
+# Las fixtures solo existen en desarrollo: el bundle que necesitan es una dependencia dev, así que
+# declararlas siempre rompía el contenedor cuando se instalaba con --no-dev.
+when@dev:
+    services:
+        App\Command\SeedDatabaseCommand:
+            tags: ['console.command']
 
-    App\DataFixtures\UserSeeder:
-        tags: ['doctrine.fixture.orm']
-        public: true
-        arguments:
-            $passwordHasher: '@security.password_hasher'
+        App\DataFixtures\UserSeeder:
+            tags: ['doctrine.fixture.orm']
+            public: true
+            arguments:
+                $passwordHasher: '@security.password_hasher'
