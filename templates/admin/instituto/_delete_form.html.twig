@@ -1,4 +1,69 @@
-<form action="{{ path('admin_instituto_delete', {'id': instituto.id}) }}" method="post" style="display:inline-block;" onsubmit="return confirm('Seguro desea borrar este instituto?');">
-    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ instituto.id) }}">
-    <button class="btn btn-danger">Borrar</button>
-</form>
+{#
+  Las dos formas de sacar un instituto de circulación.
+
+  La de arriba es la que corresponde casi siempre: el instituto deja de entrar y de facturarse,
+  pero no se pierde nada. La de abajo no tiene vuelta atrás y por eso pide escribir el nombre.
+#}
+<div class="card border-warning mt-4 text-start">
+    <div class="card-header bg-warning-subtle">
+        <i class="bi bi-pause-circle"></i> Dar de baja
+    </div>
+    <div class="card-body">
+        {% if instituto.activo %}
+            <p class="mb-3">
+                Sus usuari@s dejan de poder entrar y no se le factura más, pero todos los datos
+                quedan guardados. Se puede reactivar cuando quieras.
+            </p>
+            <form method="post" action="{{ path('admin_instituto_desactivar', {'id': instituto.id}) }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('desactivar' ~ instituto.id) }}">
+                <input type="text" name="motivo" class="form-control mb-2" maxlength="255"
+                       placeholder="Motivo (opcional): se fueron, dejaron de pagar, prueba terminada…">
+                <button class="btn btn-warning">Dar de baja</button>
+            </form>
+        {% else %}
+            <p class="mb-2">
+                <strong>Dado de baja{% if instituto.fechaBaja %} el {{ instituto.fechaBaja|date('d/m/Y') }}{% endif %}.</strong>
+                {% if instituto.motivoBaja %}<br>{{ instituto.motivoBaja }}{% endif %}
+            </p>
+            <form method="post" action="{{ path('admin_instituto_reactivar', {'id': instituto.id}) }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('reactivar' ~ instituto.id) }}">
+                <button class="btn btn-success">Reactivar</button>
+            </form>
+        {% endif %}
+    </div>
+</div>
+
+{% if is_granted('ROLE_SUPER_ADMIN') %}
+    <div class="card border-danger mt-4 text-start">
+        <div class="card-header bg-danger text-white">
+            <i class="bi bi-exclamation-octagon"></i> Borrado definitivo
+        </div>
+        <div class="card-body">
+            <p>
+                Borra <strong>{{ instituto.nombre }}</strong> y todo lo que cuelga de él.
+                <strong>No se puede deshacer</strong> y no hay copia de seguridad del otro lado.
+            </p>
+
+            {% if resumenBorrado|default({})|length > 0 %}
+                <p class="mb-2">Se van a borrar:</p>
+                <ul>
+                    {% for etiqueta, cantidad in resumenBorrado %}
+                        <li><strong>{{ cantidad }}</strong> {{ etiqueta }}</li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-muted">Este instituto no tiene datos cargados.</p>
+            {% endif %}
+
+            <form method="post" action="{{ path('admin_instituto_delete', {'id': instituto.id}) }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('eliminar' ~ instituto.id) }}">
+                <label class="form-label" for="confirmacion">
+                    Escribí <code>{{ instituto.nombre }}</code> para confirmar
+                </label>
+                <input type="text" name="confirmacion" id="confirmacion" class="form-control mb-2"
+                       autocomplete="off" placeholder="{{ instituto.nombre }}">
+                <button class="btn btn-danger">Borrar definitivamente</button>
+            </form>
+        </div>
+    </div>
+{% endif %}

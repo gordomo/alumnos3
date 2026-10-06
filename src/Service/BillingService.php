@@ -77,6 +77,11 @@ class BillingService
             throw new \RuntimeException("El instituto {$instituto->getNombre()} está exento de facturación");
         }
 
+        // Un instituto dado de baja no se factura: dejó de usar el sistema.
+        if (!$instituto->isActivo()) {
+            throw new \RuntimeException("El instituto {$instituto->getNombre()} está dado de baja");
+        }
+
         // El primer mes es de cortesía: el instituto lo usa entero sin que se le facture. Se
         // compara contra la fecha de alta, que queda seteada al confirmar su solicitud.
         if ($instituto->enMesDeCortesia($year, $month)) {

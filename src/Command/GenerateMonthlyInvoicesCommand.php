@@ -77,7 +77,9 @@ class GenerateMonthlyInvoicesCommand extends Command
                     // Si se dejaran para que el servicio los rechace, aparecerían en rojo como
                     // errores y en una corrida mensual eso hace ruido.
                     $motivoOmision = null;
-                    if ($instituto->isSuscripcionExenta()) {
+                    if (!$instituto->isActivo()) {
+                        $motivoOmision = 'está dado de baja';
+                    } elseif ($instituto->isSuscripcionExenta()) {
                         $motivoOmision = 'está exento de facturación';
                     } elseif ($instituto->enMesDeCortesia((int) $year, (int) $month)) {
                         $motivoOmision = 'está en su primer mes, que es sin cargo';

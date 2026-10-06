@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Instituto;
+use App\Service\EliminarInstitutoService;
 use App\Entity\InstitutoAdmin;
 use App\Entity\InstitutoConfiguracion;
 use App\Entity\MetodoPago;
@@ -185,7 +186,8 @@ class InstitutoAdminController extends AbstractController
         UserRepository $userRepository,
         InstitutoAdminRepository $institutoAdminRepository,
         UserPasswordHasherInterface $passwordHasher,
-        EntityManagerInterface $entityManager
+        EntityManagerInterface $entityManager,
+        EliminarInstitutoService $eliminarInstituto
     ): Response {
         $usuarioActual = $this->getUser();
         
@@ -289,7 +291,9 @@ class InstitutoAdminController extends AbstractController
 
         return $this->render('admin/instituto/edit.html.twig', [
             'form' => $form->createView(),
-            'instituto' => $instituto
+            'instituto' => $instituto,
+            // Qué se lleva puesto el borrado definitivo, para poder mostrarlo antes de borrar.
+            'resumenBorrado' => $this->isGranted('ROLE_SUPER_ADMIN') ? $eliminarInstituto->resumen($instituto) : [],
         ]);
     }
 
@@ -343,26 +347,106 @@ class InstitutoAdminController extends AbstractController
 
 
     /**
-     * @Route("/{id}", name="admin_instituto_delete", methods={"POST"})
+     * Baja lógica: el instituto deja de entrar y de facturarse, pero no se pierde nada.
+     *
+     * @Route("/{id}/desactivar", name="admin_instituto_desactivar", methods={"POST"})
      */
-    public function delete(
-        Request $request, 
-        Instituto $instituto, 
+    public function desactivar(
+        Request $request,
+        Instituto $instituto,
         InstitutoAdminRepository $institutoAdminRepository,
         EntityManagerInterface $em
     ): Response {
         $usuarioActual = $this->getUser();
-        
-        // Verificar permisos: SUPER_ADMIN puede eliminar todos, ADMIN solo los suyos
+
         if (!$usuarioActual || !$institutoAdminRepository->usuarioTieneAcceso($usuarioActual, $instituto)) {
-            $this->addFlash('danger', 'No tienes permisos para eliminar este instituto.');
+            $this->addFlash('danger', 'No tienes permisos para dar de baja este instituto.');
+
             return $this->redirectToRoute('admin_instituto_index');
         }
-        
-        if ($this->isCsrfTokenValid('delete'.$instituto->getId(), $request->request->get('_token'))) {
-            $em->remove($instituto);
+
+        if ($this->isCsrfTokenValid('desactivar' . $instituto->getId(), (string) $request->request->get('_token'))) {
+            $instituto->darDeBaja($request->request->get('motivo'));
             $em->flush();
+
+            $this->addFlash('success', $instituto->getNombre() . ' quedó dado de baja. Sus usuarios ya no pueden entrar.');
         }
+
+        return $this->redirectToRoute('admin_instituto_edit', ['id' => $instituto->getId()]);
+    }
+
+    /**
+     * @Route("/{id}/reactivar", name="admin_instituto_reactivar", methods={"POST"})
+     */
+    public function reactivar(
+        Request $request,
+        Instituto $instituto,
+        InstitutoAdminRepository $institutoAdminRepository,
+        EntityManagerInterface $em
+    ): Response {
+        $usuarioActual = $this->getUser();
+
+        if (!$usuarioActual || !$institutoAdminRepository->usuarioTieneAcceso($usuarioActual, $instituto)) {
+            $this->addFlash('danger', 'No tienes permisos para reactivar este instituto.');
+
+            return $this->redirectToRoute('admin_instituto_index');
+        }
+
+        if ($this->isCsrfTokenValid('reactivar' . $instituto->getId(), (string) $request->request->get('_token'))) {
+            $instituto->reactivar();
+            $em->flush();
+
+            $this->addFlash('success', $instituto->getNombre() . ' volvió a estar activo.');
+        }
+
+        return $this->redirectToRoute('admin_instituto_edit', ['id' => $instituto->getId()]);
+    }
+
+    /**
+     * Borrado definitivo. Se lleva el instituto y todo lo que cuelga de él.
+     *
+     * Solo el super admin, y solo escribiendo el nombre: es irreversible y no hay papelera. La
+     * acción normal para un cliente que se va es la baja lógica de arriba.
+     *
+     * @Route("/{id}/eliminar", name="admin_instituto_delete", methods={"POST"})
+     */
+    public function delete(
+        Request $request,
+        Instituto $instituto,
+        EntityManagerInterface $em,
+        EliminarInstitutoService $eliminarInstituto
+    ): Response {
+        if (!$this->isGranted('ROLE_SUPER_ADMIN')) {
+            $this->addFlash('danger', 'El borrado definitivo lo puede hacer solo el super admin.');
+
+            return $this->redirectToRoute('admin_instituto_edit', ['id' => $instituto->getId()]);
+        }
+
+        if (!$this->isCsrfTokenValid('eliminar' . $instituto->getId(), (string) $request->request->get('_token'))) {
+            $this->addFlash('danger', 'Token de seguridad inválido.');
+
+            return $this->redirectToRoute('admin_instituto_edit', ['id' => $instituto->getId()]);
+        }
+
+        // El nombre tecleado tiene que coincidir. Es la diferencia entre borrar el instituto de
+        // prueba y borrar uno real por un clic de más.
+        if (trim((string) $request->request->get('confirmacion')) !== $instituto->getNombre()) {
+            $this->addFlash('danger', 'El nombre no coincide. No se borró nada.');
+
+            return $this->redirectToRoute('admin_instituto_edit', ['id' => $instituto->getId()]);
+        }
+
+        $nombre = $instituto->getNombre();
+
+        try {
+            $eliminarInstituto->eliminar($instituto);
+        } catch (\Throwable $e) {
+            $this->addFlash('danger', 'No se pudo borrar ' . $nombre . ': ' . $e->getMessage() . '. No se borró nada.');
+
+            return $this->redirectToRoute('admin_instituto_edit', ['id' => $instituto->getId()]);
+        }
+
+        $this->addFlash('success', $nombre . ' se borró definitivamente.');
 
         return $this->redirectToRoute('admin_instituto_index');
     }

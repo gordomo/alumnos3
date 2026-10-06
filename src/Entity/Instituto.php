@@ -126,6 +126,28 @@ class Instituto
      */
     private $fechaAlta;
 
+    /**
+     * Un instituto dado de baja no entra más al sistema y no se le factura, pero conserva todos
+     * sus datos.
+     *
+     * Es lo que corresponde cuando un cliente se va: borrarle todo deja al instituto sin
+     * historial y a nosotros sin poder contestar cuánto nos pagó. El borrado definitivo existe
+     * aparte, para la data de prueba.
+     *
+     * @ORM\Column(type="boolean", options={"default": true})
+     */
+    private $activo = true;
+
+    /**
+     * @ORM\Column(type="date", nullable=true)
+     */
+    private $fechaBaja;
+
+    /**
+     * @ORM\Column(type="text", nullable=true)
+     */
+    private $motivoBaja;
+
     public function __construct()
     {
         $this->usuarios = new ArrayCollection();
@@ -439,6 +461,42 @@ class Instituto
      * El primer mes de uso no se factura. Devuelve true si el período (año, mes) cae dentro de
      * esa cortesía.
      */
+    public function isActivo(): bool
+    {
+        return (bool) $this->activo;
+    }
+
+    public function getFechaBaja(): ?\DateTimeInterface
+    {
+        return $this->fechaBaja;
+    }
+
+    public function getMotivoBaja(): ?string
+    {
+        return $this->motivoBaja;
+    }
+
+    /**
+     * Da de baja al instituto. La fecha y el motivo quedan para saber qué pasó.
+     */
+    public function darDeBaja(?string $motivo = null): self
+    {
+        $this->activo = false;
+        $this->fechaBaja = new \DateTime();
+        $this->motivoBaja = $motivo !== null && trim($motivo) !== '' ? trim($motivo) : null;
+
+        return $this;
+    }
+
+    public function reactivar(): self
+    {
+        $this->activo = true;
+        $this->fechaBaja = null;
+        $this->motivoBaja = null;
+
+        return $this;
+    }
+
     public function enMesDeCortesia(int $ano, int $mes): bool
     {
         if (!$this->fechaAlta) {

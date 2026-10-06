@@ -70,7 +70,12 @@
                             {% for instituto in institutos %}
                                 <tr>
                                     <td>{{ instituto.id }}</td>
-                                    <td>{{ instituto.nombre }}</td>
+                                    <td>
+                                        {{ instituto.nombre }}
+                                        {% if not instituto.activo %}
+                                            <span class="badge bg-secondary ms-1" title="{{ instituto.motivoBaja }}">De baja</span>
+                                        {% endif %}
+                                    </td>
                                     <td>{{ instituto.email|default('-') }}</td>
                                     <td>{{ instituto.dir|default('-') }}</td>
                                     <td>{{ instituto.tel|default('-') }}</td>
