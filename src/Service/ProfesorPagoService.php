@@ -33,6 +33,12 @@ use Doctrine\ORM\EntityManagerInterface;
  */
 class ProfesorPagoService
 {
+    /**
+     * Modalidad interna, no elegible: el curso de un profesor con fijo mensual, donde lo único
+     * que puede aportar es el viático de cada clase.
+     */
+    public const SOLO_VIATICO = 'solo_viatico';
+
     public function __construct(
         private EntityManagerInterface $entityManager,
         private AsistenciaProfesoresRepository $asistenciaProfesoresRepository,
@@ -66,6 +72,13 @@ class ProfesorPagoService
             }
 
             switch ($regla['modalidad']) {
+                case self::SOLO_VIATICO:
+                    // Fijo mensual: la hora ya está paga por el monto fijo, pero el viático es
+                    // un reintegro de viaje y se sigue debiendo por cada clase a la que fue.
+                    // Se reusa el cálculo por hora con la hora en cero para contar las clases
+                    // igual que siempre: mismos feriados, mismas ausencias.
+                    $fila = $this->calcularHorasDelCurso($profesor, $curso, $mes, $ano, $regla);
+                    break;
                 case ProfesorCursoPago::MODALIDAD_PORCENTAJE:
                     $fila = $this->calcularPorcentajeDelCurso($profesor, $curso, $mes, $ano, $regla);
                     break;
@@ -148,7 +161,14 @@ class ProfesorPagoService
             case 'combinado':
                 return array_merge($porDefecto, ['modalidad' => ProfesorCursoPago::MODALIDAD_PORCENTAJE]);
             case 'fijo_mensual':
-                return null;
+                // El monto fijo ya se contó una vez, fuera del bucle de cursos: acá el curso
+                // solo puede aportar viático. La fila se arma igual para que el detalle muestre
+                // los cursos aunque aporten cero; antes devolvía null y la liquidación de un
+                // fijo mensual no mostraba ni un curso, que parecía que no hacía nada.
+                return array_merge($porDefecto, [
+                    'modalidad' => self::SOLO_VIATICO,
+                    'precio_hora' => 0.0,
+                ]);
             default:
                 return array_merge($porDefecto, ['modalidad' => ProfesorCursoPago::MODALIDAD_POR_HORA]);
         }

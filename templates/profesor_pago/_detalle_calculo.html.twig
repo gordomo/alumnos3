@@ -16,6 +16,7 @@
 {% macro modalidadEtiqueta(modalidad) %}
     {%- if modalidad == 'porcentaje' -%}Porcentaje
     {%- elseif modalidad == 'fijo_mensual' -%}Fijo por el curso
+    {%- elseif modalidad == 'solo_viatico' -%}Solo viático
     {%- else -%}Por hora
     {%- endif -%}
 {% endmacro %}
@@ -32,6 +33,19 @@
         </div>
     {% elseif modalidad == 'fijo_mensual' %}
         Monto acordado para este curso
+    {% elseif modalidad == 'solo_viatico' %}
+        {% if c.viatico > 0 %}
+            {{ c.cantidad_asistencias }} clase(s) · viático
+            ${{ (c.viatico / (c.cantidad_asistencias ?: 1))|number_format(2, ',', '.') }} por clase
+        {% else %}
+            Las horas las cubre el fijo mensual
+        {% endif %}
+        <div class="text-muted">
+            {% if c.ausencias > 0 %}{{ c.ausencias }} ausencia(s) descontada(s){% else %}sin ausencias{% endif %}
+            {% if c.clases_feriado|default(0) > 0 %}
+                · {{ c.clases_feriado }} sin dictar por feriado
+            {% endif %}
+        </div>
     {% else %}
         {{ c.cantidad_asistencias }} de {{ c.clases_programadas }} clases ·
         {{ c.horas_trabajadas|format_duracion }} ·
