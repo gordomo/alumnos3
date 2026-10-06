@@ -43,6 +43,35 @@
     <form method="post">
         <input type="hidden" name="_token" value="{{ csrf_token('reglas_pago_' ~ profesor.id) }}">
 
+        {# Solo tiene sentido preguntarlo si hay un monto fijo que pueda chocar con una regla. #}
+        {% if profesor.montoFijoMensual %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h6 class="mb-2">
+                        Su fijo mensual de ${{ profesor.montoFijoMensual|number_format(2, ',', '.') }},
+                        ¿qué cubre?
+                    </h6>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="fijo_se_suma" value="1"
+                               id="fijo_suma" {% if profesor.fijoSeSuma %}checked{% endif %}>
+                        <label class="form-check-label" for="fijo_suma">
+                            <strong>Es un sueldo base y se suma.</strong>
+                            Cobra el fijo todos los meses, más lo que diga cada curso.
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="fijo_se_suma" value="0"
+                               id="fijo_reemplaza" {% if not profesor.fijoSeSuma %}checked{% endif %}>
+                        <label class="form-check-label" for="fijo_reemplaza">
+                            <strong>Cubre los cursos sin regla propia.</strong>
+                            Los cursos de acá abajo se pagan aparte, como diga su regla. Si todos
+                            tienen regla propia, el fijo no se paga.
+                        </label>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
         <div class="card">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">

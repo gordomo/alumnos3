@@ -70,6 +70,12 @@
         <strong>Fijo mensual del profesor:</strong>
         ${{ fijoProfesor|number_format(2, ',', '.') }}
     </p>
+{% elseif d.fijo_reemplazado|default(false) %}
+    {# Que el fijo esté configurado y no se pague se explica, o parece un error de cálculo. #}
+    <p class="mb-2 text-muted">
+        Su fijo mensual no se liquida este mes: todos sus cursos tienen regla propia y se pagan
+        como diga cada una.
+    </p>
 {% endif %}
 
 {% if d.cursos|default([]) is not empty %}

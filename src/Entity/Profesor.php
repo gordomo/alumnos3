@@ -279,6 +279,32 @@ class Profesor
         $this->precioHora = $precioHora;
     }
 
+    /**
+     * Qué pasa con el fijo mensual en los cursos que tienen regla propia.
+     *
+     * true  = se suma: es un sueldo base, y además cobra lo que diga cada curso.
+     * false = lo reemplaza: el fijo es el valor por defecto y el curso con regla propia lo pisa.
+     *
+     * Es por profesor y no por instituto porque el mismo instituto puede tener las dos
+     * situaciones: un coordinador con base más sus cursos, y un profesor con un fijo salvo en un
+     * curso puntual. Nace en true, que es lo que el sistema venía haciendo.
+     *
+     * @ORM\Column(type="boolean", options={"default": true})
+     */
+    private $fijoSeSuma = true;
+
+    public function isFijoSeSuma(): bool
+    {
+        return (bool) $this->fijoSeSuma;
+    }
+
+    public function setFijoSeSuma(bool $seSuma): self
+    {
+        $this->fijoSeSuma = $seSuma;
+
+        return $this;
+    }
+
     public function getTipoPago(): ?string
     {
         return $this->tipoPago ?? 'por_hora';

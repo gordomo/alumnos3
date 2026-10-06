@@ -65,10 +65,21 @@ class ProfesorPagoService
         $detalleCursos = [];
         $montoCursos = 0.0;
 
+        // Cuando el fijo no se suma, lo que cubre son los cursos que NO tienen regla propia: los
+        // que la tienen se pagan como diga su regla y quedan fuera del fijo. Si todos tienen la
+        // suya, al fijo no le queda nada que cubrir y no se paga.
+        $cursosConReglaPropia = 0;
+        $cursosLiquidados = 0;
+
         foreach ($cursos as $curso) {
             $regla = $this->reglaEfectiva($profesor, $curso, $reglas, $tipoPago);
             if ($regla === null) {
                 continue;
+            }
+
+            ++$cursosLiquidados;
+            if ($regla['origen'] === 'curso') {
+                ++$cursosConReglaPropia;
             }
 
             switch ($regla['modalidad']) {
@@ -102,9 +113,19 @@ class ProfesorPagoService
             $montoCursos += $fila['monto'];
         }
 
+        $fijoReemplazado = $montoFijoProfesor > 0
+            && !$profesor->isFijoSeSuma()
+            && $cursosLiquidados > 0
+            && $cursosConReglaPropia === $cursosLiquidados;
+
+        if ($fijoReemplazado) {
+            $montoFijoProfesor = 0.0;
+        }
+
         $detalle = [
             // Se mantiene la clave de siempre para no romper lo que ya la lee.
             'tipo_pago' => $tipoPago,
+            'fijo_reemplazado' => $fijoReemplazado,
             'mes' => $mes,
             'ano' => $ano,
             'base_porcentaje' => $this->basePorcentaje($profesor),

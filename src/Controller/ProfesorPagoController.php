@@ -236,6 +236,12 @@ class ProfesorPagoController extends AbstractController
                 return $this->redirectToRoute('app_profesor_pago_reglas', ['profesorId' => $profesor->getId()]);
             }
 
+            // Qué hace su fijo mensual con los cursos que tienen regla propia. Solo se toca si
+            // el formulario lo mostró, que es cuando el profesor tiene un monto fijo cargado.
+            if ($request->request->has('fijo_se_suma')) {
+                $profesor->setFijoSeSuma($request->request->get('fijo_se_suma') === '1');
+            }
+
             $resultado = $reglaService->guardarReglas(
                 $profesor,
                 $cursos,
