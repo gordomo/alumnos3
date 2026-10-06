@@ -246,7 +246,7 @@ class AgendaController extends AbstractAgendaController
                         ? sprintf('Se agregó "%s" a la agenda.', $evento->getTitulo())
                         : 'Evento actualizado.');
 
-                    return $this->redirectToRoute('app_agenda_eventos_listado');
+                    return $this->redirectToRoute($this->rutaDeVuelta($request));
                 }
             }
         }
@@ -254,10 +254,31 @@ class AgendaController extends AbstractAgendaController
         return $this->render('agenda/evento_form.html.twig', [
             'evento' => $evento,
             'esNuevo' => $esNuevo,
+            'rutaVolver' => $this->rutaDeVuelta($request),
+            'volver' => $this->origen($request),
             'cursos' => $cursoRepository->findByInstituto($instituto),
             'tipos' => EventoAgenda::TIPOS,
             'visibilidades' => EventoAgenda::VISIBILIDADES,
         ]);
+    }
+
+    /**
+     * De dónde se entró al formulario: 'agenda' o el listado.
+     *
+     * Viaja en la query al abrirlo y en un campo oculto al enviarlo, así sobrevive al POST y a
+     * un error de validación. Sin esto, quien abría el formulario haciendo clic en un día del
+     * calendario terminaba siempre en el listado, que no es de donde venía.
+     */
+    private function origen(Request $request): string
+    {
+        $origen = $request->request->get('volver') ?? $request->query->get('volver');
+
+        return $origen === 'agenda' ? 'agenda' : 'listado';
+    }
+
+    private function rutaDeVuelta(Request $request): string
+    {
+        return $this->origen($request) === 'agenda' ? 'app_agenda_index' : 'app_agenda_eventos_listado';
     }
 
     private function cursoElegido(Request $request, CursoRepository $cursoRepository, $instituto): ?Curso

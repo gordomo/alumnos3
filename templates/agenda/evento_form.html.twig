@@ -9,7 +9,9 @@
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="{{ path('app_agenda_index') }}">Agenda</a></li>
-            <li class="breadcrumb-item"><a href="{{ path('app_agenda_eventos_listado') }}">Eventos cargados</a></li>
+            <li class="breadcrumb-item">
+                <a href="{{ path(rutaVolver) }}">{{ volver == 'agenda' ? 'Agenda' : 'Eventos cargados' }}</a>
+            </li>
             <li class="breadcrumb-item active">{{ esNuevo ? 'Nuevo' : evento.titulo }}</li>
         </ol>
     </nav>
@@ -110,8 +112,12 @@
                         </div>
                     </div>
 
+                    <input type="hidden" name="volver" value="{{ volver }}">
+
                     <div class="card-footer d-flex justify-content-between">
-                        <a href="{{ path('app_agenda_eventos_listado') }}" class="btn btn-secondary">← Volver</a>
+                        {# Vuelve a donde se entró, sin guardar: al calendario si se abrió desde ahí,
+                           al listado si se abrió desde el listado. #}
+                        <a href="{{ path(rutaVolver) }}" class="btn btn-secondary">← Volver sin guardar</a>
                         <button type="submit" class="btn btn-primary">
                             <i class="bi bi-save"></i> {{ esNuevo ? 'Agregar a la agenda' : 'Guardar cambios' }}
                         </button>

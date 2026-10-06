@@ -41,7 +41,7 @@
                         <a href="{{ path('app_agenda_eventos_listado') }}" class="btn btn-sm btn-outline-secondary">
                             <i class="bi bi-list-ul"></i> Eventos cargados
                         </a>
-                        <a href="{{ path('app_agenda_evento_nuevo') }}" class="btn btn-sm btn-primary">
+                        <a href="{{ path('app_agenda_evento_nuevo', {'volver': 'agenda'}) }}" class="btn btn-sm btn-primary">
                             <i class="bi bi-plus-circle"></i> Nuevo evento
                         </a>
                     </div>
@@ -143,7 +143,7 @@
                 const fin = new Date(info.end.getTime() - 86400000);
                 const hasta = fin.toISOString().slice(0, 10);
 
-                let url = '{{ path('app_agenda_evento_nuevo') }}?fecha=' + desde;
+                let url = '{{ path('app_agenda_evento_nuevo', {'volver': 'agenda'}) }}&fecha=' + desde;
                 if (hasta > desde) {
                     url += '&fechaFin=' + hasta;
                 }
