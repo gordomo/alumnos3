@@ -131,8 +131,14 @@
         #features-section,
         #capturas-section,
         #pricing-section,
+        #auth-section {
+            scroll-margin-top: 6rem;
+        }
+
         /* El campo trampa del formulario de contacto. No se usa display:none a secas porque
-           algunos bots lo detectan; esto lo saca de la vista igual. */
+           algunos bots lo detectan; esto lo saca de la vista igual.
+           Va en su propia regla: metido en la lista de arriba se llevaba puestas las tres
+           secciones de contenido, que terminaban dibujadas fuera de la pantalla. */
         .campo-trampa {
             position: absolute;
             left: -9999px;
@@ -146,10 +152,6 @@
             text-align: center;
             font-size: 0.9rem;
             color: #6c757d;
-        }
-
-        #auth-section {
-            scroll-margin-top: 6rem;
         }
 
         @media (prefers-reduced-motion: reduce) {
