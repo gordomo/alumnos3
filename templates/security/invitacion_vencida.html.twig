@@ -1,0 +1,37 @@
+{% extends 'base.html.twig' %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('assets/css/loginform.css') }}">
+{% endblock %}
+
+{% block title %}El enlace no sirve{% endblock %}
+
+{% block body %}
+<div class="wrapper">
+    <div id="formContent">
+        <div class="logo-container">
+            {{ include('security/_logo.html.twig', {'tamano': 56}) }}
+            <div class="logo-nombre">Team Builder Institute</div>
+        </div>
+
+        <h1 class="h5 text-center">Este enlace ya no sirve</h1>
+        <p class="text-center text-muted">
+            Puede que lo hayas usado antes o que se haya vencido. Escribinos y te mandamos uno
+            nuevo en el momento.
+        </p>
+
+        <p class="text-center">
+            <a href="https://wa.me/{{ whatsapp_contacto }}" target="_blank" rel="noopener" class="btn btn-success">
+                <i class="bi bi-whatsapp"></i> Escribirnos por WhatsApp
+            </a>
+        </p>
+        <p class="text-center small">
+            O por mail a <a href="mailto:{{ email_contacto }}">{{ email_contacto }}</a>.
+        </p>
+        <p class="text-center small mb-0">
+            Si ya elegiste tu contraseña, <a href="{{ path('app_login') }}">iniciá sesión</a>.
+        </p>
+    </div>
+</div>
+{% endblock %}

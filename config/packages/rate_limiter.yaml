@@ -4,3 +4,10 @@ framework:
             policy: 'fixed_window'
             limit: 3
             interval: '15 minutes'
+
+        # El formulario de contacto es público y sin sesión. Tres por hora y por IP alcanza de
+        # sobra para alguien que se equivocó al escribir, y corta una tanda de spam.
+        solicitud_instituto:
+            policy: 'fixed_window'
+            limit: 3
+            interval: '1 hour'

@@ -1,0 +1,146 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Solicitud de {{ solicitud.nombreInstituto }}{% endblock %}
+{% block panelTitle %}Solicitud de alta{% endblock %}
+
+{% block body %}
+<div class="container-fluid mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ path('admin_solicitud_index') }}">Solicitudes</a></li>
+            <li class="breadcrumb-item active">{{ solicitud.nombreInstituto }}</li>
+        </ol>
+    </nav>
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-building"></i> {{ solicitud.nombreInstituto }}</span>
+                    {% if solicitud.estado == 'pendiente' %}
+                        <span class="badge bg-warning text-dark">Pendiente</span>
+                    {% elseif solicitud.estado == 'confirmada' %}
+                        <span class="badge bg-light text-success">Confirmada</span>
+                    {% else %}
+                        <span class="badge bg-light text-secondary">Descartada</span>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">Contacto</dt>
+                        <dd class="col-sm-8">{{ solicitud.nombreContacto }}</dd>
+
+                        <dt class="col-sm-4">Email</dt>
+                        <dd class="col-sm-8"><a href="mailto:{{ solicitud.email }}">{{ solicitud.email }}</a></dd>
+
+                        <dt class="col-sm-4">Teléfono</dt>
+                        <dd class="col-sm-8">
+                            {% if solicitud.telefono %}
+                                <a href="https://wa.me/{{ solicitud.telefono|replace({' ': '', '-': '', '+': ''}) }}" target="_blank" rel="noopener">
+                                    {{ solicitud.telefono }} <i class="bi bi-whatsapp text-success"></i>
+                                </a>
+                            {% else %}
+                                <span class="text-muted">No dejó</span>
+                            {% endif %}
+                        </dd>
+
+                        <dt class="col-sm-4">Alumn@s estimad@s</dt>
+                        <dd class="col-sm-8">{{ solicitud.alumnosEstimadosEtiqueta|default('No contestó') }}</dd>
+
+                        <dt class="col-sm-4">Recibida</dt>
+                        <dd class="col-sm-8">
+                            {{ solicitud.fechaSolicitud|date('d/m/Y H:i') }}
+                            {% if solicitud.ip %}<span class="text-muted small">· {{ solicitud.ip }}</span>{% endif %}
+                        </dd>
+
+                        {% if solicitud.fechaResolucion %}
+                            <dt class="col-sm-4">Resuelta</dt>
+                            <dd class="col-sm-8">{{ solicitud.fechaResolucion|date('d/m/Y H:i') }}</dd>
+                        {% endif %}
+
+                        {% if solicitud.mensaje %}
+                            <dt class="col-sm-4">Mensaje</dt>
+                            <dd class="col-sm-8" style="white-space: pre-line;">{{ solicitud.mensaje }}</dd>
+                        {% endif %}
+
+                        {% if solicitud.motivoDescarte %}
+                            <dt class="col-sm-4">Motivo del descarte</dt>
+                            <dd class="col-sm-8" style="white-space: pre-line;">{{ solicitud.motivoDescarte }}</dd>
+                        {% endif %}
+                    </dl>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mt-4">
+                <div class="card-header bg-light"><i class="bi bi-journal-text"></i> Notas internas</div>
+                <div class="card-body">
+                    <form method="post" action="{{ path('admin_solicitud_notas', {'id': solicitud.id}) }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('solicitud_notas' ~ solicitud.id) }}">
+                        <textarea name="notas" class="form-control" rows="3"
+                                  placeholder="Lo que hablamos con ell@s. No lo ve nadie más.">{{ solicitud.notas }}</textarea>
+                        <button class="btn btn-sm btn-outline-primary mt-2">Guardar notas</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            {% if solicitud.estado == 'pendiente' %}
+                <div class="card shadow-sm border-success">
+                    <div class="card-header bg-success text-white"><i class="bi bi-check-circle"></i> Confirmar</div>
+                    <div class="card-body">
+                        <p>
+                            Se crea el instituto <strong>{{ solicitud.nombreInstituto }}</strong> y le mandamos a
+                            <strong>{{ solicitud.email }}</strong> un enlace para que elija su contraseña y entre.
+                            El enlace vale {{ diasInvitacion }} días y se puede reenviar.
+                        </p>
+                        <p class="small text-muted">
+                            Su primer mes no se factura: la fecha de alta queda en hoy.
+                        </p>
+                        <form method="post" action="{{ path('admin_solicitud_confirmar', {'id': solicitud.id}) }}">
+                            <input type="hidden" name="_token" value="{{ csrf_token('solicitud_confirmar' ~ solicitud.id) }}">
+                            <button class="btn btn-success w-100">
+                                <i class="bi bi-check-circle"></i> Confirmar y enviar invitación
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm mt-4">
+                    <div class="card-header bg-light"><i class="bi bi-x-circle"></i> Descartar</div>
+                    <div class="card-body">
+                        <form method="post" action="{{ path('admin_solicitud_descartar', {'id': solicitud.id}) }}">
+                            <input type="hidden" name="_token" value="{{ csrf_token('solicitud_descartar' ~ solicitud.id) }}">
+                            <textarea name="motivo" class="form-control mb-2" rows="2"
+                                      placeholder="Por qué se descarta (queda guardado)"></textarea>
+                            <button class="btn btn-outline-danger w-100">Descartar solicitud</button>
+                            <div class="form-text">No se le manda ningún mail. Si hay que contestarle, escribile vos.</div>
+                        </form>
+                    </div>
+                </div>
+            {% elseif solicitud.estado == 'confirmada' %}
+                <div class="card shadow-sm border-success">
+                    <div class="card-header bg-success text-white"><i class="bi bi-check-circle"></i> Confirmada</div>
+                    <div class="card-body">
+                        {% if solicitud.instituto %}
+                            <p>
+                                El instituto está creado.
+                                <a href="{{ path('admin_instituto_edit', {'id': solicitud.instituto.id}) }}">Ver su ficha</a>.
+                            </p>
+                        {% endif %}
+                        <form method="post" action="{{ path('admin_solicitud_reenviar', {'id': solicitud.id}) }}">
+                            <input type="hidden" name="_token" value="{{ csrf_token('solicitud_reenviar' ~ solicitud.id) }}">
+                            <button class="btn btn-outline-primary w-100">
+                                <i class="bi bi-envelope"></i> Reenviar la invitación
+                            </button>
+                            <div class="form-text">
+                                Si no le llegó o se le venció el enlace. Genera uno nuevo y anula el anterior.
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

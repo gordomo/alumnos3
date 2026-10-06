@@ -79,6 +79,8 @@ class GenerateMonthlyInvoicesCommand extends Command
                     $motivoOmision = null;
                     if ($instituto->isSuscripcionExenta()) {
                         $motivoOmision = 'está exento de facturación';
+                    } elseif ($instituto->enMesDeCortesia((int) $year, (int) $month)) {
+                        $motivoOmision = 'está en su primer mes, que es sin cargo';
                     } elseif ($activeStudents === 0 && !$instituto->getMinimoMensual()) {
                         $motivoOmision = 'no tiene alumnos activos';
                     }

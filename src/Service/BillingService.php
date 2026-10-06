@@ -77,6 +77,12 @@ class BillingService
             throw new \RuntimeException("El instituto {$instituto->getNombre()} está exento de facturación");
         }
 
+        // El primer mes es de cortesía: el instituto lo usa entero sin que se le facture. Se
+        // compara contra la fecha de alta, que queda seteada al confirmar su solicitud.
+        if ($instituto->enMesDeCortesia($year, $month)) {
+            throw new \RuntimeException("El instituto {$instituto->getNombre()} está en su primer mes, que es sin cargo");
+        }
+
         $activeStudents = $this->getActiveStudentsCount($instituto);
 
         // Sin alumnos activos no hay nada que cobrar. Antes se emitían facturas en $0 que

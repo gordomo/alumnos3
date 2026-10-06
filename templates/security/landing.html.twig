@@ -131,6 +131,23 @@
         #features-section,
         #capturas-section,
         #pricing-section,
+        /* El campo trampa del formulario de contacto. No se usa display:none a secas porque
+           algunos bots lo detectan; esto lo saca de la vista igual. */
+        .campo-trampa {
+            position: absolute;
+            left: -9999px;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+        }
+
+        .auth-contacto-directo {
+            margin: 1.25rem 0 0;
+            text-align: center;
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+
         #auth-section {
             scroll-margin-top: 6rem;
         }
@@ -1221,7 +1238,7 @@
                     <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
                 </a>
                 <a href="#auth-section" class="register-button-hero" data-no-loading onclick="scrollToAuthForm(event)">
-                    <i class="bi bi-person-plus-fill"></i> Regístrate
+                    <i class="bi bi-chat-dots-fill"></i> Contactanos
                 </a>
             </div>
             {% endif %}
@@ -1451,90 +1468,83 @@
         <!-- CTA Section -->
         <div class="cta-section">
             <div class="cta-text">¡Comienza hoy mismo!</div>
-            <div class="cta-subtext">Regístrate gratis y comienza a gestionar tu instituto</div>
-            <div class="cta-badge">Sin tarjeta de crédito • Configuración en minutos • Sin costo de instalación</div>
+            <div class="cta-subtext">Escribinos y te ponemos el instituto en marcha</div>
+            <div class="cta-badge">Primer mes sin cargo • Te acompañamos en la puesta en marcha • Sin costo de instalación</div>
         </div>
 
         <!-- Auth Section -->
         <div class="auth-wrapper" id="auth-section">
             <div class="auth-section" id="auth-form-card">
             <div class="auth-encabezado">
-                <h2>Creá tu instituto</h2>
+                <h2>Contactanos</h2>
                 <p>
-                    Empezá gratis, sin tarjeta. Si ya tenés cuenta,
-                    <a href="{{ path('app_login') }}">iniciá sesión</a>.
+                    Dejanos tus datos y te escribimos para ponerte el instituto en marcha.
+                    Si ya tenés cuenta, <a href="{{ path('app_login') }}">iniciá sesión</a>.
                 </p>
             </div>
 
-            <!-- Register Form -->
+            {% for mensaje in app.flashes('contacto_ok') %}
+                <div class="alert alert-success">{{ mensaje }}</div>
+            {% endfor %}
+            {% for mensaje in app.flashes('contacto_error') %}
+                <div class="alert alert-danger">{{ mensaje }}</div>
+            {% endfor %}
+
             <div id="registerForm" class="auth-form active">
-
-                <form method="post" action="{{ path('app_register') }}" enctype="multipart/form-data">
+                <form method="post" action="{{ path('app_contacto') }}">
                     <div class="form-group">
-                        <input type="text" 
-                            name="nombre" 
-                            class="form-control" 
-                            placeholder="Nombre del Instituto"
-                            required>
+                        <input type="text" name="nombre_instituto" class="form-control"
+                               placeholder="Nombre del instituto" maxlength="255" required>
                     </div>
 
                     <div class="form-group">
-                        <input type="email" 
-                            name="email" 
-                            class="form-control" 
-                            placeholder="Email del Instituto"
-                            required>
+                        <input type="text" name="nombre_contacto" class="form-control"
+                               placeholder="Tu nombre" maxlength="255" required>
                     </div>
 
                     <div class="form-group">
-                        <input type="tel" 
-                            name="tel" 
-                            class="form-control" 
-                            placeholder="Teléfono (opcional)"
-                            maxlength="25">
+                        <input type="email" name="email" class="form-control"
+                               placeholder="Email de contacto" required>
+                    </div>
+
+                    <div class="form-group">
+                        <input type="tel" name="telefono" class="form-control"
+                               placeholder="Teléfono o WhatsApp (opcional)" maxlength="25">
                     </div>
 
                     <div class="form-group form-group--ancho">
-                        <textarea name="dir" 
-                                class="form-control" 
-                                rows="2"
-                                placeholder="Dirección (opcional)"></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <input type="password" 
-                            name="password" 
-                            class="form-control" 
-                            placeholder="Contraseña"
-                            required
-                            minlength="6">
-                        <small style="color: #6c757d; font-size: 0.85rem; display: block; margin-top: 0.25rem;">
-                            Mínimo 6 caracteres
-                        </small>
+                        <select name="alumnos_estimados" class="form-control" required>
+                            <option value="">¿Cuántos alumn@s tenés, más o menos?</option>
+                            <option value="1-20">Hasta 20 alumn@s</option>
+                            <option value="21-50">Entre 21 y 50</option>
+                            <option value="51-100">Entre 51 y 100</option>
+                            <option value="100+">Más de 100</option>
+                        </select>
                     </div>
 
                     <div class="form-group form-group--ancho">
-                        <label style="display: block; margin-bottom: 0.5rem; color: var(--text-color); font-size: 0.9rem;">
-                            Logo del Instituto (opcional)
-                        </label>
-                        <input type="file" 
-                            name="logo" 
-                            class="form-control" 
-                            accept="image/jpeg,image/png">
-                        <small style="color: #6c757d; font-size: 0.85rem; display: block; margin-top: 0.25rem;">
-                            Formatos: JPG, PNG. Máximo 1MB
-                        </small>
+                        <textarea name="mensaje" class="form-control" rows="2"
+                                  placeholder="Contanos algo de tu instituto (opcional)"></textarea>
                     </div>
 
-                    <input type="hidden" name="timezone" id="register_timezone" value="">
+                    {# Campo trampa: oculto para una persona, irresistible para un bot. #}
+                    <div class="campo-trampa" aria-hidden="true">
+                        <label for="apellido_contacto">No completar</label>
+                        <input type="text" name="apellido_contacto" id="apellido_contacto" tabindex="-1" autocomplete="off">
+                    </div>
 
-                    <input type="hidden" name="_csrf_token" value="{{ csrf_token('register') }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('contacto') }}">
 
                     <button class="btn btn-primary" type="submit">
-                        Crear Cuenta
+                        Quiero que me contacten
                     </button>
                 </form>
-            </div>
+
+                <p class="auth-contacto-directo">
+                    ¿Preferís hablar? Escribinos por
+                    <a href="https://wa.me/{{ whatsapp_contacto }}" target="_blank" rel="noopener">WhatsApp</a>
+                    o a <a href="mailto:{{ email_contacto }}">{{ email_contacto }}</a>.
+                </p>
             </div>
         </div>
     </div>
@@ -1571,15 +1581,6 @@
             card.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
     }
-
-    // Zona horaria del navegador para el instituto que se registra
-    document.addEventListener('DOMContentLoaded', function() {
-        try {
-            const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-            const input = document.getElementById('register_timezone');
-            if (input && tz) input.value = tz;
-        } catch (e) {}
-    });
 
     // Si hay un mensaje de éxito, mostrar el tab de login
     document.addEventListener('DOMContentLoaded', function() {

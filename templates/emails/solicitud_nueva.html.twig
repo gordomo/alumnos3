@@ -1,0 +1,26 @@
+{% extends 'emails/base_email.html.twig' %}
+
+{% block title %}Nueva solicitud de alta{% endblock %}
+
+{% block content %}
+    <h2>{{ solicitud.nombreInstituto }}</h2>
+
+    <ul>
+        <li><strong>Contacto:</strong> {{ solicitud.nombreContacto }}</li>
+        <li><strong>Email:</strong> {{ solicitud.email }}</li>
+        <li><strong>Teléfono:</strong> {{ solicitud.telefono|default('no dejó') }}</li>
+        <li><strong>Alumn@s estimad@s:</strong> {{ solicitud.alumnosEstimadosEtiqueta|default('no contestó') }}</li>
+    </ul>
+
+    {% if solicitud.mensaje %}
+        <p><strong>Mensaje:</strong><br>{{ solicitud.mensaje|nl2br }}</p>
+    {% endif %}
+
+    <p style="text-align: center;">
+        <a href="{{ url('admin_solicitud_show', {'id': solicitud.id}) }}" class="button">Ver la solicitud</a>
+    </p>
+{% endblock %}
+
+{% block footer %}
+    <p><small>Aviso interno de Team Builder.</small></p>
+{% endblock %}

@@ -114,133 +114,17 @@ class SecurityController extends AbstractController
         ]);
     }
 
-    /**
-     * @Route("/register", name="app_register", methods={"POST"})
+    /*
+     * El registro automático se eliminó a propósito.
+     *
+     * Hasta acá, cualquiera con el enlace creaba un instituto completo -con su usuario
+     * administrador y su configuración- sin que nadie lo revisara. Ahora el alta pasa por una
+     * solicitud que alguien confirma (ContactoController y SolicitudInstitutoController), y el
+     * instituto nace recién en ese momento.
+     *
+     * La ruta se borra, no se esconde: con el formulario fuera de la landing pero la ruta viva,
+     * se podía seguir posteando igual.
      */
-    public function register(Request $request): Response
-    {
-        // Si ya está autenticado, redirigir
-        if ($this->getUser()) {
-            return $this->redirectToRoute('app_start');
-        }
-
-        if ($request->isMethod('POST')) {
-            // Validar CSRF token
-            $token = $request->request->get('_csrf_token');
-            if (!$this->isCsrfTokenValid('register', $token)) {
-                $this->addFlash('error', 'Token de seguridad inválido.');
-                return $this->redirectToRoute('app_login');
-            }
-
-            $nombre = trim($request->request->get('nombre', ''));
-            $email = trim($request->request->get('email', ''));
-            $tel = trim($request->request->get('tel', ''));
-            $dir = trim($request->request->get('dir', ''));
-            $password = $request->request->get('password', '');
-
-            // Validaciones básicas
-            if (empty($nombre) || empty($email) || empty($password)) {
-                $this->addFlash('error', 'Por favor completa todos los campos obligatorios.');
-                return $this->redirectToRoute('app_login');
-            }
-
-            if (strlen($password) < 6) {
-                $this->addFlash('error', 'La contraseña debe tener al menos 6 caracteres.');
-                return $this->redirectToRoute('app_login');
-            }
-
-            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                $this->addFlash('error', 'El email ingresado no es válido.');
-                return $this->redirectToRoute('app_login');
-            }
-
-            // Verificar si el email ya existe
-            $institutoExistente = $this->entityManager->getRepository(Instituto::class)->findOneBy(['email' => $email]);
-            $usuarioExistente = $this->entityManager->getRepository(User::class)->findOneBy(['email' => $email]);
-
-            if ($institutoExistente || $usuarioExistente) {
-                $this->addFlash('error', 'El correo electrónico ya está en uso. Por favor, inicia sesión o usa otro email.');
-                return $this->redirectToRoute('app_login');
-            }
-
-            try {
-                // Crear el instituto
-                $instituto = new Instituto();
-                $instituto->setNombre($nombre);
-                $instituto->setEmail($email);
-                $instituto->setTel($tel ?: null);
-                $instituto->setDir($dir ?: null);
-
-                // Manejo del logo
-                if ($request->files->has('logo')) {
-                    $logoFile = $request->files->get('logo');
-                    if ($logoFile && $logoFile->getSize() > 0) {
-                        // Validar tamaño (máximo 1MB)
-                        if ($logoFile->getSize() > 1024 * 1024) {
-                            $this->addFlash('error', 'El logo es demasiado grande. Máximo 1MB.');
-                            return $this->redirectToRoute('app_login');
-                        }
-
-                        $originalFilename = pathinfo($logoFile->getClientOriginalName(), PATHINFO_FILENAME);
-                        $safeFilename = $this->slugger->slug($originalFilename);
-                        $newFilename = $safeFilename . '-' . uniqid() . '.' . $logoFile->guessExtension();
-
-                        try {
-                            $logoFile->move(
-                                $this->getParameter('logos_directory'),
-                                $newFilename
-                            );
-                            $instituto->setLogo($newFilename);
-                        } catch (FileException $e) {
-                            // Si falla la subida del logo, continuar sin logo
-                        }
-                    }
-                }
-
-                // Crear usuario admin del instituto
-                $user = new User();
-                $user->setEmail($email);
-                $user->setPassword($this->passwordHasher->hashPassword($user, $password));
-                $user->setRoles(['ROLE_ADMIN_INSTITUTO']);
-                $user->setInstituto($instituto);
-
-                // Crear configuración del instituto (timezone del navegador del usuario que se registra)
-                $configuracion = new InstitutoConfiguracion();
-                $configuracion->setInstituto($instituto);
-                $timezone = $request->request->get('timezone');
-                $configuracion->setTimezone($timezone !== '' && $timezone !== null ? $timezone : null);
-                $configuracion->setDateFormat('d/m/Y'); // formato por defecto al crear instituto
-
-                // Persistir
-                $this->entityManager->persist($instituto);
-                $this->entityManager->persist($user);
-                $this->entityManager->persist($configuracion);
-
-                // Métodos de pago base del instituto. "Efectivo" debe existir siempre.
-                $metodosBase = ['Efectivo', 'Transferencia', 'Tarjeta de Debito', 'Tarjeta de Credito'];
-                foreach ($metodosBase as $index => $nombreMetodo) {
-                    $metodoPago = new MetodoPago();
-                    $metodoPago->setInstituto($instituto);
-                    $metodoPago->setNombre($nombreMetodo);
-                    $metodoPago->setActivo(true);
-                    $metodoPago->setOrden($index + 1);
-                    $this->entityManager->persist($metodoPago);
-                }
-
-                $this->entityManager->flush();
-
-                $this->addFlash('success', '¡Cuenta creada exitosamente! Ya puedes gestionar tu instituto.');
-                
-                // Autenticar al usuario automáticamente
-                return $this->userAuthenticator->authenticateUser($user, $this->loginAuthenticator, $request);
-            } catch (\Exception $e) {
-                $this->addFlash('error', 'Ocurrió un error al crear la cuenta. Por favor, intenta nuevamente.');
-                return $this->redirectToRoute('app_login');
-            }
-        }
-
-        return $this->redirectToRoute('app_login');
-    }
 
     /**
      * @Route("/logout", name="app_logout")

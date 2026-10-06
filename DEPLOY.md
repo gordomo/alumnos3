@@ -69,9 +69,11 @@ php bin/console doctrine:migrations:migrate --no-interaction
 ```
 
 La única que debería **ejecutarse** en este despliegue es
-`Version20260901160000` (la suscripción de los institutos). Es aditiva y sin
-riesgo: agrega columnas nullable o con `DEFAULT` a `billing_config`,
-`billing_invoice` e `instituto`. No toca ni una fila existente.
+`Version20261006120000` (las solicitudes de alta). Crea la tabla
+`solicitud_instituto`, agrega `instituto.fecha_alta` y la completa con la fecha
+de la primera factura de cada instituto. No borra ni modifica ninguna otra fila.
+
+Este despliegue **también lleva `composer install`**: se agregó monolog.
 
 ### 5. Verificar el schema
 

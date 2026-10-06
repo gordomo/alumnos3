@@ -4,6 +4,12 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
+    # Por dónde nos contactan los institutos. Se usan en el formulario público, en los carteles
+    # de suspensión y en el aviso interno de una solicitud nueva.
+    app.email_contacto: 'contacto@teambuilder.com.ar'
+    app.whatsapp_contacto: '5493415961121'
+    app.whatsapp_contacto_visible: '+54 9 3415 96-1121'
+
     logos_directory: '%kernel.project_dir%/public/uploads/logos'
     payment_proofs_directory: '%kernel.project_dir%/public/uploads/payment_proofs'
 
@@ -37,6 +43,13 @@ services:
 # declararlas siempre rompía el contenedor cuando se instalaba con --no-dev.
 when@dev:
     services:
+        # Este bloque no hereda el _defaults de arriba: es otra sección de servicios y hay que
+        # repetirlo, o estas dos clases quedan sin autowiring y el contenedor no compila.
+        _defaults:
+            autowire: true
+            autoconfigure: true
+            public: false
+
         App\Command\SeedDatabaseCommand:
             tags: ['console.command']
 

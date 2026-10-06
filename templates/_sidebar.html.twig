@@ -223,6 +223,17 @@
             </ul>
             <ul class="nav nav-tabs sidebar-dropdown-ul">
                 <li class="nav-item">
+                    <a class="list-group-item list-group-item-action bg-light {% if app.request.get('_route') starts with 'admin_solicitud_' %}active{% endif %}" href="{{ path('admin_solicitud_index') }}">
+                        <i class="bi bi-inbox"></i> Solicitudes
+                        {% set pendientes = solicitudes_pendientes() %}
+                        {% if pendientes > 0 %}
+                            <span class="badge bg-danger rounded-pill ms-1">{{ pendientes }}</span>
+                        {% endif %}
+                    </a>
+                </li>
+            </ul>
+            <ul class="nav nav-tabs sidebar-dropdown-ul">
+                <li class="nav-item">
                     <a class="list-group-item list-group-item-action bg-light {% if app.request.get('_route') starts with 'admin_billing_invoice_' %}active{% endif %}" href="{{ path('admin_billing_invoice_index') }}">
                         <i class="bi bi-receipt-cutoff"></i> Cobranzas
                     </a>

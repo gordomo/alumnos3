@@ -1,6 +1,12 @@
 twig:
     default_path: '%kernel.project_dir%/templates'
     exception_controller: null # Usar sistema de excepción de Symfony
+    globals:
+        # Los datos de contacto se usan en la landing, en los carteles de suspensión y en los
+        # mails. Van acá para no tenerlos escritos a mano en seis plantillas distintas.
+        email_contacto: '%app.email_contacto%'
+        whatsapp_contacto: '%app.whatsapp_contacto%'
+        whatsapp_contacto_visible: '%app.whatsapp_contacto_visible%'
 
 when@test:
     twig:

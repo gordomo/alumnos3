@@ -1,0 +1,39 @@
+{% extends 'emails/base_email.html.twig' %}
+
+{% block title %}Tu instituto ya está listo{% endblock %}
+
+{% block content %}
+    <h2>Hola {{ solicitud.nombreContacto }}</h2>
+
+    <p>
+        Ya dejamos creado <strong>{{ solicitud.nombreInstituto }}</strong> en Team Builder. Para
+        empezar a usarlo solo falta que elijas tu contraseña:
+    </p>
+
+    <p style="text-align: center;">
+        <a href="{{ url('app_invitacion', {'token': token}) }}" class="button">Elegir mi contraseña y entrar</a>
+    </p>
+
+    <p>
+        El enlace vale <strong>{{ dias }} días</strong> y se puede usar una sola vez. Si se te vence,
+        escribinos y te mandamos uno nuevo.
+    </p>
+
+    <p>
+        Entrás con este mismo correo: <strong>{{ solicitud.email }}</strong>.
+    </p>
+
+    <p>
+        <strong>Tu primer mes es sin cargo.</strong> Después se factura por mes cerrado, según la
+        cantidad de alumn@s que tengas activ@s.
+    </p>
+
+    <p>
+        Cualquier duda respondé este mail o escribinos por WhatsApp al
+        {{ whatsapp_contacto_visible }}.
+    </p>
+{% endblock %}
+
+{% block footer %}
+    <p><small>Si no pediste esta cuenta, ignorá este mensaje.</small></p>
+{% endblock %}

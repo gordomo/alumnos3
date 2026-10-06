@@ -116,6 +116,16 @@ class Instituto
      */
     private $suscripcionExenta = false;
 
+    /**
+     * Cuándo empezó a usar el sistema.
+     *
+     * Es lo que define cuál es su primer mes, que no se factura. Los institutos anteriores a
+     * este campo quedan con la fecha de su primera factura, que es lo más cercano que tenemos.
+     *
+     * @ORM\Column(type="date", nullable=true)
+     */
+    private $fechaAlta;
+
     public function __construct()
     {
         $this->usuarios = new ArrayCollection();
@@ -412,5 +422,30 @@ class Instituto
     {
         $this->suscripcionExenta = $exenta;
         return $this;
+    }
+
+    public function getFechaAlta(): ?\DateTimeInterface
+    {
+        return $this->fechaAlta;
+    }
+
+    public function setFechaAlta(?\DateTimeInterface $fecha): self
+    {
+        $this->fechaAlta = $fecha;
+        return $this;
+    }
+
+    /**
+     * El primer mes de uso no se factura. Devuelve true si el período (año, mes) cae dentro de
+     * esa cortesía.
+     */
+    public function enMesDeCortesia(int $ano, int $mes): bool
+    {
+        if (!$this->fechaAlta) {
+            return false;
+        }
+
+        return (int) $this->fechaAlta->format('Y') === $ano
+            && (int) $this->fechaAlta->format('n') === $mes;
     }
 }
