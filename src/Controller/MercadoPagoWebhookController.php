@@ -32,9 +32,16 @@ class MercadoPagoWebhookController extends AbstractController
         Request $request,
         MercadoPagoService $mercadoPago,
         EntityManagerInterface $em,
-        LoggerInterface $logger
+        // Canal propio: el handler general de produccion solo escribe cuando hay un error, y un
+        // cobro que sale bien tiene que quedar registrado igual.
+        LoggerInterface $pagosLogger
     ): Response {
         $pagoId = $this->idDelPago($request);
+
+        $pagosLogger->info('Webhook de Mercado Pago recibido', [
+            'pago' => $pagoId,
+            'query' => $request->server->get('QUERY_STRING'),
+        ]);
 
         if (!$pagoId) {
             // Mercado Pago manda también avisos de otros temas (contracargos, planes). No son
@@ -45,7 +52,7 @@ class MercadoPagoWebhookController extends AbstractController
         try {
             $pago = $mercadoPago->buscarPago($pagoId);
         } catch (\Throwable $e) {
-            $logger->error('Webhook de Mercado Pago: no se pudo leer el pago', [
+            $pagosLogger->error('Webhook de Mercado Pago: no se pudo leer el pago', [
                 'pago' => $pagoId,
                 'error' => $e->getMessage(),
             ]);
@@ -57,7 +64,7 @@ class MercadoPagoWebhookController extends AbstractController
         $factura = $facturaId ? $em->getRepository(BillingInvoice::class)->find($facturaId) : null;
 
         if (!$factura) {
-            $logger->warning('Webhook de Mercado Pago: pago sin factura conocida', [
+            $pagosLogger->warning('Webhook de Mercado Pago: pago sin factura conocida', [
                 'pago' => $pagoId,
                 'referencia' => $pago['external_reference'] ?? null,
             ]);
@@ -68,7 +75,7 @@ class MercadoPagoWebhookController extends AbstractController
         if (($pago['status'] ?? null) !== 'approved') {
             // Pendiente, en revisión o rechazado: no se toca la factura. Si después se aprueba,
             // Mercado Pago vuelve a avisar.
-            $logger->info('Webhook de Mercado Pago: pago no aprobado', [
+            $pagosLogger->info('Webhook de Mercado Pago: pago no aprobado', [
                 'pago' => $pagoId,
                 'factura' => $factura->getId(),
                 'estado' => $pago['status'] ?? null,
@@ -89,7 +96,7 @@ class MercadoPagoWebhookController extends AbstractController
         $factura->setUpdatedAt(new \DateTime());
         $em->flush();
 
-        $logger->info('Webhook de Mercado Pago: factura cancelada', [
+        $pagosLogger->info('Webhook de Mercado Pago: factura cancelada', [
             'pago' => $pagoId,
             'factura' => $factura->getId(),
             'instituto' => $factura->getInstituto()?->getNombre(),
