@@ -15,6 +15,13 @@ framework:
         cookie_lifetime: 0
         gc_maxlifetime: 2700     # 45 min de inactividad sin requests → se elimina la sesión en servidor
 
+    # Detrás del nginx del servidor, que termina el TLS y le pasa el pedido al contenedor por
+    # http plano. Sin esto Symfony cree que el sitio es http y arma todas las URLs absolutas con
+    # ese esquema: los links de los mails salen en http y Mercado Pago rechaza las URLs que le
+    # mandamos. Vacío por defecto, así en local no cambia nada.
+    trusted_proxies: '%env(TRUSTED_PROXIES)%'
+    trusted_headers: ['x-forwarded-for', 'x-forwarded-host', 'x-forwarded-proto', 'x-forwarded-port']
+
     #esi: true
     #fragments: true
     php_errors:
