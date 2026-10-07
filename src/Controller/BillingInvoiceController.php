@@ -103,10 +103,43 @@ class BillingInvoiceController extends AbstractController
     }
 
     /**
+     * Las facturas que el instituto eligió pagar.
+     *
+     * Llegan como una lista de ids desde los checkboxes de la pantalla. Se filtran contra las
+     * impagas del propio instituto: lo que viene del formulario decide cuáles de las suyas, no
+     * cuáles existen. Si no vino ninguna, se usa la que encabeza la pantalla.
+     *
+     * @return BillingInvoice[]
+     */
+    private function facturasSeleccionadas(
+        Request $request,
+        BillingInvoice $porDefecto,
+        SuscripcionService $suscripcionService
+    ): array {
+        $instituto = $porDefecto->getInstituto();
+        $pedidas = array_map('intval', (array) $request->request->all('facturas'));
+
+        if (!$pedidas) {
+            return [$porDefecto];
+        }
+
+        $propias = array_filter(
+            $suscripcionService->estado($instituto)['impagas'],
+            static fn(BillingInvoice $f) => !$f->isPaid() && in_array($f->getId(), $pedidas, true)
+        );
+
+        return $propias ? array_values($propias) : [$porDefecto];
+    }
+
+    /**
      * @Route("/{id}/pay", name="billing_invoice_pay", methods={"POST"})
      */
-    public function pay(Request $request, BillingInvoice $billingInvoice, EntityManagerInterface $entityManager): Response
-    {
+    public function pay(
+        Request $request,
+        BillingInvoice $billingInvoice,
+        EntityManagerInterface $entityManager,
+        SuscripcionService $suscripcionService
+    ): Response {
         $instituto = $this->getUser()->getInstituto();
         
         // Verificar que la factura pertenece al instituto del usuario
@@ -129,14 +162,16 @@ class BillingInvoiceController extends AbstractController
 
         // Con qué dice que pagó. Determina si el comprobante es obligatorio.
         $metodo = (string) $request->request->get('payment_method', 'transferencia');
-        if (!in_array($metodo, ['transferencia', 'efectivo'], true)) {
+        if (!in_array($metodo, ['transferencia', 'cobrador'], true)) {
             $metodo = 'transferencia';
         }
 
+        $facturas = $this->facturasSeleccionadas($request, $billingInvoice, $suscripcionService);
+
         $proofFile = $request->files->get('payment_proof');
 
-        // En transferencia el comprobante es obligatorio; en efectivo no siempre hay uno, así
-        // que se acepta la declaración y la confirmamos nosotros.
+        // En transferencia el comprobante es obligatorio; cuando pide que pase un cobrador
+        // todavía no pagó nada, así que no hay comprobante posible.
         if (!$proofFile && $metodo === 'transferencia') {
             $this->addFlash('danger', 'Para una transferencia necesitamos el comprobante.');
             return $this->redirectToRoute('billing_invoice_index');
@@ -168,37 +203,51 @@ class BillingInvoiceController extends AbstractController
                 }
 
                 $proofFile->move($proofsDirectory, $newFilename);
-                $billingInvoice->setPaymentProofPath($newFilename);
+                $newFilename = $newFilename;
+            } else {
+                $newFilename = null;
             }
 
-            $billingInvoice->setPaymentMethod($metodo);
-
-            // El comentario del instituto se agrega a las notas sin borrar lo que ya hubiera.
             $comentario = trim((string) $request->request->get('notas'));
-            if ($comentario !== '') {
-                $billingInvoice->setNotes(trim(($billingInvoice->getNotes() ?? '') . "\n" . sprintf(
-                    '[%s] %s: %s',
-                    (new \DateTime())->format('d/m/Y'),
-                    $metodo,
-                    $comentario
-                )));
+
+            // Una declaración puede cubrir varias facturas: un instituto hace una transferencia
+            // por el total, no una por mes. El mismo comprobante queda apuntado en todas.
+            foreach ($facturas as $factura) {
+                if ($newFilename) {
+                    $factura->setPaymentProofPath($newFilename);
+                }
+
+                $factura->setPaymentMethod($metodo);
+
+                // El comentario del instituto se agrega a las notas sin borrar lo que ya hubiera.
+                if ($comentario !== '') {
+                    $factura->setNotes(trim(($factura->getNotes() ?? '') . "\n" . sprintf(
+                        '[%s] %s: %s',
+                        (new \DateTime())->format('d/m/Y'),
+                        $metodo,
+                        $comentario
+                    )));
+                }
+
+                $factura->setPaymentRequestedAt(new \DateTime());
+                $factura->setStatus('pending_approval');
+                // Limpiar datos de rechazo si existían
+                $factura->setRejectionReason(null);
+                $factura->setRejectedAt(null);
+                $factura->setUpdatedAt(new \DateTime());
             }
-            $billingInvoice->setPaymentRequestedAt(new \DateTime());
-            $billingInvoice->setStatus('pending_approval');
-            // Limpiar datos de rechazo si existían
-            $billingInvoice->setRejectionReason(null);
-            $billingInvoice->setRejectedAt(null);
-            $billingInvoice->setUpdatedAt(new \DateTime());
 
             $entityManager->flush();
 
-            $this->addFlash('success', 'Comprobante de pago subido exitosamente. La factura está pendiente de aprobación por el administrador.');
+            $this->addFlash('success', $metodo === 'cobrador'
+                ? sprintf('Listo: anotamos que pase un cobrador por %d factura(s). Te vamos a contactar para coordinar.', count($facturas))
+                : sprintf('Recibimos tu comprobante por %d factura(s). En cuanto lo confirmemos te va a figurar como pagado.', count($facturas)));
             
         } catch (FileException $e) {
             $this->addFlash('danger', 'Error al subir el comprobante. Por favor, intenta nuevamente.');
         }
         
-        return $this->redirectToRoute('billing_invoice_show', ['id' => $billingInvoice->getId()]);
+        return $this->redirectToRoute('billing_invoice_index');
     }
 
     /**
@@ -234,20 +283,9 @@ class BillingInvoiceController extends AbstractController
             return $this->redirectToRoute('billing_invoice_index');
         }
 
-        // Pagar todas de una: el instituto no tiene por qué hacer siete pagos de $1.000 cuando
-        // lo que quiere es saldar su cuenta. Se arma una sola preferencia con una línea por
+        // Se cobra lo que el instituto haya marcado: una sola preferencia con una línea por
         // factura, así en el checkout ve qué meses está pagando.
-        $facturas = [$invoice];
-        if ($request->request->get('todas') === '1') {
-            $impagas = array_filter(
-                $suscripcionService->estado($instituto)['impagas'],
-                static fn(BillingInvoice $f) => !$f->isPaid()
-            );
-
-            if ($impagas) {
-                $facturas = array_values($impagas);
-            }
-        }
+        $facturas = $this->facturasSeleccionadas($request, $invoice, $suscripcionService);
 
         // Las dos URLs se arman sobre APP_URL y no sobre el request: detrás del nginx del
         // servidor el pedido llega por http plano, Symfony genera http:// y Mercado Pago

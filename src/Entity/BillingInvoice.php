@@ -423,7 +423,9 @@ class BillingInvoice
 
     public function setPaymentMethod(?string $metodo): self
     {
-        $this->paymentMethod = in_array($metodo, ['transferencia', 'efectivo', 'mercadopago'], true)
+        // 'efectivo' sigue aceptándose aunque ya no se ofrezca: hay facturas viejas con ese
+        // valor y no tiene sentido perder cómo se cobraron.
+        $this->paymentMethod = in_array($metodo, ['transferencia', 'efectivo', 'cobrador', 'mercadopago'], true)
             ? $metodo
             : null;
 
@@ -435,6 +437,7 @@ class BillingInvoice
         return [
             'transferencia' => 'Transferencia',
             'efectivo' => 'Efectivo',
+            'cobrador' => 'Coordinar con cobrador',
             'mercadopago' => 'Mercado Pago',
         ][$this->paymentMethod] ?? null;
     }

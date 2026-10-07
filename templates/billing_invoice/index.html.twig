@@ -99,25 +99,55 @@
                         <h6 class="mb-0"><i class="bi bi-credit-card"></i> Cómo pagar</h6>
                     </div>
                     <div class="card-body">
-                        {# Se paga de a una factura, la más vieja primero. Sin decirlo, el botón
-                           ofrece pagar $1.000 abajo de un total de $7.000 y no se entiende cuál
-                           de los dos números vale. #}
-                        <div class="d-flex justify-content-between align-items-baseline border-bottom pb-2 mb-3">
-                            <div>
-                                <span class="text-muted small d-block">Estás pagando</span>
-                                <strong>{{ factura.formattedPeriod }}</strong>
-                                {% if factura.dueDate %}
-                                    <span class="text-muted small">· vence el {{ factura.dueDate|date('d/m/Y') }}</span>
-                                {% endif %}
-                            </div>
-                            <div class="fs-5 fw-bold">${{ factura.totalAmount|number_format(2, ',', '.') }}</div>
-                        </div>
-
+                        {# Primero se elige QUÉ se paga y después CÓMO. Antes el panel pagaba
+                           siempre la más vieja y el botón ofrecía $1.000 abajo de un total de
+                           $7.000, sin forma de elegir ni de entender cuál de los dos valía. #}
                         {% if impagas > 1 %}
-                            <p class="small text-muted">
-                                Te quedan {{ impagas - 1 }} factura(s) más. Se pagan de a una,
-                                empezando por la más vieja.
-                            </p>
+                            <div class="border-bottom pb-2 mb-3" id="selector-facturas">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="text-muted small">Qué querés pagar</span>
+                                    <button type="button" class="btn btn-link btn-sm p-0" data-marcar-todas>
+                                        Marcar todas
+                                    </button>
+                                </div>
+
+                                {% for f in s.impagas %}
+                                    <div class="form-check d-flex justify-content-between align-items-center">
+                                        <span>
+                                            <input class="form-check-input" type="checkbox" checked
+                                                   id="fac{{ f.id }}" value="{{ f.id }}"
+                                                   data-importe="{{ f.totalAmount }}" data-factura>
+                                            <label class="form-check-label" for="fac{{ f.id }}">
+                                                {{ f.formattedPeriod }}
+                                                {% if f.diasDeAtraso > 0 %}
+                                                    <span class="badge bg-danger ms-1">vencida</span>
+                                                {% elseif f.dueDate %}
+                                                    <span class="text-muted small">vence {{ f.dueDate|date('d/m') }}</span>
+                                                {% endif %}
+                                            </label>
+                                        </span>
+                                        <span class="text-nowrap">${{ f.totalAmount|number_format(2, ',', '.') }}</span>
+                                    </div>
+                                {% endfor %}
+
+                                <div class="d-flex justify-content-between align-items-baseline border-top mt-2 pt-2">
+                                    <strong><span data-cantidad>0</span> seleccionada(s)</strong>
+                                    <span class="fs-5 fw-bold" data-total-texto>$0,00</span>
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="d-flex justify-content-between align-items-baseline border-bottom pb-2 mb-3">
+                                <div>
+                                    <span class="text-muted small d-block">Estás pagando</span>
+                                    <strong>{{ factura.formattedPeriod }}</strong>
+                                    {% if factura.dueDate %}
+                                        <span class="text-muted small">· vence el {{ factura.dueDate|date('d/m/Y') }}</span>
+                                    {% endif %}
+                                </div>
+                                <div class="fs-5 fw-bold" data-total-texto>
+                                    ${{ factura.totalAmount|number_format(2, ',', '.') }}
+                                </div>
+                            </div>
                         {% endif %}
 
                         {% if s.estado == 'en_revision' %}
@@ -133,8 +163,8 @@
                                     </button>
                                 </li>
                                 <li class="nav-item">
-                                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-efectivo" type="button">
-                                        <i class="bi bi-cash"></i> Efectivo
+                                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-cobrador" type="button">
+                                        <i class="bi bi-person-walking"></i> Coordinar con cobrador
                                     </button>
                                 </li>
                                 <li class="nav-item">
@@ -163,14 +193,11 @@
                                     }) }}
                                 </div>
 
-                                <div class="tab-pane fade" id="tab-efectivo">
-                                    <p class="small text-muted">
-                                        Si pagaste en efectivo, avisanos acá y lo confirmamos de nuestro lado.
-                                        Si tenés recibo, adjuntalo.
-                                    </p>
+                                <div class="tab-pane fade" id="tab-cobrador">
                                     {{ include('billing_invoice/_form_comprobante.html.twig', {
-                                        'factura': factura, 'metodo': 'efectivo',
-                                        'ayuda': 'El comprobante es opcional en efectivo, pero ayuda.'
+                                        'factura': factura, 'metodo': 'cobrador',
+                                        'ayuda': 'Pedinos que pase alguien a cobrar en persona. Decinos dónde y
+                                                  en qué horario te queda cómodo y te contactamos para coordinar.'
                                     }) }}
                                 </div>
 
@@ -180,7 +207,7 @@
                                             <div class="alert alert-warning small">
                                                 <strong>Mercado Pago está en modo prueba.</strong>
                                                 Los pagos que hagas acá no son reales y no cancelan la factura.
-                                                Para pagar de verdad usá transferencia o efectivo.
+                                                Para pagar de verdad usá transferencia o coordiná con un cobrador.
                                             </div>
                                         {% endif %}
 
@@ -191,23 +218,12 @@
                                         </p>
 
                                         <form method="post" action="{{ path('billing_invoice_mercadopago', {'id': factura.id}) }}"
-                                              class="d-flex flex-wrap gap-2">
+                                              data-form-pago>
                                             <input type="hidden" name="_token" value="{{ csrf_token('mercadopago' ~ factura.id) }}">
-                                            <button class="btn {{ impagas > 1 ? 'btn-outline-primary' : 'btn-primary' }}">
+                                            <button class="btn btn-primary">
                                                 <i class="bi bi-wallet2"></i>
-                                                Pagar {{ factura.formattedPeriod }} ·
-                                                ${{ factura.totalAmount|number_format(2, ',', '.') }}
+                                                Pagar <span data-total-texto>$0,00</span> con Mercado Pago
                                             </button>
-
-                                            {% if impagas > 1 %}
-                                                {# Saldar todo de una. Hacer siete pagos de $1.000 para
-                                                   quedar al día no tiene ningún sentido. #}
-                                                <button class="btn btn-primary" name="todas" value="1">
-                                                    <i class="bi bi-check2-all"></i>
-                                                    Pagar las {{ impagas }} ·
-                                                    ${{ s.total|number_format(2, ',', '.') }}
-                                                </button>
-                                            {% endif %}
                                         </form>
                                     {% else %}
                                         <p class="text-muted mb-0">
@@ -336,4 +352,79 @@
         </div>
     </div>
 </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+    // Conecta los checkboxes con los tres formularios de pago: el total que muestran los botones
+    // y los ids que viajan al enviar salen siempre de lo que está marcado. Sin esto habría que
+    // repetir los checkboxes dentro de cada formulario.
+    (function () {
+        const casillas = Array.from(document.querySelectorAll('[data-factura]'));
+        const formularios = Array.from(document.querySelectorAll('[data-form-pago]'));
+
+        if (!formularios.length) {
+            return;
+        }
+
+        const plata = (n) => '$' + n.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+        function elegidas() {
+            return casillas.filter((c) => c.checked);
+        }
+
+        function actualizar() {
+            const marcadas = elegidas();
+            const total = marcadas.reduce((suma, c) => suma + parseFloat(c.dataset.importe || '0'), 0);
+
+            document.querySelectorAll('[data-total-texto]').forEach((el) => {
+                el.textContent = plata(total);
+            });
+
+            const cantidad = document.querySelector('[data-cantidad]');
+            if (cantidad) {
+                cantidad.textContent = marcadas.length;
+            }
+
+            // Sin nada marcado no hay nada que pagar.
+            formularios.forEach((form) => {
+                form.querySelectorAll('button[type=submit], button:not([type])').forEach((b) => {
+                    b.disabled = casillas.length > 0 && marcadas.length === 0;
+                });
+            });
+        }
+
+        // Los ids se agregan al enviar y no antes: así no quedan campos ocultos desincronizados
+        // con lo que la persona ve marcado.
+        formularios.forEach((form) => {
+            form.addEventListener('submit', function () {
+                form.querySelectorAll('input[name="facturas[]"]').forEach((e) => e.remove());
+
+                elegidas().forEach((c) => {
+                    const campo = document.createElement('input');
+                    campo.type = 'hidden';
+                    campo.name = 'facturas[]';
+                    campo.value = c.value;
+                    form.appendChild(campo);
+                });
+            });
+        });
+
+        casillas.forEach((c) => c.addEventListener('change', actualizar));
+
+        const marcarTodas = document.querySelector('[data-marcar-todas]');
+        if (marcarTodas) {
+            marcarTodas.addEventListener('click', function () {
+                const faltaAlguna = casillas.some((c) => !c.checked);
+                casillas.forEach((c) => { c.checked = faltaAlguna; });
+                marcarTodas.textContent = faltaAlguna ? 'Desmarcar todas' : 'Marcar todas';
+                actualizar();
+            });
+        }
+
+        actualizar();
+    })();
+    </script>
 {% endblock %}

@@ -1,31 +1,46 @@
 {#
-    Formulario para declarar un pago de la suscripción. Se usa desde las pestañas de transferencia
-    y de efectivo: lo único que cambia es el método que viaja y el texto de ayuda.
+    Formulario para declarar un pago de la suscripción. Se usa desde la pestaña de transferencia y
+    desde la del cobrador: cambia el método que viaja, si el comprobante es obligatorio y el texto.
 
-    Parámetros: factura, metodo ('transferencia'|'efectivo'), ayuda.
+    Los ids de las facturas elegidas los agrega el JavaScript de la pantalla antes de enviar, para
+    que no haya que repetir los checkboxes dentro de cada formulario.
+
+    Parámetros: factura (la que encabeza), metodo ('transferencia'|'cobrador'), ayuda.
 #}
-<form method="post" action="{{ path('billing_invoice_pay', {'id': factura.id}) }}" enctype="multipart/form-data">
+<form method="post" action="{{ path('billing_invoice_pay', {'id': factura.id}) }}"
+      enctype="multipart/form-data" data-form-pago>
     <input type="hidden" name="_token" value="{{ csrf_token('pay_invoice_' ~ factura.id) }}">
     <input type="hidden" name="payment_method" value="{{ metodo }}">
 
-    <div class="mb-2">
-        <label class="form-label small mb-1" for="proof_{{ metodo }}">
-            Comprobante
-            {% if metodo == 'transferencia' %}<span class="text-danger">*</span>{% endif %}
-        </label>
-        <input type="file" class="form-control form-control-sm" id="proof_{{ metodo }}"
-               name="payment_proof" accept="image/jpeg,image/png,application/pdf"
-               {% if metodo == 'transferencia' %}required{% endif %}>
-        <div class="form-text">{{ ayuda }} JPG, PNG o PDF, hasta 5 MB.</div>
-    </div>
+    {% if metodo == 'transferencia' %}
+        <div class="mb-2">
+            <label class="form-label small mb-1" for="proof_{{ metodo }}">
+                Comprobante <span class="text-danger">*</span>
+            </label>
+            <input type="file" class="form-control form-control-sm" id="proof_{{ metodo }}"
+                   name="payment_proof" accept="image/jpeg,image/png,application/pdf" required>
+            <div class="form-text">{{ ayuda }} JPG, PNG o PDF, hasta 5 MB.</div>
+        </div>
+    {% else %}
+        <p class="small text-muted">{{ ayuda }}</p>
+    {% endif %}
 
     <div class="mb-2">
-        <label class="form-label small mb-1" for="notas_{{ metodo }}">Comentario (opcional)</label>
+        <label class="form-label small mb-1" for="notas_{{ metodo }}">
+            {{ metodo == 'cobrador' ? 'Dónde y cuándo pasamos' : 'Comentario (opcional)' }}
+        </label>
         <input type="text" class="form-control form-control-sm" id="notas_{{ metodo }}" name="notas"
-               maxlength="200" placeholder="Ej: transferí desde la cuenta del instituto">
+               maxlength="200"
+               placeholder="{{ metodo == 'cobrador'
+                   ? 'Ej: de lunes a viernes de 9 a 13, en Rivadavia 1234'
+                   : 'Ej: transferí desde la cuenta del instituto' }}">
     </div>
 
     <button type="submit" class="btn btn-primary btn-sm">
-        <i class="bi bi-send"></i> Avisar que pagué ${{ factura.totalAmount|number_format(2, ',', '.') }}
+        {% if metodo == 'cobrador' %}
+            <i class="bi bi-person-walking"></i> Pedir que pase un cobrador por <span data-total-texto>$0,00</span>
+        {% else %}
+            <i class="bi bi-send"></i> Avisar que pagué <span data-total-texto>$0,00</span>
+        {% endif %}
     </button>
 </form>
