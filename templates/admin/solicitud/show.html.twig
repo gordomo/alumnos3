@@ -95,7 +95,9 @@
                             El enlace vale {{ diasInvitacion }} días y se puede reenviar.
                         </p>
                         <p class="small text-muted">
-                            Su primer mes no se factura: la fecha de alta queda en hoy.
+                            La fecha de alta queda en hoy y su primer mes no se factura. Si
+                            confirmás pasado el día de vencimiento, el mes siguiente también es
+                            sin cargo.
                         </p>
                         <form method="post" action="{{ path('admin_solicitud_confirmar', {'id': solicitud.id}) }}">
                             <input type="hidden" name="_token" value="{{ csrf_token('solicitud_confirmar' ~ solicitud.id) }}">

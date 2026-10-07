@@ -82,9 +82,12 @@ class BillingService
             throw new \RuntimeException("El instituto {$instituto->getNombre()} está dado de baja");
         }
 
-        // El primer mes es de cortesía: el instituto lo usa entero sin que se le facture. Se
-        // compara contra la fecha de alta, que queda seteada al confirmar su solicitud.
-        if ($instituto->enMesDeCortesia($year, $month)) {
+        // El primer mes es de cortesía, y el siguiente también si entró pasado el día de
+        // vencimiento. Se compara contra la fecha de alta, que queda seteada al confirmar su
+        // solicitud.
+        $config = $this->billingConfigRepository->getOrCreatePriceConfig();
+
+        if ($instituto->enMesDeCortesia($year, $month, $config->getDiaVencimiento())) {
             throw new \RuntimeException("El instituto {$instituto->getNombre()} está en su primer mes, que es sin cargo");
         }
 
@@ -115,7 +118,6 @@ class BillingService
 
         // El vencimiento, que es lo que después permite avisar y calcular el atraso. La factura
         // es del mes ya cerrado, así que vence en el mes siguiente al del período.
-        $config = $this->billingConfigRepository->getOrCreatePriceConfig();
         $invoice->setDueDate(new \DateTime(sprintf(
             '%d-%02d-%02d',
             $month === 12 ? $year + 1 : $year,

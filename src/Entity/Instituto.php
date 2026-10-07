@@ -497,13 +497,33 @@ class Instituto
         return $this;
     }
 
-    public function enMesDeCortesia(int $ano, int $mes): bool
+    /**
+     * Si el período (año, mes) cae dentro del primer mes sin cargo.
+     *
+     * El mes del alta no se factura. Y si el instituto entró el día del vencimiento o después,
+     * tampoco el siguiente: de un alta el 28 quedarían tres días de cortesía, que no es el mes
+     * que le prometimos. El corte es el mismo día de vencimiento configurado, así que las dos
+     * fechas se mueven juntas.
+     *
+     * Con vencimiento el 10: alta el 9 → solo ese mes. Alta el 10 → ese mes y el siguiente.
+     */
+    public function enMesDeCortesia(int $ano, int $mes, int $diaCorte = 10): bool
     {
         if (!$this->fechaAlta) {
             return false;
         }
 
-        return (int) $this->fechaAlta->format('Y') === $ano
-            && (int) $this->fechaAlta->format('n') === $mes;
+        if ((int) $this->fechaAlta->format('Y') === $ano
+            && (int) $this->fechaAlta->format('n') === $mes) {
+            return true;
+        }
+
+        if ((int) $this->fechaAlta->format('j') < $diaCorte) {
+            return false;
+        }
+
+        $siguiente = (new \DateTime($this->fechaAlta->format('Y-m-01')))->modify('+1 month');
+
+        return $ano === (int) $siguiente->format('Y') && $mes === (int) $siguiente->format('n');
     }
 }
