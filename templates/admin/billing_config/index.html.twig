@@ -126,6 +126,18 @@
                                    name="mp_public_key" value="{{ config.mpPublicKey }}"
                                    placeholder="APP_USR-... o TEST-...">
                         </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="mp_modo_prueba"
+                                   name="mp_modo_prueba" value="1" {{ config.mpModoPrueba ? 'checked' : '' }}>
+                            <label class="form-check-label" for="mp_modo_prueba">
+                                Son credenciales de <strong>prueba</strong>
+                            </label>
+                            <div class="form-text">
+                                Las de prueba y las productivas se escriben igual, así que hay que decirlo acá.
+                                Con esto tildado, al instituto se le avisa que ningún pago es real.
+                            </div>
+                        </div>
+
                         <div class="alert {{ config.mercadoPagoConfigurado ? 'alert-success' : 'alert-warning' }} mb-0 small">
                             {% if config.mercadoPagoConfigurado %}
                                 Configurado. La pestaña de Mercado Pago queda habilitada en la pantalla de suscripción.

@@ -87,6 +87,18 @@ class BillingConfig
     private ?string $mpPublicKey = null;
 
     /**
+     * Si las credenciales cargadas son las de prueba de Mercado Pago.
+     *
+     * Hace falta decirlo a mano: las credenciales de prueba y las productivas tienen el mismo
+     * formato, así que el sistema no puede distinguirlas solo. Con esto prendido, al instituto
+     * se le avisa que ningún pago es real; sin esto, alguien podría pagar contra el sandbox y
+     * nadie se enteraría de que ese dinero no entró nunca.
+     *
+     * @ORM\Column(type="boolean", options={"default": false})
+     */
+    private bool $mpModoPrueba = false;
+
+    /**
      * @ORM\Column(type="datetime")
      */
     private ?\DateTimeInterface $createdAt = null;
@@ -228,6 +240,18 @@ class BillingConfig
     public function setMpAccessToken(?string $token): self
     {
         $this->mpAccessToken = $token;
+        return $this;
+    }
+
+    public function isMpModoPrueba(): bool
+    {
+        return (bool) $this->mpModoPrueba;
+    }
+
+    public function setMpModoPrueba(bool $prueba): self
+    {
+        $this->mpModoPrueba = $prueba;
+
         return $this;
     }
 

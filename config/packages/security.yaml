@@ -60,6 +60,9 @@ security:
         # La invitación es pública por la misma razón que el enlace de familia: todavía no hay
         # sesión. Lo que autoriza es el token de la URL, con vencimiento y de un solo uso.
         - { path: ^/invitacion/, roles: PUBLIC_ACCESS }
+        # Lo llama Mercado Pago, no una persona: no hay sesión posible. Lo que lo hace seguro es
+        # que del aviso solo se toma un id y el pago se verifica contra la API con nuestro token.
+        - { path: ^/webhook/, roles: PUBLIC_ACCESS }
         - { path: ^/reset-password, roles: PUBLIC_ACCESS }
         # Acceso de la familia por enlace: es público a propósito, no hay sesión. Lo que autoriza
         # es el token de la URL, que el controller valida contra un alumno y nada más. Va acá

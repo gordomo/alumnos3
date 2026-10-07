@@ -63,6 +63,7 @@ class BillingConfigController extends AbstractController
             $config->setDatosTransferencia(trim((string) $request->request->get('datos_transferencia')) ?: null);
             $config->setMpAccessToken(trim((string) $request->request->get('mp_access_token')) ?: null);
             $config->setMpPublicKey(trim((string) $request->request->get('mp_public_key')) ?: null);
+            $config->setMpModoPrueba($request->request->get('mp_modo_prueba') === '1');
 
             $entityManager->flush();
 

@@ -30,7 +30,15 @@
                 </h5>
                 <p class="mb-0 text-muted small">
                     {% if s.estado == 'al_dia' %}
-                        No tenés nada pendiente. La próxima factura se emite el 1° del mes que viene.
+                        {% if factura and factura.dueDate %}
+                            {# Al día pero con una factura emitida: todavía no vence, así que no hay
+                               nada que reclamar, pero decir "no tenés nada pendiente" arriba de una
+                               factura de $4.000 y su formulario de pago es contradictorio. #}
+                            Tenés una factura de ${{ factura.totalAmount|number_format(2, ',', '.') }}
+                            que vence el {{ factura.dueDate|date('d/m/Y') }}. Todavía estás en fecha.
+                        {% else %}
+                            No tenés nada pendiente. La próxima factura se emite el 1° del mes que viene.
+                        {% endif %}
                     {% elseif s.estado == 'exenta' %}
                         Tu instituto está exento de facturación. No se emiten facturas ni se bloquea el acceso.
                     {% elseif s.estado == 'en_revision' %}
@@ -129,11 +137,35 @@
                                 </div>
 
                                 <div class="tab-pane fade" id="tab-mp">
-                                    <p class="text-muted mb-0">
-                                        <i class="bi bi-info-circle"></i>
-                                        El pago con Mercado Pago —y la adhesión al débito automático— está en
-                                        preparación. Por ahora usá transferencia o efectivo.
-                                    </p>
+                                    {% if config.mercadoPagoConfigurado %}
+                                        {% if config.mpModoPrueba %}
+                                            <div class="alert alert-warning small">
+                                                <strong>Mercado Pago está en modo prueba.</strong>
+                                                Los pagos que hagas acá no son reales y no cancelan la factura.
+                                                Para pagar de verdad usá transferencia o efectivo.
+                                            </div>
+                                        {% endif %}
+
+                                        <p>
+                                            Pagás con tarjeta, débito o dinero en cuenta desde Mercado Pago.
+                                            Cuando el pago se acredita, la factura se cancela sola: no hace falta
+                                            que nos avises ni que subas nada.
+                                        </p>
+
+                                        <form method="post" action="{{ path('billing_invoice_mercadopago', {'id': suscripcion.factura.id}) }}">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('mercadopago' ~ suscripcion.factura.id) }}">
+                                            <button class="btn btn-primary">
+                                                <i class="bi bi-wallet2"></i>
+                                                Pagar ${{ suscripcion.factura.totalAmount|number_format(2, ',', '.') }} con Mercado Pago
+                                            </button>
+                                        </form>
+                                    {% else %}
+                                        <p class="text-muted mb-0">
+                                            <i class="bi bi-info-circle"></i>
+                                            El pago con Mercado Pago —y la adhesión al débito automático— está en
+                                            preparación. Por ahora usá transferencia o efectivo.
+                                        </p>
+                                    {% endif %}
                                 </div>
                             </div>
                         {% endif %}

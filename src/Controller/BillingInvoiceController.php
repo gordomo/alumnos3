@@ -10,6 +10,8 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use App\Service\MercadoPagoService;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\String\Slugger\SluggerInterface;
 
@@ -196,5 +198,54 @@ class BillingInvoiceController extends AbstractController
         }
         
         return $this->redirectToRoute('billing_invoice_show', ['id' => $billingInvoice->getId()]);
+    }
+
+    /**
+     * Manda al instituto a pagar su factura con Mercado Pago.
+     *
+     * El link se pide en el momento y no se guarda: una preferencia vieja podría tener un monto
+     * que ya no corresponde, y el riesgo de cobrar de menos es peor que la llamada de más.
+     *
+     * @Route("/{id}/mercadopago", name="billing_invoice_mercadopago", methods={"POST"})
+     */
+    public function mercadoPago(
+        Request $request,
+        BillingInvoice $invoice,
+        MercadoPagoService $mercadoPago,
+        UrlGeneratorInterface $urlGenerator
+    ): Response {
+        $instituto = $this->getUser()->getInstituto();
+
+        if (!$instituto || $invoice->getInstituto() !== $instituto) {
+            throw $this->createNotFoundException('Factura no encontrada');
+        }
+
+        if (!$this->isCsrfTokenValid('mercadopago' . $invoice->getId(), (string) $request->request->get('_token'))) {
+            $this->addFlash('danger', 'El formulario expiró. Volvé a intentarlo.');
+
+            return $this->redirectToRoute('billing_invoice_index');
+        }
+
+        if ($invoice->isPaid()) {
+            $this->addFlash('info', 'Esa factura ya está paga.');
+
+            return $this->redirectToRoute('billing_invoice_index');
+        }
+
+        try {
+            $link = $mercadoPago->crearLinkDePago(
+                $invoice,
+                $urlGenerator->generate('billing_invoice_index', [], UrlGeneratorInterface::ABSOLUTE_URL),
+                $urlGenerator->generate('billing_invoice_webhook_mp', [], UrlGeneratorInterface::ABSOLUTE_URL)
+            );
+        } catch (\Throwable $e) {
+            // El instituto no puede hacer nada con el detalle técnico, pero sí necesita saber
+            // que no es culpa suya y que tiene otra forma de pagar.
+            $this->addFlash('danger', 'No pudimos generar el link de Mercado Pago. Probá de nuevo en un rato o pagá por transferencia.');
+
+            return $this->redirectToRoute('billing_invoice_index');
+        }
+
+        return $this->redirect($link);
     }
 }
