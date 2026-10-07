@@ -20,7 +20,24 @@
         'solo_lectura': {'clase': 'danger',   'icono': 'bi-lock-fill',                'texto': 'Sistema en modo consulta'},
         'bloqueada':    {'clase': 'danger',   'icono': 'bi-slash-circle-fill',        'texto': 'Panel bloqueado'}
     } %}
-    {% set enc = encabezados[s.estado]|default(encabezados.al_dia) %}
+    {# "Al día" con facturas impagas encima es una contradicción. El servicio las trata como al
+       día porque no tienen vencimiento y no disparan ningún plazo, pero decirle a alguien que no
+       debe nada arriba de siete facturas pendientes es mentirle. Se muestra distinto sin cambiar
+       el estado real, que es el que manda sobre los bloqueos. #}
+    {% set impagas = s.impagas|default([])|length %}
+    {# El vencimiento más próximo de todas, no el de la más vieja: la más vieja puede no tener
+       fecha y las nuevas sí, y ahí decir "ninguna vence" sería falso. #}
+    {% set proximoVto = null %}
+    {% for f in s.impagas|default([]) %}
+        {% if f.dueDate and (proximoVto is null or f.dueDate < proximoVto) %}
+            {% set proximoVto = f.dueDate %}
+        {% endif %}
+    {% endfor %}
+    {% set estadoVisual = (s.estado == 'al_dia' and impagas > 0) ? 'pendiente' : s.estado %}
+    {% set encabezados = encabezados|merge({
+        'pendiente': {'clase': 'primary', 'icono': 'bi-receipt', 'texto': 'Tenés facturas pendientes'}
+    }) %}
+    {% set enc = encabezados[estadoVisual]|default(encabezados.al_dia) %}
 
     <div class="card mb-3 border-{{ enc.clase }}">
         <div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-3">
@@ -29,16 +46,16 @@
                     <i class="bi {{ enc.icono }}"></i> {{ enc.texto }}
                 </h5>
                 <p class="mb-0 text-muted small">
-                    {% if s.estado == 'al_dia' %}
-                        {% if factura and factura.dueDate %}
-                            {# Al día pero con una factura emitida: todavía no vence, así que no hay
-                               nada que reclamar, pero decir "no tenés nada pendiente" arriba de una
-                               factura de $4.000 y su formulario de pago es contradictorio. #}
-                            Tenés una factura de ${{ factura.totalAmount|number_format(2, ',', '.') }}
-                            que vence el {{ factura.dueDate|date('d/m/Y') }}. Todavía estás en fecha.
+                    {% if estadoVisual == 'pendiente' %}
+                        {% if proximoVto %}
+                            La más próxima vence el {{ proximoVto|date('d/m/Y') }}.
+                            Todavía estás en fecha: no hay nada vencido.
                         {% else %}
-                            No tenés nada pendiente. La próxima factura se emite el 1° del mes que viene.
+                            Ninguna tiene fecha de vencimiento, así que no corre ningún plazo ni se
+                            limita el sistema. Podés pagarlas cuando quieras.
                         {% endif %}
+                    {% elseif s.estado == 'al_dia' %}
+                        No tenés nada pendiente. La próxima factura se emite el 1° del mes que viene.
                     {% elseif s.estado == 'exenta' %}
                         Tu instituto está exento de facturación. No se emiten facturas ni se bloquea el acceso.
                     {% elseif s.estado == 'en_revision' %}
@@ -63,10 +80,10 @@
 
             {% if s.total > 0 %}
                 <div class="text-end">
-                    <div class="text-muted small">Total a pagar</div>
+                    <div class="text-muted small">{{ impagas > 1 ? 'Total de todas' : 'Total a pagar' }}</div>
                     <div class="fs-3 fw-bold text-{{ enc.clase }}">${{ s.total|number_format(2, ',', '.') }}</div>
-                    {% if s.impagas|length > 1 %}
-                        <div class="small text-muted">{{ s.impagas|length }} facturas pendientes</div>
+                    {% if impagas > 1 %}
+                        <div class="small text-muted">en {{ impagas }} facturas</div>
                     {% endif %}
                 </div>
             {% endif %}
@@ -82,6 +99,27 @@
                         <h6 class="mb-0"><i class="bi bi-credit-card"></i> Cómo pagar</h6>
                     </div>
                     <div class="card-body">
+                        {# Se paga de a una factura, la más vieja primero. Sin decirlo, el botón
+                           ofrece pagar $1.000 abajo de un total de $7.000 y no se entiende cuál
+                           de los dos números vale. #}
+                        <div class="d-flex justify-content-between align-items-baseline border-bottom pb-2 mb-3">
+                            <div>
+                                <span class="text-muted small d-block">Estás pagando</span>
+                                <strong>{{ factura.formattedPeriod }}</strong>
+                                {% if factura.dueDate %}
+                                    <span class="text-muted small">· vence el {{ factura.dueDate|date('d/m/Y') }}</span>
+                                {% endif %}
+                            </div>
+                            <div class="fs-5 fw-bold">${{ factura.totalAmount|number_format(2, ',', '.') }}</div>
+                        </div>
+
+                        {% if impagas > 1 %}
+                            <p class="small text-muted">
+                                Te quedan {{ impagas - 1 }} factura(s) más. Se pagan de a una,
+                                empezando por la más vieja.
+                            </p>
+                        {% endif %}
+
                         {% if s.estado == 'en_revision' %}
                             <p class="mb-0 text-muted">
                                 Ya nos enviaste el comprobante de
@@ -240,7 +278,11 @@
                         <td class="text-center">{{ f.activeStudentsCount }}</td>
                         <td class="text-end fw-semibold">${{ f.totalAmount|number_format(2, ',', '.') }}</td>
                         <td class="text-nowrap small">
-                            {{ f.dueDate ? f.dueDate|date('d/m/Y') : '—' }}
+                            {% if f.dueDate %}
+                                {{ f.dueDate|date('d/m/Y') }}
+                            {% else %}
+                                <span class="text-muted">sin vencimiento</span>
+                            {% endif %}
                         </td>
                         <td>
                             {% if f.isPaid() %}
@@ -251,8 +293,13 @@
                                 <span class="badge bg-danger">Rechazada</span>
                             {% elseif f.isCancelled() %}
                                 <span class="badge bg-secondary">Cancelada</span>
+                            {% elseif f.diasDeAtraso > 0 %}
+                                {# El rojo se reserva para lo que de verdad está vencido. Pintar de
+                                   rojo siete facturas que no vencieron hace que el rojo no
+                                   signifique nada. #}
+                                <span class="badge bg-danger">Vencida hace {{ f.diasDeAtraso }} día(s)</span>
                             {% else %}
-                                <span class="badge bg-warning text-dark">Pendiente</span>
+                                <span class="badge bg-secondary">Pendiente</span>
                             {% endif %}
                         </td>
                         <td class="text-end text-nowrap">
