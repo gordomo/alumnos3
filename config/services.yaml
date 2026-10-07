@@ -6,6 +6,12 @@
 parameters:
     # Por dónde nos contactan los institutos. Se usan en el formulario público, en los carteles
     # de suspensión y en el aviso interno de una solicitud nueva.
+    # La URL publica del sistema, tal cual la ve un navegador. Se usa para armar los enlaces que
+    # tienen que funcionar desde afuera -los que recibe Mercado Pago- sin depender de lo que
+    # diga el request: detras del nginx del servidor el pedido llega por http plano y Symfony
+    # genera http://, que Mercado Pago rechaza.
+    app.url: '%env(APP_URL)%'
+
     app.email_contacto: 'contacto@teambuilder.com.ar'
     app.whatsapp_contacto: '5493416043603'
     app.whatsapp_contacto_visible: '+54 9 341 604-3603'

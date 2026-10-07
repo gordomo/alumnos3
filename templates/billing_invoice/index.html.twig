@@ -190,12 +190,24 @@
                                             que nos avises ni que subas nada.
                                         </p>
 
-                                        <form method="post" action="{{ path('billing_invoice_mercadopago', {'id': suscripcion.factura.id}) }}">
-                                            <input type="hidden" name="_token" value="{{ csrf_token('mercadopago' ~ suscripcion.factura.id) }}">
-                                            <button class="btn btn-primary">
+                                        <form method="post" action="{{ path('billing_invoice_mercadopago', {'id': factura.id}) }}"
+                                              class="d-flex flex-wrap gap-2">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('mercadopago' ~ factura.id) }}">
+                                            <button class="btn {{ impagas > 1 ? 'btn-outline-primary' : 'btn-primary' }}">
                                                 <i class="bi bi-wallet2"></i>
-                                                Pagar ${{ suscripcion.factura.totalAmount|number_format(2, ',', '.') }} con Mercado Pago
+                                                Pagar {{ factura.formattedPeriod }} ·
+                                                ${{ factura.totalAmount|number_format(2, ',', '.') }}
                                             </button>
+
+                                            {% if impagas > 1 %}
+                                                {# Saldar todo de una. Hacer siete pagos de $1.000 para
+                                                   quedar al día no tiene ningún sentido. #}
+                                                <button class="btn btn-primary" name="todas" value="1">
+                                                    <i class="bi bi-check2-all"></i>
+                                                    Pagar las {{ impagas }} ·
+                                                    ${{ s.total|number_format(2, ',', '.') }}
+                                                </button>
+                                            {% endif %}
                                         </form>
                                     {% else %}
                                         <p class="text-muted mb-0">

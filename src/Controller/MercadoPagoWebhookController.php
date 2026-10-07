@@ -60,10 +60,12 @@ class MercadoPagoWebhookController extends AbstractController
             return new Response('error al consultar', Response::HTTP_OK);
         }
 
-        $facturaId = MercadoPagoService::facturaIdDeReferencia($pago['external_reference'] ?? null);
-        $factura = $facturaId ? $em->getRepository(BillingInvoice::class)->find($facturaId) : null;
+        $facturaIds = MercadoPagoService::facturaIdsDeReferencia($pago['external_reference'] ?? null);
+        $facturas = $facturaIds
+            ? $em->getRepository(BillingInvoice::class)->findBy(['id' => $facturaIds])
+            : [];
 
-        if (!$factura) {
+        if (!$facturas) {
             $pagosLogger->warning('Webhook de Mercado Pago: pago sin factura conocida', [
                 'pago' => $pagoId,
                 'referencia' => $pago['external_reference'] ?? null,
@@ -73,33 +75,43 @@ class MercadoPagoWebhookController extends AbstractController
         }
 
         if (($pago['status'] ?? null) !== 'approved') {
-            // Pendiente, en revisión o rechazado: no se toca la factura. Si después se aprueba,
+            // Pendiente, en revisión o rechazado: no se toca nada. Si después se aprueba,
             // Mercado Pago vuelve a avisar.
             $pagosLogger->info('Webhook de Mercado Pago: pago no aprobado', [
                 'pago' => $pagoId,
-                'factura' => $factura->getId(),
+                'facturas' => $facturaIds,
                 'estado' => $pago['status'] ?? null,
             ]);
 
             return new Response('no aprobado', Response::HTTP_OK);
         }
 
-        if ($factura->isPaid()) {
+        $canceladas = [];
+
+        foreach ($facturas as $factura) {
             // Mercado Pago reenvía el mismo aviso varias veces: la segunda no tiene que hacer nada.
-            return new Response('ya estaba paga', Response::HTTP_OK);
+            if ($factura->isPaid()) {
+                continue;
+            }
+
+            $factura->setStatus('paid');
+            $factura->setPaidAt(new \DateTime());
+            $factura->setPaymentMethod('mercadopago');
+            $factura->setMpPaymentId((string) $pagoId);
+            $factura->setUpdatedAt(new \DateTime());
+            $canceladas[] = $factura->getId();
         }
 
-        $factura->setStatus('paid');
-        $factura->setPaidAt(new \DateTime());
-        $factura->setPaymentMethod('mercadopago');
-        $factura->setMpPaymentId((string) $pagoId);
-        $factura->setUpdatedAt(new \DateTime());
+        if (!$canceladas) {
+            return new Response('ya estaban pagas', Response::HTTP_OK);
+        }
+
         $em->flush();
 
-        $pagosLogger->info('Webhook de Mercado Pago: factura cancelada', [
+        $pagosLogger->info('Webhook de Mercado Pago: factura(s) cancelada(s)', [
             'pago' => $pagoId,
-            'factura' => $factura->getId(),
-            'instituto' => $factura->getInstituto()?->getNombre(),
+            'facturas' => $canceladas,
+            'instituto' => $facturas[0]->getInstituto()?->getNombre(),
         ]);
 
         return new Response('ok', Response::HTTP_OK);

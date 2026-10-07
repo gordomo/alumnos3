@@ -11,6 +11,7 @@ use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use App\Service\MercadoPagoService;
+use App\Service\SuscripcionService;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\String\Slugger\SluggerInterface;
@@ -212,7 +213,8 @@ class BillingInvoiceController extends AbstractController
         Request $request,
         BillingInvoice $invoice,
         MercadoPagoService $mercadoPago,
-        UrlGeneratorInterface $urlGenerator
+        UrlGeneratorInterface $urlGenerator,
+        SuscripcionService $suscripcionService
     ): Response {
         $instituto = $this->getUser()->getInstituto();
 
@@ -232,11 +234,31 @@ class BillingInvoiceController extends AbstractController
             return $this->redirectToRoute('billing_invoice_index');
         }
 
+        // Pagar todas de una: el instituto no tiene por qué hacer siete pagos de $1.000 cuando
+        // lo que quiere es saldar su cuenta. Se arma una sola preferencia con una línea por
+        // factura, así en el checkout ve qué meses está pagando.
+        $facturas = [$invoice];
+        if ($request->request->get('todas') === '1') {
+            $impagas = array_filter(
+                $suscripcionService->estado($instituto)['impagas'],
+                static fn(BillingInvoice $f) => !$f->isPaid()
+            );
+
+            if ($impagas) {
+                $facturas = array_values($impagas);
+            }
+        }
+
+        // Las dos URLs se arman sobre APP_URL y no sobre el request: detrás del nginx del
+        // servidor el pedido llega por http plano, Symfony genera http:// y Mercado Pago
+        // descarta esas URLs, así que el pago se podía hacer pero nunca volvía ni avisaba.
+        $base = rtrim((string) $this->getParameter('app.url'), '/');
+
         try {
             $link = $mercadoPago->crearLinkDePago(
-                $invoice,
-                $urlGenerator->generate('billing_invoice_index', [], UrlGeneratorInterface::ABSOLUTE_URL),
-                $urlGenerator->generate('billing_invoice_webhook_mp', [], UrlGeneratorInterface::ABSOLUTE_URL)
+                $facturas,
+                $base . $urlGenerator->generate('billing_invoice_index'),
+                $base . $urlGenerator->generate('billing_invoice_webhook_mp')
             );
         } catch (\Throwable $e) {
             // El instituto no puede hacer nada con el detalle técnico, pero sí necesita saber

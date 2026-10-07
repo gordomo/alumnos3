@@ -41,20 +41,36 @@ class MercadoPagoService
     }
 
     /**
-     * Cómo se identifica una factura ante Mercado Pago, en los dos sentidos.
+     * Cómo se identifican las facturas de un pago ante Mercado Pago, en los dos sentidos.
+     *
+     * Un pago puede cubrir varias facturas, así que la referencia lleva todos los ids. Es lo
+     * único que viaja de ida y vuelta: cuando el webhook avise, de acá sale qué cancelar.
+     *
+     * @param BillingInvoice[] $facturas
      */
-    public static function referencia(BillingInvoice $factura): string
+    public static function referencia(array $facturas): string
     {
-        return 'factura-' . $factura->getId();
+        $ids = array_map(static fn(BillingInvoice $f) => $f->getId(), $facturas);
+
+        return 'facturas-' . implode('-', $ids);
     }
 
-    public static function facturaIdDeReferencia(?string $referencia): ?int
+    /**
+     * @return int[]
+     */
+    public static function facturaIdsDeReferencia(?string $referencia): array
     {
-        if (!$referencia || !preg_match('/^factura-(\d+)$/', $referencia, $partes)) {
-            return null;
+        if (!$referencia) {
+            return [];
         }
 
-        return (int) $partes[1];
+        // Se acepta "factura-6" además de "facturas-6-7": es la forma que tenían las referencias
+        // antes de que un pago pudiera cubrir varias, y esos pagos siguen existiendo.
+        if (!preg_match('/^facturas?-([\d-]+)$/', $referencia, $partes)) {
+            return [];
+        }
+
+        return array_map('intval', array_filter(explode('-', $partes[1]), 'strlen'));
     }
 
     /**
@@ -65,11 +81,18 @@ class MercadoPagoService
      *
      * @throws \RuntimeException si Mercado Pago rechaza la preferencia
      */
-    public function crearLinkDePago(BillingInvoice $factura, string $volverA, ?string $webhook = null): string
+    public function crearLinkDePago(array $facturas, string $volverA, ?string $webhook = null): string
     {
-        $datos = [
-            'items' => [[
-                'id' => self::referencia($factura),
+        if (!$facturas) {
+            throw new \RuntimeException('No hay facturas para cobrar.');
+        }
+
+        // Una línea por factura: en el checkout el instituto ve qué meses está pagando, y si
+        // reclama algo después el detalle está del lado de Mercado Pago también.
+        $items = [];
+        foreach ($facturas as $factura) {
+            $items[] = [
+                'id' => 'factura-' . $factura->getId(),
                 'title' => 'Suscripción Team Builder — ' . $factura->getFormattedPeriod(),
                 'description' => sprintf(
                     '%d alumn@s activ@s en %s',
@@ -79,8 +102,12 @@ class MercadoPagoService
                 'quantity' => 1,
                 'currency_id' => 'ARS',
                 'unit_price' => round((float) $factura->getTotalAmount(), 2),
-            ]],
-            'external_reference' => self::referencia($factura),
+            ];
+        }
+
+        $datos = [
+            'items' => $items,
+            'external_reference' => self::referencia($facturas),
             'statement_descriptor' => 'TEAMBUILDER',
         ];
 
