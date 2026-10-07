@@ -1240,7 +1240,7 @@
                     <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
                 </a>
                 <a href="#auth-section" class="register-button-hero" data-no-loading onclick="scrollToAuthForm(event)">
-                    <i class="bi bi-chat-dots-fill"></i> Contactanos
+                    <i class="bi bi-chat-dots-fill"></i> Contacto
                 </a>
             </div>
             {% endif %}
@@ -1480,7 +1480,7 @@
         <div class="auth-wrapper" id="auth-section">
             <div class="auth-section" id="auth-form-card">
             <div class="auth-encabezado">
-                <h2>Contactanos</h2>
+                <h2>Contacto</h2>
                 <p>
                     Dejanos tus datos y te escribimos para ponerte el instituto en marcha.
                     Si ya tenés cuenta, <a href="{{ path('app_login') }}">iniciá sesión</a>.
@@ -1544,10 +1544,12 @@
                     </button>
                 </form>
 
+                {# Nada de puntuación pegada a la dirección: el punto final se lee como parte
+                   del mail y la gente lo copia con el punto incluido. #}
                 <p class="auth-contacto-directo">
                     ¿Preferís hablar? Escribinos por
                     <a href="https://wa.me/{{ whatsapp_contacto }}" target="_blank" rel="noopener">WhatsApp</a>
-                    o a <a href="mailto:{{ email_contacto }}">{{ email_contacto }}</a>.
+                    o por mail a <a href="mailto:{{ email_contacto }}">{{ email_contacto }}</a>
                 </p>
             </div>
         </div>

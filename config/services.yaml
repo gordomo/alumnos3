@@ -7,8 +7,8 @@ parameters:
     # Por dónde nos contactan los institutos. Se usan en el formulario público, en los carteles
     # de suspensión y en el aviso interno de una solicitud nueva.
     app.email_contacto: 'contacto@teambuilder.com.ar'
-    app.whatsapp_contacto: '5493415961121'
-    app.whatsapp_contacto_visible: '+54 9 3415 96-1121'
+    app.whatsapp_contacto: '5493416043603'
+    app.whatsapp_contacto_visible: '+54 9 341 604-3603'
 
     logos_directory: '%kernel.project_dir%/public/uploads/logos'
     payment_proofs_directory: '%kernel.project_dir%/public/uploads/payment_proofs'
