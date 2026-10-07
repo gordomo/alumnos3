@@ -80,7 +80,7 @@
 
             {% if s.total > 0 %}
                 <div class="text-end">
-                    <div class="text-muted small">{{ impagas > 1 ? 'Total de todas' : 'Total a pagar' }}</div>
+                    <div class="text-muted small">Debés</div>
                     <div class="fs-3 fw-bold text-{{ enc.clase }}">${{ s.total|number_format(2, ',', '.') }}</div>
                     {% if impagas > 1 %}
                         <div class="small text-muted">en {{ impagas }} facturas</div>
@@ -90,9 +90,8 @@
         </div>
     </div>
 
-    <div class="row">
-        {# ---------- Cómo pagar ---------- #}
-        <div class="col-lg-7 mb-3">
+    {# ---------- Cómo pagar ---------- #}
+    <div class="mb-3">
             {% if factura and not s.factura.isPaid() and s.estado != 'exenta' %}
                 <div class="card h-100">
                     <div class="card-header bg-primary text-white">
@@ -103,7 +102,7 @@
                            siempre la más vieja y el botón ofrecía $1.000 abajo de un total de
                            $7.000, sin forma de elegir ni de entender cuál de los dos valía. #}
                         {% if impagas > 1 %}
-                            <div class="border-bottom pb-2 mb-3" id="selector-facturas">
+                            <div class="border-bottom pb-2 mb-3" id="selector-facturas" style="max-width: 46rem;">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <span class="text-muted small">Qué querés pagar</span>
                                     <button type="button" class="btn btn-link btn-sm p-0" data-marcar-todas>
@@ -174,7 +173,9 @@
                                 </li>
                             </ul>
 
-                            <div class="tab-content">
+                            {# A ancho completo el formulario se estira a toda la pantalla y cuesta
+                               leerlo. Un renglón de texto cómodo no pasa de unos 70 caracteres. #}
+                            <div class="tab-content" style="max-width: 46rem;">
                                 <div class="tab-pane fade show active" id="tab-transferencia">
                                     {% if config.datosTransferencia %}
                                         <div class="alert alert-light border">
@@ -247,13 +248,19 @@
                     </div>
                 </div>
             {% endif %}
-        </div>
+    </div>
 
-        {# ---------- Cómo se calcula ---------- #}
-        <div class="col-lg-5 mb-3">
-            <div class="card h-100">
-                <div class="card-header bg-light"><strong>Cómo se calcula</strong></div>
-                <div class="card-body">
+    {# ---------- Cómo se calcula ----------
+       Material de consulta: se lee una vez, cuando el instituto quiere entender por qué le
+       cobramos lo que le cobramos. Antes ocupaba media pantalla al lado de la acción y competía
+       con ella; acá sigue a mano pero no estorba. #}
+    <details class="card mb-3">
+        <summary class="card-header bg-light" style="cursor: pointer;">
+            <strong>¿Cómo se calcula lo que pago?</strong>
+        </summary>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
                     <div class="d-flex justify-content-between">
                         <span>Alumn@s activos hoy</span>
                         <strong>{{ alumnosActivos }}</strong>
@@ -273,8 +280,9 @@
                         <span class="fw-semibold">Estimado del mes que viene</span>
                         <span class="fs-5 fw-bold">${{ proximoMes|number_format(2, ',', '.') }}</span>
                     </div>
-
-                    <p class="small text-muted mt-3 mb-0">
+                </div>
+                <div class="col-md-6">
+                    <p class="small text-muted mb-0">
                         Se factura por mes cerrado: el 1° se emite la factura del mes anterior con los
                         alumn@s que tuviste activos, y vence el {{ config.diaVencimiento }}. Si das de baja
                         alumn@s, el mes siguiente pagás menos.
@@ -282,11 +290,20 @@
                 </div>
             </div>
         </div>
-    </div>
+    </details>
 
-    {# ---------- Historial ---------- #}
+    {# ---------- Historial ----------
+       Solo lo que NO está arriba para pagar. Antes las pendientes salían dos veces en la misma
+       pantalla -con checkbox en el panel y otra vez como fila acá-, y esa repetición era la que
+       hacía sentir la pantalla amontonada. #}
+    {% set idsAPagar = [] %}
+    {% for f in s.impagas|default([]) %}
+        {% set idsAPagar = idsAPagar|merge([f.id]) %}
+    {% endfor %}
+    {% set anteriores = historial|filter(f => f.id not in idsAPagar) %}
+
     <div class="card">
-        <div class="card-header bg-light"><strong>Facturas</strong></div>
+        <div class="card-header bg-light"><strong>Facturas anteriores</strong></div>
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
@@ -300,7 +317,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                {% for f in historial %}
+                {% for f in anteriores %}
                     <tr>
                         <td class="text-nowrap">{{ f.formattedPeriod }}</td>
                         <td class="text-center">{{ f.activeStudentsCount }}</td>
@@ -343,7 +360,8 @@
                 {% else %}
                     <tr>
                         <td colspan="6" class="text-center text-muted py-4">
-                            Todavía no hay facturas emitidas.
+                            {{ idsAPagar ? 'No hay facturas anteriores: las que tenés están todas arriba.'
+                                         : 'Todavía no hay facturas emitidas.' }}
                         </td>
                     </tr>
                 {% endfor %}
