@@ -1615,18 +1615,28 @@
         
         // Prevenir scroll automático del navegador en la home
         {% if is_home is defined and is_home == true %}
-            // Forzar posición inicial inmediatamente
-            window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-            
-            // Si hay un hash en la URL, removerlo sin hacer scroll
-            if (window.location.hash) {
-                history.replaceState(null, null, window.location.pathname);
+            // Antes esto forzaba la home arriba y además borraba el hash de la URL. Servía para
+            // que el navegador no restaurara la posición, pero rompía todo enlace que apuntara a
+            // una sección: el "Contacto" del login llegaba a /#auth-section y terminaba arriba de
+            // todo, con el formulario 4800px más abajo. Si viene apuntando a algo, se respeta.
+            let destino = null;
+            try {
+                destino = window.location.hash ? document.querySelector(window.location.hash) : null;
+            } catch (e) {
+                destino = null;
             }
-            
-            // Segunda verificación después de un breve delay
-            requestAnimationFrame(() => {
+
+            if (destino) {
+                requestAnimationFrame(() => {
+                    destino.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+            } else {
                 window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-            });
+
+                requestAnimationFrame(() => {
+                    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+                });
+            }
         {% endif %}
 
         // Solo hacer scroll si estamos en /login directamente (no en la home)
