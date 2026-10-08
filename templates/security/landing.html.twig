@@ -11,17 +11,18 @@
             --primary-legible: var(--marca-legible);
             --primary-dark: var(--marca-oscuro);
             --primary-darker: var(--marca-mas-oscuro);
-            --primary-soft: #eaf2fe;
+            --primary-soft: var(--marca-suave);
 
-            /* Bloques oscuros con texto blanco encima: necesitan contraste de verdad. */
-            --secondary-color: #1b4f9c;
+            /* Bloques oscuros con texto blanco encima: necesitan contraste de verdad. Sale de la
+               marca, si no la franja del cierre queda azul en la versión de clubes. */
+            --secondary-color: var(--marca-oscuro);
 
             /* El ámbar se usa a cuentagotas: solo la promo y el precio. Si el acento está en
                todos los elementos, no destaca ninguno. */
-            --accent-color: #f59e0b;
-            --accent-dark: #d98806;
-            /* Para texto: el ámbar claro sobre fondo claro no se lee (2:1). */
-            --accent-legible: #c2650a;
+            --accent-color: var(--acento);
+            --accent-dark: var(--acento-oscuro);
+            /* Para texto: el acento claro sobre fondo claro no se lee (2:1). */
+            --accent-legible: var(--acento-legible);
 
             --bg-color: #f8f9fa;
             --text-color: #1f2d3d;
@@ -1237,6 +1238,9 @@
     'precio_sin_limites': 'Usa todas las funcionalidades sin restricciones. Registra pagos ilimitados, crea alumnos, cursos y envía notificaciones sin límites adicionales.',
     'incluido_gestion': 'Gestión completa de alumn@s',
     'incluido_creacion': 'Creación ilimitada de cursos',
+    'ventaja_vencido': 'Solo pagas por los alumnos que realmente tuviste activos ese mes. Sin adelantos ni sorpresas.',
+    'ventaja_escala': 'Más alumnos = más valor. El precio crece de forma justa con tu instituto.',
+    'ventaja_transparencia': 'Facturación clara basada en alumnos activos. Sin letra chica ni costos ocultos.',
 
     'contacto_bajada': 'Dejanos tus datos y te escribimos para ponerte el instituto en marcha.',
     'contacto_nombre': 'Nombre del instituto',
@@ -1273,6 +1277,9 @@
     'precio_sin_limites': 'Usá todo sin restricciones: pagos ilimitados, todas las disciplinas que quieras y notificaciones sin límite.',
     'incluido_gestion': 'Gestión completa de soci@s',
     'incluido_creacion': 'Creación ilimitada de disciplinas',
+    'ventaja_vencido': 'Solo pagás por los soci@s que realmente tuviste activ@s ese mes. Sin adelantos ni sorpresas.',
+    'ventaja_escala': 'Más soci@s = más valor. El precio crece de forma justa con tu club.',
+    'ventaja_transparencia': 'Facturación clara basada en soci@s activ@s. Sin letra chica ni costos ocultos.',
 
     'contacto_bajada': 'Dejanos tus datos y te escribimos para poner el club en marcha.',
     'contacto_nombre': 'Nombre del club',
@@ -1534,7 +1541,7 @@
                 <div class="ventaja-card">
                     <div class="ventaja-icon"><i class="bi bi-calendar-month"></i></div>
                     <h4>Cobro a mes vencido</h4>
-                    <p>Solo pagas por los alumnos que realmente tuviste activos ese mes. Sin adelantos ni sorpresas.</p>
+                    <p>{{ tx.ventaja_vencido }}</p>
                 </div>
                 <div class="ventaja-card">
                     <div class="ventaja-icon"><i class="bi bi-graph-up-arrow"></i></div>
@@ -1544,12 +1551,12 @@
                 <div class="ventaja-card">
                     <div class="ventaja-icon"><i class="bi bi-arrow-up-right"></i></div>
                     <h4>Escala con vos</h4>
-                    <p>Más alumnos = más valor. El precio crece de forma justa con tu instituto.</p>
+                    <p>{{ tx.ventaja_escala }}</p>
                 </div>
                 <div class="ventaja-card">
                     <div class="ventaja-icon"><i class="bi bi-eye"></i></div>
                     <h4>Transparencia total</h4>
-                    <p>Facturación clara basada en alumnos activos. Sin letra chica ni costos ocultos.</p>
+                    <p>{{ tx.ventaja_transparencia }}</p>
                 </div>
             </div>
         </div>
