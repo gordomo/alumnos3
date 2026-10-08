@@ -90,8 +90,10 @@
         </div>
     </div>
 
-    {# ---------- Cómo pagar ---------- #}
-    <div class="mb-3">
+    {# Dos columnas: a la izquierda lo único que se hace en esta pantalla, a la derecha lo que se
+       consulta. A una sola columna el contenido quedaba en 46rem y media pantalla vacía al lado. #}
+    <div class="row">
+        <div class="col-lg-7 mb-3">
             {% if factura and not s.factura.isPaid() and s.estado != 'exenta' %}
                 <div class="card h-100">
                     <div class="card-header bg-primary text-white">
@@ -102,7 +104,7 @@
                            siempre la más vieja y el botón ofrecía $1.000 abajo de un total de
                            $7.000, sin forma de elegir ni de entender cuál de los dos valía. #}
                         {% if impagas > 1 %}
-                            <div class="border-bottom pb-2 mb-3" id="selector-facturas" style="max-width: 46rem;">
+                            <div class="border-bottom pb-2 mb-3" id="selector-facturas">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <span class="text-muted small">Qué querés pagar</span>
                                     <button type="button" class="btn btn-link btn-sm p-0" data-marcar-todas>
@@ -173,9 +175,7 @@
                                 </li>
                             </ul>
 
-                            {# A ancho completo el formulario se estira a toda la pantalla y cuesta
-                               leerlo. Un renglón de texto cómodo no pasa de unos 70 caracteres. #}
-                            <div class="tab-content" style="max-width: 46rem;">
+                            <div class="tab-content">
                                 <div class="tab-pane fade show active" id="tab-transferencia">
                                     {% if config.datosTransferencia %}
                                         <div class="alert alert-light border">
@@ -248,7 +248,9 @@
                     </div>
                 </div>
             {% endif %}
-    </div>
+        </div>
+
+        <div class="col-lg-5 mb-3">
 
     {# ---------- Cómo se calcula ----------
        Material de consulta: se lee una vez, cuando el instituto quiere entender por qué le
@@ -302,74 +304,46 @@
     {% endfor %}
     {% set anteriores = historial|filter(f => f.id not in idsAPagar) %}
 
+    {# En la columna angosta una tabla de seis columnas no entra. Como lista se lee mejor y de
+       todos modos acá solo hay cosas cerradas: lo que importa es el período, el importe y en qué
+       terminó. #}
     <div class="card">
         <div class="card-header bg-light"><strong>Facturas anteriores</strong></div>
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th>Período</th>
-                        <th class="text-center">Alumn@s</th>
-                        <th class="text-end">Importe</th>
-                        <th>Vence</th>
-                        <th>Estado</th>
-                        <th class="text-end">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                {% for f in anteriores %}
-                    <tr>
-                        <td class="text-nowrap">{{ f.formattedPeriod }}</td>
-                        <td class="text-center">{{ f.activeStudentsCount }}</td>
-                        <td class="text-end fw-semibold">${{ f.totalAmount|number_format(2, ',', '.') }}</td>
-                        <td class="text-nowrap small">
-                            {% if f.dueDate %}
-                                {{ f.dueDate|date('d/m/Y') }}
-                            {% else %}
-                                <span class="text-muted">sin vencimiento</span>
-                            {% endif %}
-                        </td>
-                        <td>
+        <div class="list-group list-group-flush">
+            {% for f in anteriores %}
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <div>{{ f.formattedPeriod }}</div>
+                        <div class="small text-muted">
+                            {{ f.activeStudentsCount }} alumn@s
                             {% if f.isPaid() %}
-                                <span class="badge bg-success">Pagada</span>
+                                <span class="badge bg-success ms-1">Pagada</span>
                             {% elseif f.isPendingApproval() %}
-                                <span class="badge bg-info text-dark">En revisión</span>
-                            {% elseif f.isRejected() %}
-                                <span class="badge bg-danger">Rechazada</span>
+                                <span class="badge bg-info text-dark ms-1">En revisión</span>
                             {% elseif f.isCancelled() %}
-                                <span class="badge bg-secondary">Cancelada</span>
-                            {% elseif f.diasDeAtraso > 0 %}
-                                {# El rojo se reserva para lo que de verdad está vencido. Pintar de
-                                   rojo siete facturas que no vencieron hace que el rojo no
-                                   signifique nada. #}
-                                <span class="badge bg-danger">Vencida hace {{ f.diasDeAtraso }} día(s)</span>
-                            {% else %}
-                                <span class="badge bg-secondary">Pendiente</span>
+                                <span class="badge bg-secondary ms-1">Cancelada</span>
                             {% endif %}
-                        </td>
-                        <td class="text-end text-nowrap">
-                            <a href="{{ path('billing_invoice_show', {'id': f.id}) }}" class="btn btn-sm btn-outline-secondary">
-                                <i class="bi bi-eye"></i>
-                            </a>
-                            <a href="{{ path('billing_invoice_pdf', {'id': f.id}) }}" target="_blank" data-no-loading
-                               class="btn btn-sm btn-outline-secondary">
-                                <i class="bi bi-file-earmark-pdf"></i>
-                            </a>
-                        </td>
-                    </tr>
-                {% else %}
-                    <tr>
-                        <td colspan="6" class="text-center text-muted py-4">
-                            {{ idsAPagar ? 'No hay facturas anteriores: las que tenés están todas arriba.'
-                                         : 'Todavía no hay facturas emitidas.' }}
-                        </td>
-                    </tr>
-                {% endfor %}
-                </tbody>
-            </table>
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <div class="fw-semibold">${{ f.totalAmount|number_format(2, ',', '.') }}</div>
+                        <div class="small">
+                            <a href="{{ path('billing_invoice_show', {'id': f.id}) }}">Ver</a>
+                            ·
+                            <a href="{{ path('billing_invoice_pdf', {'id': f.id}) }}" target="_blank" data-no-loading>PDF</a>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="list-group-item text-muted text-center py-4">
+                    {{ idsAPagar ? 'Ninguna cerrada todavía: las que tenés están al lado.'
+                                 : 'Todavía no hay facturas emitidas.' }}
+                </div>
+            {% endfor %}
         </div>
     </div>
-</div>
+        </div>
+    </div>
 </div>
 {% endblock %}
 
