@@ -1200,6 +1200,90 @@
 {% block title %}Sistema de Gestión de Institutos{% endblock %}
 
 {% block body %}
+{#
+    Los textos de la landing, uno por producto.
+
+    El sistema se vende como Team Builder Institute y como Team Builder Clubes. La página es la
+    misma -mismas secciones, mismo diseño, mismas capturas-; lo que cambia es de qué habla.
+    Juntos acá arriba se ve de un vistazo qué dice cada versión, sin leer 1700 líneas de HTML.
+
+    Van en la propia plantilla y no en un include aparte porque un include de Twig corre en su
+    propio ámbito: lo que define adentro no llega a quien lo incluye.
+#}
+{% set textos_instituto = {
+    'producto': 'Team Builder Institute',
+    'tagline': 'Gestión inteligente para institutos',
+
+    'hero_titulo': 'Gestiona tu instituto con una experiencia moderna y simple',
+    'hero_bajada': 'Centraliza alumnos, profesores, asistencia, cursos y pagos en un solo sistema. Menos tareas manuales, más tiempo para crecer.',
+
+    'f1_titulo': 'Gestión de Alumn@s',
+    'f1_texto': 'Administra fácilmente la información de tus alumnos, cursos, asistencia y pagos en un solo lugar.',
+    'f3_titulo': 'Asistencia y Cursos',
+    'f3_texto': 'Lleva el control de asistencia de alumnos y profesores, y organiza tus cursos de manera eficiente.',
+    'f4_texto': 'Envía recibos y recordatorios de deudas automáticamente por email a tus alumnos.',
+    'f5_texto': 'Visualiza estadísticas de pagos, deudas pendientes y asistencias para tomar mejores decisiones.',
+
+    'c2_titulo': 'La libreta se arma sola',
+    'c2_texto': 'El profesor carga las notas, toma asistencia y marca las tareas entregadas. La libreta junta las tres cosas por trimestre, calcula los promedios por área y dice si el alumn@ aprueba. Se imprime o se manda por email.',
+    'c3_texto': 'Las clases salen de los horarios de cada curso, las evaluaciones y las entregas de lo que ya cargaste, y los vencimientos de tu configuración. Vos solo agregás los feriados y los actos: un feriado además tapa la clase de ese día.',
+
+    'precio_titulo': 'Precio Fijo por Alumno: Simple y Transparente',
+    'precio_bajada': 'Modelo de facturación mensual basado en la cantidad de alumnos activos. Sin sorpresas, sin costos ocultos.',
+    'precio_unidad': 'por alumn@ / mes',
+    'precio_aclaracion': 'Solo pagas por los alumnos activos en tu instituto',
+    'precio_como': 'Cada mes se genera automáticamente una factura basada en la cantidad de alumnos activos que tienes registrados. El sistema cuenta los alumnos activos al momento de la facturación y calcula tu costo mensual.',
+    'precio_ejemplo_sujeto': '50 alumnos activos',
+    'precio_sin_limites': 'Usa todas las funcionalidades sin restricciones. Registra pagos ilimitados, crea alumnos, cursos y envía notificaciones sin límites adicionales.',
+    'incluido_gestion': 'Gestión completa de alumn@s',
+    'incluido_creacion': 'Creación ilimitada de cursos',
+
+    'contacto_bajada': 'Dejanos tus datos y te escribimos para ponerte el instituto en marcha.',
+    'contacto_nombre': 'Nombre del instituto',
+    'contacto_cantidad': '¿Cuántos alumn@s tenés, más o menos?',
+    'contacto_rangos': {'1-20': 'Hasta 20 alumn@s', '21-50': 'Entre 21 y 50', '51-100': 'Entre 51 y 100', '100+': 'Más de 100'},
+    'contacto_mensaje': 'Contanos algo de tu instituto (opcional)',
+    'cta_bajada': 'Escribinos y te ponemos el instituto en marcha'
+} %}
+
+{% set textos_club = {
+    'producto': 'Team Builder Clubes',
+    'tagline': 'Gestión para clubes deportivos y sociales',
+
+    'hero_titulo': 'Gestioná tu club sin perder el domingo en papeles',
+    'hero_bajada': 'Socios, disciplinas, cuotas, asistencia y profes en un solo sistema. Menos planillas, más tiempo para el club.',
+
+    'f1_titulo': 'Gestión de Soci@s',
+    'f1_texto': 'Tené en un solo lugar los datos de cada soci@, en qué disciplinas está, su asistencia y sus cuotas.',
+    'f3_titulo': 'Asistencia y Disciplinas',
+    'f3_texto': 'Controlá la asistencia a cada entrenamiento y organizá tus disciplinas y categorías sin planillas sueltas.',
+    'f4_texto': 'Mandá recibos y recordatorios de cuotas vencidas por email, sin perseguir a nadie por WhatsApp.',
+    'f5_texto': 'Mirá cuánto se cobró, quién debe y cómo viene la asistencia de cada disciplina para decidir con datos.',
+
+    'c2_titulo': 'La ficha del soci@, completa',
+    'c2_texto': 'El profe toma asistencia y deja anotado cómo viene cada entrenamiento. La ficha junta la asistencia, las cuotas y las disciplinas en las que participa, y se imprime o se manda por email.',
+    'c3_texto': 'Los entrenamientos salen de los horarios de cada disciplina y los vencimientos de tu configuración. Vos solo agregás los feriados, los partidos y los eventos del club: un feriado además tapa el entrenamiento de ese día.',
+
+    'precio_titulo': 'Precio Fijo por Soci@: Simple y Transparente',
+    'precio_bajada': 'Facturación mensual según la cantidad de soci@s activ@s. Sin sorpresas, sin costos ocultos.',
+    'precio_unidad': 'por soci@ / mes',
+    'precio_aclaracion': 'Solo pagás por los soci@s activ@s de tu club',
+    'precio_como': 'Cada mes se emite una factura según la cantidad de soci@s activ@s que tengas registrad@s. El sistema los cuenta al momento de facturar y calcula tu costo del mes.',
+    'precio_ejemplo_sujeto': '50 soci@s activ@s',
+    'precio_sin_limites': 'Usá todo sin restricciones: pagos ilimitados, todas las disciplinas que quieras y notificaciones sin límite.',
+    'incluido_gestion': 'Gestión completa de soci@s',
+    'incluido_creacion': 'Creación ilimitada de disciplinas',
+
+    'contacto_bajada': 'Dejanos tus datos y te escribimos para poner el club en marcha.',
+    'contacto_nombre': 'Nombre del club',
+    'contacto_cantidad': '¿Cuántos soci@s tenés, más o menos?',
+    'contacto_rangos': {'1-20': 'Hasta 20 soci@s', '21-50': 'Entre 21 y 50', '51-100': 'Entre 51 y 100', '100+': 'Más de 100'},
+    'contacto_mensaje': 'Contanos algo de tu club (opcional)',
+    'cta_bajada': 'Escribinos y ponemos tu club en marcha'
+} %}
+
+{% set tx = vertical == 'club' ? textos_club : textos_instituto %}
+
 <div class="landing-bg">
     <span class="floating-shape"></span>
     <span class="floating-shape"></span>
@@ -1212,8 +1296,8 @@
         <a href="{{ path('app_start') }}" class="landing-header-brand" data-no-loading>
             {{ include('security/_logo.html.twig', {'tamano': 48}) }}
             <div class="landing-header-text">
-                <span class="landing-header-name">Team Builder Institute</span>
-                <span class="landing-header-tagline">Gestión inteligente para institutos</span>
+                <span class="landing-header-name">{{ tx.producto }}</span>
+                <span class="landing-header-tagline">{{ tx.tagline }}</span>
             </div>
         </a>
         <nav class="landing-header-nav" aria-label="Navegación principal">
@@ -1232,8 +1316,8 @@
     <!-- Hero Section -->
     <div class="hero-section">
         <div class="hero-texto">
-            <h1>Gestiona tu instituto con una experiencia moderna y simple</h1>
-            <p>Centraliza alumnos, profesores, asistencia, cursos y pagos en un solo sistema. Menos tareas manuales, más tiempo para crecer.</p>
+            <h1>{{ tx.hero_titulo }}</h1>
+            <p>{{ tx.hero_bajada }}</p>
             {% if is_home is not defined or is_home %}
             <div class="hero-buttons">
                 <a href="{{ path('app_login') }}" class="login-button-hero">
@@ -1268,8 +1352,8 @@
                 <div class="feature-icon">
                     <i class="bi bi-people-fill"></i>
                 </div>
-                <h3>Gestión de Alumn@s</h3>
-                <p>Administra fácilmente la información de tus alumnos, cursos, asistencia y pagos en un solo lugar.</p>
+                <h3>{{ tx.f1_titulo }}</h3>
+                <p>{{ tx.f1_texto }}</p>
             </div>
             <div class="feature-card">
                 <div class="feature-icon">
@@ -1282,22 +1366,22 @@
                 <div class="feature-icon">
                     <i class="bi bi-calendar-check"></i>
                 </div>
-                <h3>Asistencia y Cursos</h3>
-                <p>Lleva el control de asistencia de alumnos y profesores, y organiza tus cursos de manera eficiente.</p>
+                <h3>{{ tx.f3_titulo }}</h3>
+                <p>{{ tx.f3_texto }}</p>
             </div>
             <div class="feature-card">
                 <div class="feature-icon">
                     <i class="bi bi-envelope-paper"></i>
                 </div>
                 <h3>Notificaciones Automáticas</h3>
-                <p>Envía recibos y recordatorios de deudas automáticamente por email a tus alumnos.</p>
+                <p>{{ tx.f4_texto }}</p>
             </div>
             <div class="feature-card">
                 <div class="feature-icon">
                     <i class="bi bi-graph-up"></i>
                 </div>
                 <h3>Reportes y Estadísticas</h3>
-                <p>Visualiza estadísticas de pagos, deudas pendientes y asistencias para tomar mejores decisiones.</p>
+                <p>{{ tx.f5_texto }}</p>
             </div>
             <div class="feature-card">
                 <div class="feature-icon">
@@ -1334,8 +1418,8 @@
         <div class="funcionalidad funcionalidad--invertida">
             <div class="funcionalidad-texto">
                 <span class="funcionalidad-icono"><i class="bi bi-mortarboard"></i></span>
-                <h3>La libreta se arma sola</h3>
-                <p>El profesor carga las notas, toma asistencia y marca las tareas entregadas. La libreta junta las tres cosas por trimestre, calcula los promedios por área y dice si el alumn@ aprueba. Se imprime o se manda por email.</p>
+                <h3>{{ tx.c2_titulo }}</h3>
+                <p>{{ tx.c2_texto }}</p>
             </div>
             <div class="funcionalidad-captura">
                 <div class="ventana">
@@ -1351,7 +1435,7 @@
             <div class="funcionalidad-texto">
                 <span class="funcionalidad-icono"><i class="bi bi-calendar3"></i></span>
                 <h3>Todo lo que se viene, en un lugar</h3>
-                <p>Las clases salen de los horarios de cada curso, las evaluaciones y las entregas de lo que ya cargaste, y los vencimientos de tu configuración. Vos solo agregás los feriados y los actos: un feriado además tapa la clase de ese día.</p>
+                <p>{{ tx.c3_texto }}</p>
             </div>
             <div class="funcionalidad-captura">
                 <div class="ventana">
@@ -1375,23 +1459,23 @@
     <div class="features-section" id="pricing-section" style="margin-bottom: 2rem; background: var(--primary-soft);">
         <h2 style="text-align: center; color: var(--text-color); margin-bottom: 1rem;">
             <i class="bi bi-cash-stack" style="color: var(--accent-color); margin-right: 0.5rem;"></i>
-            Precio Fijo por Alumno: Simple y Transparente
+            {{ tx.precio_titulo }}
         </h2>
         <p style="text-align: center; color: #6c757d; margin-bottom: 2rem; font-size: 1.1rem;">
-            Modelo de facturación mensual basado en la cantidad de alumnos activos. Sin sorpresas, sin costos ocultos.
+            {{ tx.precio_bajada }}
         </p>
 
         <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 15px; padding: 2rem; margin-bottom: 2rem; border: 2px solid var(--accent-color);">
             <div style="text-align: center; margin-bottom: 1.5rem;">
                 <div style="font-size: 3rem; font-weight: 700; color: var(--accent-legible); margin-bottom: 0.5rem;">
                     ${{ pricePerStudent|default(50)|number_format(0, ',', '.') }}
-                    <span style="font-size: 1.4rem; font-weight: 600; color: #6c757d;">por alumn@ / mes</span>
+                    <span style="font-size: 1.4rem; font-weight: 600; color: #6c757d;">{{ tx.precio_unidad }}</span>
                 </div>
                 <div style="font-size: 1.2rem; color: var(--primary-legible); font-weight: 600;">
                     Facturación mensual automática
                 </div>
                 <div style="font-size: 0.95rem; color: #6c757d; margin-top: 0.5rem;">
-                    Solo pagas por los alumnos activos en tu instituto
+                    {{ tx.precio_aclaracion }}
                 </div>
             </div>
         </div>
@@ -1403,7 +1487,7 @@
                     ¿Cómo Funciona?
                 </h3>
                 <p style="color: #6c757d; font-size: 0.95rem; line-height: 1.6; margin: 0;">
-                    Cada mes se genera automáticamente una factura basada en la cantidad de alumnos activos que tienes registrados. El sistema cuenta los alumnos activos al momento de la facturación y calcula tu costo mensual.
+                    {{ tx.precio_como }}
                 </p>
             </div>
 
@@ -1413,7 +1497,7 @@
                     Ejemplo de Facturación
                 </h3>
                 <p style="color: #6c757d; font-size: 0.95rem; line-height: 1.6; margin: 0;">
-                    Si tienes <strong>50 alumnos activos</strong>, tu factura mensual será de <strong>${{ (50 * pricePerStudent|default(50))|number_format(2, ',', '.') }}</strong>. Simple, predecible y sin sorpresas.
+                    Si tenés <strong>{{ tx.precio_ejemplo_sujeto }}</strong>, tu factura mensual será de <strong>${{ (50 * pricePerStudent|default(50))|number_format(2, ',', '.') }}</strong>. Simple, predecible y sin sorpresas.
                 </p>
                 <p style="color: #6c757d; font-size: 0.75rem; line-height: 1.6; margin: 0;margin-top: 0.3rem;">
                     <i>Cualquier cambio en este precio se avisa con 30 días de anticipación</i>
@@ -1426,7 +1510,7 @@
                     Sin Límites de Uso
                 </h3>
                 <p style="color: #6c757d; font-size: 0.95rem; line-height: 1.6; margin: 0;">
-                    Usa todas las funcionalidades sin restricciones. Registra pagos ilimitados, crea alumnos, cursos y envía notificaciones sin límites adicionales.
+                    {{ tx.precio_sin_limites }}
                 </p>
             </div>
         </div>
@@ -1435,8 +1519,8 @@
             <h3>¿Qué está incluido?</h3>
             <ul class="incluido-lista">
                 <li><i class="bi bi-check-circle-fill"></i> Registro ilimitado de pagos</li>
-                <li><i class="bi bi-check-circle-fill"></i> Gestión completa de alumn@s</li>
-                <li><i class="bi bi-check-circle-fill"></i> Creación ilimitada de cursos</li>
+                <li><i class="bi bi-check-circle-fill"></i> {{ tx.incluido_gestion }}</li>
+                <li><i class="bi bi-check-circle-fill"></i> {{ tx.incluido_creacion }}</li>
                 <li><i class="bi bi-check-circle-fill"></i> Notificaciones por email</li>
                 <li><i class="bi bi-check-circle-fill"></i> Control de asistencia</li>
                 <li><i class="bi bi-check-circle-fill"></i> Calificaciones y libretas</li>
@@ -1472,7 +1556,7 @@
         <!-- CTA Section -->
         <div class="cta-section">
             <div class="cta-text">¡Comienza hoy mismo!</div>
-            <div class="cta-subtext">Escribinos y te ponemos el instituto en marcha</div>
+            <div class="cta-subtext">{{ tx.cta_bajada }}</div>
             <div class="cta-badge">Primer mes sin cargo • Te acompañamos en la puesta en marcha • Sin costo de instalación</div>
         </div>
 
@@ -1482,7 +1566,7 @@
             <div class="auth-encabezado">
                 <h2>Contacto</h2>
                 <p>
-                    Dejanos tus datos y te escribimos para ponerte el instituto en marcha.
+                    {{ tx.contacto_bajada }}
                     Si ya tenés cuenta, <a href="{{ path('app_login') }}">iniciá sesión</a>.
                 </p>
             </div>
@@ -1498,7 +1582,7 @@
                 <form method="post" action="{{ path('app_contacto') }}">
                     <div class="form-group">
                         <input type="text" name="nombre_instituto" class="form-control"
-                               placeholder="Nombre del instituto" maxlength="255" required>
+                               placeholder="{{ tx.contacto_nombre }}" maxlength="255" required>
                     </div>
 
                     <div class="form-group">
@@ -1518,17 +1602,16 @@
 
                     <div class="form-group form-group--ancho">
                         <select name="alumnos_estimados" class="form-control" required>
-                            <option value="">¿Cuántos alumn@s tenés, más o menos?</option>
-                            <option value="1-20">Hasta 20 alumn@s</option>
-                            <option value="21-50">Entre 21 y 50</option>
-                            <option value="51-100">Entre 51 y 100</option>
-                            <option value="100+">Más de 100</option>
+                            <option value="">{{ tx.contacto_cantidad }}</option>
+                            {% for valor, etiqueta in tx.contacto_rangos %}
+                                <option value="{{ valor }}">{{ etiqueta }}</option>
+                            {% endfor %}
                         </select>
                     </div>
 
                     <div class="form-group form-group--ancho">
                         <textarea name="mensaje" class="form-control" rows="2"
-                                  placeholder="Contanos algo de tu instituto (opcional)"></textarea>
+                                  placeholder="{{ tx.contacto_mensaje }}"></textarea>
                     </div>
 
                     {# Campo trampa: oculto para una persona, irresistible para un bot. #}
