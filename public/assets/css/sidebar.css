@@ -54,6 +54,10 @@
     font-size: 0.84rem;
     color: var(--sidebar-muted) !important;
     background: var(--sidebar-heading);
+    /* Un mail largo no tiene espacios donde cortar, así que se desbordaba de la barra y se
+       montaba sobre el contenido. Se parte donde haga falta. */
+    overflow-wrap: anywhere;
+    line-height: 1.25;
 }
 
 #sidebar-wrapper hr {
