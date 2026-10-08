@@ -26,15 +26,27 @@ class AppDateFormatExtension extends AbstractExtension implements GlobalsInterfa
     {
         $format = 'd/m/Y';
         $timezone = date_default_timezone_get();
-        
-        $user = $this->security?->getUser();
-        if ($user !== null && method_exists($user, 'getInstituto')) {
-            $instituto = $user->getInstituto();
-            if ($instituto !== null) {
-                $format = $this->institutoTimezoneService->getDateFormatForInstituto($instituto);
-                $timezone = $this->institutoTimezoneService->getTimezoneForInstituto($instituto);
+
+        // Symfony evalúa los globales al calentar la caché de Twig, y eso pasa también cuando se
+        // construye la imagen de Docker, donde todavía no hay base de datos. Sin este try la
+        // consulta explota y el build entero falla con un "getaddrinfo for db failed", que no se
+        // parece en nada al problema real.
+        //
+        // Más allá del build: un formato de fecha es decoración. Si la base no responde, lo
+        // correcto es mostrar el formato por defecto, no tirar la página abajo.
+        try {
+            $user = $this->security?->getUser();
+            if ($user !== null && method_exists($user, 'getInstituto')) {
+                $instituto = $user->getInstituto();
+                if ($instituto !== null) {
+                    $format = $this->institutoTimezoneService->getDateFormatForInstituto($instituto);
+                    $timezone = $this->institutoTimezoneService->getTimezoneForInstituto($instituto);
+                }
             }
+        } catch (\Throwable $e) {
+            // Se siguen usando los valores por defecto de arriba.
         }
+
         return [
             'app_date_format' => $format,
             'app_timezone' => $timezone,
