@@ -4,6 +4,26 @@
 
 {% block panelTitle %}Mi suscripción{% endblock %}
 
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        /* Cebra en las dos listas de facturas. Con cinco renglones iguales el ojo se pierde al
+           cruzar de la izquierda -el mes- a la derecha -el importe-. */
+        .lista-facturas .list-group-item:nth-child(odd) {
+            background-color: rgba(0, 0, 0, .02);
+        }
+
+        .lista-facturas .list-group-item:hover {
+            background-color: rgba(47, 126, 240, .06);
+        }
+
+        /* Lo desmarcado se apaga: a simple vista se ve qué entra en el pago y qué no. */
+        .lista-facturas .list-group-item:has(input:not(:checked)) {
+            opacity: .55;
+        }
+    </style>
+{% endblock %}
+
 {% block body %}
 {% set s = suscripcion %}
 {% set factura = s.factura %}
@@ -115,7 +135,7 @@
                                 {# Cada mes con su renglón separado y el mismo detalle que las
                                    facturas anteriores: pegadas una contra otra se leían como un
                                    bloque y costaba ver dónde terminaba una y empezaba la otra. #}
-                                <div class="list-group list-group-flush">
+                                <div class="list-group list-group-flush lista-facturas">
                                     {% for f in s.impagas %}
                                         <label class="list-group-item d-flex justify-content-between align-items-center gap-2"
                                                for="fac{{ f.id }}" style="cursor: pointer;">
@@ -323,7 +343,7 @@
        terminó. #}
     <div class="card">
         <div class="card-header bg-light"><strong>Facturas anteriores</strong></div>
-        <div class="list-group list-group-flush">
+        <div class="list-group list-group-flush lista-facturas">
             {% for f in anteriores %}
                 <div class="list-group-item d-flex justify-content-between align-items-center">
                     <div>
