@@ -105,33 +105,48 @@
                            $7.000, sin forma de elegir ni de entender cuál de los dos valía. #}
                         {% if impagas > 1 %}
                             <div class="border-bottom pb-2 mb-3" id="selector-facturas">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div class="d-flex justify-content-between align-items-center mb-2 px-3">
                                     <span class="text-muted small">Qué querés pagar</span>
                                     <button type="button" class="btn btn-link btn-sm p-0" data-marcar-todas>
                                         Marcar todas
                                     </button>
                                 </div>
 
-                                {% for f in s.impagas %}
-                                    <div class="form-check d-flex justify-content-between align-items-center">
-                                        <span>
-                                            <input class="form-check-input" type="checkbox" checked
-                                                   id="fac{{ f.id }}" value="{{ f.id }}"
-                                                   data-importe="{{ f.totalAmount }}" data-factura>
-                                            <label class="form-check-label" for="fac{{ f.id }}">
-                                                {{ f.formattedPeriod }}
-                                                {% if f.diasDeAtraso > 0 %}
-                                                    <span class="badge bg-danger ms-1">vencida</span>
-                                                {% elseif f.dueDate %}
-                                                    <span class="text-muted small">vence {{ f.dueDate|date('d/m') }}</span>
-                                                {% endif %}
-                                            </label>
-                                        </span>
-                                        <span class="text-nowrap">${{ f.totalAmount|number_format(2, ',', '.') }}</span>
-                                    </div>
-                                {% endfor %}
+                                {# Cada mes con su renglón separado y el mismo detalle que las
+                                   facturas anteriores: pegadas una contra otra se leían como un
+                                   bloque y costaba ver dónde terminaba una y empezaba la otra. #}
+                                <div class="list-group list-group-flush">
+                                    {% for f in s.impagas %}
+                                        <label class="list-group-item d-flex justify-content-between align-items-center gap-2"
+                                               for="fac{{ f.id }}" style="cursor: pointer;">
+                                            <span class="d-flex align-items-center gap-2">
+                                                <input class="form-check-input m-0 flex-shrink-0" type="checkbox" checked
+                                                       id="fac{{ f.id }}" value="{{ f.id }}"
+                                                       data-importe="{{ f.totalAmount }}" data-factura>
+                                                <span>
+                                                    <span class="d-block">{{ f.formattedPeriod }}</span>
+                                                    <span class="small text-muted">
+                                                        {{ f.activeStudentsCount }} alumn@s
+                                                        {% if f.diasDeAtraso > 0 %}
+                                                            <span class="badge bg-danger ms-1">
+                                                                Vencida hace {{ f.diasDeAtraso }} día(s)
+                                                            </span>
+                                                        {% elseif f.dueDate %}
+                                                            · vence el {{ f.dueDate|date('d/m/Y') }}
+                                                        {% else %}
+                                                            · sin vencimiento
+                                                        {% endif %}
+                                                    </span>
+                                                </span>
+                                            </span>
+                                            <span class="fw-semibold text-nowrap">
+                                                ${{ f.totalAmount|number_format(2, ',', '.') }}
+                                            </span>
+                                        </label>
+                                    {% endfor %}
+                                </div>
 
-                                <div class="d-flex justify-content-between align-items-baseline border-top mt-2 pt-2">
+                                <div class="d-flex justify-content-between align-items-baseline border-top pt-2 px-3">
                                     <strong><span data-cantidad>0</span> seleccionada(s)</strong>
                                     <span class="fs-5 fw-bold" data-total-texto>$0,00</span>
                                 </div>
