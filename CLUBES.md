@@ -22,17 +22,24 @@ queda azul en la versión de clubes.
 
 Desde cero, en el servidor:
 
+`docker-compose.yml` **está en el .gitignore**: cada despliegue tiene el suyo y no viaja en el
+repositorio. Por eso institutos publica 8021/8022/8023 y el del club hay que escribirlo a mano.
+Es a propósito: los puertos y la base son de la máquina, no del código.
+
 ```bash
-# 1. El código, en su propia carpeta
+# 1. El código, en su propia carpeta. aaPanel ya creó la carpeta con sus archivos, así que se
+#    clona al lado y se mueve adentro.
 cd /www/wwwroot
-git clone git@github.com:gordomo/alumnos3.git clubes.teambuilder.com.ar
-cd clubes.teambuilder.com.ar
-git checkout version-3-saas
+git clone git@github.com:gordomo/alumnos3.git clubes-tmp
+cd clubes-tmp && git checkout version-3-saas && cd ..
+cd clubes.teambuilder.com.ar && mkdir -p _aapanel && mv 404.html 502.html index.html .htaccess _aapanel/
+shopt -s dotglob && mv /www/wwwroot/clubes-tmp/* . && rmdir /www/wwwroot/clubes-tmp && shopt -u dotglob
 
 # 2. El .env propio (ver más abajo qué tiene que decir)
-cp .env .env.bak 2>/dev/null; nano .env
+cp /www/wwwroot/innovateglobal.es/.env .env && nano .env
 
-# 3. Levantar
+# 3. El docker-compose.yml propio (ver más abajo) y levantar
+nano docker-compose.yml
 docker compose up -d --build
 
 # 4. Crear el esquema en la base nueva
@@ -56,6 +63,58 @@ TRUSTED_PROXIES=127.0.0.1,REMOTE_ADDR
 ```
 
 El resto (`APP_SECRET`, `MAILER_DSN`, `APP_TIMEZONE`) se copia del otro.
+
+Y su `docker-compose.yml`, que es el de institutos con los puertos tomados del `.env`:
+
+```yaml
+services:
+  app:
+    build: .
+    ports:
+      - "${PUERTO_APP}:80"
+    environment:
+      TZ: America/Argentina/Buenos_Aires
+      APP_TIMEZONE: America/Argentina/Buenos_Aires
+    volumes:
+      - .:/var/www/html
+      - ./php-custom.ini:/usr/local/etc/php/conf.d/php-custom.ini
+    networks: [symfony-network]
+    depends_on: [db]
+
+  db:
+    image: mysql:5.7
+    environment:
+      TZ: America/Argentina/Buenos_Aires
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "${PUERTO_DB}:3306"
+    networks: [symfony-network]
+    volumes:
+      - db_data:/var/lib/mysql
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    restart: always
+    ports:
+      - "${PUERTO_PHPMYADMIN}:80"
+    environment:
+      TZ: America/Argentina/Buenos_Aires
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+    networks: [symfony-network]
+    volumes:
+      - ./php-custom.ini:/usr/local/etc/php/conf.d/php-custom.ini
+
+volumes:
+  db_data:
+
+networks:
+  symfony-network:
+```
 
 **Los puertos son del host, no del contenedor.** Adentro de su red cada stack sigue hablando por
 el 80 y el 3306; lo que no se puede repetir es el puerto publicado. Por eso 8090 y 3307.
