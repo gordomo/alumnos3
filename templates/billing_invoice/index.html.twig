@@ -167,8 +167,8 @@
                                 </div>
 
                                 <div class="d-flex justify-content-between align-items-baseline border-top pt-2 px-3">
-                                    <strong><span data-cantidad>0</span> seleccionada(s)</strong>
-                                    <span class="fs-5 fw-bold" data-total-texto>$0,00</span>
+                                    <strong><span data-cantidad>{{ impagas }}</span> seleccionada(s)</strong>
+                                    <span class="fs-5 fw-bold" data-total-texto>${{ s.total|number_format(2, ',', '.') }}</span>
                                 </div>
                             </div>
                         {% else %}
@@ -250,7 +250,7 @@
                                             <input type="hidden" name="_token" value="{{ csrf_token('mercadopago' ~ factura.id) }}">
                                             <button class="btn btn-primary">
                                                 <i class="bi bi-wallet2"></i>
-                                                Pagar <span data-total-texto>$0,00</span> con Mercado Pago
+                                                Pagar <span data-total-texto>${{ (impagas > 1 ? s.total : factura.totalAmount)|number_format(2, ',', '.') }}</span> con Mercado Pago
                                             </button>
                                         </form>
                                     {% else %}
@@ -391,7 +391,9 @@
         const casillas = Array.from(document.querySelectorAll('[data-factura]'));
         const formularios = Array.from(document.querySelectorAll('[data-form-pago]'));
 
-        if (!formularios.length) {
+        // Con una sola factura no hay checkboxes y el importe ya viene escrito desde el servidor.
+        // Sin esta guarda, el total calculado daba 0 y el botón ofrecía "pagué $0,00".
+        if (!formularios.length || !casillas.length) {
             return;
         }
 

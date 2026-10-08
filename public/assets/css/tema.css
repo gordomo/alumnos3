@@ -1,0 +1,135 @@
+/*
+    La paleta de la marca, en un solo lugar.
+
+    El sistema se vende como dos productos: Team Builder Institute, para institutos educativos, y
+    Team Builder Clubes, para clubes deportivos y sociales. Es el mismo código: lo que cambia es
+    la variable APP_VERTICAL, que termina como data-vertical en el <html>.
+
+    Todo color de marca sale de acá. Si algún archivo vuelve a escribir un #2f7ef0 a mano, ese
+    pedazo se queda azul en la versión de clubes y nadie se entera hasta que un cliente lo ve.
+
+    Los mails son la excepción y van aparte: los clientes de correo no entienden las variables
+    CSS, así que ahí el color viaja como un valor literal desde Twig.
+*/
+
+:root {
+    /* Instituto: el azul de siempre. */
+    --marca: #2f7ef0;
+    --marca-legible: #1b6ae0;    /* sobre blanco, para texto */
+    --marca-oscuro: #1b5fc4;
+    --marca-mas-oscuro: #123a7a;
+    --marca-profundo: #071c3f;   /* el extremo del degradé */
+    --marca-suave: #eaf2fe;      /* fondos tenues */
+    --marca-tenue: rgba(47, 126, 240, 0.14);
+
+    /* El acento se usa a cuentagotas: promociones y precios. */
+    --acento: #f0a32f;
+}
+
+/*
+    Clubes: naranja y verde. El naranja manda -es el color de la acción- y el verde queda para
+    el acento, que es donde el azul no tenía contraparte.
+
+    El naranja elegido es oscuro a propósito (#c2410c y no un naranja brillante): sobre blanco
+    llega a 4.5:1 de contraste, que es lo mínimo para texto. Un naranja más vivo se ve mejor en
+    un botón pero deja ilegible cualquier enlace.
+*/
+:root[data-vertical="club"] {
+    --marca: #ea580c;
+    --marca-legible: #c2410c;
+    --marca-oscuro: #9a3412;
+    --marca-mas-oscuro: #7c2d12;
+    --marca-profundo: #431407;
+    --marca-suave: #fff3ea;
+    --marca-tenue: rgba(234, 88, 12, 0.14);
+
+    --acento: #15803d;
+}
+
+/*
+    Bootstrap trae su propio azul (#0d6efd) y lo usa en todo lo que diga "primary". Hasta ahora
+    convivía con el #2f7ef0 de la marca sin que se notara demasiado, pero son dos azules
+    distintos: un botón y el menú activo nunca fueron del mismo color.
+
+    Se atan los dos a la misma variable. Eso unifica la versión de institutos y, de paso, es lo
+    que hace que la de clubes salga naranja sin tocar una plantilla.
+
+    Este archivo se carga después de Bootstrap, así que alcanza con repetir el selector.
+*/
+.btn-primary {
+    background-color: var(--marca);
+    border-color: var(--marca);
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active,
+.btn-primary.active,
+.btn-check:checked + .btn-primary {
+    background-color: var(--marca-oscuro);
+    border-color: var(--marca-oscuro);
+}
+
+.btn-primary:focus,
+.btn-primary.focus {
+    box-shadow: 0 0 0 0.25rem var(--marca-tenue);
+}
+
+.btn-outline-primary {
+    color: var(--marca-legible);
+    border-color: var(--marca);
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:active {
+    background-color: var(--marca);
+    border-color: var(--marca);
+    color: #fff;
+}
+
+.bg-primary {
+    background-color: var(--marca) !important;
+}
+
+.text-primary {
+    color: var(--marca-legible) !important;
+}
+
+.border-primary {
+    border-color: var(--marca) !important;
+}
+
+.link-primary {
+    color: var(--marca-legible) !important;
+}
+
+/* Los enlaces de contenido y los checkboxes marcados, que también salen azules de fábrica. */
+.card a:not(.btn):not(.nav-link):not(.list-group-item),
+.list-group-item a:not(.btn) {
+    color: var(--marca-legible);
+}
+
+.form-check-input:checked {
+    background-color: var(--marca);
+    border-color: var(--marca);
+}
+
+.form-check-input:focus,
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--marca);
+    box-shadow: 0 0 0 0.25rem var(--marca-tenue);
+}
+
+.nav-tabs .nav-link {
+    color: var(--marca-legible);
+}
+
+.page-item.active .page-link {
+    background-color: var(--marca);
+    border-color: var(--marca);
+}
+
+.page-link {
+    color: var(--marca-legible);
+}

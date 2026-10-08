@@ -26,8 +26,8 @@
 
 /* Encabezado de los días: azul del sistema en lugar del gris. */
 .calendario-panel .fc-col-header-cell {
-    background: #1b6ae0;
-    border-color: #1b6ae0;
+    background: var(--marca-legible);
+    border-color: var(--marca-legible);
     padding: 0.55rem 0;
 }
 
@@ -56,7 +56,7 @@
 
 /* Hoy, con el número en un círculo lleno. */
 .calendario-panel .fc-day-today .fc-daygrid-day-number {
-    background: #1b6ae0;
+    background: var(--marca-legible);
     color: #fff;
     border-radius: 999px;
     min-width: 1.75rem;
@@ -72,20 +72,20 @@
 
 /* Barra de botones: los mismos azules que el resto del sistema. */
 .calendario-panel .fc-button-primary {
-    background: #1b6ae0;
-    border-color: #1b6ae0;
+    background: var(--marca-legible);
+    border-color: var(--marca-legible);
     box-shadow: none;
 }
 
 .calendario-panel .fc-button-primary:hover {
-    background: #1b5fc4;
-    border-color: #1b5fc4;
+    background: var(--marca-oscuro);
+    border-color: var(--marca-oscuro);
 }
 
 .calendario-panel .fc-button-primary:disabled,
 .calendario-panel .fc-button-primary.fc-button-active {
-    background: #123a7a;
-    border-color: #123a7a;
+    background: var(--marca-mas-oscuro);
+    border-color: var(--marca-mas-oscuro);
 }
 
 .calendario-panel .fc-button-primary:focus,
@@ -122,7 +122,7 @@
    ajustarAlto() en el JS de la agenda. */
 
 .calendario-panel .fc-more-link {
-    color: #1b6ae0;
+    color: var(--marca-legible);
     font-weight: 600;
     text-decoration: none;
 }

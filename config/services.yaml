@@ -12,6 +12,11 @@ parameters:
     # genera http://, que Mercado Pago rechaza.
     app.url: '%env(APP_URL)%'
 
+    # Qué producto es esta instalación: 'instituto' (Team Builder Institute) o 'club'
+    # (Team Builder Clubes). Es el mismo código; cambia la paleta, la landing y el vocabulario.
+    app.vertical: '%env(default:vertical_por_defecto:APP_VERTICAL)%'
+    vertical_por_defecto: 'instituto'
+
     app.email_contacto: 'contacto@teambuilder.com.ar'
     app.whatsapp_contacto: '5493416043603'
     app.whatsapp_contacto_visible: '+54 9 341 604-3603'

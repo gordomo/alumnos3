@@ -6,10 +6,10 @@
  * con texto blanco no llega al contraste que pide AA.
  */
 :root {
-    --auth-primary: #2f7ef0;
-    --auth-primary-legible: #1b6ae0;
-    --auth-primary-dark: #1b5fc4;
-    --auth-primary-darker: #123a7a;
+    --auth-primary: var(--marca);
+    --auth-primary-legible: var(--marca-legible);
+    --auth-primary-dark: var(--marca-oscuro);
+    --auth-primary-darker: var(--marca-mas-oscuro);
     --auth-borde: #d7dee8;
     --auth-texto: #1f2d3d;
     --auth-texto-suave: #5a6672;
@@ -17,7 +17,7 @@
 
 html, body {
     /* El mismo degradé azul del fondo de la landing, sin animación: acá no hace falta. */
-    background: linear-gradient(160deg, #071c3f 0%, #123a7a 45%, #1b5fc4 100%) !important;
+    background: linear-gradient(160deg, var(--marca-profundo) 0%, var(--marca-mas-oscuro) 45%, var(--marca-oscuro) 100%) !important;
     min-height: 100%;
     margin: 0;
 }

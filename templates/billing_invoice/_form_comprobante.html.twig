@@ -38,9 +38,9 @@
 
     <button type="submit" class="btn btn-primary btn-sm">
         {% if metodo == 'cobrador' %}
-            <i class="bi bi-person-walking"></i> Pedir que pase un cobrador por <span data-total-texto>$0,00</span>
+            <i class="bi bi-person-walking"></i> Pedir que pase un cobrador por <span data-total-texto>${{ factura.totalAmount|number_format(2, ',', '.') }}</span>
         {% else %}
-            <i class="bi bi-send"></i> Avisar que pagué <span data-total-texto>$0,00</span>
+            <i class="bi bi-send"></i> Avisar que pagué <span data-total-texto>${{ factura.totalAmount|number_format(2, ',', '.') }}</span>
         {% endif %}
     </button>
 </form>

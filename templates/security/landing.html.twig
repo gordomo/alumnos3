@@ -5,12 +5,12 @@
     <style>
         :root {
             /* Azul de marca. Todo lo accionable y todo lo decorativo sale de estos tres. */
-            --primary-color: #2f7ef0;
+            --primary-color: var(--marca);
             /* El azul de marca sobre blanco da 3.92:1, abajo del 4.5 que pide AA. Este tono es
                el que se usa para texto y botones: 5.02:1, y a simple vista es el mismo azul. */
-            --primary-legible: #1b6ae0;
-            --primary-dark: #1b5fc4;
-            --primary-darker: #123a7a;
+            --primary-legible: var(--marca-legible);
+            --primary-dark: var(--marca-oscuro);
+            --primary-darker: var(--marca-mas-oscuro);
             --primary-soft: #eaf2fe;
 
             /* Bloques oscuros con texto blanco encima: necesitan contraste de verdad. */
@@ -42,7 +42,7 @@
             width: 100%;
             height: 100%;
             z-index: -2;
-            background: linear-gradient(-45deg, #071c3f, #123a7a, #1b5fc4, #2f7ef0);
+            background: linear-gradient(-45deg, var(--marca-profundo), var(--marca-mas-oscuro), var(--marca-oscuro), var(--marca));
             background-size: 400% 400%;
             animation: gradientShift 15s ease infinite;
         }
@@ -71,8 +71,8 @@
         }
 
         .landing-bg .floating-shape:nth-child(1) { width: 300px; height: 300px; background: #f59e0b; top: 10%; left: 5%; animation-delay: 0s; }
-        .landing-bg .floating-shape:nth-child(2) { width: 200px; height: 200px; background: #2f7ef0; top: 60%; right: 10%; animation-delay: -8s; }
-        .landing-bg .floating-shape:nth-child(3) { width: 250px; height: 250px; background: #123a7a; bottom: 20%; left: 15%; animation-delay: -15s; }
+        .landing-bg .floating-shape:nth-child(2) { width: 200px; height: 200px; background: var(--marca); top: 60%; right: 10%; animation-delay: -8s; }
+        .landing-bg .floating-shape:nth-child(3) { width: 250px; height: 250px; background: var(--marca-mas-oscuro); bottom: 20%; left: 15%; animation-delay: -15s; }
 
         @keyframes gradientShift {
             0%, 100% { background-position: 0% 50%; }
