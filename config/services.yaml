@@ -27,6 +27,15 @@ parameters:
         instituto: 'instituto'
         club: 'club'
 
+    # Los colores de marca, escritos literalmente, para los correos: los clientes de mail no
+    # entienden las variables CSS, así que ahí el valor tiene que viajar resuelto desde Twig.
+    app.colores_marca:
+        instituto: '#1b4f9c'
+        club: '#9a3412'
+    app.colores_boton:
+        instituto: '#1b6ae0'
+        club: '#c2410c'
+
     app.email_contacto: 'contacto@teambuilder.com.ar'
     app.whatsapp_contacto: '5493416043603'
     app.whatsapp_contacto_visible: '+54 9 341 604-3603'

@@ -1,13 +1,13 @@
 {% extends 'emails/base_email.html.twig' %}
 
-{% block title %}Tu instituto ya está listo{% endblock %}
+{% block title %}Tu {{ term('instituto') }} ya está listo{% endblock %}
 
 {% block content %}
     <h2>Hola {{ solicitud.nombreContacto }}</h2>
 
     <p>
-        Ya dejamos creado <strong>{{ solicitud.nombreInstituto }}</strong> en Team Builder. Para
-        empezar a usarlo solo falta que elijas tu contraseña:
+        Ya dejamos creado <strong>{{ solicitud.nombreInstituto }}</strong> en {{ productos[vertical]|default('Team Builder') }}.
+        Para empezar a usarlo solo falta que elijas tu contraseña:
     </p>
 
     <p style="text-align: center;">
@@ -26,7 +26,7 @@
     <p>
         <strong>Tu primer mes es sin cargo</strong>, completo: si entrás promediando el mes, la
         cortesía se extiende al siguiente para que lo aproveches entero. Después se factura por
-        mes cerrado, según la cantidad de alumn@s que tengas activ@s.
+        mes cerrado, según la cantidad de {{ term('alumnos') }} que tengas activ@s.
     </p>
 
     <p>

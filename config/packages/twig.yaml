@@ -8,6 +8,8 @@ twig:
         vertical: '%app.vertical%'
         productos: '%app.productos%'
         sustantivos: '%app.sustantivos%'
+        colores_marca: '%app.colores_marca%'
+        colores_boton: '%app.colores_boton%'
         email_contacto: '%app.email_contacto%'
         whatsapp_contacto: '%app.whatsapp_contacto%'
         whatsapp_contacto_visible: '%app.whatsapp_contacto_visible%'

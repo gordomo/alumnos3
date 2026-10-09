@@ -6,6 +6,7 @@ use App\Entity\SolicitudInstituto;
 use App\Repository\SolicitudInstitutoRepository;
 use App\Service\AltaInstitutoService;
 use App\Service\EmailService;
+use App\Service\Vocabulario;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -25,6 +26,10 @@ use Symfony\Component\Routing\Annotation\Route;
  */
 class SolicitudInstitutoController extends AbstractController
 {
+    public function __construct(private Vocabulario $vocabulario)
+    {
+    }
+
     /**
      * @Route("/", name="admin_solicitud_index", methods={"GET"})
      */
@@ -185,7 +190,7 @@ class SolicitudInstitutoController extends AbstractController
         try {
             $emailService->sendGeneralCommunication(
                 $solicitud->getEmail(),
-                'Tu instituto en Team Builder ya está listo',
+                sprintf('Tu %s en Team Builder ya está listo', $this->vocabulario->termino('instituto')),
                 'emails/invitacion_instituto.html.twig',
                 [
                     'solicitud' => $solicitud,
