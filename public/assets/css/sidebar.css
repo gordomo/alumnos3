@@ -225,6 +225,22 @@
 /* En el teléfono la barra arranca escondida, así que el botón es lo único que se ve: tiene que
    ser compacto y no taparle media pantalla al contenido. */
 @media (max-width: 767.98px) {
+    /* El botón flota sobre el contenido, así que lo último de la página quedaba tapado. */
+    #page-content-wrapper {
+        padding-bottom: 4rem;
+    }
+
+    /* Una tabla de cinco columnas no entra en 390px y quedaba cortada sin forma de ver el
+       resto. Así se desliza dentro de su tarjeta, sin que la página entera se mueva a lo
+       ancho. El nowrap evita que cada celda se parta en cuatro renglones. */
+    .card .table,
+    .table-responsive > .table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+    }
+
     #menu-toggle {
         width: 3rem;
         /* Los botones del sistema tienen un min-width de 100px que gana sobre el width. */
