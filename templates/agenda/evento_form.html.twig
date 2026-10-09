@@ -91,9 +91,9 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="curso" class="form-label fw-semibold">Curso</label>
+                            <label for="curso" class="form-label fw-semibold">{{ Term('curso') }}</label>
                             <select class="form-select" id="curso" name="curso">
-                                <option value="">Todo el instituto</option>
+                                <option value="">Todo {{ term('el_instituto') }}</option>
                                 {% for curso in cursos %}
                                     <option value="{{ curso.id }}"
                                         {% if evento.curso and evento.curso.id == curso.id %}selected{% endif %}>
@@ -102,7 +102,7 @@
                                 {% endfor %}
                             </select>
                             <div class="form-text">
-                                Si lo asociás a un curso, solo lo ven quienes cursan o dictan ese curso.
+                                Si lo asociás a {{ term('un_curso') }}, solo lo ven quienes cursan o dictan ese {{ term('curso') }}.
                             </div>
                         </div>
 

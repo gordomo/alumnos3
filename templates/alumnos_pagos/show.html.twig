@@ -17,7 +17,7 @@
         <div>{{ instituto.tel }}</div>
     </div>
     <div id="project">
-        <div><span>Alumno:</span> {{ alumnos_pago.alumno.nombreApellido }}</div>
+        <div><span>{{ Term('alumno_formal') }}:</span> {{ alumnos_pago.alumno.nombreApellido }}</div>
         <div><span>email:</span> <a href="mailto:john@example.com">{{ alumnos_pago.alumno.email }}</a></div>
         <div><span>Fecha:</span> {{ 'now' | date(app_date_format|default('d/m/Y')) }}</div>
         <div><span>Pago:</span> {{ alumnos_pago.fecha | date(app_date_format|default('d/m/Y')) }}</div>
@@ -27,7 +27,7 @@
     <table>
         <thead>
         <tr>
-            <th class="service">Curso</th>
+            <th class="service">{{ Term('curso') }}</th>
             <th class="desc">Descripción</th>
             <th>Precio</th>
             <th>TOTAL</th>

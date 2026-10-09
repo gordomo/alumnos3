@@ -7,7 +7,7 @@
         <h1>Pagos Históricos</h1>
 
         {% if pagos_por_alumno is empty %}
-            <p class="text-muted">No hay históricos de cursos registrados.</p>
+            <p class="text-muted">No hay históricos de {{ term('cursos') }} registrados.</p>
         {% endif %}
 
         {% for alumnoId, datos in pagos_por_alumno %}
@@ -20,7 +20,7 @@
                         <table class="table table-striped">
                             <thead>
                                 <tr>
-                                    <th>Curso</th>
+                                    <th>{{ Term('curso') }}</th>
                                     <th>Período</th>
                                     <th>Precio</th>
                                     <th>Meses Pagados</th>

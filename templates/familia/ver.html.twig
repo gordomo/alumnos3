@@ -55,7 +55,7 @@
                         {% endfor %}
                     </ul>
                     <p class="small text-muted mb-0">
-                        Para pagar o consultar, hablá con la administración del instituto.
+                        Para pagar o consultar, hablá con la administración {{ term('del_instituto') }}.
                     </p>
                 </div>
             </div>
@@ -69,7 +69,7 @@
                         <table class="table table-sm mb-0">
                             <thead>
                                 <tr>
-                                    <th>Curso</th>
+                                    <th>{{ Term('curso') }}</th>
                                     <th class="text-center">Presentes</th>
                                     <th class="text-center">Ausentes</th>
                                     <th class="text-center">%</th>
@@ -106,7 +106,7 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
                         <div>
-                            <div class="etiqueta">Curso</div>
+                            <div class="etiqueta">{{ Term('curso') }}</div>
                             <h2 class="h5 mb-0">{{ datos.curso.nombre }}</h2>
                         </div>
                         <div class="text-end">
@@ -165,7 +165,7 @@
         <p class="small text-muted mt-3">
             Esta página es solo para consultar y se abre con el enlace que te enviamos por email.
             No hace falta usuario ni contraseña. Si querés que dejemos de enviarlo o si el enlace
-            llegó a alguien que no debía, avisale al instituto y lo cambiamos.
+            llegó a alguien que no debía, avisale al {{ term('instituto') }} y lo cambiamos.
         </p>
     </div>
 </body>

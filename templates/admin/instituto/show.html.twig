@@ -227,7 +227,7 @@
                                                     {% if 'ROLE_ADMIN_INSTITUTO' in usuario.roles %}
                                                         <span class="badge bg-primary">Administrador</span>
                                                     {% elseif 'ROLE_PROFESOR' in usuario.roles %}
-                                                        <span class="badge bg-success">Profesor</span>
+                                                        <span class="badge bg-success">{{ Term('profesor') }}</span>
                                                     {% else %}
                                                         <span class="badge bg-secondary">Usuario</span>
                                                     {% endif %}
@@ -240,7 +240,7 @@
                         </div>
                     {% else %}
                         <p class="text-muted mb-0 text-center py-3">
-                            <i class="fas fa-info-circle"></i> No hay usuarios registrados para este instituto.
+                            <i class="fas fa-info-circle"></i> No hay usuarios registrados para este {{ term('instituto') }}.
                         </p>
                     {% endif %}
                 </div>

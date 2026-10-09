@@ -44,7 +44,7 @@
                             {% endif %}
                         </dd>
 
-                        <dt class="col-sm-4">Alumn@s estimad@s</dt>
+                        <dt class="col-sm-4">{{ Term('alumnos') }} estimad@s</dt>
                         <dd class="col-sm-8">{{ solicitud.alumnosEstimadosEtiqueta|default('No contestó') }}</dd>
 
                         <dt class="col-sm-4">Recibida</dt>
@@ -90,7 +90,7 @@
                     <div class="card-header bg-success text-white"><i class="bi bi-check-circle"></i> Confirmar</div>
                     <div class="card-body">
                         <p>
-                            Se crea el instituto <strong>{{ solicitud.nombreInstituto }}</strong> y le mandamos a
+                            Se crea {{ term('el_instituto') }} <strong>{{ solicitud.nombreInstituto }}</strong> y le mandamos a
                             <strong>{{ solicitud.email }}</strong> un enlace para que elija su contraseña y entre.
                             El enlace vale {{ diasInvitacion }} días y se puede reenviar.
                         </p>
@@ -126,7 +126,7 @@
                     <div class="card-body">
                         {% if solicitud.instituto %}
                             <p>
-                                El instituto está creado.
+                                El {{ term('instituto') }} está creado.
                                 <a href="{{ path('admin_instituto_edit', {'id': solicitud.instituto.id}) }}">Ver su ficha</a>.
                             </p>
                         {% endif %}

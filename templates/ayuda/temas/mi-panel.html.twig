@@ -3,8 +3,8 @@
 
 {% block contenido %}
 <p>
-    Como alumno tenés varias pantallas, todas con tu propia información y nada más:
-    <strong>Mi Dashboard</strong> con el resumen, <strong>Mis Cursos</strong> con lo que se dio en
+    Como {{ term('alumno_formal') }} tenés varias pantallas, todas con tu propia información y nada más:
+    <strong>Mi Dashboard</strong> con el resumen, <strong>Mis {{ Term('cursos') }}</strong> con lo que se dio en
     clase y los materiales, <strong>Mis Notas</strong>, <strong>Mis Asistencias</strong>,
     <strong>Mis Tareas</strong> y <strong>Mi Agenda</strong>.
 </p>
@@ -16,7 +16,7 @@
 </p>
 
 <ul>
-    <li><strong>Cursos activos</strong>: en cuántos cursos estás inscripto ahora.</li>
+    <li><strong>{{ Term('cursos') }} activos</strong>: en cuántos {{ term('cursos') }} estás inscripto ahora.</li>
     <li><strong>Asistencias (30 días)</strong>: cuántas clases se te registraron en el último mes.</li>
     <li><strong>Pagos (30 días)</strong>: cuántos pagos tuyos se registraron en el último mes.</li>
     <li><strong>Deudas pendientes</strong>: cuántas cuotas te figuran sin pagar.</li>
@@ -28,20 +28,20 @@
 
 <ul>
     <li>
-        <strong>Tus cursos</strong>, con sus horarios, así podés confirmar el día y la hora de
+        <strong>Tus {{ term('cursos') }}</strong>, con sus horarios, así podés confirmar el día y la hora de
         cada clase.
     </li>
     <li>
-        <strong>Tus asistencias recientes</strong>, con la fecha, el curso y si quedaste como
-        presente o ausente. Si ves una falta que no corresponde, avisale al profesor o a la
+        <strong>Tus asistencias recientes</strong>, con la fecha, {{ term('el_curso') }} y si quedaste como
+        presente o ausente. Si ves una falta que no corresponde, avisale al {{ term('profesor') }} o a la
         administración: se corrige del lado de ellos.
     </li>
     <li>
-        <strong>Tus pagos</strong>, con fecha, curso y monto. Es el comprobante de lo que ya
+        <strong>Tus pagos</strong>, con fecha, {{ term('curso') }} y monto. Es el comprobante de lo que ya
         abonaste según el sistema.
     </li>
     <li>
-        <strong>Tus deudas pendientes</strong>, con el curso y el mes de cada cuota.
+        <strong>Tus deudas pendientes</strong>, con {{ term('el_curso') }} y el mes de cada cuota.
     </li>
 </ul>
 
@@ -60,32 +60,32 @@
 {{ m.captura('alumno-notas.png', 'Mis Notas: evaluaciones y promedio por curso') }}
 
 <p>
-    Según cómo lo tenga configurado el instituto, la nota puede ser un número, un concepto
-    (Bueno, Muy bueno…) o las dos cosas. También se muestra tu <strong>promedio</strong> por curso.
+    Según cómo lo tenga configurado {{ term('el_instituto') }}, la nota puede ser un número, un concepto
+    (Bueno, Muy bueno…) o las dos cosas. También se muestra tu <strong>promedio</strong> por {{ term('curso') }}.
 </p>
 
 <p>
-    Una evaluación sin nota significa que el profesor todavía no la cargó, no que estés
+    Una evaluación sin nota significa que el {{ term('profesor') }} todavía no la cargó, no que estés
     desaprobado.
 </p>
 
 <p>
-    Esta pantalla es de <strong>solo lectura</strong>: las notas las carga el profesor. Si
-    encontrás algo que no coincide con lo que te devolvieron, hablalo con el profesor del curso.
+    Esta pantalla es de <strong>solo lectura</strong>: las notas las carga el {{ term('profesor') }}. Si
+    encontrás algo que no coincide con lo que te devolvieron, hablalo con el {{ term('profesor') }} {{ term('del_curso') }}.
 </p>
 
-<h2>Mis Cursos</h2>
+<h2>Mis {{ Term('cursos') }}</h2>
 
 <p>
-    Por cada curso, los <strong>materiales de consulta</strong> que dejó el profesor y el detalle
+    Por cada {{ term('curso') }}, los <strong>materiales de consulta</strong> que dejó el {{ term('profesor') }} y el detalle
     de <strong>qué se dio en cada clase</strong>. Es lo que hay que mirar cuando faltaste.
 </p>
 
 <h2>Mis Asistencias</h2>
 
 <p>
-    Tu porcentaje de asistencia en cada curso, el resumen mes por mes y la lista de clases una por
-    una, con los ausentes marcados. La toma el profesor en cada clase: si algo no coincide,
+    Tu porcentaje de asistencia en cada {{ term('curso') }}, el resumen mes por mes y la lista de clases una por
+    una, con los ausentes marcados. La toma el {{ term('profesor') }} en cada clase: si algo no coincide,
     hablalo con él.
 </p>
 
@@ -100,12 +100,12 @@
 {{ m.captura('alumno-tareas.png', 'Mis Tareas: qué se pidió y qué figura entregado') }}
 
 <p>
-    Arriba de cada curso está el total: cuántas entregaste de cuántas se pidieron, con el
+    Arriba de cada {{ term('curso') }} está el total: cuántas entregaste de cuántas se pidieron, con el
     porcentaje. Es el mismo número que aparece en tu libreta.
 </p>
 
 <p>
-    También es de solo lectura, y quien marca las entregas es el profesor. Si entregaste algo y
+    También es de solo lectura, y quien marca las entregas es el {{ term('profesor') }}. Si entregaste algo y
     figura como sin entregar, avisale.
 </p>
 {% endblock %}

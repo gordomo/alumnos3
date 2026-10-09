@@ -16,7 +16,7 @@
                         <th>ID</th>
                         <th>Email</th>
                         <th>Rol</th>
-                        <th>Instituto</th>
+                        <th>{{ Term('instituto') }}</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
@@ -36,7 +36,7 @@
                                 {% if user.instituto %}
                                     {{ user.instituto.nombre }}
                                 {% else %}
-                                    <span class="text-muted">Sin instituto</span>
+                                    <span class="text-muted">Sin {{ term('instituto') }}</span>
                                 {% endif %}
                             </td>
                             <td>

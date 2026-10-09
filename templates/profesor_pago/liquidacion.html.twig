@@ -9,7 +9,7 @@
 {% block body %}
 <div class="container-fluid px-4 mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0">Liquidación de Profesores</h4>
+        <h4 class="mb-0">Liquidación de {{ Term('profesores') }}</h4>
     </div>
 
     <div class="card shadow-sm mb-4">
@@ -61,14 +61,14 @@
         <div class="card-body">
     {% if liquidaciones is empty %}
         <div class="alert alert-info">
-            <i class="bi bi-info-circle"></i> No hay profesores registrados en el instituto.
+            <i class="bi bi-info-circle"></i> No hay {{ term('profesores') }} registrados en {{ term('el_instituto') }}.
         </div>
     {% else %}
         <div class="table-responsive">
             <table class="table table-hover table-striped">
                 <thead class="table-light">
                     <tr>
-                        <th>Profesor</th>
+                        <th>{{ Term('profesor') }}</th>
                         <th>Tipo de Pago</th>
                         <th class="text-end">Monto Calculado</th>
                         <th class="text-end">Pagado</th>
@@ -97,7 +97,7 @@
                                 {% set conReglaPropia = liq.detalle_calculo.cursos|default([])|filter(c => c.origen_regla|default('profesor') == 'curso')|length %}
                                 {% if conReglaPropia > 0 %}
                                     <br>
-                                    <small class="text-muted" title="Estos cursos se liquidan con su propia regla">
+                                    <small class="text-muted" title="Estos {{ term('cursos') }} se liquidan con su propia regla">
                                         {{ conReglaPropia }} curso(s) con regla propia
                                     </small>
                                 {% endif %}
@@ -147,8 +147,8 @@
                                         <i class="bi bi-eye"></i> Detalle
                                     </button>
                                     <a href="{{ path('app_profesor_pago_reglas', {'profesorId': profesor.id}) }}"
-                                       class="btn btn-sm btn-outline-secondary" title="Pago por curso">
-                                        <i class="bi bi-sliders"></i> Pago por curso
+                                       class="btn btn-sm btn-outline-secondary" title="Pago por {{ term('curso') }}">
+                                        <i class="bi bi-sliders"></i> Pago por {{ term('curso') }}
                                     </a>
                                 </div>
                             </td>

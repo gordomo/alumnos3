@@ -50,7 +50,7 @@
                                 <td>{{ alumno.celular }}</td>
                             </tr>
                             <tr>
-                                <th>Curso</th>
+                                <th>{{ Term('curso') }}</th>
                                 <td>
                                     {% for curso in alumno.curso %}
                                         {{ curso.nombre }}{% if not loop.last %}, {% endif %}
@@ -270,7 +270,7 @@
     {# Historial de Cursos #}
     <div class="card shadow mb-4">
         <div class="card-header py-3 bg-info text-white">
-            <h6 class="m-0 font-weight-bold"><i class="bi bi-clock-history"></i> Historial de Cursos</h6>
+            <h6 class="m-0 font-weight-bold"><i class="bi bi-clock-history"></i> Historial de {{ Term('cursos') }}</h6>
         </div>
         <div class="card-body">
             {% set historicos = alumno.cursosHistoricos|sort((a, b) => b.fechaAlta <=> a.fechaAlta) %}
@@ -279,9 +279,9 @@
                     <table class="table table-striped table-hover">
                         <thead>
                             <tr>
-                                <th>Curso</th>
+                                <th>{{ Term('curso') }}</th>
                                 <th>Precio Mensual</th>
-                                <th>Período del Curso</th>
+                                <th>Período del {{ Term('curso') }}</th>
                                 <th>Fecha de Inscripción</th>
                                 <th>Fecha de Baja</th>
                                 <th>Estado</th>
@@ -335,11 +335,11 @@
                 </div>
                 <div class="alert alert-info mt-3">
                     <i class="bi bi-info-circle"></i> 
-                    <strong>Nota:</strong> Este historial preserva los datos del curso al momento de la inscripción. 
-                    Si ves diferencias entre el precio/nombre original y el actual, es porque el curso fue modificado después de la inscripción.
+                    <strong>Nota:</strong> Este historial preserva los datos {{ term('del_curso') }} al momento de la inscripción. 
+                    Si ves diferencias entre el precio/nombre original y el actual, es porque {{ term('el_curso') }} fue modificado después de la inscripción.
                 </div>
             {% else %}
-                <p class="text-muted">El alumno no tiene historial de cursos registrado.</p>
+                <p class="text-muted">El {{ term('alumno_formal') }} no tiene historial de {{ term('cursos') }} registrado.</p>
             {% endif %}
         </div>
     </div>

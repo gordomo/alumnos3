@@ -35,8 +35,8 @@
                         <div class="alert alert-info mt-2 mb-0 py-2">
                             <small class="d-block">
                                 <i class="bi bi-info-circle"></i>
-                                Este curso tiene <strong>{{ precioDesfasado.inscriptos }}</strong>
-                                alumn@(s) inscript@(s). Al guardar, <strong>todas sus cuotas impagas
+                                Este {{ term('curso') }} tiene <strong>{{ precioDesfasado.inscriptos }}</strong>
+                                {{ term('alumno') }}(s) inscript@(s). Al guardar, <strong>todas sus cuotas impagas
                                 pasan a este precio</strong> —incluidas las atrasadas— con el recargo
                                 por mora recalculado.
                                 {% if precioDesfasado.alumnos > 0 and precioDesfasado.precioAnterior %}
@@ -60,7 +60,7 @@
                                     <i class="bi bi-megaphone"></i> Avisar a las familias antes de guardar
                                 </a>
                                 <small class="d-block text-muted mt-1">
-                                    Abre Comunicaciones en otra pestaña, con el aviso redactado y este curso ya
+                                    Abre Comunicaciones en otra pestaña, con el aviso redactado y {{ term('este_curso') }} ya
                                     elegido. Podés editarlo antes de enviarlo.
                                 </small>
                             {% endif %}
@@ -76,7 +76,7 @@
 <div class="card mb-4 shadow-sm">
     <div class="card-header" style="background-color: #e7f1ff; border-bottom: 2px solid #0d6efd;">
         <h4 class="mb-0 text-dark">
-            <i class="bi bi-calendar-event" style="color: #0d6efd;"></i> Fechas del curso
+            <i class="bi bi-calendar-event" style="color: #0d6efd;"></i> Fechas {{ term('del_curso') }}
         </h4>
     </div>
     <div class="card-body">
@@ -338,13 +338,13 @@ document.addEventListener('DOMContentLoaded', function() {
 <div class="card mb-4 shadow-sm">
     <div class="card-header" style="background-color: #d1e7dd; border-bottom: 2px solid #198754;">
         <h4 class="mb-0 text-dark">
-            <i class="bi bi-person-workspace" style="color: #198754;"></i> Profesores
+            <i class="bi bi-person-workspace" style="color: #198754;"></i> {{ Term('profesores') }}
         </h4>
     </div>
     <div class="card-body">
         <div class="mb-3">
-            <label for="{{ form.profesores.vars.id }}" class="form-label fw-semibold text-dark">Profesores</label>
-            <small class="text-muted d-block mb-2">Puede seleccionar múltiples profesores. Use Ctrl+Click (o Cmd+Click en Mac) para seleccionar varios.</small>
+            <label for="{{ form.profesores.vars.id }}" class="form-label fw-semibold text-dark">{{ Term('profesores') }}</label>
+            <small class="text-muted d-block mb-2">Puede seleccionar múltiples {{ term('profesores') }}. Use Ctrl+Click (o Cmd+Click en Mac) para seleccionar varios.</small>
             {{ form_widget(form.profesores, {'attr': {'class': 'form-control chosen-select'}}) }}
             {{ form_errors(form.profesores) }}
         </div>
@@ -353,12 +353,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
 {% if mostrar_confirmacion is defined and mostrar_confirmacion %}
     <div class="alert alert-warning mt-3">
-        <p><strong>Atención:</strong> Este curso ya ha comenzado y tiene registros de asistencia para los profesores actuales.</p>
-        <p>Si remueve algún profesor del curso, las asistencias registradas de ese profesor serán transferidas a otro profesor del curso.</p>
+        <p><strong>Atención:</strong> Este {{ term('curso') }} ya ha comenzado y tiene registros de asistencia para los {{ term('profesores') }} actuales.</p>
+        <p>Si remueve algún {{ term('profesor') }} {{ term('del_curso') }}, las asistencias registradas de ese {{ term('profesor') }} serán transferidas a otro {{ term('profesor') }} {{ term('del_curso') }}.</p>
         <div class="form-check mt-3">
             <input type="checkbox" class="form-check-input" id="confirmar_cambio_profesor" name="confirmar_cambio_profesor" value="1" required>
             <label class="form-check-label" for="confirmar_cambio_profesor">
-                Confirmo que deseo transferir las asistencias de los profesores removidos
+                Confirmo que deseo transferir las asistencias de los {{ term('profesores') }} removidos
             </label>
         </div>
     </div>
@@ -540,14 +540,14 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
             <div class="modal-body">
                 <div class="alert alert-warning">
-                    <strong>Se detectaron conflictos de horarios con otros cursos asignados a los profesores:</strong>
+                    <strong>Se detectaron conflictos de horarios con otros {{ term('cursos') }} asignados a los {{ term('profesores') }}:</strong>
                 </div>
                 
                 <div class="table-responsive">
                     <table class="table table-sm table-bordered">
                         <thead class="table-warning">
                             <tr>
-                                <th>Curso con Conflicto</th>
+                                <th>{{ Term('curso') }} con Conflicto</th>
                                 <th>Días</th>
                                 <th>Horario Existente</th>
                                 <th>Horario Nuevo</th>
@@ -569,7 +569,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="alert alert-danger">
                     <i class="bi bi-exclamation-triangle-fill me-2"></i>
                     <strong>¿Está seguro de que desea continuar?</strong><br>
-                    Los profesores asignados tendrán cursos con horarios solapados. Esto puede causar problemas en la gestión de asistencias y reportes.
+                    Los {{ term('profesores') }} asignados tendrán {{ term('cursos') }} con horarios solapados. Esto puede causar problemas en la gestión de asistencias y reportes.
                 </div>
             </div>
             <div class="modal-footer">

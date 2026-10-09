@@ -10,14 +10,14 @@
         </div>
         <div class="card-body">
             {% if cursos is empty %}
-                <p class="text-muted mb-0">No hay cursos disponibles para calificar.</p>
+                <p class="text-muted mb-0">No hay {{ term('cursos') }} disponibles para calificar.</p>
             {% else %}
-                <p class="text-muted">Elegí un curso para ver sus evaluaciones y cargar notas.</p>
+                <p class="text-muted">Elegí {{ term('un_curso') }} para ver sus evaluaciones y cargar notas.</p>
                 <div class="table-responsive">
                     <table class="table table-hover align-middle">
                         <thead>
                             <tr>
-                                <th>Curso</th>
+                                <th>{{ Term('curso') }}</th>
                                 <th>Período</th>
                                 <th class="text-center">Evaluaciones</th>
                                 <th class="text-center">Estado</th>

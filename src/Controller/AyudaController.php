@@ -22,6 +22,10 @@ use Symfony\Component\Routing\Annotation\Route;
  */
 class AyudaController extends AbstractController
 {
+    public function __construct(private \App\Service\Vocabulario $vocabulario)
+    {
+    }
+
     /**
      * Registro de temas. El orden es el del índice.
      *
@@ -35,39 +39,39 @@ class AyudaController extends AbstractController
             'roles' => ['ROLE_ADMIN_INSTITUTO'],
         ],
         'configuracion' => [
-            'titulo' => 'Configuración del instituto',
+            'titulo' => 'Configuración %del_instituto%',
             'icono' => 'bi-gear',
-            'resumen' => 'Datos del instituto, vencimientos e intereses, descuentos, métodos de pago y criterios de aprobación.',
+            'resumen' => 'Datos %del_instituto%, vencimientos e intereses, descuentos, métodos de pago y criterios de aprobación.',
             'roles' => ['ROLE_ADMIN_INSTITUTO'],
         ],
         'agenda' => [
             'titulo' => 'Agenda',
             'icono' => 'bi-calendar3',
-            'resumen' => 'El calendario con las clases, las evaluaciones, las entregas, los vencimientos y los eventos del instituto.',
+            'resumen' => 'El calendario con %los_cursos%, las evaluaciones, las entregas, los vencimientos y los eventos %del_instituto%.',
             'roles' => ['ROLE_ADMIN_INSTITUTO', 'ROLE_PROFESOR', 'ROLE_ALUMNO'],
         ],
         'cursos' => [
-            'titulo' => 'Cursos',
+            'titulo' => '%Cursos%',
             'icono' => 'bi-journal-bookmark',
-            'resumen' => 'Crear un curso, asignarle horarios y profesores, y cerrarlo al final del período.',
+            'resumen' => 'Crear %un_curso%, asignarle horarios y %profesores%, y cerrarlo al final del período.',
             'roles' => ['ROLE_ADMIN_INSTITUTO'],
         ],
         'diario' => [
-            'titulo' => 'Clases y materiales',
+            'titulo' => '%Clases% y materiales',
             'icono' => 'bi-journal-text',
-            'resumen' => 'Anotar qué se dio en cada clase y dejar los materiales de consulta del curso.',
+            'resumen' => 'Anotar qué se dio en cada %clase% y dejar los materiales de consulta %del_curso%.',
             'roles' => ['ROLE_ADMIN_INSTITUTO', 'ROLE_PROFESOR'],
         ],
         'alumnos' => [
-            'titulo' => 'Alumn@s e inscripciones',
+            'titulo' => '%Alumnos% e inscripciones',
             'icono' => 'bi-people',
-            'resumen' => 'Dar de alta un alumno, inscribirlo a cursos y entender desde cuándo se le genera deuda.',
+            'resumen' => 'Dar de alta %un_alumno%, inscribirlo a %cursos% y entender desde cuándo se le genera deuda.',
             'roles' => ['ROLE_ADMIN_INSTITUTO'],
         ],
         'profesores' => [
-            'titulo' => 'Profesores y su liquidación',
+            'titulo' => '%Profesores% y su liquidación',
             'icono' => 'bi-person-workspace',
-            'resumen' => 'Cómo se le paga a cada profesor: por hora, fijo, porcentaje o distinto en cada curso.',
+            'resumen' => 'Cómo se le paga a cada %profesor%: por hora, fijo, porcentaje o distinto en cada %curso%.',
             'roles' => ['ROLE_ADMIN_INSTITUTO'],
         ],
         'pagos' => [
@@ -79,7 +83,7 @@ class AyudaController extends AbstractController
         'comunicaciones' => [
             'titulo' => 'Comunicaciones',
             'icono' => 'bi-megaphone',
-            'resumen' => 'Mandar un aviso por email a todo el instituto, a un curso o a los que deben.',
+            'resumen' => 'Mandar un aviso por email a todo %el_instituto%, a %un_curso% o a los que deben.',
             'roles' => ['ROLE_ADMIN_INSTITUTO'],
         ],
         'calificaciones' => [
@@ -91,17 +95,17 @@ class AyudaController extends AbstractController
         'tareas' => [
             'titulo' => 'Tareas',
             'icono' => 'bi-journal-text',
-            'resumen' => 'Pedir tareas a un curso, marcar quién las entregó y verlo en la libreta.',
+            'resumen' => 'Pedir tareas a %un_curso%, marcar quién las entregó y verlo en la libreta.',
             'roles' => ['ROLE_ADMIN_INSTITUTO', 'ROLE_PROFESOR'],
         ],
         'asistencias' => [
             'titulo' => 'Asistencias',
             'icono' => 'bi-clipboard-check',
-            'resumen' => 'Tomar asistencia de una clase, corregirla después y ver los informes.',
+            'resumen' => 'Tomar asistencia de %la_clase%, corregirla después y ver los informes.',
             'roles' => ['ROLE_ADMIN_INSTITUTO', 'ROLE_PROFESOR'],
         ],
         'suscripcion' => [
-            'titulo' => 'Suscripción del instituto',
+            'titulo' => 'Suscripción %del_instituto%',
             'icono' => 'bi-patch-check',
             'resumen' => 'Cuánto se paga por el uso del sistema, cómo pagarlo y qué pasa si una factura queda impaga.',
             'roles' => ['ROLE_ADMIN_INSTITUTO'],
@@ -115,7 +119,7 @@ class AyudaController extends AbstractController
         'mi-panel' => [
             'titulo' => 'Mi panel',
             'icono' => 'bi-person-circle',
-            'resumen' => 'Dónde ver tus cursos, tus asistencias, tus pagos y tus notas.',
+            'resumen' => 'Dónde ver tus %cursos%, tus asistencias, tus pagos y tus notas.',
             'roles' => ['ROLE_ALUMNO'],
         ],
     ];
@@ -160,6 +164,8 @@ class AyudaController extends AbstractController
         foreach (self::TEMAS as $slug => $datos) {
             foreach ($datos['roles'] as $rol) {
                 if ($this->isGranted($rol)) {
+                    $datos['titulo'] = $this->conVocabulario($datos['titulo']);
+                    $datos['resumen'] = $this->conVocabulario($datos['resumen']);
                     $visibles[$slug] = $datos;
                     break;
                 }
@@ -167,5 +173,23 @@ class AyudaController extends AbstractController
         }
 
         return $visibles;
+    }
+
+    /**
+     * Resuelve las marcas %clave% del índice con el glosario del producto.
+     *
+     * Los títulos y resúmenes de la ayuda viven en PHP y no en plantillas, así que no pueden
+     * usar term(). Con mayúscula inicial en la clave se pide la palabra capitalizada, que es lo
+     * que necesitan los títulos.
+     */
+    private function conVocabulario(string $texto): string
+    {
+        return preg_replace_callback('/%([A-Za-z_]+)%/', function (array $coincidencia) {
+            $clave = $coincidencia[1];
+
+            return ctype_upper($clave[0])
+                ? $this->vocabulario->terminoMayuscula(lcfirst($clave))
+                : $this->vocabulario->termino($clave);
+        }, $texto);
     }
 }

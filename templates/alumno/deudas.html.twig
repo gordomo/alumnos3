@@ -8,7 +8,7 @@
         <div class="col-md-12">
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ path('app_alumno_index') }}">Alumn@s</a></li>
+                    <li class="breadcrumb-item"><a href="{{ path('app_alumno_index') }}">{{ Term('alumnos') }}</a></li>
                     <li class="breadcrumb-item"><a href="{{ path('app_alumno_show', {'id': alumno.id}) }}">{{ alumno.nombre }} {{ alumno.apellido }}</a></li>
                     <li class="breadcrumb-item active" aria-current="page">Gestión de Deudas</li>
                 </ol>
@@ -24,7 +24,7 @@
                 <div class="card-body">
                     {% if deudasPorCurso|length > 0 %}
                         <div class="alert alert-info">
-                            <p><i class="bi bi-info-circle"></i> Las deudas se calculan automáticamente basándose en los cursos activos del alumno y los pagos realizados. Para cancelar una deuda, registre un pago que la cubra completamente.</p>
+                            <p><i class="bi bi-info-circle"></i> Las deudas se calculan automáticamente basándose en {{ term('los_cursos') }} activos del {{ term('alumno_formal') }} y los pagos realizados. Para cancelar una deuda, registre un pago que la cubra completamente.</p>
                         </div>
 
                         {% if saldoFavorTotal is defined and saldoFavorTotal > 0 %}
@@ -86,7 +86,7 @@
                         {% endif %}
 
                         <div class="alert alert-secondary">
-                            <h5><i class="bi bi-book"></i> Cursos del alumno</h5>
+                            <h5><i class="bi bi-book"></i> {{ Term('cursos') }} del {{ term('alumno_formal') }}</h5>
                             {% for cursoId, datos in deudasPorCurso %}
                                 {% set historico = datos.historico %}
                                 {% set curso = datos.curso %}
@@ -94,18 +94,18 @@
                                 <div class="mb-3">
                                     <strong>{{ curso.nombre }}</strong>
                                     {% if not cursoActivo %}
-                                        <span class="badge bg-secondary">Curso inactivo</span>
+                                        <span class="badge bg-secondary">{{ Term('curso') }} inactivo</span>
                                     {% endif %}
                                     {% if historico %}
                                     <ul class="mb-0">
                                         <li><strong>Fecha de inscripción:</strong> {{ historico.fechaAlta|date('d/m/Y') }}</li>
                                         <li><strong>Precio mensual:</strong> ${{ historico.precioMensual|number_format(2, ',', '.') }}</li>
-                                        <li><strong>Período del curso:</strong> {{ historico.fechaInicioPeriodo|date('d/m/Y') }} - {{ historico.fechaFinPeriodo ? historico.fechaFinPeriodo|date('d/m/Y') : 'Sin fecha de fin' }}</li>
+                                        <li><strong>Período {{ term('del_curso') }}:</strong> {{ historico.fechaInicioPeriodo|date('d/m/Y') }} - {{ historico.fechaFinPeriodo ? historico.fechaFinPeriodo|date('d/m/Y') : 'Sin fecha de fin' }}</li>
                                         <li>
                                             <strong>Generación de deudas:</strong> 
                                             {% set modo = historico.modoGeneracionDeuda %}
                                             {% if modo == 'inicio_curso' %}
-                                                <span class="badge bg-primary">Desde el inicio del curso</span>
+                                                <span class="badge bg-primary">Desde el inicio {{ term('del_curso') }}</span>
                                                 <br><small class="text-muted">
                                                     Primera deuda: {{ historico.fechaInicioPeriodo|mes_es }}
                                                     {% if historico.fechaAlta > historico.fechaInicioPeriodo %}
@@ -127,7 +127,7 @@
                                         </li>
                                     </ul>
                                     {% else %}
-                                        <p class="text-muted mb-0"><small>Deudas pendientes de un curso donde el alumno ya no está inscrito.</small></p>
+                                        <p class="text-muted mb-0"><small>Deudas pendientes de {{ term('un_curso') }} donde el {{ term('alumno_formal') }} ya no está inscrito.</small></p>
                                     {% endif %}
                                 </div>
                             {% endfor %}
@@ -152,7 +152,7 @@
                                 </ul>
                                 <p class="mb-0"><strong>Nota:</strong> Las deudas del mes actual se consideran vencidas a partir del día {{ vencimientos_sorted|first.diaVencimiento }} del mes.</p>
                             {% else %}
-                                <p>No hay vencimientos configurados para este instituto. Se considera el día 5 de cada mes como fecha de vencimiento por defecto.</p>
+                                <p>No hay vencimientos configurados para este {{ term('instituto') }}. Se considera el día 5 de cada mes como fecha de vencimiento por defecto.</p>
                             {% endif %}
                         </div>
                         
@@ -168,7 +168,7 @@
                                                     {{ estado.vencidas }} cuota{{ estado.vencidas > 1 ? 's' : '' }} vencida{{ estado.vencidas > 1 ? 's' : '' }}
                                                 </span>
                                             {% else %}
-                                                <span class="badge bg-success ms-2"><i class="bi bi-check-circle-fill"></i> Curso al día</span>
+                                                <span class="badge bg-success ms-2"><i class="bi bi-check-circle-fill"></i> {{ Term('curso') }} al día</span>
                                                 {% if estado.pendientes > 0 %}
                                                     <span class="badge bg-primary ms-2">
                                                         {{ estado.pendientes }} cuota{{ estado.pendientes > 1 ? 's' : '' }} por vencer
@@ -176,7 +176,7 @@
                                                 {% endif %}
                                             {% endif %}
                                             {% if not datos.cursoActivo|default(true) %}
-                                                <span class="badge bg-secondary ms-2">Curso inactivo</span>
+                                                <span class="badge bg-secondary ms-2">{{ Term('curso') }} inactivo</span>
                                             {% endif %}
                                         </button>
                                     </h2>
@@ -185,14 +185,14 @@
                                             {% if datos.deudas|length == 0 %}
                                                 <div class="alert alert-success mb-0">
                                                     <i class="bi bi-check-circle-fill"></i>
-                                                    <strong>Curso al día.</strong> El alumno no tiene cuotas pendientes de este curso hasta el mes actual.
+                                                    <strong>{{ Term('curso') }} al día.</strong> El {{ term('alumno_formal') }} no tiene cuotas pendientes de {{ term('este_curso') }} hasta el mes actual.
                                                 </div>
                                             {% else %}
                                             <div class="d-flex justify-content-between align-items-center mb-3">
                                                 <div>
                                                     {% if not datos.cursoActivo|default(true) %}
                                                         <div class="alert alert-warning mb-0 py-2">
-                                                            <small><i class="bi bi-exclamation-triangle"></i> El alumno ya no está inscrito en este curso, pero tiene deudas pendientes.</small>
+                                                            <small><i class="bi bi-exclamation-triangle"></i> El {{ term('alumno_formal') }} ya no está inscrito en {{ term('este_curso') }}, pero tiene deudas pendientes.</small>
                                                         </div>
                                                     {% endif %}
                                                 </div>
@@ -281,7 +281,7 @@
                         </div>
                     {% else %}
                         <div class="alert alert-success">
-                            <p><i class="bi bi-check-circle"></i> El alumno no tiene deudas pendientes.</p>
+                            <p><i class="bi bi-check-circle"></i> El {{ term('alumno_formal') }} no tiene deudas pendientes.</p>
                         </div>
                     {% endif %}
                 </div>

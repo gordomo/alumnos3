@@ -17,20 +17,20 @@
                         <p class="card-text">
                             <strong>Dirección:</strong> {{ instituto.dir }}<br>
                             <strong>Teléfono:</strong> {{ instituto.tel }}<br>
-                            <strong>Cursos Activos:</strong> {{ instituto.cursos|length }}<br>
-                            <strong>Profesores:</strong> {{ instituto.profesores|length }}<br>
-                            <strong>Alumn@s:</strong> {{ instituto.alumnos|length }}
+                            <strong>{{ Term('cursos') }} Activos:</strong> {{ instituto.cursos|length }}<br>
+                            <strong>{{ Term('profesores') }}:</strong> {{ instituto.profesores|length }}<br>
+                            <strong>{{ Term('alumnos') }}:</strong> {{ instituto.alumnos|length }}
                         </p>
                     </div>
                     <div class="card-footer d-flex justify-content-between">
                         <a href="{{ path('app_curso_index', {'instituto': instituto.id}) }}" class="btn btn-primary">
-                            <i class="fas fa-book"></i> Gestionar Cursos
+                            <i class="fas fa-book"></i> Gestionar {{ Term('cursos') }}
                         </a>
                         <a href="{{ path('app_profesor_index', {'instituto': instituto.id}) }}" class="btn btn-info">
-                            <i class="fas fa-chalkboard-teacher"></i> Gestionar Profesores
+                            <i class="fas fa-chalkboard-teacher"></i> Gestionar {{ Term('profesores') }}
                         </a>
                         <a href="{{ path('app_alumno_index', {'instituto': instituto.id}) }}" class="btn btn-success">
-                            <i class="fas fa-user-graduate"></i> Gestionar Alumn@s
+                            <i class="fas fa-user-graduate"></i> Gestionar {{ Term('alumnos') }}
                         </a>
                     </div>
                 </div>
@@ -38,7 +38,7 @@
         {% else %}
             <div class="col-12">
                 <div class="alert alert-info">
-                    No hay institutos disponibles.
+                    No hay {{ term('instituto_plural') }} disponibles.
                 </div>
             </div>
         {% endfor %}

@@ -76,13 +76,13 @@
             <div class="modal-body">
                 {% if sePuedeEliminar %}
                     <p class="mb-2">
-                        Se borra junto con el alumno y <strong>no se puede recuperar</strong>.
+                        Se borra junto con el {{ term('alumno_formal') }} y <strong>no se puede recuperar</strong>.
                     </p>
                     {% if detalle is not empty %}
                         <p class="mb-3">Tiene cargado: {{ detalle|join(' · ') }}.</p>
                     {% endif %}
                     <p class="small text-muted mb-0">
-                        Si se fue del instituto, conviene <strong>darlo de baja</strong>: sale de los
+                        Si se fue {{ term('del_instituto') }}, conviene <strong>darlo de baja</strong>: sale de los
                         listados igual, pero se conserva su historial.
                     </p>
                 {% else %}

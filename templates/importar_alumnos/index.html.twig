@@ -8,7 +8,7 @@
 <div class="container-fluid px-4 mt-3" style="padding-bottom: 3rem;">
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{{ path('app_alumno_index') }}">Alumn@s</a></li>
+            <li class="breadcrumb-item"><a href="{{ path('app_alumno_index') }}">{{ Term('alumnos') }}</a></li>
             <li class="breadcrumb-item active">Importar</li>
         </ol>
     </nav>
@@ -22,7 +22,7 @@
                 <div class="card-body">
                     <ol class="mb-3">
                         <li class="mb-2">
-                            <strong>Descargá la plantilla</strong> y cargá ahí a tus alumn@s. Trae los
+                            <strong>Descargá la plantilla</strong> y cargá ahí a tus {{ term('alumnos') }}. Trae los
                             encabezados que el sistema espera y una hoja con las instrucciones.
                             <div class="mt-2">
                                 {# data-no-loading: es una descarga, no una navegación. Sin esto el
@@ -100,16 +100,16 @@
                 <div class="card-body small text-muted">
                     <p>
                         El <strong>DNI no puede repetirse</strong>, ni dentro de la planilla ni contra
-                        los alumn@s que ya están cargados. La fila que choque se rechaza y te decimos
+                        los {{ term('alumnos') }} que ya están cargados. La fila que choque se rechaza y te decimos
                         cuál.
                     </p>
                     <p>
-                        Si pones un <strong>curso</strong>, el nombre tiene que coincidir con el del
-                        sistema. Si no coincide, el alumn@ se importa igual pero sin inscribirlo, y te
+                        Si pones un <strong>{{ term('curso') }}</strong>, el nombre tiene que coincidir con el del
+                        sistema. Si no coincide, {{ term('el_alumno') }} se importa igual pero sin inscribirlo, y te
                         avisamos.
                     </p>
                     <p class="mb-0">
-                        Cuando el curso coincide, el alumn@ queda <strong>inscripto de verdad</strong>:
+                        Cuando {{ term('el_curso') }} coincide, {{ term('el_alumno') }} queda <strong>inscripto de verdad</strong>:
                         se le empiezan a generar las cuotas desde la fecha de importación.
                     </p>
                 </div>

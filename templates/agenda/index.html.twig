@@ -54,8 +54,8 @@
         <p class="small text-muted mb-2">
             <i class="bi bi-hand-index"></i>
             Clic en un día (o arrastrá sobre varios) para agendar algo ahí. Lo que agregues se puede
-            mover arrastrándolo. Los horarios de los cursos están en
-            <a href="{{ path('app_curso_calendario') }}">Cursos → Calendario</a>; acá se prenden con
+            mover arrastrándolo. Los horarios de {{ term('los_cursos') }} están en
+            <a href="{{ path('app_curso_calendario') }}">{{ Term('cursos') }} → Calendario</a>; acá se prenden con
             el tilde de <em>Clases</em> si los querés ver encima.
         </p>
     {% endif %}
@@ -73,7 +73,7 @@
             <div class="modal-body">
                 <p class="mb-1"><strong>Cuándo:</strong> <span id="modalEventoCuando">-</span></p>
                 <p class="mb-1"><strong>Qué es:</strong> <span id="modalEventoFuente">-</span></p>
-                <p class="mb-1" id="modalEventoCursoFila"><strong>Curso:</strong> <span id="modalEventoCurso">-</span></p>
+                <p class="mb-1" id="modalEventoCursoFila"><strong>{{ Term('curso') }}:</strong> <span id="modalEventoCurso">-</span></p>
                 <p class="mb-0" id="modalEventoDetalleFila"><span id="modalEventoDetalle"></span></p>
             </div>
             <div class="modal-footer">

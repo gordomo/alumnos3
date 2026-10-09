@@ -87,13 +87,13 @@
     {% if inscripciones is not empty %}
         <div class="card">
             <div class="card-header bg-light">
-                <strong><i class="bi bi-people"></i> Resumen por alumn@</strong>
+                <strong><i class="bi bi-people"></i> Resumen por {{ term('alumno') }}</strong>
             </div>
             <div class="table-responsive">
                 <table class="table table-sm align-middle mb-0">
                     <thead>
                         <tr>
-                            <th>Alumn@</th>
+                            <th>{{ Term('alumno') }}</th>
                             <th class="text-center">Entregadas</th>
                             <th class="text-center">Pedidas</th>
                             <th class="text-center">%</th>

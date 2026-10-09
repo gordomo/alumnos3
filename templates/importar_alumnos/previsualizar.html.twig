@@ -8,7 +8,7 @@
 <div class="container-fluid px-4 mt-3" style="padding-bottom: 3rem;">
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{{ path('app_alumno_index') }}">Alumn@s</a></li>
+            <li class="breadcrumb-item"><a href="{{ path('app_alumno_index') }}">{{ Term('alumnos') }}</a></li>
             <li class="breadcrumb-item"><a href="{{ path('app_importar_alumnos') }}">Importar</a></li>
             <li class="breadcrumb-item active">Revisar</li>
         </ol>
@@ -70,10 +70,10 @@
                 <thead class="table-light">
                     <tr>
                         <th>Fila</th>
-                        <th>Alumn@</th>
+                        <th>{{ Term('alumno') }}</th>
                         <th>DNI</th>
                         <th>Email</th>
-                        <th>Curso</th>
+                        <th>{{ Term('curso') }}</th>
                         <th>Qué va a pasar</th>
                     </tr>
                 </thead>
@@ -90,7 +90,7 @@
                             {% if fila.datos.curso|default('') %}
                                 {{ fila.datos.curso }}
                                 {% if fila.datos.curso_encontrado %}
-                                    <i class="bi bi-check-circle-fill text-success" title="El curso existe"></i>
+                                    <i class="bi bi-check-circle-fill text-success" title="El {{ term('curso') }} existe"></i>
                                 {% endif %}
                             {% else %}
                                 <span class="text-muted">—</span>

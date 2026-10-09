@@ -303,8 +303,8 @@
                     </a>
                 </li>
                 <li class="nav-item" >
-                    <select class="form-select" aria-label="Cursos" name="cursoSelected" id="filtroCursos">
-                        <option value="0">Filtrar por Cursos</option>
+                    <select class="form-select" aria-label="{{ Term('cursos') }}" name="cursoSelected" id="filtroCursos">
+                        <option value="0">Filtrar por {{ Term('cursos') }}</option>
                         {% for curso in cursos %}
                             <option {% if cursoSelected == curso.id %} selected {% endif %} value="{{ curso.id }}">{{ curso.nombre }}</option>
                         {% endfor %}
@@ -314,7 +314,7 @@
         </div>
         {% if alumnosQueNoGuardadamos | length > 0 %}
             <div class="col-12 alert alumno-alert-inline" role="alert">
-                <h5>Alumn@s que no pudimos agregar: </h5>
+                <h5>{{ Term('alumnos') }} que no pudimos agregar: </h5>
                 {% for alumnoQueNoGuardadamos in alumnosQueNoGuardadamos %}
                     Nombre: {{ alumnoQueNoGuardadamos.nombre }} {{ alumnoQueNoGuardadamos.apellido }} - Email: {{ alumnoQueNoGuardadamos.email }} - DNI: {{ alumnoQueNoGuardadamos.dni }}<br>
                 {% endfor %}
@@ -344,7 +344,7 @@
                 </th>
                 <th>Celular</th>
                 <th>Email</th>
-                <th>Cursos</th>
+                <th>{{ Term('cursos') }}</th>
                 <th>Acciones</th>
             </tr>
         </thead>
@@ -359,7 +359,7 @@
                     {% for curso in alumno.curso %}
                         <span class="curso-chip">{{ curso.nombre }}</span>
                     {% else %}
-                        <span class="text-muted">Sin cursos</span>
+                        <span class="text-muted">Sin {{ term('cursos') }}</span>
                     {% endfor %}
                 </td>
                 <td>
@@ -374,7 +374,7 @@
                            inscribir a nada. Cobrar, en cambio, tiene que seguir estando: la deuda
                            vieja no desaparece con la baja. #}
                         {% if (alumno.activo) %}
-                            <button type="button" class="btn btn-sm btn-outline-info btn-action-icon" title="Gestionar Cursos" data-toggle="tooltip" data-placement="top" data-bs-toggle="modal" data-bs-target="#cursosModal{{ alumno.id }}">
+                            <button type="button" class="btn btn-sm btn-outline-info btn-action-icon" title="Gestionar {{ Term('cursos') }}" data-toggle="tooltip" data-placement="top" data-bs-toggle="modal" data-bs-target="#cursosModal{{ alumno.id }}">
                                 <i class="bi bi-book"></i>
                             </button>
 
@@ -418,7 +418,7 @@
 
 <div class="alumno-floating-actions">
     <a href="{{ path('app_alumno_new') }}" class="alumno-floating-btn">
-        <i class="bi bi-plus-circle"></i> Nuevo Alumno
+        <i class="bi bi-plus-circle"></i> Nuevo {{ Term('alumno_formal') }}
     </a>
 </div>
 {% endblock %}

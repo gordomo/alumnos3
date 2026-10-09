@@ -14,7 +14,7 @@
                 </div>
                 <div class="card-body">
                     <p class="text-muted">
-                        Un aviso por email a varios alumn@s de una vez: un cambio de precio, un cambio
+                        Un aviso por email a varios {{ term('alumnos') }} de una vez: un cambio de precio, un cambio
                         de horario, una clase que no se da. Cada envío queda registrado en el
                         <a href="{{ path('app_email_log_index') }}">Historial de Emails</a>.
                     </p>
@@ -29,7 +29,7 @@
                                 <input class="form-check-input" type="radio" name="destino" id="destino_instituto"
                                        value="instituto" {% if destinoPrevio not in ['curso', 'deudores', 'seleccion'] %}checked{% endif %}>
                                 <label class="form-check-label" for="destino_instituto">
-                                    Todos los alumn@s del instituto
+                                    Todos los {{ term('alumnos') }} {{ term('del_instituto') }}
                                     <span class="badge bg-secondary">{{ conteos.instituto }}</span>
                                 </label>
                             </div>
@@ -37,12 +37,12 @@
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="destino" id="destino_curso"
                                        value="curso" {% if destinoPrevio == 'curso' %}checked{% endif %}>
-                                <label class="form-check-label" for="destino_curso">Los alumn@s de un curso</label>
+                                <label class="form-check-label" for="destino_curso">Los {{ term('alumnos') }} de {{ term('un_curso') }}</label>
                             </div>
 
                             <div class="ms-4 mb-2">
                                 <select class="form-select" name="curso" id="curso_select">
-                                    <option value="">Elegí un curso…</option>
+                                    <option value="">Elegí {{ term('un_curso') }}…</option>
                                     {% for curso in cursos %}
                                         <option value="{{ curso.id }}" {% if cursoPrevio == curso.id %}selected{% endif %}>
                                             {{ curso.nombre }}
@@ -55,7 +55,7 @@
                                 <input class="form-check-input" type="radio" name="destino" id="destino_deudores"
                                        value="deudores" {% if destinoPrevio == 'deudores' %}checked{% endif %}>
                                 <label class="form-check-label" for="destino_deudores">
-                                    Los alumn@s con cuotas vencidas
+                                    Los {{ term('alumnos') }} con cuotas vencidas
                                     <span class="badge bg-warning text-dark">{{ conteos.deudores }}</span>
                                 </label>
                             </div>
@@ -64,7 +64,7 @@
                                 <input class="form-check-input" type="radio" name="destino" id="destino_seleccion"
                                        value="seleccion" {% if destinoPrevio == 'seleccion' %}checked{% endif %}>
                                 <label class="form-check-label" for="destino_seleccion">
-                                    Alumn@s elegid@s de a uno
+                                    {{ Term('alumnos') }} elegid@s de a uno
                                     <span class="badge bg-primary" id="contador_seleccion">0</span>
                                 </label>
                             </div>
@@ -98,16 +98,16 @@
                                             </span>
                                         </label>
                                     {% else %}
-                                        <p class="text-muted small m-2">No hay alumn@s activos.</p>
+                                        <p class="text-muted small m-2">No hay {{ term('alumnos') }} activos.</p>
                                     {% endfor %}
                                 </div>
                                 <small class="form-text text-muted" id="sin_resultados" style="display: none;">
-                                    Ningún alumn@ coincide con la búsqueda.
+                                    Ningún {{ term('alumno') }} coincide con la búsqueda.
                                 </small>
                             </div>
 
                             <small class="form-text text-muted">
-                                Solo se les manda a los alumn@s activos. A los dados de baja no.
+                                Solo se les manda a los {{ term('alumnos') }} activos. A los dados de baja no.
                             </small>
                         </div>
 
@@ -123,7 +123,7 @@
                                       placeholder="Escribí el aviso como se lo querés mandar a las familias.">{{ mensajePrevio }}</textarea>
                             <small class="form-text text-muted">
                                 Texto común, sin formato. Los saltos de línea se respetan. El email sale con
-                                el nombre y el logo del instituto, y arranca saludando a cada alumn@ por su nombre.
+                                el nombre y el logo {{ term('del_instituto') }}, y arranca saludando a cada {{ term('alumno') }} por su nombre.
                             </small>
                         </div>
 
@@ -131,9 +131,9 @@
                             <i class="bi bi-info-circle"></i>
                             Según la configuración del instituto, ahora mismo cada aviso va
                             {% if notificarA == 'ambos' %}
-                                <strong>al alumn@ y a su tutor</strong>.
+                                <strong>al {{ term('alumno') }} y a su tutor</strong>.
                             {% else %}
-                                <strong>solo al alumn@</strong>.
+                                <strong>solo al {{ term('alumno') }}</strong>.
                             {% endif %}
                             Se cambia en <a href="{{ path('instituto_config_index', {'tab': 'notificaciones'}) }}">Configuración → Notificaciones</a>.
                         </div>
@@ -154,11 +154,11 @@
                 <div class="card-body small text-muted">
                     <p>
                         Los emails se mandan <strong>en el momento</strong>, no en segundo plano. Con
-                        muchos alumn@s la pantalla puede tardar unos segundos: no la cierres ni
+                        muchos {{ term('alumnos') }} la pantalla puede tardar unos segundos: no la cierres ni
                         recargues hasta que confirme.
                     </p>
                     <p>
-                        Al alumn@ sin email cargado no le llega nada, y queda registrado como fallido
+                        Al {{ term('alumno') }} sin email cargado no le llega nada, y queda registrado como fallido
                         en el historial para que lo puedas ver.
                     </p>
                     <p class="mb-0">

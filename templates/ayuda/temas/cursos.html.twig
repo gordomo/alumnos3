@@ -3,35 +3,35 @@
 
 {% block contenido %}
 <p>
-    El curso es la pieza central: define el precio, el período y los días de clase. Todo lo
+    El {{ term('curso') }} es la pieza central: define el precio, el período y los días de clase. Todo lo
     demás —cuotas, asistencias, notas— se apoya en eso.
 </p>
 
-<h2>Crear un curso</h2>
+<h2>Crear {{ term('un_curso') }}</h2>
 
 <ol>
-    <li>{{ m.ruta(['Cursos', 'Listado']) }} y clic en <strong>Nuevo curso</strong>.</li>
+    <li>{{ m.ruta(['Cursos', 'Listado']) }} y clic en <strong>Nuevo {{ term('curso') }}</strong>.</li>
     <li>
         <strong>Nombre</strong> y <strong>descripción</strong>. El nombre es el que verán los
-        alumnos y el que queda guardado en su historial.
+        {{ term('alumnos_formal') }} y el que queda guardado en su historial.
     </li>
     <li>
         <strong>Fecha de inicio y fecha de fin</strong>. Marcan el período sobre el que se
         generan las cuotas mensuales, así que conviene tenerlas definidas antes de inscribir gente.
     </li>
     <li>
-        <strong>Precio mensual</strong>. Es el valor que se copia a la inscripción de cada alumno
+        <strong>Precio mensual</strong>. Es el valor que se copia a la inscripción de cada {{ term('alumno_formal') }}
         en el momento de inscribirlo.
     </li>
     <li><strong>Cupo</strong>, si querés limitar la cantidad de inscriptos.</li>
     <li><strong>Horarios</strong>: día de la semana, hora de inicio y hora de fin. Podés cargar varios.</li>
-    <li><strong>Profesores</strong> asignados. Determina qué profesores pueden entrar a tomar asistencia y cargar notas de este curso.</li>
+    <li><strong>{{ Term('profesores') }}</strong> asignados. Determina qué {{ term('profesores') }} pueden entrar a tomar asistencia y cargar notas de {{ term('este_curso') }}.</li>
     <li>Guardar.</li>
 </ol>
 
 {{ m.captura('curso-nuevo.png', 'Formulario de creación de un curso') }}
 
-<h2>Aumentar el precio de un curso</h2>
+<h2>Aumentar el precio de {{ term('un_curso') }}</h2>
 
 <p>
     Cambiás el precio, guardás, y <strong>se le aplica a todos los inscriptos</strong>. No hay
@@ -41,12 +41,12 @@
 <ol>
     <li>Entrá a {{ m.ruta(['Cursos', 'Listado']) }} y editá el curso.</li>
     <li>Poné el <strong>precio nuevo</strong>.</li>
-    <li>Guardá. El sistema te confirma a cuántos alumnos y cuántas cuotas afectó.</li>
+    <li>Guardá. El sistema te confirma a cuántos {{ term('alumnos_formal') }} y cuántas cuotas afectó.</li>
 </ol>
 
 <p>
-    Debajo del precio, un recuadro te avisa cuántos alumnos tiene el curso y qué va a pasar al
-    guardar. Sólo aparece si el curso tiene inscriptos.
+    Debajo del precio, un recuadro te avisa cuántos {{ term('alumnos_formal') }} tiene {{ term('el_curso') }} y qué va a pasar al
+    guardar. Sólo aparece si {{ term('el_curso') }} tiene inscriptos.
 </p>
 
 {{ m.captura('curso-aplicar-precio.png', 'El aviso debajo del campo Precio') }}
@@ -85,18 +85,18 @@
 <h2>El listado</h2>
 
 <p>
-    Muestra cada curso con sus horarios, su cantidad de inscriptos y su estado. Desde los
-    botones de cada fila se llega a ver el curso, editarlo, y a las acciones de asistencia y
+    Muestra cada {{ term('curso') }} con sus horarios, su cantidad de inscriptos y su estado. Desde los
+    botones de cada fila se llega a ver {{ term('el_curso') }}, editarlo, y a las acciones de asistencia y
     calificaciones.
 </p>
 
 {{ m.captura('curso-index.png', 'Listado de cursos con los botones de acción') }}
 
-<h2>La ficha del curso</h2>
+<h2>La ficha {{ term('del_curso') }}</h2>
 
 <p>
-    Entrando a un curso ves la lista de alumnos inscriptos, los horarios, los profesores, y los
-    accesos directos a asistencias y calificaciones de ese curso.
+    Entrando a {{ term('un_curso') }} ves la lista de {{ term('alumnos_formal') }} inscriptos, los horarios, los {{ term('profesores') }}, y los
+    accesos directos a asistencias y calificaciones de ese {{ term('curso') }}.
 </p>
 
 {{ m.captura('curso-show.png', 'Ficha de un curso con sus alumnos inscriptos') }}
@@ -104,13 +104,13 @@
 <h2>El calendario</h2>
 
 <p>
-    {{ m.ruta(['Cursos', 'Calendario']) }} muestra <strong>solo los horarios de los cursos</strong>,
+    {{ m.ruta(['Cursos', 'Calendario']) }} muestra <strong>solo los horarios de {{ term('los_cursos') }}</strong>,
     cada día en su horario real. Abre en vista semanal, que es donde se ven de una los
-    solapamientos de aula o de profesor.
+    solapamientos de aula o de {{ term('profesor') }}.
 </p>
 
 <p>
-    Si algún curso no aparece, arriba se listan los que <strong>no tienen horarios cargados</strong>,
+    Si algún {{ term('curso') }} no aparece, arriba se listan los que <strong>no tienen horarios cargados</strong>,
     con un enlace para editarlos.
 </p>
 
@@ -119,22 +119,22 @@
     instituto anota: feriados, actos, reuniones, mesas de examen. Si querés ver los horarios
     encima de la agenda, ahí se prenden con el tilde de Clases.') }}
 
-<h2>Cerrar un curso</h2>
+<h2>Cerrar {{ term('un_curso') }}</h2>
 
 <p>
-    Cerrar un curso es la acción que <strong>decide qué alumnos lo finalizaron</strong>. Se hace
+    Cerrar {{ term('un_curso') }} es la acción que <strong>decide qué {{ term('alumnos_formal') }} lo finalizaron</strong>. Se hace
     al terminar el período.
 </p>
 
 <ol>
-    <li>Entrá a la ficha del curso y buscá la acción <strong>Cerrar curso</strong>.</li>
+    <li>Entrá a la ficha {{ term('del_curso') }} y buscá la acción <strong>Cerrar {{ term('curso') }}</strong>.</li>
     <li>
-        El sistema muestra primero una <strong>vista previa</strong>: alumno por alumno, su
+        El sistema muestra primero una <strong>vista previa</strong>: {{ term('alumno_formal') }} por {{ term('alumno_formal') }}, su
         porcentaje de asistencia, su deuda, su promedio de notas, y el resultado que le
         correspondería. <strong>Todavía no se guardó nada.</strong>
     </li>
     <li>Revisá la lista. Si algo no cuadra, cancelá, corregí los datos y volvé a entrar.</li>
-    <li>Confirmá. Ahí sí se escribe el resultado en el historial de cada alumno.</li>
+    <li>Confirmá. Ahí sí se escribe el resultado en el historial de cada {{ term('alumno_formal') }}.</li>
 </ol>
 
 {{ m.captura('curso-cierre-preview.png', 'Vista previa del cierre, alumno por alumno') }}

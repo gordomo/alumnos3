@@ -124,12 +124,12 @@
 
             <div class="libreta-datos">
                 <div class="libreta-campo">
-                    <span class="etiqueta">Alumno</span>
+                    <span class="etiqueta">{{ Term('alumno_formal') }}</span>
                     <span class="valor">{{ alumno.apellido }}, {{ alumno.nombre }}</span>
                 </div>
                 <div class="d-flex gap-2 flex-wrap">
                     <div class="libreta-campo flex-grow-1">
-                        <span class="etiqueta">Curso</span>
+                        <span class="etiqueta">{{ Term('curso') }}</span>
                         <span class="valor">{{ historico.nombreCurso|default(curso.nombre) }}</span>
                     </div>
                     <div class="libreta-campo">
@@ -145,7 +145,7 @@
                 <strong>Esta libreta todavía no tiene grilla.</strong>
                 Para armarla hacen falta <strong>períodos</strong> (los trimestres o mesas, que son las
                 columnas) y <strong>áreas de evaluación</strong> (Writing, Listening…, que son las filas).
-                Se cargan en Configuración → Configuración académica. Abajo se listan las notas del alumno.
+                Se cargan en Configuración → Configuración académica. Abajo se listan las notas del {{ term('alumno_formal') }}.
             </div>
         {% endif %}
 
@@ -349,7 +349,7 @@
     </div>
 
     <a href="{{ path(rutas.curso, {'id': curso.id}) }}" class="btn btn-secondary mt-3 libreta-sin-imprimir">
-        ← Volver al curso
+        ← Volver {{ term('al_curso') }}
     </a>
 </div>
 {% endblock %}

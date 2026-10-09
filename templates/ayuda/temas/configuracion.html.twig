@@ -10,7 +10,7 @@
 
 {{ m.captura('config-index.png', 'Resumen de la configuración del instituto') }}
 
-<h2>Datos del instituto</h2>
+<h2>Datos {{ term('del_instituto') }}</h2>
 
 <p>
     Nombre, dirección, teléfono, email de contacto y <strong>zona horaria</strong>. La zona
@@ -62,8 +62,8 @@
 <h2>Cuota de inscripción anual</h2>
 
 <p>
-    Es un cargo que se le hace al alumno <strong>una vez por año</strong> y que no pertenece a
-    ningún curso. Se activa en la configuración con tres datos: prenderla, el
+    Es un cargo que se le hace al {{ term('alumno_formal') }} <strong>una vez por año</strong> y que no pertenece a
+    ningún {{ term('curso') }}. Se activa en la configuración con tres datos: prenderla, el
     <strong>monto</strong> y el <strong>mes de cobro</strong>.
 </p>
 
@@ -71,8 +71,8 @@
 
 <ul>
     <li>
-        A los alumnos que <strong>inscribas de ahí en adelante</strong> se les genera sola al
-        momento de inscribirlos a cualquier curso.
+        A los {{ term('alumnos_formal') }} que <strong>inscribas de ahí en adelante</strong> se les genera sola al
+        momento de inscribirlos a cualquier {{ term('curso') }}.
     </li>
     <li>
         A los que <strong>ya estaban inscriptos</strong> hay que generársela una vez. Eso lo hace
@@ -84,7 +84,7 @@
 <p>
     La cuota aparece en {{ m.ruta(['Alumn@s', 'Listado', 'Gestionar Deudas']) }}, en su propio
     recuadro arriba de los cursos, con el botón para cobrarla. En el listado de deudas se
-    distingue con la etiqueta <strong>Inscripción</strong> en lugar de un curso.
+    distingue con la etiqueta <strong>Inscripción</strong> en lugar de {{ term('un_curso') }}.
 </p>
 
 {{ m.nota('info', 'No lleva recargo por mora',
@@ -105,15 +105,15 @@
 
 <p>
     Un solo desplegable que vale para <strong>los recibos, los recordatorios de deuda y los
-    boletines de notas</strong>: solo al alumn@, o al alumn@ y a su tutor. Se usan el email del
-    alumn@ y el del tutor cargados en su ficha.
+    boletines de notas</strong>: solo al {{ term('alumno') }}, o al {{ term('alumno') }} y a su tutor. Se usan el email del
+    {{ term('alumno') }} y el del tutor cargados en su ficha.
 </p>
 
 <ul>
-    <li><strong>El alumn@ recibe siempre.</strong> Lo que se elige es si además se le avisa al tutor.</li>
+    <li><strong>El {{ term('alumno') }} recibe siempre.</strong> Lo que se elige es si además se le avisa al tutor.</li>
     <li>Si las dos direcciones son la misma, se manda una sola copia.</li>
     <li>
-        Si elegís avisarle también al tutor y algún alumn@ no tiene email de tutor cargado, a
+        Si elegís avisarle también al tutor y algún {{ term('alumno') }} no tiene email de tutor cargado, a
         ese le llega solo a su dirección.
     </li>
 </ul>
@@ -145,7 +145,7 @@
 
 <p>
     Y <strong>avisar desde N cuotas vencidas</strong> pone el umbral: con 1 se avisa desde la
-    primera. Solo cuentan las cuotas <em>vencidas</em>: la del mes en curso que todavía está en
+    primera. Solo cuentan las cuotas <em>vencidas</em>: la del mes en {{ term('curso') }} que todavía está en
     plazo no genera recordatorio.
 </p>
 
@@ -167,17 +167,17 @@
 
 <h2>Configuración académica</h2>
 
-<p>Es el bloque que define <strong>cuándo un alumno aprueba un curso</strong>. Hay tres criterios, y cada uno se prende por separado:</p>
+<p>Es el bloque que define <strong>cuándo un {{ term('alumno_formal') }} aprueba {{ term('un_curso') }}</strong>. Hay tres criterios, y cada uno se prende por separado:</p>
 
 <h3>1. Asistencia mínima</h3>
 <p>
-    El porcentaje de clases al que el alumno tiene que haber ido. Si lo dejás vacío, la
+    El porcentaje de clases al que el {{ term('alumno_formal') }} tiene que haber ido. Si lo dejás vacío, la
     asistencia no se tiene en cuenta para aprobar.
 </p>
 
 <h3>2. Pago total</h3>
 <p>
-    Si lo activás, un alumno con deuda pendiente al cerrar el curso queda como
+    Si lo activás, un {{ term('alumno_formal') }} con deuda pendiente al cerrar {{ term('el_curso') }} queda como
     <em>no finalizado</em> aunque tenga la asistencia y las notas en regla.
 </p>
 
@@ -230,7 +230,7 @@
 <p>
     Son los <strong>ejes</strong> sobre los que calificás: Writing, Listening, Speaking, o
     Técnica y Ritmo si es una escuela de música. Se cargan una vez y valen para todo el
-    instituto.
+    {{ term('instituto') }}.
 </p>
 
 <ol>
@@ -255,7 +255,7 @@
 
 <p>
     Una evaluación puede quedar <strong>sin área</strong>: es el caso de una integradora. No
-    entra en la grilla, pero sigue contando para el promedio general del curso. El orden de las
+    entra en la grilla, pero sigue contando para el promedio general {{ term('del_curso') }}. El orden de las
     áreas es el orden de las filas de la libreta.
 </p>
 
@@ -268,13 +268,13 @@
 <ul>
     <li><strong>Numérica</strong>: definís nota mínima, máxima y nota de aprobación (por ejemplo 1, 10 y 6).</li>
     <li><strong>Conceptual</strong>: cargás una lista de conceptos (Insuficiente, Regular, Bueno, Muy bueno…) y marcás cuáles aprueban.</li>
-    <li><strong>Ambas</strong>: el profesor carga número y concepto. Para que el promedio funcione, a cada concepto le podés poner un equivalente numérico.</li>
+    <li><strong>Ambas</strong>: el {{ term('profesor') }} carga número y concepto. Para que el promedio funcione, a cada concepto le podés poner un equivalente numérico.</li>
 </ul>
 
 <p>
-    Con la escala elegida, aparece <strong>"Requerir aprobar notas para aprobar el curso"</strong>.
+    Con la escala elegida, aparece <strong>"Requerir aprobar notas para aprobar {{ term('el_curso') }}"</strong>.
     Recién ahí las notas empiezan a pesar en el cierre, y podés elegir el criterio:
-    <strong>promedio</strong> (el promedio del alumno tiene que alcanzar la nota de aprobación)
+    <strong>promedio</strong> (el promedio del {{ term('alumno_formal') }} tiene que alcanzar la nota de aprobación)
     o <strong>todas</strong> (tiene que aprobar cada evaluación).
 </p>
 

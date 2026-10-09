@@ -37,7 +37,7 @@
                                 </div>
                                 <div class="card-body">
                                     <div class="mb-3">
-                                        <label class="text-muted small">Alumno</label>
+                                        <label class="text-muted small">{{ Term('alumno_formal') }}</label>
                                         <p class="mb-0 fw-bold">{{ deuda.alumno.nombre }} {{ deuda.alumno.apellido }}</p>
                                     </div>
                                     
@@ -149,7 +149,7 @@
                                                 required
                                             >
                                             <div class="form-text">
-                                                <i class="bi bi-info-circle"></i> Fecha según la zona horaria del instituto
+                                                <i class="bi bi-info-circle"></i> Fecha según la zona horaria {{ term('del_instituto') }}
                                             </div>
                                         </div>
                                         

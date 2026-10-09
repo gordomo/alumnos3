@@ -3,14 +3,14 @@
 
 {% block contenido %}
 <p>
-    Un alumno se carga una sola vez y después se lo inscribe a uno o varios cursos. La
-    <strong>inscripción</strong> es lo que genera las cuotas, no el alta del alumno.
+    Un {{ term('alumno_formal') }} se carga una sola vez y después se lo inscribe a uno o varios {{ term('cursos') }}. La
+    <strong>inscripción</strong> es lo que genera las cuotas, no el alta del {{ term('alumno_formal') }}.
 </p>
 
-<h2>Dar de alta un alumno</h2>
+<h2>Dar de alta un {{ term('alumno_formal') }}</h2>
 
 <ol>
-    <li>{{ m.ruta(['Alumn@s', 'Listado']) }} y clic en <strong>Nuevo alumno</strong>.</li>
+    <li>{{ m.ruta(['Alumn@s', 'Listado']) }} y clic en <strong>Nuevo {{ term('alumno_formal') }}</strong>.</li>
     <li>
         <strong>Nombre, apellido y DNI</strong>. El DNI se usa para identificarlo y para
         buscarlo, así que conviene cargarlo siempre.
@@ -21,7 +21,7 @@
         boletín de notas si lo mandás.
     </li>
     <li>
-        <strong>Datos del tutor</strong> (nombre, teléfono, email). Para alumnos menores es el
+        <strong>Datos del tutor</strong> (nombre, teléfono, email). Para {{ term('alumnos_formal') }} menores es el
         contacto que usa el sistema para enviar el boletín.
     </li>
     <li>Guardar.</li>
@@ -29,19 +29,19 @@
 
 {{ m.captura('alumno-nuevo.png', 'Formulario de alta de un alumno') }}
 
-<h2>Inscribirlo a un curso</h2>
+<h2>Inscribirlo a {{ term('un_curso') }}</h2>
 
-<p>Desde la ficha del alumno, en el bloque de cursos:</p>
+<p>Desde la ficha del {{ term('alumno_formal') }}, en el bloque de {{ term('cursos') }}:</p>
 
 <ol>
-    <li>Elegí el curso de la lista.</li>
+    <li>Elegí {{ term('el_curso') }} de la lista.</li>
     <li>
-        Confirmá la <strong>fecha de alta</strong>. Es la fecha desde la cual el alumno debe
-        cuotas de ese curso.
+        Confirmá la <strong>fecha de alta</strong>. Es la fecha desde la cual el {{ term('alumno_formal') }} debe
+        cuotas de ese {{ term('curso') }}.
     </li>
     <li>
-        El <strong>precio mensual</strong> lo toma del curso. No se puede negociar un precio
-        distinto por alumno: para eso están los <strong>descuentos promocionales</strong>, que se
+        El <strong>precio mensual</strong> lo toma {{ term('del_curso') }}. No se puede negociar un precio
+        distinto por {{ term('alumno_formal') }}: para eso están los <strong>descuentos promocionales</strong>, que se
         aplican al momento de cobrar.
     </li>
     <li>Guardar. En ese momento se generan las cuotas del período.</li>
@@ -64,9 +64,9 @@
 <ol>
     <li>
         <strong>Descargá la plantilla</strong>. Trae los encabezados exactos que el sistema
-        espera, una fila de ejemplo, y una hoja con las instrucciones y la lista de tus cursos.
+        espera, una fila de ejemplo, y una hoja con las instrucciones y la lista de tus {{ term('cursos') }}.
     </li>
-    <li>Cargá tus alumn@s ahí, uno por fila.</li>
+    <li>Cargá tus {{ term('alumnos') }} ahí, uno por fila.</li>
     <li>
         <strong>Subila.</strong> El sistema te muestra fila por fila qué va a pasar: cuáles se
         importan, cuáles se importan con avisos y cuáles se saltan, con el motivo de cada una.
@@ -96,12 +96,12 @@
     </li>
     <li>
         La <strong>fecha de nacimiento</strong> se escribe 15/03/2010, y también se acepta una
-        celda con formato de fecha de Excel. Si no se entiende, el alumn@ se importa igual pero
+        celda con formato de fecha de Excel. Si no se entiende, {{ term('el_alumno') }} se importa igual pero
         sin fecha.
     </li>
     <li>
-        Si completás <strong>Curso</strong>, el nombre tiene que coincidir con el del sistema. Si
-        coincide, el alumn@ queda <strong>inscripto de verdad</strong> con fecha de hoy y se le
+        Si completás <strong>{{ Term('curso') }}</strong>, el nombre tiene que coincidir con el del sistema. Si
+        coincide, {{ term('el_alumno') }} queda <strong>inscripto de verdad</strong> con fecha de hoy y se le
         empiezan a generar las cuotas. Si no coincide, se importa sin inscribirlo y te avisamos.
     </li>
 </ul>
@@ -114,30 +114,30 @@
    'Al inscribir por planilla se le genera igual que en el alta manual, así que después de importar
     puede aparecer esa deuda. Es lo esperado.') }}
 
-<h2>El listado de alumnos</h2>
+<h2>El listado de {{ term('alumnos_formal') }}</h2>
 
 <p>
-    Muestra a cada alumno con sus cursos y su situación de deuda. Se puede buscar por nombre,
+    Muestra a cada {{ term('alumno_formal') }} con sus {{ term('cursos') }} y su situación de deuda. Se puede buscar por nombre,
     apellido o DNI. Desde los botones de cada fila se llega a la ficha, a la edición, y a la
     gestión de sus deudas y pagos.
 </p>
 
 {{ m.captura('alumno-index.png', 'Listado de alumnos con su estado de deuda') }}
 
-<h2>Dar de baja de un curso</h2>
+<h2>Dar de baja de {{ term('un_curso') }}</h2>
 
 <p>
-    Al dar de baja a un alumno de un curso se registra la fecha de baja y el motivo, y desde
+    Al dar de baja a un {{ term('alumno_formal') }} de {{ term('un_curso') }} se registra la fecha de baja y el motivo, y desde
     ahí deja de generársele cuotas. La inscripción no se borra: queda en el
-    <strong>historial</strong> del alumno, con el nombre del curso y el precio que tenía. Por eso
-    después se puede consultar qué cursó y con qué resultado, incluso si el curso se modificó
+    <strong>historial</strong> del {{ term('alumno_formal') }}, con el nombre {{ term('del_curso') }} y el precio que tenía. Por eso
+    después se puede consultar qué cursó y con qué resultado, incluso si {{ term('el_curso') }} se modificó
     o se borró.
 </p>
 
 <h2>Cobrarle a alguien que ya se fue</h2>
 
 <p>
-    Dar de baja a un alumno <strong>no le perdona la deuda</strong>. Si se fue debiendo, esa
+    Dar de baja a un {{ term('alumno_formal') }} <strong>no le perdona la deuda</strong>. Si se fue debiendo, esa
     deuda sigue viva y se le puede cobrar.
 </p>
 
@@ -163,21 +163,21 @@
 <h2>El enlace para la familia</h2>
 
 <p>
-    El tutor no tiene usuario en el sistema, y no le hace falta: desde la ficha del alumn@ se
+    El tutor no tiene usuario en el sistema, y no le hace falta: desde la ficha {{ term('del_alumno') }} se
     genera un <strong>enlace de solo lectura</strong> que se le incluye en los emails que ya
     recibe. Lo abre sin usuario ni contraseña.
 </p>
 
-<p>Con ese enlace ve, de ese alumn@ y de nadie más:</p>
+<p>Con ese enlace ve, de ese {{ term('alumno') }} y de nadie más:</p>
 
 <ul>
     <li>Las <strong>cuotas pendientes</strong>, con su recargo si corresponde.</li>
-    <li>La <strong>asistencia</strong> de cada curso, con el porcentaje.</li>
+    <li>La <strong>asistencia</strong> de cada {{ term('curso') }}, con el porcentaje.</li>
     <li>El <strong>promedio</strong> y cuántas <strong>tareas</strong> entregó.</li>
-    <li>Los <strong>materiales</strong> y las <strong>últimas clases</strong> de cada curso.</li>
+    <li>Los <strong>materiales</strong> y las <strong>últimas clases</strong> de cada {{ term('curso') }}.</li>
 </ul>
 
-<p>Cómo se maneja, en la ficha del alumn@:</p>
+<p>Cómo se maneja, en la ficha {{ term('del_alumno') }}:</p>
 
 <ol>
     <li><strong>Generar el enlace.</strong> A partir de ahí viaja en los próximos emails.</li>
@@ -207,7 +207,7 @@
    'Porque en la práctica no se usa: hay que darle de alta a cada familia, explicarle la
     contraseña y después recuperársela. A un enlace en el email que ya recibe le hace clic.') }}
 
-<h2>Usuario para que el alumno entre al sistema</h2>
+<h2>Usuario para que el {{ term('alumno_formal') }} entre al sistema</h2>
 
 <p>
     Cargar el alumno no le crea un acceso. Para que pueda entrar y ver sus notas y sus pagos,

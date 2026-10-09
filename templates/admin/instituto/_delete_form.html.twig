@@ -52,7 +52,7 @@
                     {% endfor %}
                 </ul>
             {% else %}
-                <p class="text-muted">Este instituto no tiene datos cargados.</p>
+                <p class="text-muted">Este {{ term('instituto') }} no tiene datos cargados.</p>
             {% endif %}
 
             <form method="post" action="{{ path('admin_instituto_delete', {'id': instituto.id}) }}">

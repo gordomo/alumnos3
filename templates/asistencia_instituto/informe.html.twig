@@ -168,9 +168,9 @@
                     <input type="text" class="form-control" id="fecha" name="fecha" value="{{ fecha }}" autocomplete="off">
                 </div>
                 <div class="col-md-3">
-                    <label for="curso" class="form-label">Curso</label>
+                    <label for="curso" class="form-label">{{ Term('curso') }}</label>
                     <select class="form-select chosen-select" id="curso" name="curso">
-                        <option value="">Seleccione un curso</option>
+                        <option value="">Seleccione {{ term('un_curso') }}</option>
                         {% for cursoOption in cursos %}
                             <option value="{{ cursoOption.id }}" {% if curso and curso.id == cursoOption.id %}selected{% endif %}>
                                 {{ cursoOption.nombre }}
@@ -227,7 +227,7 @@
                                 <table class="table table-striped asistencia-informe-table">
                                     <thead>
                                         <tr>
-                                            <th>Alumno</th>
+                                            <th>{{ Term('alumno_formal') }}</th>
                                             <th>Estado</th>
                                             <th>Observaciones</th>
                                         </tr>
@@ -263,7 +263,7 @@
                                 <table class="table table-bordered table-striped table-sm asistencia-informe-table">
                                     <thead>
                                         <tr>
-                                            <th style="min-width: 150px;">Alumno</th>
+                                            <th style="min-width: 150px;">{{ Term('alumno_formal') }}</th>
                                             {% for fecha in informeAsistencias.fechas %}
                                                 <th class="text-center" style="min-width: 60px;">{{ fecha|date('d/m') }}</th>
                                             {% endfor %}
@@ -318,7 +318,7 @@
                                         {% else %}
                                             <tr>
                                                 <td colspan="{{ informeAsistencias.fechas|length + 2 }}" class="text-center">
-                                                    No hay alumnos registrados en este curso
+                                                    No hay {{ term('alumnos_formal') }} registrados en {{ term('este_curso') }}
                                                 </td>
                                             </tr>
                                         {% endif %}
@@ -350,7 +350,7 @@
         <div class="row">
             <div class="col-md-12">
                 <div class="alert alert-info">
-                    Seleccione un curso y un tipo de informe para ver las estadísticas de asistencia.
+                    Seleccione {{ term('un_curso') }} y un tipo de informe para ver las estadísticas de asistencia.
                 </div>
             </div>
         </div>

@@ -12,19 +12,19 @@
 
 <p>
     Se factura por <strong>mes cerrado</strong>: el 1° de cada mes se emite la factura del mes
-    anterior, con la cantidad de alumn@s que estuvieron activ@s en ese período, multiplicada por
-    el precio por alumn@ que tenés acordado.
+    anterior, con la cantidad de {{ term('alumnos') }} que estuvieron activ@s en ese período, multiplicada por
+    el precio por {{ term('alumno') }} que tenés acordado.
 </p>
 
 <p>
-    <strong>El primer mes no se factura.</strong> Y si tu instituto se dio de alta pasado el día
+    <strong>El primer mes no se factura.</strong> Y si {{ term('tu_instituto') }} se dio de alta pasado el día
     de vencimiento, el mes siguiente tampoco: así la cortesía siempre es un mes de verdad y no
     los pocos días que quedaban.
 </p>
 
 <p>
     En la pantalla de suscripción, el panel <strong>Cómo se calcula</strong> te muestra cuántos
-    alumn@s activ@s tenés hoy y el estimado del mes que viene. Si das de baja alumn@s, el mes
+    {{ term('alumnos') }} activ@s tenés hoy y el estimado del mes que viene. Si das de baja {{ term('alumnos') }}, el mes
     siguiente pagás menos: la factura ya emitida no cambia.
 </p>
 
@@ -72,7 +72,7 @@
     </li>
     <li>
         <strong>Modo consulta</strong>: podés entrar y ver toda la información, pero no cargar
-        nada nuevo. La única excepción son los <strong>pagos de alumn@s</strong>, que se pueden
+        nada nuevo. La única excepción son los <strong>pagos de {{ term('alumnos') }}</strong>, que se pueden
         seguir registrando: no tiene sentido que dejes de cobrarle a las familias.
     </li>
     <li>
@@ -94,7 +94,7 @@
 
 <p>
     Abajo de la pantalla está la lista de todas tus facturas con el período, la cantidad de
-    alumn@s, el importe, la fecha de vencimiento y el estado. De cada una podés ver el detalle y
+    {{ term('alumnos') }}, el importe, la fecha de vencimiento y el estado. De cada una podés ver el detalle y
     descargar el <strong>PDF</strong>.
 </p>
 {% endblock %}

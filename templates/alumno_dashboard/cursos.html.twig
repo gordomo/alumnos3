@@ -5,13 +5,13 @@
 {% block body %}
 <div class="container mt-4" style="padding-bottom: 3rem;">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 mb-0"><i class="bi bi-book"></i> Mis Cursos</h1>
+        <h1 class="h3 mb-0"><i class="bi bi-book"></i> Mis {{ Term('cursos') }}</h1>
         <a href="{{ path('app_alumno_dashboard') }}" class="btn btn-secondary btn-sm">← Volver al panel</a>
     </div>
 
     {% if cursos is empty %}
         <div class="alert alert-light border">
-            <i class="bi bi-inbox"></i> Todavía no estás inscript@ en ningún curso.
+            <i class="bi bi-inbox"></i> Todavía no estás inscript@ en ningún {{ term('curso') }}.
         </div>
     {% else %}
         {% for datos in cursos %}
@@ -19,14 +19,14 @@
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">{{ datos.curso.nombre }}</h5>
                     {% if not datos.activo %}
-                        <span class="badge bg-light text-dark">curso terminado</span>
+                        <span class="badge bg-light text-dark">{{ term('curso') }} terminado</span>
                     {% endif %}
                 </div>
 
                 <div class="card-body">
                     <h6 class="text-muted"><i class="bi bi-paperclip"></i> Materiales de consulta</h6>
                     {% if datos.materiales is empty %}
-                        <p class="small text-muted">Todavía no hay materiales en este curso.</p>
+                        <p class="small text-muted">Todavía no hay materiales en {{ term('este_curso') }}.</p>
                     {% else %}
                         <ul class="list-unstyled mb-3">
                             {% for material in datos.materiales %}
@@ -50,7 +50,7 @@
 
                     <h6 class="text-muted"><i class="bi bi-journal-text"></i> Qué se dio en clase</h6>
                     {% if datos.clases is empty %}
-                        <p class="small text-muted mb-0">El profesor todavía no cargó el detalle de las clases.</p>
+                        <p class="small text-muted mb-0">El {{ term('profesor') }} todavía no cargó el detalle de las clases.</p>
                     {% else %}
                         <div class="table-responsive">
                             <table class="table table-sm table-striped mb-0">

@@ -17,7 +17,7 @@
                     </div>
                     <div class="card-body">
                         <div class="mb-3">
-                            <label class="form-label" for="price_per_student_monthly">Precio por alumn@ activ@ por mes</label>
+                            <label class="form-label" for="price_per_student_monthly">Precio por {{ term('alumno') }} activ@ por mes</label>
                             <div class="input-group">
                                 <span class="input-group-text">$</span>
                                 <input type="number" step="0.01" min="0.01" class="form-control" required
@@ -25,7 +25,7 @@
                                        value="{{ config.pricePerStudentMonthly }}">
                             </div>
                             <div class="form-text">
-                                Es el valor por defecto. Cada instituto puede tener su propio precio y un mínimo
+                                Es el valor por defecto. Cada {{ term('instituto') }} puede tener su propio precio y un mínimo
                                 mensual desde su ficha, y ese pisa a este.
                             </div>
                         </div>
@@ -85,7 +85,7 @@
                             a los {{ config.diasGracia }} día(s) de atraso el instituto pasa a
                             <strong>modo consulta</strong> (puede ver todo pero no cargar nada, salvo pagos de alumn@s)
                             y a los {{ config.diasHastaBloqueo }} día(s) queda con el
-                            <strong>panel bloqueado</strong>. Profesor@s, alumn@s y familias nunca se bloquean.
+                            <strong>panel bloqueado</strong>. {{ Term('profesor') }}@s, {{ term('alumnos') }} y familias nunca se bloquean.
                         </div>
                     </div>
                 </div>
@@ -97,11 +97,11 @@
                         <i class="bi bi-bank"></i> Datos para transferencia
                     </div>
                     <div class="card-body">
-                        <label class="form-label" for="datos_transferencia">Se muestran tal cual al instituto</label>
+                        <label class="form-label" for="datos_transferencia">Se muestran tal cual al {{ term('instituto') }}</label>
                         <textarea class="form-control" rows="6" id="datos_transferencia" name="datos_transferencia"
                                   placeholder="Banco&#10;CBU:&#10;Alias:&#10;Titular:&#10;CUIT:">{{ config.datosTransferencia }}</textarea>
                         <div class="form-text">
-                            Si está vacío, en la pantalla de suscripción se le dice al instituto que nos escriba
+                            Si está vacío, en la pantalla de suscripción se le dice al {{ term('instituto') }} que nos escriba
                             para pedir los datos.
                         </div>
                     </div>
@@ -134,7 +134,7 @@
                             </label>
                             <div class="form-text">
                                 Las de prueba y las productivas se escriben igual, así que hay que decirlo acá.
-                                Con esto tildado, al instituto se le avisa que ningún pago es real.
+                                Con esto tildado, al {{ term('instituto') }} se le avisa que ningún pago es real.
                             </div>
                         </div>
 

@@ -19,18 +19,18 @@
                 <i class="bi bi-info-circle"></i>
                 {% if porcentajeRequerido is not null %}
                     El porcentaje de asistencia requerido para aprobar es <strong>{{ porcentajeRequerido }}%</strong>.
-                    Los alumnos que no alcancen este porcentaje serán marcados como <span class="badge bg-danger">No finalizado</span>.
+                    Los {{ term('alumnos_formal') }} que no alcancen este porcentaje serán marcados como <span class="badge bg-danger">No finalizado</span>.
                 {% else %}
                     No se configuró un porcentaje de asistencia mínimo. Todos los alumnos serán marcados como <span class="badge bg-primary">Finalizado</span>.
-                    <br><small>Podés configurar el porcentaje en <strong>Configuración del Instituto → Configuración Académica</strong>.</small>
+                    <br><small>Podés configurar el porcentaje en <strong>Configuración del {{ Term('instituto') }} → Configuración Académica</strong>.</small>
                 {% endif %}
                 {% if requierePagoTotal %}
-                    <br><i class="bi bi-cash-stack"></i> Se requiere el <strong>pago total del curso</strong> para aprobar.
-                    Los alumnos con cuotas pendientes serán marcados como <span class="badge bg-danger">No finalizado</span>.
+                    <br><i class="bi bi-cash-stack"></i> Se requiere el <strong>pago total {{ term('del_curso') }}</strong> para aprobar.
+                    Los {{ term('alumnos_formal') }} con cuotas pendientes serán marcados como <span class="badge bg-danger">No finalizado</span>.
                 {% endif %}
                 {% if requiereNotas|default(false) %}
                     <br><i class="bi bi-mortarboard"></i> Se verifica también la <strong>calificación</strong>.
-                    Un alumno <strong>sin notas cargadas no se desaprueba</strong> por este criterio: figura como
+                    Un {{ term('alumno_formal') }} <strong>sin notas cargadas no se desaprueba</strong> por este criterio: figura como
                     <span class="badge bg-secondary">sin datos</span>.
                 {% endif %}
             </div>
@@ -40,7 +40,7 @@
                     <table class="table table-striped table-sm">
                         <thead>
                             <tr>
-                                <th>Alumno</th>
+                                <th>{{ Term('alumno_formal') }}</th>
                                 <th class="text-center">Clases Totales</th>
                                 <th class="text-center">Presentes</th>
                                 <th class="text-center">% Asistencia</th>
@@ -120,14 +120,14 @@
                         <form method="post" action="{{ path('app_curso_cerrar', {'id': curso.id}) }}" onsubmit="return confirm('¿Estás seguro de cerrar este curso? Esta acción no se puede deshacer.')">
                             <input type="hidden" name="_token" value="{{ csrf_token('cerrar_curso_' ~ curso.id) }}">
                             <button type="submit" class="btn btn-danger">
-                                <i class="bi bi-lock"></i> Confirmar cierre del curso
+                                <i class="bi bi-lock"></i> Confirmar cierre {{ term('del_curso') }}
                             </button>
                         </form>
                     </div>
                 </div>
             {% else %}
                 <div class="alert alert-warning">
-                    <i class="bi bi-exclamation-triangle"></i> No hay alumnos activos en este curso para procesar.
+                    <i class="bi bi-exclamation-triangle"></i> No hay {{ term('alumnos_formal') }} activos en {{ term('este_curso') }} para procesar.
                 </div>
                 <a href="{{ path('app_curso_show', {'id': curso.id}) }}" class="btn btn-secondary">
                     <i class="bi bi-arrow-left"></i> Volver

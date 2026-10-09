@@ -39,11 +39,11 @@
                         <div class="form-check">
                             <input class="form-check-input" type="radio" name="modo_generacion_deuda" value="inicio_curso" id="modoInicioCurso_{{ alumno.id }}">
                             <label class="form-check-label" for="modoInicioCurso_{{ alumno.id }}">
-                                Desde el inicio del curso
+                                Desde el inicio {{ term('del_curso') }}
                             </label>
                         </div>
                         <small class="text-muted d-block mt-2">
-                            Selecciona desde qué momento se deben generar las deudas para los cursos nuevos.
+                            Selecciona desde qué momento se deben generar las deudas para {{ term('los_cursos') }} nuevos.
                         </small>
                     </div>
                 </div>

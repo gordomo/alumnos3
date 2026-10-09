@@ -14,9 +14,9 @@
                     <input type="text" class="form-control" id="fecha" name="fecha" value="{{ fecha }}" autocomplete="off">
                 </div>
                 <div class="col-md-6">
-                    <label for="curso" class="form-label">Curso</label>
+                    <label for="curso" class="form-label">{{ Term('curso') }}</label>
                     <select class="form-select chosen-select" id="curso" name="curso">
-                        <option value="">Seleccione un curso</option>
+                        <option value="">Seleccione {{ term('un_curso') }}</option>
                         {% for curso in cursos %}
                             <option value="{{ curso.id }}" {% if cursoSeleccionado and cursoSeleccionado.id == curso.id %}selected{% endif %}>
                                 {{ curso.nombre }}

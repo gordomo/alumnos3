@@ -14,13 +14,13 @@
         <div class="card">
             <div class="card-body">
                 {% if historicos is empty %}
-                    <p class="text-muted mb-0">Este alumno no tiene históricos de cursos registrados.</p>
+                    <p class="text-muted mb-0">Este {{ term('alumno_formal') }} no tiene históricos de {{ term('cursos') }} registrados.</p>
                 {% else %}
                 <div class="table-responsive">
                     <table class="table table-striped">
                         <thead>
                             <tr>
-                                <th>Curso</th>
+                                <th>{{ Term('curso') }}</th>
                                 <th>Período</th>
                                 <th>Precio Mensual</th>
                                 <th>Meses Pagados</th>

@@ -82,7 +82,7 @@
                         {% else %}
                             <tr>
                                 <td colspan="3" class="text-center text-muted py-4">
-                                    Todavía no hay clases registradas en este curso.
+                                    Todavía no hay clases registradas en {{ term('este_curso') }}.
                                 </td>
                             </tr>
                         {% endfor %}
@@ -126,7 +126,7 @@
                         <div class="col-md-5 d-flex align-items-end">
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" name="visible" id="visible" value="1" checked>
-                                <label class="form-check-label small" for="visible">Lo ven los alumn@s</label>
+                                <label class="form-check-label small" for="visible">Lo ven los {{ term('alumnos') }}</label>
                             </div>
                         </div>
                         <div class="col-12">
@@ -172,7 +172,7 @@
                     </li>
                 {% else %}
                     <li class="list-group-item text-center text-muted py-4">
-                        Todavía no hay materiales en este curso.
+                        Todavía no hay materiales en {{ term('este_curso') }}.
                     </li>
                 {% endfor %}
                 </ul>

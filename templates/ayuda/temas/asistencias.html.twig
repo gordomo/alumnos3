@@ -5,8 +5,8 @@
 {% set esProfe = is_granted('ROLE_PROFESOR') and not is_granted('ROLE_ADMIN_INSTITUTO') %}
 
 <p>
-    La asistencia se toma <strong>por curso y por fecha</strong>. Cada clase es un registro
-    aparte, y el porcentaje de asistencia del alumno sale de la suma de todas.
+    La asistencia se toma <strong>por {{ term('curso') }} y por fecha</strong>. Cada clase es un registro
+    aparte, y el porcentaje de asistencia del {{ term('alumno_formal') }} sale de la suma de todas.
 </p>
 
 {% if esProfe %}
@@ -21,14 +21,14 @@
 <h2>Tomar asistencia de una clase</h2>
 
 <ol>
-    <li>Elegí el curso.</li>
+    <li>Elegí {{ term('el_curso') }}.</li>
     <li>
         Elegí la <strong>fecha</strong> de la clase. Por default viene el día de hoy, pero podés
         cargar una clase anterior si te quedó pendiente.
     </li>
-    <li>Aparece la grilla con todos los alumnos inscriptos.</li>
+    <li>Aparece la grilla con todos los {{ term('alumnos_formal') }} inscriptos.</li>
     <li>Marcá el estado de cada uno: <strong>presente</strong>, <strong>ausente</strong> o <strong>justificado</strong>.</li>
-    <li>Si hace falta, agregá una <strong>observación</strong> por alumno.</li>
+    <li>Si hace falta, agregá una <strong>observación</strong> por {{ term('alumno_formal') }}.</li>
     <li>Clic en <strong>Guardar</strong>.</li>
 </ol>
 
@@ -42,7 +42,7 @@
 <h2>Corregir una asistencia ya tomada</h2>
 
 <p>
-    Volvé a entrar con el mismo curso y la misma fecha: la grilla se abre con lo que se había
+    Volvé a entrar con el mismo {{ term('curso') }} y la misma fecha: la grilla se abre con lo que se había
     guardado, lo cambiás y guardás de nuevo. No se duplica el registro de la clase.
 </p>
 
@@ -59,7 +59,7 @@
 <p>El informe se puede exportar para trabajarlo en una planilla.</p>
 
 {% if not esProfe %}
-<h2>Cómo se usa la asistencia al cerrar el curso</h2>
+<h2>Cómo se usa la asistencia al cerrar {{ term('el_curso') }}</h2>
 
 <p>
     Si en {{ m.ruta(['Configuración', 'Configuración académica']) }} cargaste un porcentaje
@@ -69,7 +69,7 @@
 
 <p>
     Conviene revisar el informe antes de cerrar: una clase que nadie cargó baja el porcentaje de
-    todo el curso, y se nota mucho más en cursos cortos.
+    todo {{ term('el_curso') }}, y se nota mucho más en {{ term('cursos') }} cortos.
 </p>
 {% endif %}
 {% endblock %}

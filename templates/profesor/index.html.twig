@@ -245,7 +245,7 @@
         <div class="col-md-6">
             <form method="get" action="{{ path('app_profesor_index') }}" class="profesor-search">
                 <div class="input-group">
-                    <input name="busqueda" type="text" class="form-control" placeholder="Buscar por nombre y apellido" value="{{ busqueda ? busqueda : '' }}" aria-label="Buscar profesor">
+                    <input name="busqueda" type="text" class="form-control" placeholder="Buscar por nombre y apellido" value="{{ busqueda ? busqueda : '' }}" aria-label="Buscar {{ term('profesor') }}">
                     <button class="btn btn-outline-secondary" type="submit" id="button-addon2"><i class="bi bi-search"></i></button>
                 </div>
             </form>
@@ -276,7 +276,7 @@
                 </th>
                 <th>Teléfono</th>
                 <th>Email</th>
-                <th>Cursos</th>
+                <th>{{ Term('cursos') }}</th>
                 <th>Precio/Hora</th>
                 <th>Viatico</th>
                 <th>Acciones</th>
@@ -293,7 +293,7 @@
                     {% for curso in profesor.cursos %}
                         <a href="{{ path('app_curso_edit', {'id': curso.id}) }}" class="curso-chip">{{ curso.nombre }}</a>
                     {% else %}
-                        <span class="text-muted">Sin cursos</span>
+                        <span class="text-muted">Sin {{ term('cursos') }}</span>
                     {% endfor %}
                 </td>
                 <td>
@@ -323,7 +323,7 @@
 
 <div class="profesor-floating-actions">
     <a href="{{ path('app_profesor_new') }}" class="profesor-floating-btn">
-        <i class="bi bi-plus-circle"></i> Nuevo Profesor
+        <i class="bi bi-plus-circle"></i> Nuevo {{ Term('profesor') }}
     </a>
 </div>
 

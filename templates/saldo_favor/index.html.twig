@@ -8,7 +8,7 @@
         <div class="col-md-12">
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ path('app_alumno_index') }}">Alumn@s</a></li>
+                    <li class="breadcrumb-item"><a href="{{ path('app_alumno_index') }}">{{ Term('alumnos') }}</a></li>
                     <li class="breadcrumb-item"><a href="{{ path('app_alumno_show', {'id': alumno.id}) }}">{{ alumno.nombre }} {{ alumno.apellido }}</a></li>
                     <li class="breadcrumb-item"><a href="{{ path('app_alumno_deudas', {'id': alumno.id}) }}">Gestión de Deudas</a></li>
                     <li class="breadcrumb-item active" aria-current="page">Saldos a Favor</li>
@@ -33,12 +33,12 @@
                             <i class="bi bi-wallet2 me-2" style="font-size: 1.5rem;"></i>
                             <div>
                                 <strong>Saldo disponible total: ${{ saldoTotal|number_format(2, ',', '.') }}</strong>
-                                <br><small class="text-muted">Este saldo puede ser aplicado manualmente a deudas pendientes del alumno.</small>
+                                <br><small class="text-muted">Este saldo puede ser aplicado manualmente a deudas pendientes del {{ term('alumno_formal') }}.</small>
                             </div>
                         </div>
                     {% else %}
                         <div class="alert alert-info" role="alert">
-                            <i class="bi bi-info-circle"></i> El alumno no tiene saldo a favor disponible. Puede crear una nota de crédito manualmente.
+                            <i class="bi bi-info-circle"></i> El {{ term('alumno_formal') }} no tiene saldo a favor disponible. Puede crear una nota de crédito manualmente.
                         </div>
                     {% endif %}
 
@@ -48,11 +48,11 @@
                         </summary>
                         <div class="mt-2 ps-3 border-start border-3">
                             <p class="mb-2">
-                                Es plata del alumn@ que todavía no está imputada a ninguna cuota. Aparece de tres formas:
+                                Es plata {{ term('del_alumno') }} que todavía no está imputada a ninguna cuota. Aparece de tres formas:
                             </p>
                             <ul class="mb-2">
                                 <li>
-                                    <strong>Sobrepago</strong>: se registró un pago mayor a lo que el alumn@ debía en ese
+                                    <strong>Sobrepago</strong>: se registró un pago mayor a lo que {{ term('el_alumno') }} debía en ese
                                     momento. El sistema imputa lo que puede a las cuotas pendientes y <strong>la diferencia
                                     queda acá</strong>, no se pierde.
                                 </li>
@@ -66,7 +66,7 @@
                             </ul>
                             <p class="mb-0">
                                 El saldo <strong>no se aplica solo</strong>: queda disponible hasta que lo imputes con el
-                                botón <em>Aplicar</em> a la cuota que elijas. Así el instituto decide a qué mes va.
+                                botón <em>Aplicar</em> a la cuota que elijas. Así {{ term('el_instituto') }} decide a qué mes va.
                             </p>
                         </div>
                     </details>
@@ -78,7 +78,7 @@
                                     <tr>
                                         <th>Fecha</th>
                                         <th>Tipo</th>
-                                        <th>Curso</th>
+                                        <th>{{ Term('curso') }}</th>
                                         <th>Descripción</th>
                                         <th class="text-end">Monto Original</th>
                                         <th class="text-end">Disponible</th>
@@ -160,7 +160,7 @@
                             </table>
                         </div>
                     {% else %}
-                        <p class="text-muted mt-3">No hay registros de saldos a favor para este alumno.</p>
+                        <p class="text-muted mt-3">No hay registros de saldos a favor para este {{ term('alumno_formal') }}.</p>
                     {% endif %}
                 </div>
             </div>

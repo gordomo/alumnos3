@@ -24,7 +24,7 @@
 
     {% if asistenciasExistentes|length > 0 %}
         <div class="alert alert-warning">
-            Ya se tomaron asistencias para este curso en esta fecha. Si continúa, se registrarán nuevas asistencias.
+            Ya se tomaron asistencias para {{ term('este_curso') }} en esta fecha. Si continúa, se registrarán nuevas asistencias.
         </div>
     {% endif %}
 
@@ -38,7 +38,7 @@
                     <table class="table table-striped">
                         <thead>
                             <tr>
-                                <th>Alumno</th>
+                                <th>{{ Term('alumno_formal') }}</th>
                                 <th>Presente</th>
                                 <th>Observaciones</th>
                             </tr>
@@ -71,7 +71,7 @@
                                 </tr>
                             {% else %}
                                 <tr>
-                                    <td colspan="3" class="text-center">No hay alumnos inscriptos en este curso</td>
+                                    <td colspan="3" class="text-center">No hay {{ term('alumnos_formal') }} inscriptos en {{ term('este_curso') }}</td>
                                 </tr>
                             {% endfor %}
                         </tbody>

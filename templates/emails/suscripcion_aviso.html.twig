@@ -37,7 +37,7 @@
             Como la suscripción sigue impaga (saldo
             <strong>${{ suscripcion.total|number_format(2, ',', '.') }}</strong>,
             {{ suscripcion.atraso }} días de atraso), tu sistema quedó en <strong>modo consulta</strong>:
-            podés ver toda la información y registrar pagos de alumn@s, pero no cargar datos nuevos.
+            podés ver toda la información y registrar pagos de {{ term('alumnos') }}, pero no cargar datos nuevos.
         </p>
         {% if suscripcion.limiteBloqueo %}
             <p>
@@ -54,7 +54,7 @@
             ({{ suscripcion.atraso }} días de atraso).
         </p>
         <p>
-            Tus datos están intactos y profesor@s, alumn@s y familias siguen entrando con normalidad.
+            Tus datos están intactos y {{ term('profesor') }}@s, {{ term('alumnos') }} y familias siguen entrando con normalidad.
             En cuanto confirmemos el pago, el panel vuelve a funcionar.
         </p>
     {% endif %}
@@ -67,5 +67,5 @@
 {% endblock %}
 
 {% block footer %}
-    <p><small>Team Builder &mdash; gestión de institutos.</small></p>
+    <p><small>Team Builder &mdash; gestión de {{ term('instituto_plural') }}.</small></p>
 {% endblock %}

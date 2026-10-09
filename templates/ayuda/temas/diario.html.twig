@@ -5,7 +5,7 @@
 {% set esProfe = is_granted('ROLE_PROFESOR') and not is_granted('ROLE_ADMIN_INSTITUTO') %}
 
 <p>
-    Dos cosas que se cargan en el mismo momento —al terminar la clase— y que el alumn@ y su
+    Dos cosas que se cargan en el mismo momento —al terminar la clase— y que {{ term('el_alumno') }} y su
     familia consultan juntas: <strong>qué se dio</strong> y <strong>de dónde estudiarlo</strong>.
 </p>
 
@@ -19,7 +19,7 @@
 
 <ol>
     <li>La <strong>fecha</strong> viene con el día de hoy puesta.</li>
-    <li>El <strong>tema</strong>: una línea con lo que se dio. Es lo que va a leer el alumn@.</li>
+    <li>El <strong>tema</strong>: una línea con lo que se dio. Es lo que va a leer {{ term('el_alumno') }}.</li>
     <li>
         El <strong>detalle</strong>, opcional: las páginas, la consigna, lo que quedó pendiente.
     </li>
@@ -38,16 +38,16 @@
 </p>
 
 <ul>
-    <li><strong>Título</strong>: cómo lo va a ver el alumn@.</li>
+    <li><strong>Título</strong>: cómo lo va a ver {{ term('el_alumno') }}.</li>
     <li><strong>Enlace</strong>: tiene que empezar con <em>http</em> o <em>https</em>.</li>
     <li><strong>Tipo</strong>: apunte, video, sitio u otro. Solo cambia el ícono.</li>
     <li>
-        <strong>Lo ven los alumn@s</strong>: destildado queda guardado pero oculto, para ir
+        <strong>Lo ven los {{ term('alumnos') }}</strong>: destildado queda guardado pero oculto, para ir
         preparándolo antes de publicarlo.
     </li>
 </ul>
 
-<h2>Cómo lo ve el alumn@</h2>
+<h2>Cómo lo ve {{ term('el_alumno') }}</h2>
 
 <p>
     En {{ m.ruta(['Mis Cursos']) }} ve, por cada curso, los materiales visibles y las últimas 30

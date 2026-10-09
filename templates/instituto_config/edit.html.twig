@@ -129,7 +129,7 @@
             <div class="card shadow-sm config-edit-shell">
                 <div class="card-header bg-primary text-white config-edit-main-header">
                     <h1 class="h3 mb-0">
-                        <i class="bi bi-gear"></i> Editar Configuración del Instituto
+                        <i class="bi bi-gear"></i> Editar Configuración del {{ Term('instituto') }}
                     </h1>
                 </div>
                 <div class="card-body">
@@ -171,7 +171,7 @@
                                 <input type="hidden" name="section" value="general">
                                 <div class="card mb-3">
                                     <div class="card-header bg-light">
-                                        <h5 class="mb-0">Datos del Instituto</h5>
+                                        <h5 class="mb-0">Datos del {{ Term('instituto') }}</h5>
                                     </div>
                                     <div class="card-body">
                         <div class="row">
@@ -185,7 +185,7 @@
                                     {% endif %}
                                     <div class="form-group">
                                                         <label for="logo" class="form-label">
-                                                            <i class="bi bi-image"></i> Logo del Instituto
+                                                            <i class="bi bi-image"></i> Logo del {{ Term('instituto') }}
                                                         </label>
                                         <input type="file" 
                                                class="form-control" 
@@ -201,7 +201,7 @@
                             <div class="col-md-8">
                                 <div class="mb-3">
                                                     <label for="nombre" class="form-label">
-                                                        <i class="bi bi-building"></i> Nombre del Instituto <span class="text-danger">*</span>
+                                                        <i class="bi bi-building"></i> Nombre del {{ Term('instituto') }} <span class="text-danger">*</span>
                                                     </label>
                                     <input type="text" 
                                            class="form-control" 
@@ -305,7 +305,7 @@
                                                         <span class="input-group-text">%</span>
                                                     </div>
                                                     <small class="form-text text-muted">
-                                                        Al finalizar un curso, se verificará que el alumno cumpla este porcentaje de asistencia 
+                                                        Al finalizar {{ term('un_curso') }}, se verificará que el {{ term('alumno_formal') }} cumpla este porcentaje de asistencia 
                                                         para marcarlo como "Finalizado". Si no lo cumple, se marcará como "No finalizado". 
                                                         Dejar vacío para no verificar asistencia.
                                                     </small>
@@ -319,11 +319,11 @@
                                                                name="requiere_pago_total_para_aprobar"
                                                                {% if configuracion.requierePagoTotalParaAprobar %}checked{% endif %}>
                                                         <label class="form-check-label" for="requiere_pago_total_para_aprobar">
-                                                            <i class="bi bi-cash-stack"></i> Pago total del curso requerido para aprobar
+                                                            <i class="bi bi-cash-stack"></i> Pago total {{ term('del_curso') }} requerido para aprobar
                                                         </label>
                                                     </div>
                                                     <small class="form-text text-muted">
-                                                        Al finalizar un curso, se verificará que el alumno tenga todas las cuotas pagadas.
+                                                        Al finalizar {{ term('un_curso') }}, se verificará que el {{ term('alumno_formal') }} tenga todas las cuotas pagadas.
                                                         Si tiene cuotas pendientes, será marcado como "No finalizado".
                                                     </small>
                                                 </div>
@@ -342,7 +342,7 @@
                                     <div class="card-body">
                                         <div class="row">
                                             <div class="col-md-6 mb-3">
-                                                <label for="modo_calificacion" class="form-label">Cómo califica el instituto</label>
+                                                <label for="modo_calificacion" class="form-label">Cómo califica {{ term('el_instituto') }}</label>
                                                 <select class="form-select" id="modo_calificacion" name="modo_calificacion"
                                                         onchange="toggleEscalaNotas()">
                                                     <option value="ninguno" {% if configuracion.modoCalificacion == 'ninguno' %}selected{% endif %}>
@@ -516,7 +516,7 @@
                                             <small class="form-text text-muted">
                                                 Los períodos se definen por rango de meses, sin año, así que se configuran una
                                                 vez y sirven todos los años. Los de tipo <strong>examen</strong> no se asignan
-                                                por fecha: el profesor los elige a mano al crear la evaluación, porque su mes
+                                                por fecha: el {{ term('profesor') }} los elige a mano al crear la evaluación, porque su mes
                                                 suele caer dentro de un trimestre.
                                             </small>
                                         {% endif %}
@@ -622,12 +622,12 @@
                                                                id="notas_influyen_aprobacion" name="notas_influyen_aprobacion"
                                                                {% if configuracion.notasInfluyenAprobacion %}checked{% endif %}>
                                                         <label class="form-check-label" for="notas_influyen_aprobacion">
-                                                            <i class="bi bi-check2-square"></i> Las notas influyen en la aprobación del curso
+                                                            <i class="bi bi-check2-square"></i> Las notas influyen en la aprobación {{ term('del_curso') }}
                                                         </label>
                                                     </div>
                                                     <small class="form-text text-muted">
-                                                        Si está apagado, las notas son solo informativas y el cierre de curso
-                                                        sigue decidiéndose por asistencia y pago. Un alumno sin notas cargadas
+                                                        Si está apagado, las notas son solo informativas y el cierre de {{ term('curso') }}
+                                                        sigue decidiéndose por asistencia y pago. Un {{ term('alumno_formal') }} sin notas cargadas
                                                         nunca se desaprueba por este criterio.
                                                     </small>
                                                 </div>
@@ -668,7 +668,7 @@
                                                     </label>
                                                 </div>
                                                 <small class="form-text text-muted">
-                                                    Si se activa, se generará automáticamente una cuota de inscripción anual para todos los alumnos activos del instituto.
+                                                    Si se activa, se generará automáticamente una cuota de inscripción anual para todos los {{ term('alumnos_formal') }} activos {{ term('del_instituto') }}.
                                                 </small>
                                             </div>
                                         </div>
@@ -688,7 +688,7 @@
                                                                    placeholder="Ej: 5000.00">
                                                         </div>
                                                         <small class="form-text text-muted">
-                                                            Monto fijo que se cobrará anualmente a cada alumno.
+                                                            Monto fijo que se cobrará anualmente a cada {{ term('alumno_formal') }}.
                                                         </small>
                                                     </div>
                                                 </div>
@@ -719,7 +719,7 @@
                                                 </div>
                                             </div>
                                             <div class="alert alert-warning">
-                                                <i class="bi bi-exclamation-triangle"></i> <strong>Importante:</strong> La cuota de inscripción se generará automáticamente para todos los alumnos activos en el mes configurado. Esta deuda aparecerá en el estado de cuenta del alumno separada de las cuotas mensuales de los cursos.
+                                                <i class="bi bi-exclamation-triangle"></i> <strong>Importante:</strong> La cuota de inscripción se generará automáticamente para todos los {{ term('alumnos_formal') }} activos en el mes configurado. Esta deuda aparecerá en el estado de cuenta del {{ term('alumno_formal') }} separada de las cuotas mensuales de {{ term('los_cursos') }}.
                                             </div>
                                         </div>
                                     </div>
@@ -740,7 +740,7 @@
                         <div class="tab-pane fade" id="edit-pagos" role="tabpanel" aria-labelledby="edit-pagos-tab">
                             <div class="card mb-4">
                                 <div class="card-header bg-warning text-dark">
-                                    <h5 class="mb-0"><i class="bi bi-person-workspace"></i> Pago a profesores</h5>
+                                    <h5 class="mb-0"><i class="bi bi-person-workspace"></i> Pago a {{ term('profesores') }}</h5>
                                 </div>
                                 <div class="card-body">
                                     <form method="post" action="{{ path('instituto_config_edit') }}">
@@ -750,11 +750,11 @@
                                         <div class="row">
                                             <div class="col-md-6 mb-3">
                                                 <label for="base_porcentaje_profesor" class="form-label">
-                                                    Cuando un profesor cobra un porcentaje del curso, calcularlo sobre
+                                                    Cuando un {{ term('profesor') }} cobra un porcentaje {{ term('del_curso') }}, calcularlo sobre
                                                 </label>
                                                 <select class="form-select" id="base_porcentaje_profesor" name="base_porcentaje_profesor">
                                                     <option value="cobrado" {% if configuracion.basePorcentajeProfesor == 'cobrado' %}selected{% endif %}>
-                                                        Lo efectivamente cobrado del curso en el mes
+                                                        Lo efectivamente cobrado {{ term('del_curso') }} en el mes
                                                     </option>
                                                     <option value="facturado" {% if configuracion.basePorcentajeProfesor == 'facturado' %}selected{% endif %}>
                                                         Lo facturado del mes (inscriptos × precio), cobrado o no
@@ -762,17 +762,17 @@
                                                 </select>
                                                 <div class="form-text">
                                                     Con <strong>lo cobrado</strong> nunca pagás comisión por una cuota que no
-                                                    entró. Con <strong>lo facturado</strong> le pagás al profesor por todos
-                                                    sus inscriptos aunque el instituto todavía no haya cobrado.
+                                                    entró. Con <strong>lo facturado</strong> le pagás al {{ term('profesor') }} por todos
+                                                    sus inscriptos aunque {{ term('el_instituto') }} todavía no haya cobrado.
                                                 </div>
                                             </div>
                                         </div>
 
                                         <div class="alert alert-light border small mb-3">
                                             <i class="bi bi-info-circle"></i>
-                                            La modalidad de cada profesor (por hora, fijo mensual, porcentaje) se define en
-                                            su ficha, y la excepción por curso en
-                                            <a href="{{ path('app_profesor_pago_liquidacion') }}">Liquidación → Pago por curso</a>.
+                                            La modalidad de cada {{ term('profesor') }} (por hora, fijo mensual, porcentaje) se define en
+                                            su ficha, y la excepción por {{ term('curso') }} en
+                                            <a href="{{ path('app_profesor_pago_liquidacion') }}">Liquidación → Pago por {{ term('curso') }}</a>.
                                         </div>
 
                                         <button type="submit" class="btn btn-primary">
@@ -878,7 +878,7 @@
                                                                    min="0" max="100" step="0.01"
                                                                    value="{{ configuracion.descuentoHermanos }}"
                                                                    placeholder="0.00">
-                                                            <small class="form-text text-muted">Porcentaje de descuento aplicado a alumnos con hermanos en el instituto. Dejar en blanco para no aplicar descuento.</small>
+                                                            <small class="form-text text-muted">Porcentaje de descuento aplicado a {{ term('alumnos_formal') }} con hermanos en {{ term('el_instituto') }}. Dejar en blanco para no aplicar descuento.</small>
                                                         </td>
                                                     </tr>
                                                     <tr>
@@ -891,10 +891,10 @@
                                                                        name="deshabilitarDescuentosEnDeuda"
                                                                        {% if not configuracion.deshabilitarDescuentosEnDeuda %}checked{% endif %}>
                                                                 <label class="form-check-label" for="deshabilitarDescuentosEnDeuda">
-                                                                    <strong>Habilitar descuentos para alumnos con deudas</strong>
+                                                                    <strong>Habilitar descuentos para {{ term('alumnos_formal') }} con deudas</strong>
                                                                 </label>
                                                             </div>
-                                                            <small class="form-text text-muted">Si se activa esta opción, los alumnos con deudas podrán beneficiarse de los descuentos configurados.</small>
+                                                            <small class="form-text text-muted">Si se activa esta opción, los {{ term('alumnos_formal') }} con deudas podrán beneficiarse de los descuentos configurados.</small>
                                                         </td>
                                                     </tr>
                                                     <tr>
@@ -1010,7 +1010,7 @@
                                 </div>
                                 <div class="card-body">
                                     <div class="alert alert-info mb-4">
-                                        <i class="bi bi-info-circle"></i> Configure los métodos de pago disponibles para su instituto. El método "Efectivo" aplicará automáticamente el descuento configurado en la sección de Pagos.
+                                        <i class="bi bi-info-circle"></i> Configure los métodos de pago disponibles para su {{ term('instituto') }}. El método "Efectivo" aplicará automáticamente el descuento configurado en la sección de Pagos.
                                     </div>
 
                                     <!-- Formulario para agregar nuevo método -->
@@ -1161,7 +1161,7 @@
                                                 <strong>Enviar recibos automáticamente al registrar pagos</strong>
                                             </label>
                                             <div class="form-text text-muted">
-                                                <strong>Activado:</strong> Cada vez que se registre un pago, se enviará automáticamente un email al alumno con el comprobante de pago.<br>
+                                                <strong>Activado:</strong> Cada vez que se registre un pago, se enviará automáticamente un email al {{ term('alumno_formal') }} con el comprobante de pago.<br>
                                                 <strong>Desactivado:</strong> Los recibos solo se pueden enviar manualmente desde el historial de emails.
                                             </div>
                                         </div>
@@ -1171,13 +1171,13 @@
                                                 <strong>¿A quién le llegan los emails?</strong>
                                             </label>
                                             <select class="form-select" id="notificarA" name="notificarA">
-                                                <option value="alumno" {% if configuracion.notificarA == 'alumno' %}selected{% endif %}>Solo al alumn@</option>
-                                                <option value="ambos" {% if configuracion.notificarA == 'ambos' %}selected{% endif %}>Al alumn@ y a su tutor</option>
+                                                <option value="alumno" {% if configuracion.notificarA == 'alumno' %}selected{% endif %}>Solo al {{ term('alumno') }}</option>
+                                                <option value="ambos" {% if configuracion.notificarA == 'ambos' %}selected{% endif %}>Al {{ term('alumno') }} y a su tutor</option>
                                             </select>
                                             <div class="form-text text-muted">
                                                 Aplica a los recibos de pago, los recordatorios de deuda y los boletines de notas.
-                                                El alumn@ recibe siempre; con la segunda opción se suma el email del tutor cargado en su
-                                                ficha. Si el email del alumn@ y el del tutor son el mismo, se manda una sola copia.
+                                                El {{ term('alumno') }} recibe siempre; con la segunda opción se suma el email del tutor cargado en su
+                                                ficha. Si el email {{ term('del_alumno') }} y el del tutor son el mismo, se manda una sola copia.
                                             </div>
                                         </div>
 
@@ -1191,8 +1191,8 @@
                                                 <strong>Enviar recordatorios de deudas automáticamente</strong>
                                             </label>
                                             <div class="form-text text-muted">
-                                                <strong>Activado:</strong> se envían recordatorios según las reglas de abajo. <strong>Requiere el cron job en el servidor.</strong> El alumno recibe un solo email por día aunque deba varias cuotas: se manda por la más antigua e indica cuántas debe en total.<br>
-                                                <strong>Desactivado:</strong> los recordatorios solo se pueden enviar a mano desde el botón "Enviar Recordatorio" en la vista de cada alumno.
+                                                <strong>Activado:</strong> se envían recordatorios según las reglas de abajo. <strong>Requiere el cron job en el servidor.</strong> El {{ term('alumno_formal') }} recibe un solo email por día aunque deba varias cuotas: se manda por la más antigua e indica cuántas debe en total.<br>
+                                                <strong>Desactivado:</strong> los recordatorios solo se pueden enviar a mano desde el botón "Enviar Recordatorio" en la vista de cada {{ term('alumno_formal') }}.
                                             </div>
                                         </div>
                                         

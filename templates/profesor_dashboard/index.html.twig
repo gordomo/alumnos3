@@ -21,7 +21,7 @@
                         <p class="card-text">
                             <strong>Horario:</strong> {{ curso.horarioInicio|date('H:i') }} - {{ curso.horarioFin|date('H:i') }}<br>
                             <strong>Días:</strong> {{ curso.dias|join(', ') }}<br>
-                            <strong>Alumn@s Inscriptos:</strong> {{ curso.alumnos|length }}
+                            <strong>{{ Term('alumnos') }} Inscriptos:</strong> {{ curso.alumnos|length }}
                         </p>
                     </div>
                     <div class="card-footer">
@@ -34,7 +34,7 @@
         {% else %}
             <div class="col-12">
                 <div class="alert alert-info">
-                    No tienes cursos asignados.
+                    No tienes {{ term('cursos') }} asignados.
                 </div>
             </div>
         {% endfor %}

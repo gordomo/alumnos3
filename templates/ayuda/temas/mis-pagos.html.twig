@@ -22,8 +22,8 @@
 <h2>Cómo se llega a ese número</h2>
 
 <p>
-    Abajo está el desglose, curso por curso, con la modalidad que se le aplicó a cada uno y la
-    cuenta que se hizo. Según lo que tengas acordado, cada curso puede ir:
+    Abajo está el desglose, {{ term('curso') }} por {{ term('curso') }}, con la modalidad que se le aplicó a cada uno y la
+    cuenta que se hizo. Según lo que tengas acordado, cada {{ term('curso') }} puede ir:
 </p>
 
 <ul>
@@ -31,8 +31,8 @@
         <strong>Por hora</strong>: las clases dictadas del mes por la duración de cada una y por tu
         valor hora, más el viático por clase si tenés uno cargado.
     </li>
-    <li><strong>Porcentaje</strong>: un porcentaje de lo que produjo el curso ese mes.</li>
-    <li><strong>Fijo por el curso</strong>: un monto acordado, sin importar las clases.</li>
+    <li><strong>Porcentaje</strong>: un porcentaje de lo que produjo {{ term('el_curso') }} ese mes.</li>
+    <li><strong>Fijo por {{ term('el_curso') }}</strong>: un monto acordado, sin importar las clases.</li>
 </ul>
 
 {{ m.nota('info', 'Lo que no se dictó no se paga',

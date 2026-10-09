@@ -5,7 +5,7 @@
 {% block title %}Lista de Institutos{% endblock %}
 
 {% block panelTitle %}
-    Lista de Institutos <a href="{{ path('admin_instituto_new') }}" class="btn btn-success btn-sm">Nuevo instituto</a>
+    Lista de Institutos <a href="{{ path('admin_instituto_new') }}" class="btn btn-success btn-sm">Nuevo {{ term('instituto') }}</a>
 {% endblock %}
 
 {% block body %}
@@ -21,7 +21,7 @@
                            id="nombre" 
                            name="nombre" 
                            value="{{ nombre }}" 
-                           placeholder="Nombre del instituto">
+                           placeholder="Nombre {{ term('del_instituto') }}">
                 </div>
                 {% if usuariosAdmin is defined and usuariosAdmin|length > 0 %}
                     <div class="col-md-4">
@@ -110,7 +110,7 @@
                         {% else %}
                             <tr>
                                 <td colspan="7" class="text-center text-muted">
-                                    No se encontraron institutos con los filtros aplicados.
+                                    No se encontraron {{ term('instituto_plural') }} con los filtros aplicados.
                                 </td>
                             </tr>
                         {% endif %}

@@ -8,7 +8,7 @@
         <div class="col-md-12">
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ path('app_alumno_index') }}">Alumn@s</a></li>
+                    <li class="breadcrumb-item"><a href="{{ path('app_alumno_index') }}">{{ Term('alumnos') }}</a></li>
                     <li class="breadcrumb-item"><a href="{{ path('app_alumno_show', {'id': alumno.id}) }}">{{ alumno.nombre }} {{ alumno.apellido }}</a></li>
                     <li class="breadcrumb-item"><a href="{{ path('app_saldo_favor_index', {'id': alumno.id}) }}">Saldos a Favor</a></li>
                     <li class="breadcrumb-item active" aria-current="page">Nueva Nota de Crédito</li>
@@ -45,9 +45,9 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="curso_id" class="form-label">Curso relacionado <small class="text-muted">(opcional)</small></label>
+                            <label for="curso_id" class="form-label">{{ Term('curso') }} relacionado <small class="text-muted">(opcional)</small></label>
                             <select name="curso_id" id="curso_id" class="form-select">
-                                <option value="">— Sin curso específico —</option>
+                                <option value="">— Sin {{ term('curso') }} específico —</option>
                                 {% for curso in cursosActivos %}
                                     <option value="{{ curso.id }}">{{ curso.nombre }}</option>
                                 {% endfor %}
@@ -61,7 +61,7 @@
 
                         <div class="alert alert-info">
                             <i class="bi bi-info-circle"></i> 
-                            El saldo a favor quedará disponible para ser aplicado manualmente a deudas pendientes del alumno.
+                            El saldo a favor quedará disponible para ser aplicado manualmente a deudas pendientes del {{ term('alumno_formal') }}.
                         </div>
 
                         <div class="d-flex justify-content-end gap-2">

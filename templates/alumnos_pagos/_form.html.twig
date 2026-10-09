@@ -7,7 +7,7 @@
     <div class="card-body">
     {# Curso - oculto en modo múltiple #}
     <div class="mb-3" id="campo-curso-container">
-        <label for="{{ form.curso.vars.id }}" class="form-label fw-semibold text-dark mb-1">Curso <span class="text-danger">*</span></label>
+        <label for="{{ form.curso.vars.id }}" class="form-label fw-semibold text-dark mb-1">{{ Term('curso') }} <span class="text-danger">*</span></label>
         {{ form_widget(form.curso, {'attr': {'class': 'form-select'}}) }}
         {{ form_errors(form.curso) }}
     </div>

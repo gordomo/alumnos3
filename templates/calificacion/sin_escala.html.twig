@@ -10,7 +10,7 @@
         </div>
         <div class="card-body">
             <div class="alert alert-info mb-0">
-                <h5 class="alert-heading"><i class="bi bi-info-circle"></i> El instituto todavía no usa calificaciones</h5>
+                <h5 class="alert-heading"><i class="bi bi-info-circle"></i> El {{ term('instituto') }} todavía no usa calificaciones</h5>
                 <p class="mb-2">
                     Para empezar a cargar notas hay que elegir una escala de calificación:
                     numérica, conceptual o ambas.
@@ -23,8 +23,8 @@
                 {% else %}
                     <hr>
                     <p class="mb-0 small">
-                        Pedile al administrador del instituto que configure la escala en
-                        <strong>Configuración del Instituto → Configuración Académica</strong>.
+                        Pedile al administrador {{ term('del_instituto') }} que configure la escala en
+                        <strong>Configuración del {{ Term('instituto') }} → Configuración Académica</strong>.
                     </p>
                 {% endif %}
             </div>

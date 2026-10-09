@@ -277,7 +277,7 @@
         <div class="col-md-6">
             <form method="get" action="{{ path('app_curso_index') }}" class="d-flex gap-2 curso-search-form ui-filter-search">
                 <div class="input-group">
-                    <input name="busqueda" type="text" class="form-control" placeholder="Buscar por nombre" value="{{ busqueda is defined ? busqueda : '' }}" aria-label="Buscar curso">
+                    <input name="busqueda" type="text" class="form-control" placeholder="Buscar por nombre" value="{{ busqueda is defined ? busqueda : '' }}" aria-label="Buscar {{ term('curso') }}">
                     <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i></button>
                 </div>
                 {% if busqueda %}
@@ -320,7 +320,7 @@
                                     <i class="bi bi-arrow-{{ sort == 'nombre' ? (order == 'asc' ? 'up' : 'down') : 'up-down' }}"></i>
                                 </a>
                             </th>
-                            <th class="w-auto">Profesor</th>
+                            <th class="w-auto">{{ Term('profesor') }}</th>
                             <th class="w-auto">
                                 <a href="{{ path('app_curso_index', {
                                     'action': 'cursos',
@@ -348,7 +348,7 @@
                                         <span class="profesor-badge">{{ profesor.apellido }} {{ profesor.nombre }}</span>
                                     </div>
                                 {% else %}
-                                    <span class="text-danger"><i class="bi bi-exclamation-triangle"></i> Sin profesores</span>
+                                    <span class="text-danger"><i class="bi bi-exclamation-triangle"></i> Sin {{ term('profesores') }}</span>
                                 {% endfor %}
                             </td>
                             <td><strong class="text-success">${{ curso.precio | number_format(2, ',', '.') }}</strong></td>
@@ -390,7 +390,7 @@
                         <tr>
                             <td colspan="8" class="text-center py-4">
                                 <i class="bi bi-inbox" style="font-size: 2rem; color: #ccc;"></i>
-                                <p class="text-muted mt-2">No se encontraron cursos activos</p>
+                                <p class="text-muted mt-2">No se encontraron {{ term('cursos') }} activos</p>
                             </td>
                         </tr>
                     {% endfor %}
@@ -409,7 +409,7 @@
                     <thead class="table-light">
                         <tr>
                             <th class="w-auto">Nombre</th>
-                            <th class="w-auto">Profesor</th>
+                            <th class="w-auto">{{ Term('profesor') }}</th>
                             <th class="w-auto">Precio</th>
                             <th class="w-auto">Horario</th>
                             <th class="w-auto">Fecha Inicio</th>
@@ -427,7 +427,7 @@
                                         <span class="profesor-badge">{{ profesor.apellido }} {{ profesor.nombre }}</span>
                                     </div>
                                 {% else %}
-                                    <span class="text-danger"><i class="bi bi-exclamation-triangle"></i> Sin profesores</span>
+                                    <span class="text-danger"><i class="bi bi-exclamation-triangle"></i> Sin {{ term('profesores') }}</span>
                                 {% endfor %}
                             </td>
                             <td><strong class="text-success">${{ curso.precio | number_format(2, ',', '.') }}</strong></td>
@@ -454,7 +454,7 @@
                         <tr>
                             <td colspan="8" class="text-center py-4">
                                 <i class="bi bi-inbox" style="font-size: 2rem; color: #ccc;"></i>
-                                <p class="text-muted mt-2">No se encontraron cursos deshabilitados</p>
+                                <p class="text-muted mt-2">No se encontraron {{ term('cursos') }} deshabilitados</p>
                             </td>
                         </tr>
                     {% endfor %}
@@ -471,7 +471,7 @@
 
 <div class="curso-floating-actions">
     <a href="{{ path('app_curso_new') }}" class="curso-floating-btn curso-floating-btn--new">
-        <i class="bi bi-plus-circle"></i> Nuevo Curso
+        <i class="bi bi-plus-circle"></i> Nuevo {{ Term('curso') }}
     </a>
     <a href="{{ path('app_curso_calendario') }}" class="curso-floating-btn curso-floating-btn--calendar">
         <i class="bi bi-calendar3"></i> Ver Calendario

@@ -9,7 +9,7 @@
         <li><strong>Contacto:</strong> {{ solicitud.nombreContacto }}</li>
         <li><strong>Email:</strong> {{ solicitud.email }}</li>
         <li><strong>Teléfono:</strong> {{ solicitud.telefono|default('no dejó') }}</li>
-        <li><strong>Alumn@s estimad@s:</strong> {{ solicitud.alumnosEstimadosEtiqueta|default('no contestó') }}</li>
+        <li><strong>{{ Term('alumnos') }} estimad@s:</strong> {{ solicitud.alumnosEstimadosEtiqueta|default('no contestó') }}</li>
     </ul>
 
     {% if solicitud.mensaje %}

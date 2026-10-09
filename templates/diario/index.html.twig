@@ -9,8 +9,8 @@
     <div class="card mb-3">
         <div class="card-body">
             <p class="mb-0 small text-muted">
-                Por cada curso, lo que se fue dando clase por clase y los materiales de consulta.
-                El alumn@ lo ve en <strong>Mis Cursos</strong>, así que el que faltó se entera de qué
+                Por cada {{ term('curso') }}, lo que se fue dando clase por clase y los materiales de consulta.
+                El {{ term('alumno') }} lo ve en <strong>Mis {{ Term('cursos') }}</strong>, así que el que faltó se entera de qué
                 se perdió y de dónde estudiarlo.
             </p>
         </div>
@@ -21,7 +21,7 @@
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
                     <tr>
-                        <th>Curso</th>
+                        <th>{{ Term('curso') }}</th>
                         <th class="text-center">Clases registradas</th>
                         <th class="text-center">Materiales</th>
                         <th class="text-end">Acciones</th>
@@ -55,7 +55,7 @@
                 {% else %}
                     <tr>
                         <td colspan="4" class="text-center text-muted py-4">
-                            No hay cursos para mostrar.
+                            No hay {{ term('cursos') }} para mostrar.
                         </td>
                     </tr>
                 {% endfor %}

@@ -31,7 +31,7 @@
 
         <p>
             Notas de <strong>{{ alumno.nombre }} {{ alumno.apellido }}</strong>
-            en el curso <strong>{{ curso.nombre }}</strong>.
+            en {{ term('el_curso') }} <strong>{{ curso.nombre }}</strong>.
         </p>
 
         <div class="resumen">
@@ -49,7 +49,7 @@
         </div>
 
         {% if calificaciones is empty %}
-            <p>Todavía no hay notas cargadas para este curso.</p>
+            <p>Todavía no hay notas cargadas para {{ term('este_curso') }}.</p>
         {% else %}
             <table>
                 <thead>

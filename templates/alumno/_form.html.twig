@@ -9,8 +9,8 @@
         <div>
             <h5 class="alert-heading mb-2">Creación de Usuario</h5>
             <p class="mb-0">
-                Al crear este alumno, se generará automáticamente un usuario para acceder al sistema con el Email ingresado.
-                Para obtener la contraseña, el alumno deberá utilizar la funcionalidad 
+                Al crear este {{ term('alumno_formal') }}, se generará automáticamente un usuario para acceder al sistema con el Email ingresado.
+                Para obtener la contraseña, el {{ term('alumno_formal') }} deberá utilizar la funcionalidad 
                 <strong>"¿Olvidó su contraseña?"</strong> en la página de inicio de sesión.
             </p>
         </div>
@@ -271,7 +271,7 @@
 <div class="card mb-4 shadow-sm">
     <div class="card-header" style="background-color: #d1e7dd; border-bottom: 2px solid #198754;">
         <h4 class="mb-0 text-dark">
-            <i class="bi bi-people" style="color: #198754;"></i> Relaciones y Cursos
+            <i class="bi bi-people" style="color: #198754;"></i> Relaciones y {{ Term('cursos') }}
         </h4>
     </div>
     <div class="card-body">
@@ -289,9 +289,9 @@
             <div class="col-md-6">
                 <div class="mb-3">
                     <label for="{{ form.curso.vars.id }}" class="form-label fw-semibold text-dark">
-                        Cursos
+                        {{ Term('cursos') }}
                     </label>
-                    <small class="text-muted d-block mb-2">Puede seleccionar múltiples cursos. Use Ctrl+Click (o Cmd+Click en Mac) para seleccionar varios.</small>
+                    <small class="text-muted d-block mb-2">Puede seleccionar múltiples {{ term('cursos') }}. Use Ctrl+Click (o Cmd+Click en Mac) para seleccionar varios.</small>
                     {{ form_widget(form.curso, {'attr': {'class': 'form-control chosen-select'}}) }}
                     {{ form_errors(form.curso) }}
                 </div>
@@ -311,7 +311,7 @@
                         {% endfor %}
                     </div>
                     <small class="text-muted d-block mt-2">
-                        Selecciona desde qué momento se deben generar las deudas para los cursos nuevos.
+                        Selecciona desde qué momento se deben generar las deudas para {{ term('los_cursos') }} nuevos.
                     </small>
                     {{ form_errors(form.modoGeneracionDeuda) }}
                 </div>

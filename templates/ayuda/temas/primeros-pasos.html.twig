@@ -3,32 +3,32 @@
 
 {% block contenido %}
 <p>
-    El sistema se organiza alrededor de tres cosas: <strong>cursos</strong>,
-    <strong>alumnos</strong> y las <strong>inscripciones</strong> que los vinculan. Casi todo
+    El sistema se organiza alrededor de tres cosas: <strong>{{ term('cursos') }}</strong>,
+    <strong>{{ term('alumnos_formal') }}</strong> y las <strong>inscripciones</strong> que los vinculan. Casi todo
     lo demás (deudas, asistencias, notas) se deriva de esas inscripciones.
 </p>
 
 <h2>En qué orden conviene cargar todo</h2>
 
-<p>Si el instituto arranca de cero, este orden evita tener que volver atrás:</p>
+<p>Si {{ term('el_instituto') }} arranca de cero, este orden evita tener que volver atrás:</p>
 
 <ol>
     <li>
-        <strong>Configuración del instituto.</strong> Los días de vencimiento y los intereses
+        <strong>Configuración {{ term('del_instituto') }}.</strong> Los días de vencimiento y los intereses
         primero, porque las deudas que se generen después los usan para calcular recargos.
         {{ m.ruta(['Configuración']) }}
     </li>
     <li>
         <strong>Métodos de pago y descuentos.</strong> En la misma pantalla de configuración.
     </li>
-    <li><strong>Profesores.</strong> {{ m.ruta(['Profesores', 'Listado']) }}</li>
+    <li><strong>{{ Term('profesores') }}.</strong> {{ m.ruta(['Profesores', 'Listado']) }}</li>
     <li>
-        <strong>Cursos</strong>, con sus horarios y los profesores asignados. Un curso necesita
+        <strong>{{ Term('cursos') }}</strong>, con sus horarios y los {{ term('profesores') }} asignados. Un {{ term('curso') }} necesita
         fecha de inicio y de fin: sobre ese período se calculan las cuotas.
     </li>
     <li>
-        <strong>Alumn@s</strong>, y recién ahí inscribirlos a los cursos. Al inscribir se
-        generan las cuotas, así que conviene tener el curso bien configurado antes.
+        <strong>{{ Term('alumnos') }}</strong>, y recién ahí inscribirlos a {{ term('los_cursos') }}. Al inscribir se
+        generan las cuotas, así que conviene tener {{ term('el_curso') }} bien configurado antes.
     </li>
 </ol>
 
@@ -40,8 +40,8 @@
 
 <p>
     Todo se navega desde el menú de la izquierda. Lo que ves ahí depende de tu tipo de
-    usuario: un profesor ve solo sus cursos y las pantallas de carga; un administrador del
-    instituto ve todo.
+    usuario: un {{ term('profesor') }} ve solo sus {{ term('cursos') }} y las pantallas de carga; un administrador del
+    {{ term('instituto') }} ve todo.
 </p>
 
 {{ m.captura('sidebar-admin.png', 'Menú de un administrador de instituto') }}
@@ -50,15 +50,15 @@
 
 <ul>
     <li>
-        <strong>Administrador del instituto.</strong> Configura el instituto, carga cursos,
-        alumnos y profesores, registra pagos y ve todos los informes.
+        <strong>Administrador {{ term('del_instituto') }}.</strong> Configura {{ term('el_instituto') }}, carga {{ term('cursos') }},
+        {{ term('alumnos_formal') }} y {{ term('profesores') }}, registra pagos y ve todos los informes.
     </li>
     <li>
-        <strong>Profesor.</strong> Entra solo a los cursos que tiene asignados, para tomar
+        <strong>{{ Term('profesor') }}.</strong> Entra solo a {{ term('los_cursos') }} que tiene asignados, para tomar
         asistencia y cargar notas.
     </li>
     <li>
-        <strong>Alumno.</strong> Ve su propia información: cursos, asistencias, pagos,
+        <strong>{{ Term('alumno_formal') }}.</strong> Ve su propia información: {{ term('cursos') }}, asistencias, pagos,
         deudas y notas.
     </li>
 </ul>

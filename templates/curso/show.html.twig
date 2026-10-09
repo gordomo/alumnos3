@@ -10,7 +10,7 @@
 <div class="container-fluid">
     <div class="card shadow mb-4">
         <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Información del Curso</h6>
+            <h6 class="m-0 font-weight-bold text-primary">Información del {{ Term('curso') }}</h6>
         </div>
         <div class="card-body">
             <div class="row">
@@ -75,17 +75,17 @@
                                 </td>
                             </tr>
                             <tr>
-                                <th>Profesores</th>
+                                <th>{{ Term('profesores') }}</th>
                                 <td>
                                     {% for profesor in curso.profesores %}
                                         {{ profesor.apellido }}, {{ profesor.nombre }}{% if not loop.last %}<br>{% endif %}
                                     {% else %}
-                                        <span class="text-danger">No tiene profesores asignados</span>
+                                        <span class="text-danger">No tiene {{ term('profesores') }} asignados</span>
                                     {% endfor %}
                                 </td>
             </tr>
             <tr>
-                                <th>Total de Alumn@s</th>
+                                <th>Total de {{ Term('alumnos') }}</th>
                                 <td>
                                     <strong>{{ curso.alumnos|length }}</strong>
                                     {% if curso.alumnos|length > 0 %}
@@ -102,7 +102,7 @@
 
     <div class="card shadow mb-4">
         <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Alumn@s Inscriptos</h6>
+            <h6 class="m-0 font-weight-bold text-primary">{{ Term('alumnos') }} Inscriptos</h6>
         </div>
         <div class="card-body">
             {% if curso.alumnos|length > 0 %}
@@ -150,7 +150,7 @@
                 </div>
             {% else %}
                 <div class="alert alert-info">
-                    <i class="bi bi-info-circle"></i> No hay alumnos inscriptos en este curso.
+                    <i class="bi bi-info-circle"></i> No hay {{ term('alumnos_formal') }} inscriptos en {{ term('este_curso') }}.
                 </div>
             {% endif %}
         </div>
@@ -180,7 +180,7 @@
                 {% endif %}
                 {% if not curso.cerrado and not curso.disabled %}
                     <a href="{{ path('app_curso_cerrar_preview', {'id': curso.id}) }}" class="btn btn-warning">
-                        <i class="bi bi-lock"></i> Cerrar Curso
+                        <i class="bi bi-lock"></i> Cerrar {{ Term('curso') }}
                     </a>
                 {% endif %}
             </div>

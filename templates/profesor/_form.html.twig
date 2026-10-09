@@ -10,8 +10,8 @@
         <div>
             <h5 class="alert-heading mb-2">Creación de Usuario</h5>
             <p class="mb-0">
-                Al crear este profesor, se generará automáticamente un usuario para acceder al sistema.
-                Para obtener la contraseña, el profesor deberá utilizar la funcionalidad 
+                Al crear este {{ term('profesor') }}, se generará automáticamente un usuario para acceder al sistema.
+                Para obtener la contraseña, el {{ term('profesor') }} deberá utilizar la funcionalidad 
                 <strong>"¿Olvidó su contraseña?"</strong> en la página de inicio de sesión.
             </p>
         </div>
@@ -113,8 +113,8 @@
                         <input class="form-check-input" type="radio" name="tipo_pago" id="tipo_pago_porcentaje" value="porcentaje"
                             {% if profesor and profesor.tipoPago == 'porcentaje' %}checked{% endif %}>
                         <label class="form-check-label" for="tipo_pago_porcentaje">
-                            <strong>Porcentaje del curso</strong>
-                            <small class="d-block text-muted">% sobre (alumnos activos × precio del curso)</small>
+                            <strong>Porcentaje {{ term('del_curso') }}</strong>
+                            <small class="d-block text-muted">% sobre ({{ term('alumnos_formal') }} activos × precio {{ term('del_curso') }})</small>
                         </label>
                     </div>
                     <div class="form-check mb-2">
@@ -216,7 +216,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <div class="card mb-4 shadow-sm">
     <div class="card-header" style="background-color: #d1e7dd; border-bottom: 2px solid #198754;">
         <h4 class="mb-0 text-dark">
-            <i class="bi bi-book" style="color: #198754;"></i> Cursos Asignados
+            <i class="bi bi-book" style="color: #198754;"></i> {{ Term('cursos') }} Asignados
         </h4>
     </div>
     <div class="card-body">
@@ -224,9 +224,9 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="col-md-12">
                 <div class="mb-2">
                     <label for="{{ form.cursos.vars.id }}" class="form-label fw-semibold text-dark">
-                        Cursos
+                        {{ Term('cursos') }}
                     </label>
-                    <small class="text-muted d-block mb-2">Puede seleccionar múltiples cursos. Use Ctrl+Click (o Cmd+Click en Mac) para seleccionar varios.</small>
+                    <small class="text-muted d-block mb-2">Puede seleccionar múltiples {{ term('cursos') }}. Use Ctrl+Click (o Cmd+Click en Mac) para seleccionar varios.</small>
                     {{ form_widget(form.cursos, {'attr': {'class': 'form-control chosen-select'}}) }}
                     {{ form_errors(form.cursos) }}
                 </div>
@@ -237,12 +237,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
 {% if mostrar_confirmacion is defined and mostrar_confirmacion %}
     <div class="alert alert-warning mt-3">
-        <p><strong>Atención:</strong> Está quitando a este profesor de al menos un curso que ya comenzó y tiene asistencias cargadas.</p>
-        <p class="mb-0">Los registros de asistencia se conservan; el profesor dejará de figurar asignado a ese curso. Si desea continuar, marque la confirmación abajo.</p>
+        <p><strong>Atención:</strong> Está quitando a este {{ term('profesor') }} de al menos {{ term('un_curso') }} que ya comenzó y tiene asistencias cargadas.</p>
+        <p class="mb-0">Los registros de asistencia se conservan; el {{ term('profesor') }} dejará de figurar asignado a ese {{ term('curso') }}. Si desea continuar, marque la confirmación abajo.</p>
         <div class="form-check mt-3">
             <input type="checkbox" class="form-check-input" id="confirmar_cambio_cursos" name="confirmar_cambio_cursos" value="1" required>
             <label class="form-check-label" for="confirmar_cambio_cursos">
-                Confirmo que deseo continuar con los cambios en los cursos asignados
+                Confirmo que deseo continuar con los cambios en {{ term('los_cursos') }} asignados
             </label>
         </div>
     </div>

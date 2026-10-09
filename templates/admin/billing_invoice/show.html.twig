@@ -34,7 +34,7 @@
                 <div class="card-body">
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <h6 class="text-muted">Instituto</h6>
+                            <h6 class="text-muted">{{ Term('instituto') }}</h6>
                             <p><strong>{{ invoice.instituto.nombre }}</strong></p>
                             {% if invoice.instituto.email %}
                                 <p><i class="bi bi-envelope"></i> {{ invoice.instituto.email }}</p>
@@ -79,19 +79,19 @@
                                 <tbody>
                                     <tr>
                                         <td>
-                                            <strong>Facturación mensual por alumnos activos</strong>
+                                            <strong>Facturación mensual por {{ term('alumnos_formal') }} activos</strong>
                                             <br>
                                             <small class="text-muted">Período: {{ invoice.getFormattedPeriod() }}</small>
                                         </td>
                                         <td class="text-center">
                                             <span class="badge bg-primary">{{ invoice.activeStudentsCount }}</span>
                                             <br>
-                                            <small class="text-muted">alumnos activos</small>
+                                            <small class="text-muted">{{ term('alumnos_formal') }} activos</small>
                                         </td>
                                         <td class="text-end">
                                             <strong>${{ invoice.pricePerStudent|number_format(2, ',', '.') }}</strong>
                                             <br>
-                                            <small class="text-muted">por alumno/mes</small>
+                                            <small class="text-muted">por {{ term('alumno_formal') }}/mes</small>
                                         </td>
                                         <td class="text-end">
                                             <strong class="fs-5">${{ invoice.totalAmount|number_format(2, ',', '.') }}</strong>
@@ -187,13 +187,13 @@
                         </label>
                         <textarea class="form-control" id="rejection_reason" name="rejection_reason" rows="4" required placeholder="Explica el motivo del rechazo..."></textarea>
                         <small class="form-text text-muted">
-                            Este motivo será visible para el instituto.
+                            Este motivo será visible para {{ term('el_instituto') }}.
                         </small>
                     </div>
                     
                     <div class="alert alert-warning">
                         <i class="bi bi-exclamation-triangle"></i> 
-                        <strong>Advertencia:</strong> Al rechazar este pago, el instituto podrá subir un nuevo comprobante.
+                        <strong>Advertencia:</strong> Al rechazar este pago, {{ term('el_instituto') }} podrá subir un nuevo comprobante.
                     </div>
                 </div>
                 <div class="modal-footer">

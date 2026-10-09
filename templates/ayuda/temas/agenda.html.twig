@@ -54,13 +54,13 @@
     día por día.
 </p>
 
-<p>Clic en cualquier evento abre el detalle: de qué es, de qué curso, y la información que tenga.</p>
+<p>Clic en cualquier evento abre el detalle: de qué es, de qué {{ term('curso') }}, y la información que tenga.</p>
 
 <h2>De dónde sale cada cosa</h2>
 
 <ul>
     <li>
-        <strong>Clases</strong>: de los horarios del curso, entre su fecha de inicio y la de fin.
+        <strong>Clases</strong>: de los horarios {{ term('del_curso') }}, entre su fecha de inicio y la de fin.
         Cada día se dibuja en <em>su</em> horario, así que un curso que tiene lunes a la tarde y
         jueves a la mañana se ve como es.{% if esAdmin %} Arrancan apagadas: su pantalla es
         {{ m.ruta(['Cursos', 'Calendario']) }}.{% endif %}
@@ -82,7 +82,7 @@
             pagaste no aparece.
         </li>
     {% endif %}
-    <li><strong>Eventos del instituto</strong>: lo que se carga a mano, que es lo único que se escribe acá.</li>
+    <li><strong>Eventos {{ term('del_instituto') }}</strong>: lo que se carga a mano, que es lo único que se escribe acá.</li>
 </ul>
 
 {{ m.nota('info', 'No se carga nada dos veces',
@@ -104,7 +104,7 @@
         además tapa las clases de esos días.
     </li>
     <li>
-        <strong>Quién lo ve</strong>: todos, solo profesores, solo alumn@s, o solo administración.
+        <strong>Quién lo ve</strong>: todos, solo {{ term('profesores') }}, solo {{ term('alumnos') }}, o solo administración.
         La administración lo ve siempre.
     </li>
     <li>
@@ -112,8 +112,8 @@
         hora, prendé <em>tiene horario</em>.
     </li>
     <li>
-        <strong>Curso</strong>, opcional. Asociarlo a un curso hace que solo lo vean quienes
-        cursan o dictan ese curso: sirve para la mesa de examen de una materia.
+        <strong>{{ Term('curso') }}</strong>, opcional. Asociarlo a {{ term('un_curso') }} hace que solo lo vean quienes
+        cursan o dictan ese {{ term('curso') }}: sirve para la mesa de examen de una materia.
     </li>
 </ol>
 

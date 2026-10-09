@@ -26,9 +26,9 @@
                         <thead class="table-light">
                             <tr>
                                 <th>Recibida</th>
-                                <th>Instituto</th>
+                                <th>{{ Term('instituto') }}</th>
                                 <th>Contacto</th>
-                                <th>Alumn@s</th>
+                                <th>{{ Term('alumnos') }}</th>
                                 <th>Estado</th>
                                 <th class="text-end">Acciones</th>
                             </tr>
@@ -42,7 +42,7 @@
                                         {% if solicitud.instituto %}
                                             <div class="small text-muted">
                                                 <a href="{{ path('admin_instituto_edit', {'id': solicitud.instituto.id}) }}">
-                                                    Ver el instituto
+                                                    Ver {{ term('el_instituto') }}
                                                 </a>
                                             </div>
                                         {% endif %}

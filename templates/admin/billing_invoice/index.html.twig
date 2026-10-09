@@ -11,9 +11,9 @@
         <div class="card-body">
             <form method="get" action="{{ path('admin_billing_invoice_index') }}" class="row g-3">
                 <div class="col-md-4">
-                    <label for="instituto" class="form-label">Instituto</label>
+                    <label for="instituto" class="form-label">{{ Term('instituto') }}</label>
                     <select name="instituto" id="instituto" class="form-select">
-                        <option value="">Todos los institutos</option>
+                        <option value="">Todos los {{ term('instituto_plural') }}</option>
                         {% for instituto in institutos %}
                             <option value="{{ instituto.id }}" {% if selectedInstituto == instituto.id %}selected{% endif %}>
                                 {{ instituto.nombre }}
@@ -99,9 +99,9 @@
                         <thead>
                             <tr>
                                 <th>ID</th>
-                                <th>Instituto</th>
+                                <th>{{ Term('instituto') }}</th>
                                 <th>Período</th>
-                                <th>Alumn@s</th>
+                                <th>{{ Term('alumnos') }}</th>
                                 <th>Monto</th>
                                 <th>Vence</th>
                                 <th>Estado</th>

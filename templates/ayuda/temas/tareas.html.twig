@@ -5,8 +5,8 @@
 {% set esProfe = is_granted('ROLE_PROFESOR') and not is_granted('ROLE_ADMIN_INSTITUTO') %}
 
 <p>
-    Las tareas se le piden <strong>al curso</strong>, y después se marca quién las entregó. Con
-    eso la libreta informa, por cada período, cuántas se pidieron y cuántas entregó cada alumn@.
+    Las tareas se le piden <strong>{{ term('al_curso') }}</strong>, y después se marca quién las entregó. Con
+    eso la libreta informa, por cada período, cuántas se pidieron y cuántas entregó cada {{ term('alumno') }}.
 </p>
 
 {% if esProfe %}
@@ -14,14 +14,14 @@
 {% else %}
     <p>
         Se entra por {{ m.ruta(['Alumn@s', 'Tareas']) }}. Los profesores tienen su propio acceso en
-        {{ m.ruta(['Tareas']) }} y ven ahí <strong>solo los cursos que tienen asignados</strong>.
+        {{ m.ruta(['Tareas']) }} y ven ahí <strong>solo {{ term('los_cursos') }} que tienen asignados</strong>.
     </p>
 {% endif %}
 
 <h2>1. Crear la tarea</h2>
 
 <ol>
-    <li>Elegí el curso y clic en <strong>Nueva tarea</strong>.</li>
+    <li>Elegí {{ term('el_curso') }} y clic en <strong>Nueva tarea</strong>.</li>
     <li><strong>Título</strong>: cómo la vas a reconocer ("Ejercicios de la unidad 3").</li>
     <li>
         <strong>Fecha en que se pide</strong>. Es la que ubica la tarea en un período, así que
@@ -31,7 +31,7 @@
         <strong>Fecha de entrega</strong>, opcional. Dejala vacía si la tarea no tiene plazo.
     </li>
     <li>
-        <strong>Período</strong>, si el instituto tiene trimestres cargados. Viene propuesto
+        <strong>Período</strong>, si {{ term('el_instituto') }} tiene trimestres cargados. Viene propuesto
         según la fecha.
     </li>
     <li><strong>Descripción</strong>, opcional: la consigna, las páginas, lo que haga falta.</li>
@@ -47,9 +47,9 @@
 <h2>2. Marcar quién entregó</h2>
 
 <ol>
-    <li>En la lista de tareas del curso, clic en <strong>Cargar entregas</strong>.</li>
-    <li>Aparecen todos los alumn@s inscript@s. Tildá a los que entregaron.</li>
-    <li>Si querés, agregá una <strong>observación</strong> por alumn@.</li>
+    <li>En la lista de tareas {{ term('del_curso') }}, clic en <strong>Cargar entregas</strong>.</li>
+    <li>Aparecen todos los {{ term('alumnos') }} inscript@s. Tildá a los que entregaron.</li>
+    <li>Si querés, agregá una <strong>observación</strong> por {{ term('alumno') }}.</li>
     <li>Clic en <strong>Guardar entregas</strong>.</li>
 </ol>
 
@@ -60,10 +60,10 @@
     se guarda, así que podés volver a entrar y corregir cuantas veces quieras sin duplicar nada.
 </p>
 
-<h2>3. Ver cómo viene el curso</h2>
+<h2>3. Ver cómo viene {{ term('el_curso') }}</h2>
 
 <p>
-    Abajo de la lista de tareas hay un <strong>resumen por alumn@</strong>: cuántas entregó de
+    Abajo de la lista de tareas hay un <strong>resumen por {{ term('alumno') }}</strong>: cuántas entregó de
     las que se pidieron, con el porcentaje. Verde de 75% para arriba, amarillo de 50 a 74, rojo
     abajo de 50.
 </p>
@@ -71,14 +71,14 @@
 <h2>Cómo aparece en la libreta</h2>
 
 <p>
-    Si el instituto usa períodos, la libreta trae un bloque <strong>Tareas</strong> con una
+    Si {{ term('el_instituto') }} usa períodos, la libreta trae un bloque <strong>Tareas</strong> con una
     columna por período y tres filas: <em>pedidas</em>, <em>entregadas</em> y
     <em>% entregado</em>.
 </p>
 
 <ul>
-    <li><strong>Pedidas</strong> es igual para todo el curso: son las tareas de ese período.</li>
-    <li><strong>Entregadas</strong> es de cada alumn@.</li>
+    <li><strong>Pedidas</strong> es igual para todo {{ term('el_curso') }}: son las tareas de ese período.</li>
+    <li><strong>Entregadas</strong> es de cada {{ term('alumno') }}.</li>
 </ul>
 
 {{ m.nota('info', 'Una tarea sin período no entra en la libreta',

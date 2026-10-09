@@ -11,7 +11,7 @@
 
     {% if cursos is empty %}
         <div class="alert alert-light border">
-            <i class="bi bi-inbox"></i> Todavía no hay asistencias tomadas en tus cursos.
+            <i class="bi bi-inbox"></i> Todavía no hay asistencias tomadas en tus {{ term('cursos') }}.
         </div>
     {% else %}
         {% for datos in cursos %}
@@ -105,7 +105,7 @@
         {% endfor %}
 
         <p class="small text-muted">
-            La asistencia la toma el profesor en cada clase. Si ves algo que no coincide, hablalo con él.
+            La asistencia la toma el {{ term('profesor') }} en cada clase. Si ves algo que no coincide, hablalo con él.
         </p>
     {% endif %}
 </div>

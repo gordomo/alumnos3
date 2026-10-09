@@ -72,7 +72,7 @@
 
         {# La primera que corresponda al rol de quien está mirando. #}
         {% if is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_ADMIN') %}
-            <a href="{{ path('admin_instituto_index') }}" class="boton">Volver a Institutos</a>
+            <a href="{{ path('admin_instituto_index') }}" class="boton">Volver a {{ Term('instituto_plural') }}</a>
         {% elseif is_granted('ROLE_ADMIN_INSTITUTO') %}
             <a href="{{ path('dashboard_index') }}" class="boton">Volver al panel</a>
         {% elseif is_granted('ROLE_PROFESOR') %}

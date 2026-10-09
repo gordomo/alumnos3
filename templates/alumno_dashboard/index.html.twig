@@ -13,7 +13,7 @@
         <div class="col-md-3 mb-3">
             <div class="card text-center">
                 <div class="card-body">
-                    <h5 class="card-title text-muted">Cursos Activos</h5>
+                    <h5 class="card-title text-muted">{{ Term('cursos') }} Activos</h5>
                     <h2 class="text-primary">{{ totalCursos }}</h2>
                 </div>
             </div>
@@ -66,7 +66,7 @@
         <div class="col-md-6 mb-4">
             <div class="card">
                 <div class="card-header">
-                    <h5 class="mb-0"><i class="bi bi-book"></i> Mis Cursos</h5>
+                    <h5 class="mb-0"><i class="bi bi-book"></i> Mis {{ Term('cursos') }}</h5>
                 </div>
                 <div class="card-body">
                     {% if cursos|length > 0 %}
@@ -83,7 +83,7 @@
                         </div>
                     {% else %}
                         <div class="alert alert-info mb-0">
-                            No estás inscrito en ningún curso actualmente.
+                            No estás inscrito en ningún {{ term('curso') }} actualmente.
                         </div>
                     {% endif %}
                 </div>
@@ -133,7 +133,7 @@
                                 <thead>
                                     <tr>
                                         <th>Fecha</th>
-                                        <th>Curso</th>
+                                        <th>{{ Term('curso') }}</th>
                                         <th>Estado</th>
                                     </tr>
                                 </thead>
@@ -176,7 +176,7 @@
                                 <thead>
                                     <tr>
                                         <th>Fecha</th>
-                                        <th>Curso</th>
+                                        <th>{{ Term('curso') }}</th>
                                         <th>Monto</th>
                                     </tr>
                                 </thead>

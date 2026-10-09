@@ -254,7 +254,7 @@
                     <div class="invoice-from">
                         <h3>De:</h3>
                         <p><strong>TEAM INSTITUTE</strong></p>
-                        <p>Sistema de Gestión de Institutos</p>
+                        <p>Sistema de Gestión de {{ Term('instituto_plural') }}</p>
                         <p>by TEAM BUILDER</p>
                     </div>
                     <div class="invoice-to">
@@ -287,19 +287,19 @@
                         <tbody>
                             <tr>
                                 <td>
-                                    <strong>Facturación mensual por alumnos activos</strong>
+                                    <strong>Facturación mensual por {{ term('alumnos_formal') }} activos</strong>
                                     <br>
                                     <small style="color: #666;">Período: {{ invoice.getFormattedPeriod() }}</small>
                                 </td>
                                 <td class="text-center">
                                     <strong>{{ invoice.activeStudentsCount }}</strong>
                                     <br>
-                                    <small style="color: #666;">alumnos</small>
+                                    <small style="color: #666;">{{ term('alumnos_formal') }}</small>
                                 </td>
                                 <td class="text-right">
                                     <strong>${{ invoice.pricePerStudent|number_format(2, ',', '.') }}</strong>
                                     <br>
-                                    <small style="color: #666;">por alumno/mes</small>
+                                    <small style="color: #666;">por {{ term('alumno_formal') }}/mes</small>
                                 </td>
                                 <td class="text-right">
                                     <strong>${{ invoice.totalAmount|number_format(2, ',', '.') }}</strong>

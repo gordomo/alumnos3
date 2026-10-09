@@ -36,6 +36,7 @@ class Vocabulario
         'alumnos' => ['alumn@s', 'soci@s'],
         'el_alumno' => ['el alumn@', 'el soci@'],
         'del_alumno' => ['del alumn@', 'del soci@'],
+        'un_alumno' => ['un alumn@', 'un soci@'],
         'alumno_formal' => ['alumno', 'socio'],
         'alumnos_formal' => ['alumnos', 'socios'],
 
