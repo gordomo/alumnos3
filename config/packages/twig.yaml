@@ -6,6 +6,8 @@ twig:
         # mails. Van acá para no tenerlos escritos a mano en seis plantillas distintas.
         # En las plantillas se compara con 'club'; no hace falta un segundo global.
         vertical: '%app.vertical%'
+        productos: '%app.productos%'
+        sustantivos: '%app.sustantivos%'
         email_contacto: '%app.email_contacto%'
         whatsapp_contacto: '%app.whatsapp_contacto%'
         whatsapp_contacto_visible: '%app.whatsapp_contacto_visible%'

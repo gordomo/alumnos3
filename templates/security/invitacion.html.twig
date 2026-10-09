@@ -12,7 +12,7 @@
     <div id="formContent">
         <div class="logo-container">
             {{ include('security/_logo.html.twig', {'tamano': 56}) }}
-            <div class="logo-nombre">Team Builder Institute</div>
+            <div class="logo-nombre">{{ productos[vertical]|default('Team Builder') }}</div>
         </div>
 
         <h1 class="h5 text-center mb-2">Bienvenid@ a {{ usuario.instituto.nombre }}</h1>
@@ -30,19 +30,27 @@
             <div class="input-group">
                 <input type="password" name="password" id="inputPassword" class="form-control"
                        placeholder="Contraseña nueva" autocomplete="new-password" required autofocus minlength="8">
-                <button class="btn btn-outline-secondary" type="button" id="togglePassword" tabindex="-1">
+                <button class="btn btn-outline-secondary" type="button" data-ver-clave="#inputPassword"
+                        tabindex="-1" aria-label="Mostrar u ocultar la contraseña">
                     <i class="bi bi-eye"></i>
                 </button>
             </div>
 
-            <div class="form-group">
-                <input type="password" name="password_repetida" class="form-control"
-                       placeholder="Repetila" autocomplete="new-password" required minlength="8">
+            <div class="input-group">
+                <input type="password" name="password_repetida" id="inputPasswordRepetida"
+                       class="form-control" placeholder="Repetila" autocomplete="new-password"
+                       required minlength="8">
+                <button class="btn btn-outline-secondary" type="button" data-ver-clave="#inputPasswordRepetida"
+                        tabindex="-1" aria-label="Mostrar u ocultar la contraseña">
+                    <i class="bi bi-eye"></i>
+                </button>
             </div>
 
             <p class="small text-muted">Mínimo 8 caracteres.</p>
 
-            <button class="btn btn-primary" type="submit">Entrar a mi instituto</button>
+            <button class="btn btn-primary" type="submit">
+                Entrar a mi {{ sustantivos[vertical]|default('instituto') }}
+            </button>
         </form>
     </div>
 </div>
@@ -51,15 +59,19 @@
 {% block javascripts %}
     {{ parent() }}
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const toggle = document.querySelector('#togglePassword');
-            const password = document.querySelector('#inputPassword');
-            if (!toggle || !password) return;
-            const icon = toggle.querySelector('i');
-            toggle.addEventListener('click', function() {
-                password.setAttribute('type', password.getAttribute('type') === 'password' ? 'text' : 'password');
-                icon.classList.toggle('bi-eye');
-                icon.classList.toggle('bi-eye-slash');
+        // Un solo mecanismo para los dos campos: cada botón dice a qué input mira. Antes el
+        // script estaba atado por id a uno solo, y el de repetir la contraseña -que es donde más
+        // se equivoca uno, porque hay que escribir de memoria lo que no se vio- no tenía ojo.
+        document.querySelectorAll('[data-ver-clave]').forEach(function (boton) {
+            boton.addEventListener('click', function () {
+                const campo = document.querySelector(boton.dataset.verClave);
+                const icono = boton.querySelector('i');
+                if (!campo) return;
+
+                const oculta = campo.getAttribute('type') === 'password';
+                campo.setAttribute('type', oculta ? 'text' : 'password');
+                icono.classList.toggle('bi-eye', !oculta);
+                icono.classList.toggle('bi-eye-slash', oculta);
             });
         });
     </script>

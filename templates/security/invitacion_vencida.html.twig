@@ -12,7 +12,7 @@
     <div id="formContent">
         <div class="logo-container">
             {{ include('security/_logo.html.twig', {'tamano': 56}) }}
-            <div class="logo-nombre">Team Builder Institute</div>
+            <div class="logo-nombre">{{ productos[vertical]|default('Team Builder') }}</div>
         </div>
 
         <h1 class="h5 text-center">Este enlace ya no sirve</h1>

@@ -17,6 +17,16 @@ parameters:
     app.vertical: '%env(default:vertical_por_defecto:APP_VERTICAL)%'
     vertical_por_defecto: 'instituto'
 
+    # Cómo se llama el producto y cómo se llama su cliente, en cada vertical. Es el primer
+    # pedazo del vocabulario: las pantallas de acceso decían "Team Builder Institute" y
+    # "Entrar a mi instituto" también en la versión de clubes.
+    app.productos:
+        instituto: 'Team Builder Institute'
+        club: 'Team Builder Clubes'
+    app.sustantivos:
+        instituto: 'instituto'
+        club: 'club'
+
     app.email_contacto: 'contacto@teambuilder.com.ar'
     app.whatsapp_contacto: '5493416043603'
     app.whatsapp_contacto_visible: '+54 9 341 604-3603'
