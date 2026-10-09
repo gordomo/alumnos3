@@ -23,7 +23,7 @@
                 </li>
                 <li class="nav-item">
                     <a class="list-group-item list-group-item-action bg-light {% if app.request.get('_route') == 'app_alumno_cursos' %}active{% endif %}" href="{{ path('app_alumno_cursos') }}">
-                        <i class="bi bi-book"></i> Mis Cursos
+                        <i class="bi bi-book"></i> Mis {{ Term('cursos') }}
                     </a>
                 </li>
                 <li class="nav-item">
@@ -53,7 +53,7 @@
             <ul class="nav nav-tabs sidebar-dropdown-ul">
                 <li class="nav-item">
                     <a class="list-group-item list-group-item-action bg-light {% if app.request.get('_route') == 'app_profesor_dashboard' %}active{% endif %}" href="{{ path('app_profesor_dashboard') }}">
-                        <i class="bi bi-bar-chart"></i> Mis Cursos
+                        <i class="bi bi-bar-chart"></i> Mis {{ Term('cursos') }}
                     </a>
                 </li>
                 <li class="nav-item">
@@ -63,7 +63,7 @@
                 </li>
                 <li class="nav-item">
                     <a class="list-group-item list-group-item-action bg-light {% if app.request.get('_route') == 'app_asistencia_alumnos_index' %}active{% endif %}" href="{{ path('app_asistencia_alumnos_index') }}">
-                        <i class="bi bi-clipboard-check"></i> Asistencias de Alumn@s
+                        <i class="bi bi-clipboard-check"></i> Asistencias de {{ Term('alumnos') }}
                     </a>
                 </li>
                 <li class="nav-item">
@@ -120,7 +120,7 @@
             <ul class="nav nav-tabs sidebar-dropdown-ul">
                 <li class="nav-item dropdown dropend">
                     <a class="list-group-item list-group-item-action bg-light dropdown-toggle {% if app.request.get('_route') starts with 'app_curso_' %}active{% endif %}" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">
-                        <i class="bi bi-book"></i> Cursos
+                        <i class="bi bi-book"></i> {{ Term('cursos') }}
                     </a>
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item {% if app.request.get('_route') == 'app_curso_index' %}active{% endif %}" href="{{ path('app_curso_index') }}">Listado</a></li>
@@ -134,7 +134,7 @@
             <ul class="nav nav-tabs sidebar-dropdown-ul">
                 <li class="nav-item dropdown dropend">
                     <a class="list-group-item list-group-item-action bg-light dropdown-toggle {% if app.request.get('_route') starts with 'app_profesor_' or app.request.get('_route') in ['asistencias', 'informes'] %}active{% endif %}" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">
-                        <i class="bi bi-briefcase"></i> Profesores
+                        <i class="bi bi-briefcase"></i> {{ Term('profesores') }}
                     </a>
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item {% if app.request.get('_route') == 'app_profesor_index' %}active{% endif %}" href="{{ path('app_profesor_index') }}">Listado</a></li>
@@ -150,7 +150,7 @@
             <ul class="nav nav-tabs sidebar-dropdown-ul">
                 <li class="nav-item dropdown dropend">
                     <a class="list-group-item list-group-item-action bg-light dropdown-toggle {% if app.request.get('_route') == 'app_alumno_index' or app.request.get('_route') == 'app_instituto_asistencias_index' or app.request.get('_route') starts with 'app_evaluacion' %}active{% endif %}" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">
-                        <i class="bi bi-mortarboard"></i> Alumn@s
+                        <i class="bi bi-mortarboard"></i> {{ Term('alumnos') }}
                     </a>
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item {% if app.request.get('_route') == 'app_alumno_index' %}active{% endif %}" href="{{ path('app_alumno_index') }}">Listado</a></li>
@@ -217,7 +217,7 @@
             <ul class="nav nav-tabs sidebar-dropdown-ul">
                 <li class="nav-item">
                     <a class="list-group-item list-group-item-action bg-light {% if app.request.get('_route') == 'admin_instituto_index' %}active{% endif %}" href="{{ path('admin_instituto_index') }}">
-                        <i class="bi bi-building"></i> Institutos
+                        <i class="bi bi-building"></i> {{ Term('instituto_plural') }}
                     </a>
                 </li>
             </ul>

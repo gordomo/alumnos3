@@ -20,7 +20,7 @@
             <div class="card shadow-sm">
                 <div class="card-header bg-white border-bottom">
                     <h4 class="mb-0">
-                        <i class="fas fa-info-circle text-primary"></i> Información del Instituto
+                        <i class="fas fa-info-circle text-primary"></i> Información {{ term('del_instituto') }}
                     </h4>
                 </div>
                 <div class="card-body">
@@ -92,12 +92,12 @@
 
     {# Estadísticas - Solo visible para Super Admin #}
     <div class="row mb-4">
-        {# Estadísticas de Alumn@s #}
+        {# Estadísticas de {{ Term('alumnos') }} #}
         <div class="col-md-12 mb-4">
             <div class="card shadow-sm">
                 <div class="card-header bg-primary text-white">
                     <h3 class="mb-0">
-                        <i class="fas fa-users"></i> Estadísticas de Alumn@s
+                        <i class="fas fa-users"></i> Estadísticas de {{ Term('alumnos') }}
                     </h3>
                 </div>
                 <div class="card-body">
@@ -107,7 +107,7 @@
                                 <div class="card-body text-center d-flex flex-column justify-content-center" style="min-height: 140px;">
                                     <h2 class="mb-3" style="font-size: 2.5rem;">{{ total_alumnos }}</h2>
                                     <p class="mb-0">
-                                        <i class="fas fa-users"></i> Total de Alumn@s
+                                        <i class="fas fa-users"></i> Total de {{ Term('alumnos') }}
                                     </p>
                                 </div>
                             </div>
@@ -117,7 +117,7 @@
                                 <div class="card-body text-center d-flex flex-column justify-content-center" style="min-height: 140px;">
                                     <h2 class="mb-3" style="font-size: 2.5rem;">{{ alumnos_activos }}</h2>
                                     <p class="mb-0">
-                                        <i class="fas fa-user-check"></i> Alumn@s Activos
+                                        <i class="fas fa-user-check"></i> {{ Term('alumnos') }} Activ@s
                                     </p>
                                 </div>
                             </div>
@@ -127,7 +127,7 @@
                                 <div class="card-body text-center d-flex flex-column justify-content-center" style="min-height: 140px;">
                                     <h2 class="mb-3" style="font-size: 2.5rem;">{{ alumnos_inactivos }}</h2>
                                     <p class="mb-0">
-                                        <i class="fas fa-user-times"></i> Alumn@s Inactivos
+                                        <i class="fas fa-user-times"></i> {{ Term('alumnos') }} Inactiv@s
                                     </p>
                                 </div>
                             </div>
@@ -135,7 +135,8 @@
                     </div>
                     <div class="alert alert-info mt-3 mb-0 shadow-sm">
                         <i class="fas fa-info-circle"></i> 
-                        <strong>Información de facturación:</strong> Este instituto tiene <strong>{{ total_alumnos }}</strong> alumno(s) registrado(s) en total.
+                        <strong>Información de facturación:</strong> Este {{ term('instituto') }} tiene
+                        <strong>{{ total_alumnos }}</strong> {{ term('alumnos') }} registrad@s en total.
                     </div>
                 </div>
             </div>
@@ -176,7 +177,7 @@
                                 <div class="card-body text-center d-flex flex-column justify-content-center" style="min-height: 140px;">
                                     <h2 class="mb-3" style="font-size: 2.5rem;">{{ usuarios_profesor }}</h2>
                                     <p class="mb-0">
-                                        <i class="fas fa-chalkboard-teacher"></i> Profesores
+                                        <i class="fas fa-chalkboard-teacher"></i> {{ Term('profesores') }}
                                     </p>
                                 </div>
                             </div>
@@ -203,7 +204,7 @@
             <div class="card shadow-sm">
                 <div class="card-header bg-white border-bottom">
                     <h4 class="mb-0">
-                        <i class="fas fa-user-friends text-primary"></i> Usuarios del Instituto
+                        <i class="fas fa-user-friends text-primary"></i> Usuarios {{ term('del_instituto') }}
                     </h4>
                 </div>
                 <div class="card-body">

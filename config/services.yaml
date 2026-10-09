@@ -57,6 +57,11 @@ services:
             # SeedDatabaseCommand recibe el seeder, así que arrastra la misma dependencia dev.
             - '../src/Command/SeedDatabaseCommand.php'
 
+    # El glosario necesita saber qué producto es esta instalación.
+    App\Service\Vocabulario:
+        arguments:
+            $vertical: '%app.vertical%'
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
 
