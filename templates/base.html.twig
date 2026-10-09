@@ -3,6 +3,10 @@
 <html lang="es-AR" data-vertical="{{ vertical }}">
 <head>
     <meta charset="UTF-8">
+    {# Sin esto los navegadores móviles fingen una pantalla de ~980px y muestran el escritorio
+       achicado: el CSS responsive que ya existe no se activa nunca y la barra lateral se come
+       media pantalla del teléfono. #}
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}Welcome!{% endblock %}</title>
     <link rel="icon" href="{{ asset('assets/img/logoTeamT.png') }}">
     {% block stylesheets %}

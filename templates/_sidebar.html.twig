@@ -292,11 +292,30 @@
             var wrapper = document.getElementById('wrapper');
             var arrowIcon = document.getElementById('arrow-icon');
             
+            var sidebar = document.getElementById('sidebar-wrapper');
+
+            // El ícono dice qué va a pasar al tocarlo, no dónde estamos: con la barra escondida
+            // -que en el teléfono es lo normal- una flecha hacia la izquierda se lee como
+            // "volver", cuando en realidad abre el menú.
+            function actualizarIcono() {
+                if (!arrowIcon || !sidebar) {
+                    return;
+                }
+
+                var abierta = sidebar.getBoundingClientRect().right > 1;
+                arrowIcon.className = abierta ? 'bi bi-arrow-left' : 'bi bi-list';
+            }
+
             if (menuToggle != undefined) {
                 menuToggle.addEventListener('click', function () {
                     wrapper.classList.toggle('toggled');
+                    // La barra tarda 0,25s en moverse: se espera a que termine para mirar dónde quedó.
+                    setTimeout(actualizarIcono, 280);
                 });
             }
+
+            actualizarIcono();
+            window.addEventListener('resize', actualizarIcono);
         });
     </script>
 {% endblock %}

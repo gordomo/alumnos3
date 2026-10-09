@@ -222,6 +222,18 @@
     margin-left: 0;
 }
 
+/* En el teléfono la barra arranca escondida, así que el botón es lo único que se ve: tiene que
+   ser compacto y no taparle media pantalla al contenido. */
+@media (max-width: 767.98px) {
+    #menu-toggle {
+        width: 3rem;
+        /* Los botones del sistema tienen un min-width de 100px que gana sobre el width. */
+        min-width: 3rem;
+        border-radius: 0 0.5rem 0 0;
+        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.12);
+    }
+}
+
 @media (min-width: 768px) {
     #sidebar-wrapper {
         margin-left: 0;
