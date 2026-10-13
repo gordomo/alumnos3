@@ -51,7 +51,11 @@
                                         {{ solicitud.nombreContacto }}
                                         <div class="small text-muted">{{ solicitud.email }}</div>
                                     </td>
-                                    <td>{{ solicitud.alumnosEstimadosEtiqueta|default('—') }}</td>
+                                    <td>
+                                        {% if solicitud.alumnosEstimadosEtiqueta %}
+                                            {{ solicitud.alumnosEstimadosEtiqueta }} {{ term('alumnos') }}
+                                        {% else %}—{% endif %}
+                                    </td>
                                     <td>
                                         {% if solicitud.estado == 'pendiente' %}
                                             <span class="badge bg-warning text-dark">Pendiente</span>

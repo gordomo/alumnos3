@@ -45,7 +45,11 @@
                         </dd>
 
                         <dt class="col-sm-4">{{ Term('alumnos') }} estimad@s</dt>
-                        <dd class="col-sm-8">{{ solicitud.alumnosEstimadosEtiqueta|default('No contestó') }}</dd>
+                        <dd class="col-sm-8">
+                            {% if solicitud.alumnosEstimadosEtiqueta %}
+                                {{ solicitud.alumnosEstimadosEtiqueta }} {{ term('alumnos') }}
+                            {% else %}No contestó{% endif %}
+                        </dd>
 
                         <dt class="col-sm-4">Recibida</dt>
                         <dd class="col-sm-8">

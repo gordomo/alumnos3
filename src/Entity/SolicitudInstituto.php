@@ -28,7 +28,7 @@ class SolicitudInstituto
     /** Rangos en vez de un número exacto: nadie sabe cuántos alumnos tiene, y un desplegable
      *  se completa más rápido que un input. */
     public const RANGOS = [
-        '1-20' => 'Hasta 20 alumn@s',
+        '1-20' => 'Hasta 20',
         '21-50' => 'Entre 21 y 50',
         '51-100' => 'Entre 51 y 100',
         '100+' => 'Más de 100',

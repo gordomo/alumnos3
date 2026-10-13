@@ -9,7 +9,7 @@
         <li><strong>Contacto:</strong> {{ solicitud.nombreContacto }}</li>
         <li><strong>Email:</strong> {{ solicitud.email }}</li>
         <li><strong>Teléfono:</strong> {{ solicitud.telefono|default('no dejó') }}</li>
-        <li><strong>{{ Term('alumnos') }} estimad@s:</strong> {{ solicitud.alumnosEstimadosEtiqueta|default('no contestó') }}</li>
+        <li><strong>{{ Term('alumnos') }} estimad@s:</strong> {% if solicitud.alumnosEstimadosEtiqueta %}{{ solicitud.alumnosEstimadosEtiqueta }} {{ term('alumnos') }}{% else %}no contestó{% endif %}</li>
     </ul>
 
     {% if solicitud.mensaje %}
@@ -17,7 +17,7 @@
     {% endif %}
 
     <p style="text-align: center;">
-        <a href="{{ url('admin_solicitud_show', {'id': solicitud.id}) }}" class="button">Ver la solicitud</a>
+        <a href="{{ url('admin_solicitud_show', {'id': solicitud.id}) }}" style="display: inline-block; padding: 12px 24px; background-color: {{ colores_boton[vertical]|default('#1b6ae0') }}; color: #ffffff !important; text-decoration: none; border-radius: 5px; font-weight: bold; margin: 20px 0;">Ver la solicitud</a>
     </p>
 {% endblock %}
 

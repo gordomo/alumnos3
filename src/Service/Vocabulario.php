@@ -41,14 +41,14 @@ class Vocabulario
         'alumnos_formal' => ['alumnos', 'socios'],
 
         // Lo que se dicta
-        'curso' => ['curso', 'disciplina'],
-        'cursos' => ['cursos', 'disciplinas'],
-        'el_curso' => ['el curso', 'la disciplina'],
-        'los_cursos' => ['los cursos', 'las disciplinas'],
-        'del_curso' => ['del curso', 'de la disciplina'],
-        'al_curso' => ['al curso', 'a la disciplina'],
-        'un_curso' => ['un curso', 'una disciplina'],
-        'este_curso' => ['este curso', 'esta disciplina'],
+        'curso' => ['curso', 'deporte'],
+        'cursos' => ['cursos', 'deportes'],
+        'el_curso' => ['el curso', 'el deporte'],
+        'los_cursos' => ['los cursos', 'los deportes'],
+        'del_curso' => ['del curso', 'del deporte'],
+        'al_curso' => ['al curso', 'al deporte'],
+        'un_curso' => ['un curso', 'un deporte'],
+        'este_curso' => ['este curso', 'este deporte'],
 
         // El encuentro concreto
         'clase' => ['clase', 'entrenamiento'],
@@ -56,9 +56,9 @@ class Vocabulario
         'la_clase' => ['la clase', 'el entrenamiento'],
 
         // Quien la dicta
-        'profesor' => ['profesor', 'profe'],
-        'profesores' => ['profesores', 'profes'],
-        'el_profesor' => ['el profesor', 'el profe'],
+        'profesor' => ['profesor', 'profesor'],
+        'profesores' => ['profesores', 'profesores'],
+        'el_profesor' => ['el profesor', 'el profesor'],
 
         // La inscripción y lo que se cobra
         'inscripcion' => ['inscripción', 'inscripción'],

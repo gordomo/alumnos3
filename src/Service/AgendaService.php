@@ -36,11 +36,11 @@ class AgendaService
     public const FUENTE_EVENTO = 'evento';
 
     public const FUENTES = [
-        self::FUENTE_CLASE => ['etiqueta' => 'Clases', 'icono' => 'bi-easel', 'color' => '#0d6efd'],
+        self::FUENTE_CLASE => ['etiqueta' => '%Clases%', 'icono' => 'bi-easel', 'color' => '#0d6efd'],
         self::FUENTE_EXAMEN => ['etiqueta' => 'Evaluaciones', 'icono' => 'bi-file-earmark-text', 'color' => '#6f42c1'],
         self::FUENTE_TAREA => ['etiqueta' => 'Entregas de tareas', 'icono' => 'bi-journal-text', 'color' => '#fd7e14'],
         self::FUENTE_VENCIMIENTO => ['etiqueta' => 'Vencimientos', 'icono' => 'bi-cash-coin', 'color' => '#dc3545'],
-        self::FUENTE_EVENTO => ['etiqueta' => 'Eventos del instituto', 'icono' => 'bi-pin-angle', 'color' => '#20c997'],
+        self::FUENTE_EVENTO => ['etiqueta' => 'Eventos %del_instituto%', 'icono' => 'bi-pin-angle', 'color' => '#20c997'],
     ];
 
     private const DIAS_SEMANA = [
@@ -54,7 +54,8 @@ class AgendaService
         private TareaRepository $tareaRepository,
         private EventoAgendaRepository $eventoRepository,
         private DeudaCalculatorService $deudaCalculator,
-        private FeriadoService $feriadoService
+        private FeriadoService $feriadoService,
+        private Vocabulario $vocabulario
     ) {
     }
 
@@ -487,5 +488,29 @@ class AgendaService
         ]));
 
         return self::DIAS_SEMANA[$normalizado] ?? null;
+    }
+
+    /**
+     * El catálogo de fuentes con las palabras del producto.
+     *
+     * Las etiquetas viven en una constante -se usan como catálogo en varias pantallas- así que
+     * llevan marcas %clave% que se resuelven acá contra el glosario. Para un club, "Clases"
+     * son entrenamientos y los eventos son del club, no del instituto.
+     */
+    public function catalogoFuentes(): array
+    {
+        $catalogo = self::FUENTES;
+
+        foreach ($catalogo as $clave => $datos) {
+            $catalogo[$clave]['etiqueta'] = preg_replace_callback(
+                '/%([A-Za-z_]+)%/',
+                fn(array $c) => ctype_upper($c[1][0])
+                    ? $this->vocabulario->terminoMayuscula(lcfirst($c[1]))
+                    : $this->vocabulario->termino($c[1]),
+                $datos['etiqueta']
+            );
+        }
+
+        return $catalogo;
     }
 }

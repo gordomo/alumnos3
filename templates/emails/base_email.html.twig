@@ -44,9 +44,12 @@
                 display: inline-block;
                 padding: 10px 20px;
                 background-color: {{ colores_boton[vertical]|default('#1b6ae0') }};
-                color: white;
+                /* Respaldo: los estilos que importan van en la propia etiqueta, porque Gmail
+                   descarta este bloque y el enlace vuelve al azul por defecto. */
+                color: #ffffff !important;
                 text-decoration: none;
                 border-radius: 5px;
+                font-weight: bold;
                 margin: 20px 0;
             }
             @media only screen and (max-width: 600px) {
