@@ -38,7 +38,7 @@ class ContactoController extends AbstractController
         if (!$this->isCsrfTokenValid('contacto', (string) $request->request->get('_token'))) {
             $this->addFlash('contacto_error', 'Se venció el formulario. Volvé a enviarlo, por favor.');
 
-            return $this->redirectToRoute('app_start', [], Response::HTTP_SEE_OTHER);
+            return $this->volverAlFormulario();
         }
 
         // Campo trampa: está oculto por CSS, una persona nunca lo completa.
@@ -46,13 +46,13 @@ class ContactoController extends AbstractController
             // Se le responde como si todo hubiera salido bien: si el bot ve el error, prueba otra cosa.
             $this->addFlash('contacto_ok', 'Recibimos tus datos. Te escribimos a la brevedad.');
 
-            return $this->redirectToRoute('app_start', [], Response::HTTP_SEE_OTHER);
+            return $this->volverAlFormulario();
         }
 
         if (!$solicitudInstitutoLimiter->create($request->getClientIp())->consume()->isAccepted()) {
             $this->addFlash('contacto_error', 'Recibimos varios pedidos desde tu conexión. Probá de nuevo en un rato.');
 
-            return $this->redirectToRoute('app_start', [], Response::HTTP_SEE_OTHER);
+            return $this->volverAlFormulario();
         }
 
         $solicitud = new SolicitudInstituto();
@@ -68,7 +68,7 @@ class ContactoController extends AbstractController
         if (count($errores) > 0) {
             $this->addFlash('contacto_error', $errores->get(0)->getMessage());
 
-            return $this->redirectToRoute('app_start', [], Response::HTTP_SEE_OTHER);
+            return $this->volverAlFormulario();
         }
 
         // Dos envíos seguidos con el mismo mail no generan dos solicitudes: se contesta igual,
@@ -76,7 +76,7 @@ class ContactoController extends AbstractController
         if ($solicitudes->pendientePorEmail($solicitud->getEmail())) {
             $this->addFlash('contacto_ok', 'Recibimos tus datos. Te escribimos a la brevedad.');
 
-            return $this->redirectToRoute('app_start', [], Response::HTTP_SEE_OTHER);
+            return $this->volverAlFormulario();
         }
 
         $em->persist($solicitud);
@@ -97,6 +97,21 @@ class ContactoController extends AbstractController
 
         $this->addFlash('contacto_ok', 'Recibimos tus datos. Te escribimos a la brevedad.');
 
-        return $this->redirectToRoute('app_start', [], Response::HTTP_SEE_OTHER);
+        return $this->volverAlFormulario();
+    }
+
+    /**
+     * Vuelve a la landing, al formulario de contacto.
+     *
+     * Con el redirect pelado a la home, el mensaje -"recibimos tus datos" o el error- quedaba
+     * 4800px más abajo y la persona veía la portada como si no hubiera pasado nada. El ancla
+     * baja hasta el formulario, que es donde se muestra.
+     */
+    private function volverAlFormulario(): Response
+    {
+        return $this->redirect(
+            $this->generateUrl('app_start') . '#auth-section',
+            Response::HTTP_SEE_OTHER
+        );
     }
 }

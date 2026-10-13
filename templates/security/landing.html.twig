@@ -1310,10 +1310,16 @@
         <nav class="landing-header-nav" aria-label="Navegación principal">
             <a href="#features-section" class="landing-header-link" data-no-loading>Funciones</a>
             <a href="#pricing-section" class="landing-header-link" data-no-loading>Precios</a>
+            {# El encabezado es lo único que queda a la vista al bajar, así que tiene que ofrecer
+               las dos cosas: entrar, para quien ya es cliente, y el formulario, para quien
+               todavía no. Antes "Comenzar" llevaba al login y la landing se quedaba sin ningún
+               camino hacia el contacto una vez que pasabas el hero. #}
+            <a href="{{ path('app_login') }}" class="landing-header-link">Ingresar</a>
             {% if is_home is not defined or is_home %}
-            <a href="{{ path('app_login') }}" class="landing-header-link landing-header-link--primary">Comenzar</a>
+            <a href="#auth-section" class="landing-header-link landing-header-link--primary"
+               data-no-loading onclick="scrollToAuthForm(event)">Contacto</a>
             {% else %}
-            <a href="{{ path('app_start') }}" class="landing-header-link landing-header-link--primary" data-no-loading>Comenzar</a>
+            <a href="{{ path('app_start') }}#auth-section" class="landing-header-link landing-header-link--primary" data-no-loading>Contacto</a>
             {% endif %}
         </nav>
     </header>
