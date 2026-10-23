@@ -5,20 +5,6 @@
 {% block stylesheets %}
     {{ parent() }}
     <style>
-        :root {
-            --db-primary: #5c6f6c;
-            --db-secondary: #849d9a;
-            --db-accent: #d4a373;
-            --db-surface: #ffffff;
-            --db-text: #1f2a2d;
-            --db-muted: #647079;
-            --db-border: #e5eceb;
-            --db-shadow: 0 10px 28px rgba(19, 44, 43, 0.1);
-        }
-
-        .dashboard-shell {
-            padding: 1.25rem;
-        }
 
         .dashboard-intro {
             margin-bottom: 1rem;
@@ -26,7 +12,7 @@
 
         .dashboard-title {
             margin: 0;
-            color: var(--db-text);
+            color: var(--ui-texto);
             font-size: 1.8rem;
             font-weight: 800;
             letter-spacing: -0.02em;
@@ -34,7 +20,7 @@
 
         .dashboard-subtitle {
             margin: 0.35rem 0 0;
-            color: var(--db-muted);
+            color: var(--ui-apagado);
             font-size: 0.95rem;
         }
 
@@ -42,7 +28,7 @@
             border: 0;
             border-radius: 14px;
             color: #fff;
-            box-shadow: var(--db-shadow);
+            box-shadow: var(--ui-sombra);
             height: 100%;
         }
 
@@ -96,10 +82,10 @@
         }
 
         .dashboard-panel {
-            background: var(--db-surface);
-            border: 1px solid var(--db-border);
+            background: var(--ui-superficie);
+            border: 1px solid var(--ui-borde);
             border-radius: 14px;
-            box-shadow: var(--db-shadow);
+            box-shadow: var(--ui-sombra);
             overflow: hidden;
         }
 
@@ -109,7 +95,7 @@
 
         .dashboard-panel-header {
             padding: 1rem 1.2rem;
-            border-bottom: 1px solid var(--db-border);
+            border-bottom: 1px solid var(--ui-borde);
             background: linear-gradient(180deg, #fcfdfd 0%, #f7faf9 100%);
         }
 
@@ -117,7 +103,7 @@
             margin: 0;
             font-size: 1.1rem;
             font-weight: 700;
-            color: var(--db-text);
+            color: var(--ui-texto);
         }
 
         .dashboard-panel-body {
@@ -140,8 +126,8 @@
         }
 
         .dashboard-filter .form-control:focus {
-            border-color: var(--db-secondary);
-            box-shadow: 0 0 0 0.2rem rgba(132, 157, 154, 0.18);
+            border-color: var(--ui-secundario);
+            box-shadow: 0 0 0 0.2rem var(--marca-tenue);
         }
 
         .dashboard-filter .btn-outline-secondary {
@@ -223,8 +209,8 @@
         }
 
         .navigation .page-item.active .page-link {
-            background: var(--db-primary);
-            border-color: var(--db-primary);
+            background: var(--ui-primario);
+            border-color: var(--ui-primario);
             color: #fff;
         }
 
@@ -235,9 +221,6 @@
         }
 
         @media (max-width: 768px) {
-            .dashboard-shell {
-                padding: 1rem 0.25rem;
-            }
 
             .dashboard-title {
                 font-size: 1.45rem;
@@ -261,7 +244,7 @@
 {% endblock %}
 
 {% block body %}
-    <div class="container-fluid mt-3 dashboard-shell">
+    <div class="container-fluid pagina dashboard-shell">
         <div class="row mb-4">
             <div class="col">
                 <div class="card metric-card metric-card--total">

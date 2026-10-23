@@ -139,3 +139,278 @@
 .page-link {
     color: var(--marca-legible);
 }
+
+/*
+    ─────────────────────────────────────────────────────────────────────────────
+    La capa de interfaz: la forma de las cosas, en un solo lugar.
+
+    Hasta acá el archivo definía los colores de la marca. De acá para abajo va lo otro que
+    hacía que dos pantallas del mismo sistema se sintieran dos sistemas distintos: cuánto se
+    redondea una tarjeta, qué sombra tiene, de qué tamaño es un botón, cuánto respira una
+    página.
+
+    Esto existe porque había dieciséis plantillas con un bloque <style> adentro que repetían la
+    misma paleta con un prefijo distinto cada una ---pag-primary, --alu-primary, --usr-primary-
+    y todas escribían el mismo #5c6f6c a mano. Dos problemas: el gris verdoso no es el color de
+    la marca, y al estar escrito a mano esas pantallas se quedaban grises en la versión de
+    clubes mientras el resto salía naranja.
+
+    Ahora los nombres son unos solos y el color sale de las variables de arriba, así que cambia
+    con el producto. Si una pantalla necesita algo propio, que lo defina sobre estos tokens; que
+    no vuelva a inventar una paleta.
+*/
+:root {
+    /* El color de acción sale de la marca: azul en institutos, naranja en clubes. */
+    --ui-primario: var(--marca-legible);
+    --ui-secundario: var(--marca);
+
+    /* Los neutros no cambian entre productos: son el papel, la tinta y el lápiz. */
+    --ui-superficie: #ffffff;
+    --ui-texto: #1f2a2d;
+    --ui-apagado: #647079;
+    --ui-borde: #e5eceb;
+    --ui-borde-campo: #d9e4e2;
+    --ui-sombra: 0 10px 28px rgba(19, 44, 43, 0.1);
+
+    /*
+        Tres radios y nada más. Antes había doce valores distintos dando vueltas (10px, 14px,
+        8px, 4px, 5px, 12px, 15px...), que es lo que hace que dos tarjetas una al lado de la
+        otra se vean de dos sistemas distintos.
+    */
+    --ui-radio: 14px;        /* tarjetas, modales, lo que contiene */
+    --ui-radio-chico: 10px;  /* botones y campos, lo que se toca */
+    --ui-radio-mini: 8px;    /* botones chicos, paginación */
+
+    --ui-alto-campo: 40px;
+}
+
+/*
+    Tarjetas. Bootstrap 5.1 no usa variables para esto, así que hay que repetir los selectores
+    -incluidos los de las esquinas internas, que trae calculadas sobre su propio radio-.
+*/
+.card {
+    background-color: var(--ui-superficie);
+    border: 1px solid var(--ui-borde);
+    border-radius: var(--ui-radio);
+    box-shadow: var(--ui-sombra);
+}
+
+.card > .card-header:first-child,
+.card > .list-group:first-child .list-group-item:first-child,
+.card > img:first-child {
+    border-radius: calc(var(--ui-radio) - 1px) calc(var(--ui-radio) - 1px) 0 0;
+}
+
+.card > .card-footer:last-child,
+.card > .list-group:last-child .list-group-item:last-child,
+.card > img:last-child {
+    border-radius: 0 0 calc(var(--ui-radio) - 1px) calc(var(--ui-radio) - 1px);
+}
+
+.card-header {
+    border-bottom-color: var(--ui-borde);
+}
+
+.modal-content,
+.list-group {
+    border-radius: var(--ui-radio);
+}
+
+.dropdown-menu {
+    border-color: var(--ui-borde);
+    border-radius: var(--ui-radio-chico);
+    box-shadow: var(--ui-sombra);
+}
+
+.alert {
+    border-radius: var(--ui-radio-chico);
+}
+
+/* Botones y campos: lo que se toca tiene todo la misma forma y el mismo alto. */
+.btn {
+    border-radius: var(--ui-radio-chico);
+}
+
+.btn-sm {
+    border-radius: var(--ui-radio-mini);
+}
+
+.form-control,
+.form-select,
+.input-group-text {
+    border-radius: var(--ui-radio-chico);
+    border-color: var(--ui-borde-campo);
+}
+
+.nav-pills .nav-link {
+    border-radius: var(--ui-radio-chico);
+}
+
+.page-link {
+    border-radius: var(--ui-radio-mini);
+}
+
+/*
+    La barra de filtros que encabeza casi todos los listados. Vivía en un <style> dentro de
+    base.html.twig con los colores escritos a mano; es el mismo componente, movido acá y atado
+    a los tokens.
+*/
+.ui-filter-card {
+    background: var(--ui-superficie);
+    border: 1px solid var(--ui-borde);
+    border-radius: var(--ui-radio);
+    box-shadow: var(--ui-sombra);
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.ui-filter-card .form-label {
+    color: var(--ui-apagado);
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.35px;
+    margin-bottom: 0.35rem;
+}
+
+.ui-filter-card .form-control,
+.ui-filter-card .form-select,
+.ui-filter-card .btn {
+    height: var(--ui-alto-campo);
+}
+
+.ui-filter-card .form-control,
+.ui-filter-card .form-select {
+    box-shadow: none;
+}
+
+.ui-filter-card .btn-outline-secondary {
+    border-color: var(--ui-borde-campo);
+    color: #556067;
+}
+
+.ui-filter-card .btn-outline-secondary:hover {
+    background: #f1f6f5;
+    color: #3f4a50;
+    border-color: #cfdcda;
+}
+
+/* Los botones de solo icono de las tablas: todos del mismo tamaño, sin importar la pantalla. */
+.actions-group {
+    display: inline-flex;
+    gap: 0.3rem;
+    flex-wrap: nowrap;
+    align-items: center;
+}
+
+.actions-group .btn {
+    border-radius: var(--ui-radio-mini);
+    width: 38px !important;
+    min-width: 38px !important;
+    height: 38px !important;
+    padding: 0.2rem;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.actions-group form {
+    display: inline-flex;
+    margin: 0;
+}
+
+td .actions-group {
+    white-space: nowrap;
+}
+
+.btn-action-icon {
+    width: 38px;
+    min-width: 38px;
+    height: 30px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/*
+    El botón flotante de los listados. La acción principal -"Nuevo alumno", "Registrar pago"-
+    queda siempre al alcance del pulgar, sin importar cuánto se haya bajado en la tabla.
+
+    Estaba copiado en cinco plantillas, idéntico en las cinco salvo por el prefijo del nombre.
+    Acá está una sola vez: el verde es el de "crear algo nuevo", y las dos variantes son para
+    cuando una pantalla tiene una segunda acción al lado.
+*/
+.pagina-acciones {
+    position: fixed;
+    right: 1rem;
+    bottom: 1rem;
+    z-index: 1030;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-end;
+}
+
+.pagina-boton-flotante {
+    border: none;
+    border-radius: 999px;
+    padding: 0.58rem 0.95rem;
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: #fff;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: linear-gradient(135deg, #2c9e67, #228556);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.pagina-boton-flotante:hover,
+.pagina-boton-flotante:focus {
+    color: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.26);
+}
+
+/* Para una acción que no crea nada: ver el calendario, ir al detalle. Va con el color del producto. */
+.pagina-boton-flotante--marca {
+    background: linear-gradient(135deg, var(--marca), var(--marca-oscuro));
+}
+
+/* Para lo que avisa de algo: deudas, vencimientos. El texto va oscuro porque el ámbar no da contraste. */
+.pagina-boton-flotante--alerta {
+    background: linear-gradient(135deg, #f2b644, #d29523);
+    color: #3a2a07;
+}
+
+.pagina-boton-flotante--alerta:hover,
+.pagina-boton-flotante--alerta:focus {
+    color: #3a2a07;
+}
+
+@media (max-width: 576px) {
+    .pagina-boton-flotante {
+        padding: 0.54rem 0.85rem;
+        font-size: 0.8rem;
+    }
+}
+
+/*
+    El margen de la página. Antes cada pantalla elegía el suyo -mt-3, mt-4, px-4, py-4- y por eso
+    el contenido arrancaba a distinta altura según dónde estuvieras. El espacio de abajo es
+    generoso a propósito: es lo que deja leer el último renglón de una tabla sin que el botón
+    flotante lo tape.
+*/
+.pagina {
+    padding: 1rem 0.75rem 6rem;
+}
+
+@media (max-width: 768px) {
+    .pagina {
+        padding: 0.8rem 0.4rem 6.4rem;
+    }
+}

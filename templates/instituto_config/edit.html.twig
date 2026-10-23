@@ -9,30 +9,16 @@
 {% block stylesheets %}
     {{ parent() }}
     <style>
-        :root {
-            --cfg-primary: #5c6f6c;
-            --cfg-secondary: #849d9a;
-            --cfg-accent: #d4a373;
-            --cfg-surface: #ffffff;
-            --cfg-text: #1f2a2d;
-            --cfg-muted: #647079;
-            --cfg-border: #e5eceb;
-            --cfg-shadow: 0 10px 28px rgba(19, 44, 43, 0.1);
-        }
-
-        .config-edit-page {
-            padding: 1.2rem 0.75rem;
-        }
 
         .config-edit-shell {
-            border: 1px solid var(--cfg-border);
+            border: 1px solid var(--ui-borde);
             border-radius: 14px;
-            box-shadow: var(--cfg-shadow);
+            box-shadow: var(--ui-sombra);
             overflow: hidden;
         }
 
         .config-edit-main-header {
-            background: linear-gradient(135deg, var(--cfg-primary), var(--cfg-secondary)) !important;
+            background: linear-gradient(135deg, var(--ui-primario), var(--ui-secundario)) !important;
             border-bottom: 1px solid rgba(0, 0, 0, 0.06);
         }
 
@@ -55,21 +41,21 @@
         }
 
         .config-edit-tabs .nav-link.active {
-            background: linear-gradient(135deg, var(--cfg-primary), var(--cfg-secondary));
+            background: linear-gradient(135deg, var(--ui-primario), var(--ui-secundario));
             border-color: transparent;
             color: #fff;
-            box-shadow: 0 8px 22px rgba(92, 111, 108, 0.28);
+            box-shadow: 0 8px 22px var(--marca-tenue);
         }
 
         .config-edit-page .card {
-            border: 1px solid var(--cfg-border);
+            border: 1px solid var(--ui-borde);
             border-radius: 14px;
-            box-shadow: var(--cfg-shadow);
+            box-shadow: var(--ui-sombra);
         }
 
         .config-edit-page .card-header.bg-light {
             background: linear-gradient(180deg, #fcfdfd 0%, #f7faf9 100%) !important;
-            border-bottom: 1px solid var(--cfg-border);
+            border-bottom: 1px solid var(--ui-borde);
         }
 
         .config-edit-page .card-header.bg-warning {
@@ -105,8 +91,8 @@
 
         .config-edit-page .form-control:focus,
         .config-edit-page .form-select:focus {
-            border-color: var(--cfg-secondary);
-            box-shadow: 0 0 0 0.2rem rgba(132, 157, 154, 0.16);
+            border-color: var(--ui-secundario);
+            box-shadow: 0 0 0 0.2rem var(--marca-tenue);
         }
 
         .config-edit-page .btn-lg {
@@ -115,15 +101,13 @@
         }
 
         @media (max-width: 768px) {
-            .config-edit-page {
-                padding: 0.9rem 0.2rem;
-            }
+
         }
     </style>
 {% endblock %}
 
 {% block body %}
-<div class="container-fluid mt-3 config-edit-page">
+<div class="container-fluid pagina config-edit-page">
     <div class="row">
         <div class="col-md-12">
             <div class="card shadow-sm config-edit-shell">
@@ -1751,7 +1735,6 @@
         </div>
     </div>
 {% endfor %}
-
 
 {# Áreas de evaluación. Fuera del formulario principal: no se pueden anidar forms. #}
 <div class="modal fade" id="modalNuevaArea" tabindex="-1" aria-hidden="true">

@@ -5,22 +5,11 @@
 {% block stylesheets %}
     {{ parent() }}
     <style>
-        :root {
-            --usr-primary: #5c6f6c;
-            --usr-secondary: #849d9a;
-            --usr-surface: #ffffff;
-            --usr-border: #e5eceb;
-            --usr-shadow: 0 10px 28px rgba(19, 44, 43, 0.1);
-        }
-
-        .user-edit-page {
-            padding: 1.2rem 0.75rem;
-        }
 
         .user-edit-card {
-            border: 1px solid var(--usr-border);
+            border: 1px solid var(--ui-borde);
             border-radius: 14px;
-            box-shadow: var(--usr-shadow);
+            box-shadow: var(--ui-sombra);
             overflow: hidden;
         }
 
@@ -39,7 +28,7 @@
 {% endblock %}
 
 {% block body %}
-<div class="container-fluid mt-3 user-edit-page">
+<div class="container-fluid pagina user-edit-page">
     <div class="row">
         <div class="col-12">
             <div class="card user-edit-card">

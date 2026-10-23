@@ -5,25 +5,11 @@
 {% block stylesheets %}
     {{ parent() }}
     <style>
-        :root {
-            --cfg-primary: #5c6f6c;
-            --cfg-secondary: #849d9a;
-            --cfg-accent: #d4a373;
-            --cfg-surface: #ffffff;
-            --cfg-text: #1f2a2d;
-            --cfg-muted: #647079;
-            --cfg-border: #e5eceb;
-            --cfg-shadow: 0 10px 28px rgba(19, 44, 43, 0.1);
-        }
-
-        .config-page {
-            padding: 1.2rem 0.75rem;
-        }
 
         .config-shell {
-            border: 1px solid var(--cfg-border);
+            border: 1px solid var(--ui-borde);
             border-radius: 14px;
-            box-shadow: var(--cfg-shadow);
+            box-shadow: var(--ui-sombra);
             overflow: hidden;
         }
 
@@ -38,8 +24,8 @@
             border-radius: 10px;
             padding: 0.5rem 0.9rem;
             font-weight: 700;
-            background: linear-gradient(135deg, var(--cfg-primary), var(--cfg-secondary));
-            box-shadow: 0 10px 24px rgba(92, 111, 108, 0.25);
+            background: linear-gradient(135deg, var(--ui-primario), var(--ui-secundario));
+            box-shadow: 0 10px 24px var(--marca-tenue);
 
             
             position: fixed;
@@ -67,16 +53,16 @@
         }
 
         .config-tabs .nav-link.active {
-            background: linear-gradient(135deg, var(--cfg-primary), var(--cfg-secondary));
+            background: linear-gradient(135deg, var(--ui-primario), var(--ui-secundario));
             border-color: transparent;
             color: #fff;
-            box-shadow: 0 8px 22px rgba(92, 111, 108, 0.28);
+            box-shadow: 0 8px 22px var(--marca-tenue);
         }
 
         .config-section-card {
-            border: 1px solid var(--cfg-border);
+            border: 1px solid var(--ui-borde);
             border-radius: 14px;
-            box-shadow: var(--cfg-shadow);
+            box-shadow: var(--ui-sombra);
             overflow: hidden;
         }
 
@@ -140,9 +126,6 @@
         }
 
         @media (max-width: 768px) {
-            .config-page {
-                padding: 0.9rem 0.2rem;
-            }
 
             .config-data-table th {
                 width: 45%;
@@ -156,7 +139,7 @@
 {% endblock %}
 
 {% block body %}
-    <div class="container-fluid mt-3 config-page">
+    <div class="container-fluid pagina config-page">
         <div class="row">
             <div class="col-md-12">
                 <div class="card config-shell">

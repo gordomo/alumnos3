@@ -5,27 +5,12 @@
 {% block stylesheets %}
     {{ parent() }}
     <style>
-        :root {
-            --profe-primary: #5c6f6c;
-            --profe-secondary: #849d9a;
-            --profe-accent: #d4a373;
-            --profe-surface: #ffffff;
-            --profe-text: #1f2a2d;
-            --profe-muted: #647079;
-            --profe-border: #e5eceb;
-            --profe-shadow: 0 10px 28px rgba(19, 44, 43, 0.1);
-        }
-
-        .profesor-page {
-            padding: 1.2rem 0.75rem;
-            padding-bottom: 5.8rem;
-        }
 
         .profesor-toolbar {
-            background: var(--profe-surface);
-            border: 1px solid var(--profe-border);
+            background: var(--ui-superficie);
+            border: 1px solid var(--ui-borde);
             border-radius: 14px;
-            box-shadow: var(--profe-shadow);
+            box-shadow: var(--ui-sombra);
             padding: 1rem;
             margin-bottom: 1rem;
             margin-left: 0;
@@ -44,8 +29,8 @@
         }
 
         .profesor-search .form-control:focus {
-            border-color: var(--profe-secondary);
-            box-shadow: 0 0 0 0.2rem rgba(132, 157, 154, 0.16);
+            border-color: var(--ui-secundario);
+            box-shadow: 0 0 0 0.2rem var(--marca-tenue);
         }
 
         .profesor-search .btn-outline-secondary {
@@ -74,10 +59,10 @@
         }
 
         .profesor-panel {
-            background: var(--profe-surface);
-            border: 1px solid var(--profe-border);
+            background: var(--ui-superficie);
+            border: 1px solid var(--ui-borde);
             border-radius: 14px;
-            box-shadow: var(--profe-shadow);
+            box-shadow: var(--ui-sombra);
             overflow: hidden;
         }
 
@@ -172,8 +157,8 @@
         }
 
         .profesor-pagination .page-item.active .page-link {
-            background: var(--profe-primary);
-            border-color: var(--profe-primary);
+            background: var(--ui-primario);
+            border-color: var(--ui-primario);
             color: #fff;
         }
 
@@ -182,55 +167,12 @@
             font-style: italic;
         }
 
-        .profesor-floating-actions {
-            position: fixed;
-            right: 1rem;
-            bottom: 1rem;
-            z-index: 1030;
-        }
-
-        .profesor-floating-btn {
-            border: none;
-            border-radius: 999px;
-            padding: 0.58rem 0.95rem;
-            font-size: 0.84rem;
-            font-weight: 700;
-            color: #fff;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.4rem;
-            background: linear-gradient(135deg, #2c9e67, #228556);
-            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .profesor-floating-btn:hover {
-            color: #fff;
-            transform: translateY(-1px);
-            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.26);
-            text-decoration: none;
-        }
-
         @media (max-width: 768px) {
-            .profesor-page {
-                padding: 0.9rem 0.2rem;
-                padding-bottom: 6.2rem;
-            }
 
             .profesor-toolbar {
                 padding: 0.85rem;
             }
 
-            .profesor-floating-actions {
-                right: 0.75rem;
-                bottom: 0.75rem;
-            }
-
-            .profesor-floating-btn {
-                padding: 0.54rem 0.85rem;
-                font-size: 0.8rem;
-            }
         }
     </style>
 {% endblock %}
@@ -240,7 +182,7 @@
 {% endblock %}
 
 {% block body %}
-<div class="container-fluid mt-3 profesor-page">
+<div class="container-fluid pagina profesor-page">
     <div class="row profesor-toolbar ui-filter-card">
         <div class="col-md-6">
             <form method="get" action="{{ path('app_profesor_index') }}" class="profesor-search">
@@ -321,8 +263,8 @@
     </div>
 </div>
 
-<div class="profesor-floating-actions">
-    <a href="{{ path('app_profesor_new') }}" class="profesor-floating-btn">
+<div class="pagina-acciones">
+    <a href="{{ path('app_profesor_new') }}" class="pagina-boton-flotante">
         <i class="bi bi-plus-circle"></i> Nuevo {{ Term('profesor') }}
     </a>
 </div>

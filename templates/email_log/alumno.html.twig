@@ -9,9 +9,6 @@
 {% block stylesheets %}
     {{ parent() }}
     <style>
-        .email-alumno-page {
-            padding: 1.2rem 0.75rem;
-        }
 
         .alumno-info-card {
             background: #ffffff;
@@ -69,7 +66,7 @@
 {% endblock %}
 
 {% block body %}
-<div class="container-fluid mt-3 email-alumno-page">
+<div class="container-fluid pagina email-alumno-page">
     {{ include('components/back_button.html.twig', {
         'route': 'app_alumno_show',
         'params': {'id': alumno.id},

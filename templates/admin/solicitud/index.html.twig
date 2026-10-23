@@ -4,7 +4,7 @@
 {% block panelTitle %}Solicitudes de alta{% endblock %}
 
 {% block body %}
-<div class="container-fluid mt-4">
+<div class="container-fluid pagina">
     <div class="d-flex flex-wrap gap-2 mb-4">
         {% set filtros = {'': 'Todas', 'pendiente': 'Pendientes', 'confirmada': 'Confirmadas', 'descartada': 'Descartadas'} %}
         {% for valor, etiqueta in filtros %}

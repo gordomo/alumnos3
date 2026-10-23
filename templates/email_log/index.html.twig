@@ -9,21 +9,6 @@
 {% block stylesheets %}
     {{ parent() }}
     <style>
-        :root {
-            --email-primary: #5c6f6c;
-            --email-secondary: #849d9a;
-            --email-accent: #d4a373;
-            --email-surface: #ffffff;
-            --email-text: #1f2a2d;
-            --email-muted: #647079;
-            --email-border: #e5eceb;
-            --email-shadow: 0 10px 28px rgba(19, 44, 43, 0.1);
-        }
-
-        .email-page {
-            padding: 1.2rem 0.75rem;
-            padding-bottom: 3rem;
-        }
 
         .email-stats {
             display: flex;
@@ -33,11 +18,11 @@
 
         .stat-card {
             flex: 1;
-            background: var(--email-surface);
-            border: 1px solid var(--email-border);
+            background: var(--ui-superficie);
+            border: 1px solid var(--ui-borde);
             border-radius: 14px;
             padding: 1.5rem;
-            box-shadow: var(--email-shadow);
+            box-shadow: var(--ui-sombra);
         }
 
         .stat-card h3 {
@@ -48,7 +33,7 @@
 
         .stat-card p {
             margin: 0.5rem 0 0 0;
-            color: var(--email-muted);
+            color: var(--ui-apagado);
             font-size: 0.9rem;
         }
 
@@ -61,10 +46,10 @@
         }
 
         .email-panel {
-            background: var(--email-surface);
-            border: 1px solid var(--email-border);
+            background: var(--ui-superficie);
+            border: 1px solid var(--ui-borde);
             border-radius: 14px;
-            box-shadow: var(--email-shadow);
+            box-shadow: var(--ui-sombra);
             overflow: hidden;
         }
 
@@ -122,18 +107,18 @@
         }
 
         .filters-bar {
-            background: var(--email-surface);
-            border: 1px solid var(--email-border);
+            background: var(--ui-superficie);
+            border: 1px solid var(--ui-borde);
             border-radius: 14px;
             padding: 1rem;
             margin-bottom: 1rem;
-            box-shadow: var(--email-shadow);
+            box-shadow: var(--ui-sombra);
         }
     </style>
 {% endblock %}
 
 {% block body %}
-<div class="container-fluid mt-3 email-page">
+<div class="container-fluid pagina email-page">
     <div class="email-stats">
         <div class="stat-card success">
             <h3>{{ totalEnviados }}</h3>

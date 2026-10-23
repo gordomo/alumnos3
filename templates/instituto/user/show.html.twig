@@ -5,24 +5,11 @@
 {% block stylesheets %}
     {{ parent() }}
     <style>
-        :root {
-            --usr-primary: #5c6f6c;
-            --usr-secondary: #849d9a;
-            --usr-surface: #ffffff;
-            --usr-text: #1f2a2d;
-            --usr-muted: #647079;
-            --usr-border: #e5eceb;
-            --usr-shadow: 0 10px 28px rgba(19, 44, 43, 0.1);
-        }
-
-        .user-show-page {
-            padding: 1.2rem 0.75rem;
-        }
 
         .user-show-card {
-            border: 1px solid var(--usr-border);
+            border: 1px solid var(--ui-borde);
             border-radius: 14px;
-            box-shadow: var(--usr-shadow);
+            box-shadow: var(--ui-sombra);
             overflow: hidden;
         }
 
@@ -49,7 +36,7 @@
         }
 
         .role-badge--main {
-            background: linear-gradient(135deg, var(--usr-primary), var(--usr-secondary)) !important;
+            background: linear-gradient(135deg, var(--ui-primario), var(--ui-secundario)) !important;
         }
 
         .user-show-actions .btn {
@@ -64,7 +51,7 @@
 {% endblock %}
 
 {% block body %}
-<div class="container-fluid mt-3 user-show-page">
+<div class="container-fluid pagina user-show-page">
     <div class="row">
         <div class="col-12">
             <div class="card user-show-card">

@@ -34,9 +34,6 @@
     padding-bottom: 40px;
 }
 
-.card.shadow-sm {
-    border-radius: 0.5rem;
-}
 
 .form-error {
     font-size: 0.9rem;

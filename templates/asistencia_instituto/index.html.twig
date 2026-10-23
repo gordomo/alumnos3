@@ -7,19 +7,6 @@
 {% block stylesheets %}
     {{ parent() }}
     <style>
-        :root {
-            --asi-primary: #5c6f6c;
-            --asi-secondary: #849d9a;
-            --asi-surface: #ffffff;
-            --asi-text: #1f2a2d;
-            --asi-muted: #647079;
-            --asi-border: #e5eceb;
-            --asi-shadow: 0 10px 28px rgba(19, 44, 43, 0.1);
-        }
-
-        .asistencia-page {
-            padding: 1.2rem 0.75rem;
-        }
 
         .asistencia-intro {
             margin-bottom: 1rem;
@@ -27,7 +14,7 @@
 
         .asistencia-title {
             margin: 0;
-            color: var(--asi-text);
+            color: var(--ui-texto);
             font-size: 1.65rem;
             font-weight: 800;
             letter-spacing: -0.02em;
@@ -35,15 +22,15 @@
 
         .asistencia-subtitle {
             margin: 0.35rem 0 0;
-            color: var(--asi-muted);
+            color: var(--ui-apagado);
             font-size: 0.93rem;
         }
 
         .asistencia-toolbar {
-            background: var(--asi-surface);
-            border: 1px solid var(--asi-border);
+            background: var(--ui-superficie);
+            border: 1px solid var(--ui-borde);
             border-radius: 14px;
-            box-shadow: var(--asi-shadow);
+            box-shadow: var(--ui-sombra);
             padding: 1rem;
             margin-bottom: 1rem;
             margin-left: 0;
@@ -51,7 +38,7 @@
         }
 
         .asistencia-toolbar .form-label {
-            color: var(--asi-muted);
+            color: var(--ui-apagado);
             font-size: 0.8rem;
             font-weight: 700;
             text-transform: uppercase;
@@ -68,25 +55,25 @@
 
         .asistencia-toolbar .form-control:focus,
         .asistencia-toolbar .form-select:focus {
-            border-color: var(--asi-secondary);
-            box-shadow: 0 0 0 0.2rem rgba(132, 157, 154, 0.16);
+            border-color: var(--ui-secundario);
+            box-shadow: 0 0 0 0.2rem var(--marca-tenue);
         }
 
         .asistencia-page .card {
-            border: 1px solid var(--asi-border);
+            border: 1px solid var(--ui-borde);
             border-radius: 14px;
-            box-shadow: var(--asi-shadow);
+            box-shadow: var(--ui-sombra);
             overflow: hidden;
         }
 
         .asistencia-page .card-header {
             background: linear-gradient(180deg, #fcfdfd 0%, #f7faf9 100%);
-            border-bottom: 1px solid var(--asi-border);
+            border-bottom: 1px solid var(--ui-borde);
             padding: 0.9rem 1rem;
         }
 
         .asistencia-page .card-title {
-            color: var(--asi-text);
+            color: var(--ui-texto);
             font-size: 1rem;
             font-weight: 700;
         }
@@ -128,14 +115,11 @@
         }
 
         .asistencia-page .observaciones-input:focus {
-            border-color: var(--asi-secondary);
-            box-shadow: 0 0 0 0.2rem rgba(132, 157, 154, 0.16);
+            border-color: var(--ui-secundario);
+            box-shadow: 0 0 0 0.2rem var(--marca-tenue);
         }
 
         @media (max-width: 768px) {
-            .asistencia-page {
-                padding: 0.9rem 0.2rem;
-            }
 
             .asistencia-title {
                 font-size: 1.35rem;
@@ -145,7 +129,7 @@
 {% endblock %}
 
 {% block body %}
-<div class="container-fluid mt-3 asistencia-page">
+<div class="container-fluid pagina asistencia-page">
     <div class="asistencia-intro">
         <p class="asistencia-subtitle">Instituto: {{ app.user.instituto.nombre }}. Selecciona fecha y curso para registrar o revisar asistencias.</p>
     </div>
