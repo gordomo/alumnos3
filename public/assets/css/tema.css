@@ -207,8 +207,26 @@
     border-radius: 0 0 calc(var(--ui-radio) - 1px) calc(var(--ui-radio) - 1px);
 }
 
+/*
+    El encabezado de tarjeta. Era la diferencia que más se notaba entre dos pantallas: treinta
+    y cuatro encabezados venían pintados de azul con texto blanco y otros tantos venían
+    blancos, en el mismo sistema y a veces en la misma pantalla.
+
+    Queda uno solo, neutro: el color de la marca se reserva para lo que se puede tocar -un
+    botón, una solapa activa, un enlace-, que es donde sirve. Siguen pintados, a propósito, los
+    encabezados que dicen un estado: una factura pagada, un aviso, un error.
+*/
 .card-header {
+    background-color: #f7faf9;
     border-bottom-color: var(--ui-borde);
+    color: var(--ui-texto);
+    font-weight: 600;
+    padding: 0.75rem 1rem;
+}
+
+.card-header .bi,
+.card-header .fas {
+    color: var(--ui-primario);
 }
 
 .modal-content,
@@ -224,6 +242,18 @@
 
 .alert {
     border-radius: var(--ui-radio-chico);
+}
+
+/*
+    El encabezado de las tablas. Unas lo traían gris -con la clase table-light-, otras blanco, y
+    algunas listas venían con todos los bordes dibujados mientras el resto no. Queda uno solo,
+    del mismo gris que el encabezado de las tarjetas.
+*/
+.table > thead > tr > th {
+    background-color: #f7faf9;
+    color: var(--ui-texto);
+    font-weight: 600;
+    border-bottom-color: var(--ui-borde);
 }
 
 /* Botones y campos: lo que se toca tiene todo la misma forma y el mismo alto. */

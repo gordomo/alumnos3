@@ -5,7 +5,7 @@
 {% block panelTitle %}{{ curso.nombre }}{% endblock %}
 
 {% block body %}
-<div class="container-fluid pagina" style="padding-bottom: 3rem;">
+<div class="container-fluid pagina">
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="{{ path(rutas.index) }}">Diario y materiales</a></li>
@@ -16,7 +16,7 @@
     <div class="row">
         <div class="col-lg-7 mb-4">
             <div class="card">
-                <div class="card-header bg-primary text-white">
+                <div class="card-header">
                     <h5 class="mb-0"><i class="bi bi-journal-text"></i> Qué se dio en clase</h5>
                 </div>
 
@@ -70,6 +70,7 @@
                                     {% endif %}
                                 </td>
                                 <td class="text-end">
+                                    <div class="actions-group">
                                     <form method="post" action="{{ path(rutas.eliminarClase, {'id': clase.id}) }}"
                                           onsubmit="return confirm('¿Eliminar la clase del {{ clase.fecha|date('d/m/Y') }}?');">
                                         <input type="hidden" name="_token" value="{{ csrf_token('eliminar_clase_' ~ clase.id) }}">
@@ -77,6 +78,7 @@
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </form>
+                                    </div>
                                 </td>
                             </tr>
                         {% else %}
@@ -94,7 +96,7 @@
 
         <div class="col-lg-5 mb-4">
             <div class="card">
-                <div class="card-header bg-primary text-white">
+                <div class="card-header">
                     <h5 class="mb-0"><i class="bi bi-paperclip"></i> Materiales de consulta</h5>
                 </div>
 

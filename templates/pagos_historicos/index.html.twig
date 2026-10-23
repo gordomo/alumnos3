@@ -2,9 +2,10 @@
 
 {% block title %}Pagos Históricos{% endblock %}
 
+{% block panelTitle %}Pagos Históricos{% endblock %}
+
 {% block body %}
     <div class="container-fluid pagina">
-        <h1>Pagos Históricos</h1>
 
         {% if pagos_por_alumno is empty %}
             <p class="text-muted">No hay históricos de {{ term('cursos') }} registrados.</p>

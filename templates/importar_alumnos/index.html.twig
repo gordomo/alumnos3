@@ -5,7 +5,7 @@
 {% block panelTitle %}Importar {{ term('alumnos') }} desde una planilla{% endblock %}
 
 {% block body %}
-<div class="container-fluid pagina" style="padding-bottom: 3rem;">
+<div class="container-fluid pagina">
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="{{ path('app_alumno_index') }}">{{ Term('alumnos') }}</a></li>
@@ -16,7 +16,7 @@
     <div class="row">
         <div class="col-lg-7">
             <div class="card mb-3">
-                <div class="card-header bg-primary text-white">
+                <div class="card-header">
                     <h5 class="mb-0"><i class="bi bi-file-earmark-spreadsheet"></i> Subir la planilla</h5>
                 </div>
                 <div class="card-body">
@@ -60,7 +60,7 @@
 
         <div class="col-lg-5">
             <div class="card mb-3">
-                <div class="card-header bg-light"><strong>Las columnas</strong></div>
+                <div class="card-header"><strong>Las columnas</strong></div>
                 <div class="card-body">
                     <p class="small text-muted mb-2">
                         El <strong>orden no importa</strong>: cada columna se reconoce por el nombre de
@@ -96,7 +96,7 @@
             </div>
 
             <div class="card">
-                <div class="card-header bg-light"><strong>Qué tener en cuenta</strong></div>
+                <div class="card-header"><strong>Qué tener en cuenta</strong></div>
                 <div class="card-body small text-muted">
                     <p>
                         El <strong>DNI no puede repetirse</strong>, ni dentro de la planilla ni contra

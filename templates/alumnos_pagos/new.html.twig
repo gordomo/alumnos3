@@ -2,10 +2,11 @@
 
 {% block title %}Nuevo Pago{% endblock %}
 
+{% block panelTitle %}Nuevo Pago{% endblock %}
+
 
 {% block body %}
     <div class="mx-4 mt-4">
-        <h1 class="h3 mb-4 text-dark">Nuevo Pago</h1>
 
         {% for message in app.flashes('error') %}
             <div class="alert alert-danger">{{ message }}</div>

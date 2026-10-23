@@ -15,7 +15,7 @@
     <div class="row g-4">
         <div class="col-lg-7">
             <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <div class="card-header d-flex justify-content-between align-items-center">
                     <span><i class="bi bi-building"></i> {{ solicitud.nombreInstituto }}</span>
                     {% if solicitud.estado == 'pendiente' %}
                         <span class="badge bg-warning text-dark">Pendiente</span>
@@ -76,7 +76,7 @@
             </div>
 
             <div class="card shadow-sm mt-4">
-                <div class="card-header bg-light"><i class="bi bi-journal-text"></i> Notas internas</div>
+                <div class="card-header"><i class="bi bi-journal-text"></i> Notas internas</div>
                 <div class="card-body">
                     <form method="post" action="{{ path('admin_solicitud_notas', {'id': solicitud.id}) }}">
                         <input type="hidden" name="_token" value="{{ csrf_token('solicitud_notas' ~ solicitud.id) }}">
@@ -113,7 +113,7 @@
                 </div>
 
                 <div class="card shadow-sm mt-4">
-                    <div class="card-header bg-light"><i class="bi bi-x-circle"></i> Descartar</div>
+                    <div class="card-header"><i class="bi bi-x-circle"></i> Descartar</div>
                     <div class="card-body">
                         <form method="post" action="{{ path('admin_solicitud_descartar', {'id': solicitud.id}) }}">
                             <input type="hidden" name="_token" value="{{ csrf_token('solicitud_descartar' ~ solicitud.id) }}">

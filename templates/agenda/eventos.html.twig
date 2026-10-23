@@ -5,7 +5,13 @@
 {% block panelTitle %}Eventos de la agenda{% endblock %}
 
 {% block body %}
-<div class="container-fluid pagina" style="padding-bottom: 3rem;">
+<div class="container-fluid pagina">
+    <div class="pagina-acciones">
+        <a href="{{ path('app_agenda_evento_nuevo') }}" class="pagina-boton-flotante">
+            <i class="bi bi-plus-circle"></i> Nuevo evento
+        </a>
+    </div>
+
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="{{ path('app_agenda_index') }}">Agenda</a></li>
@@ -16,9 +22,6 @@
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <strong>Eventos que cargó {{ term('el_instituto') }}</strong>
-            <a href="{{ path('app_agenda_evento_nuevo') }}" class="btn btn-sm btn-primary">
-                <i class="bi bi-plus-circle"></i> Nuevo evento
-            </a>
         </div>
 
         <div class="table-responsive">
@@ -61,6 +64,7 @@
                         </td>
                         <td class="small">{{ evento.visibilidadEtiqueta }}</td>
                         <td class="text-end text-nowrap">
+                            <div class="actions-group">
                             <a href="{{ path('app_agenda_evento_editar', {'id': evento.id}) }}"
                                class="btn btn-sm btn-outline-secondary" title="Editar">
                                 <i class="bi bi-pencil"></i>
@@ -73,6 +77,7 @@
                                     <i class="bi bi-trash"></i>
                                 </button>
                             </form>
+                            </div>
                         </td>
                     </tr>
                 {% else %}

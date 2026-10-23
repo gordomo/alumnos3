@@ -70,7 +70,7 @@
     {{ include('components/back_button.html.twig', {
         'route': 'app_alumno_show',
         'params': {'id': alumno.id},
-        'label': 'Volver al Alumno'
+        'label': 'Volver ' ~ term('al_alumno')
     }) }}
 
     <div class="alumno-info-card">

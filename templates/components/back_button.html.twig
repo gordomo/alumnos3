@@ -4,6 +4,7 @@
    Parámetros:
    - default_path: ruta por defecto si no hay return_url ni referer válido
    - force_reload: si es true, añade parámetro timestamp para forzar recarga
+   - label: el texto del botón; si no se pasa, dice "Volver"
    
    Uso:
    {% include 'components/back_button.html.twig' with {
@@ -37,6 +38,6 @@
 {% endif %}
 
 <a href="{{ back_path }}" class="btn btn-secondary">
-    <i class="bi bi-arrow-left"></i> Volver
+    <i class="bi bi-arrow-left"></i> {{ label|default('Volver') }}
 </a>
  

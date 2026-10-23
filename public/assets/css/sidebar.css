@@ -213,7 +213,13 @@
     width: 100%;
 }
 
-#page-content-wrapper .col-12 {
+/*
+    Esto era para la barra del título y estaba escrito como ".col-12" a secas, así que alcanzaba
+    a cualquier columna de cualquier pantalla: la tarjeta de adentro pasaba a ser un ítem de un
+    contenedor flex y se encogía al ancho de su contenido. Por eso algunos listados se veían
+    angostos, con media pantalla vacía al costado. Ahora apunta solo a la barra del título.
+*/
+#page-content-wrapper .titulo-barra > .col-12 {
     display: flex;
     justify-content: flex-start;
 }

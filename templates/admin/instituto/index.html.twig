@@ -5,11 +5,17 @@
 {% block title %}Lista de {{ Term('instituto_plural') }}{% endblock %}
 
 {% block panelTitle %}
-    Lista de {{ Term('instituto_plural') }} <a href="{{ path('admin_instituto_new') }}" class="btn btn-success btn-sm">Nuevo {{ term('instituto') }}</a>
+    Lista de {{ Term('instituto_plural') }}
 {% endblock %}
 
 {% block body %}
 <div class="container-fluid pagina">
+    <div class="pagina-acciones">
+        <a href="{{ path('admin_instituto_new') }}" class="pagina-boton-flotante">
+            <i class="bi bi-plus-circle"></i> Nuevo {{ term('instituto') }}
+        </a>
+    </div>
+
     {# Filtros #}
     <div class="card mb-4">
         <div class="card-body">

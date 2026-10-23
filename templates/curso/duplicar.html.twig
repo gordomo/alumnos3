@@ -2,6 +2,8 @@
 
 {% block title %}Duplicar {{ Term('curso') }}{% endblock %}
 
+{% block panelTitle %}Duplicar {{ Term('curso') }}{% endblock %}
+
 {% block body %}
 <div class="container-fluid pagina">
     <nav aria-label="breadcrumb">
@@ -13,7 +15,7 @@
     </nav>
 
     <div class="card">
-        <div class="card-header bg-primary text-white">
+        <div class="card-header">
             <h4 class="mb-0"><i class="bi bi-files"></i> Duplicar Curso: {{ curso_original.nombre }}</h4>
         </div>
         <div class="card-body">

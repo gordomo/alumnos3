@@ -111,7 +111,7 @@
     <div class="row">
         <div class="col-md-12">
             <div class="card shadow-sm config-edit-shell">
-                <div class="card-header bg-primary text-white config-edit-main-header">
+                <div class="card-header config-edit-main-header">
                     <h1 class="h3 mb-0">
                         <i class="bi bi-gear"></i> Editar Configuración del {{ Term('instituto') }}
                     </h1>
@@ -154,7 +154,7 @@
                                 <input type="hidden" name="_token" value="{{ csrf_token('config_edit_general') }}">
                                 <input type="hidden" name="section" value="general">
                                 <div class="card mb-3">
-                                    <div class="card-header bg-light">
+                                    <div class="card-header">
                                         <h5 class="mb-0">Datos del {{ Term('instituto') }}</h5>
                                     </div>
                                     <div class="card-body">
@@ -414,6 +414,7 @@
                                                                         {% endif %}
                                                                     </td>
                                                                     <td class="text-end">
+                                                                        <div class="actions-group">
                                                                         <button type="button" class="btn btn-sm btn-outline-secondary"
                                                                                 data-bs-toggle="modal" data-bs-target="#modalEditarConcepto{{ concepto.id }}" title="Editar">
                                                                             <i class="bi bi-pencil"></i>
@@ -422,6 +423,7 @@
                                                                                 data-bs-toggle="modal" data-bs-target="#modalEliminarConcepto{{ concepto.id }}" title="Eliminar">
                                                                             <i class="bi bi-trash"></i>
                                                                         </button>
+                                                                        </div>
                                                                     </td>
                                                                 </tr>
                                                             {% endfor %}
@@ -483,6 +485,7 @@
                                                                 </td>
                                                                 <td>{{ periodo.rangoTexto }}</td>
                                                                 <td class="text-end">
+                                                                    <div class="actions-group">
                                                                     <button type="button" class="btn btn-sm btn-outline-primary"
                                                                             data-bs-toggle="modal" data-bs-target="#modalEditarPeriodo{{ periodo.id }}">
                                                                         <i class="bi bi-pencil"></i>
@@ -491,6 +494,7 @@
                                                                             data-bs-toggle="modal" data-bs-target="#modalBorrarPeriodo{{ periodo.id }}">
                                                                         <i class="bi bi-trash"></i>
                                                                     </button>
+                                                                    </div>
                                                                 </td>
                                                             </tr>
                                                         {% endfor %}
@@ -577,6 +581,7 @@
                                                                 </td>
                                                                 <td>{{ area.abreviatura|default('—') }}</td>
                                                                 <td class="text-end">
+                                                                    <div class="actions-group">
                                                                     <button type="button" class="btn btn-sm btn-outline-primary"
                                                                             data-bs-toggle="modal" data-bs-target="#modalEditarArea{{ area.id }}">
                                                                         <i class="bi bi-pencil"></i>
@@ -585,6 +590,7 @@
                                                                             data-bs-toggle="modal" data-bs-target="#modalBorrarArea{{ area.id }}">
                                                                         <i class="bi bi-trash"></i>
                                                                     </button>
+                                                                    </div>
                                                                 </td>
                                                             </tr>
                                                         {% endfor %}
@@ -723,7 +729,7 @@
                         <!-- Pestaña: Pagos y Vencimientos -->
                         <div class="tab-pane fade" id="edit-pagos" role="tabpanel" aria-labelledby="edit-pagos-tab">
                             <div class="card mb-4">
-                                <div class="card-header bg-warning text-dark">
+                                <div class="card-header">
                                     <h5 class="mb-0"><i class="bi bi-person-workspace"></i> Pago a {{ term('profesores') }}</h5>
                                 </div>
                                 <div class="card-body">
@@ -767,7 +773,7 @@
                             </div>
 
                             <div class="card mb-4">
-                                <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+                                <div class="card-header d-flex justify-content-between align-items-center">
                                     <h5 class="mb-0">
                                         <i class="bi bi-calendar-event"></i> Vencimientos e Intereses
                                     </h5>
@@ -915,7 +921,7 @@
                                 </div>
                                 
                                 <div class="card mb-4">
-                                    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
                                         <h5 class="mb-0">
                                             <i class="bi bi-tag"></i> Descuentos Promocionales
                                         </h5>
@@ -987,7 +993,7 @@
                         <!-- Pestaña: Métodos de Pago -->
                         <div class="tab-pane fade" id="edit-metodos-pago" role="tabpanel" aria-labelledby="edit-metodos-pago-tab">
                             <div class="card mb-4">
-                                <div class="card-header bg-info">
+                                <div class="card-header">
                                     <h4 class="card-title mb-0">
                                         <i class="bi bi-credit-card"></i> Métodos de Pago
                                     </h4>
@@ -1129,7 +1135,7 @@
                                 <input type="hidden" name="_token" value="{{ csrf_token('config_edit_notificaciones') }}">
                                 <input type="hidden" name="section" value="notificaciones">
                                 <div class="card mb-3">
-                                    <div class="card-header bg-secondary text-white">
+                                    <div class="card-header">
                                         <h5 class="mb-0">
                                             <i class="bi bi-envelope"></i> Configuración de Notificaciones por Email
                                         </h5>

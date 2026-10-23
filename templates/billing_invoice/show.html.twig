@@ -206,23 +206,24 @@
     </style>
 {% endblock %}
 
-{% block panelTitle %}
-    <div class="no-print">
-        Factura #{{ invoice.id }}
-        <a href="{{ path('billing_invoice_index') }}" class="btn btn-secondary btn-sm">
-            <i class="bi bi-arrow-left"></i> Volver
-        </a>
-                            <a href="{{ path('billing_invoice_pdf', {'id': invoice.id}) }}" target="_blank" class="btn btn-primary btn-sm">
-                                <i class="bi bi-file-pdf"></i> Descargar PDF
-                            </a>
-                            <button onclick="window.print()" class="btn btn-outline-primary btn-sm">
-                                <i class="bi bi-printer"></i> Imprimir
-                            </button>
-    </div>
-{% endblock %}
+{% block panelTitle %}Factura #{{ invoice.id }}{% endblock %}
 
 {% block body %}
 <div class="container-fluid pagina">
+    {# Las acciones van acá y no en la barra del título: esa barra dice dónde estás, igual que
+       en el resto del sistema, y no se imprime una botonera arriba de la factura. #}
+    <div class="d-flex flex-wrap gap-2 mb-3 no-print">
+        <a href="{{ path('billing_invoice_index') }}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Volver
+        </a>
+        <a href="{{ path('billing_invoice_pdf', {'id': invoice.id}) }}" target="_blank" class="btn btn-primary">
+            <i class="bi bi-file-pdf"></i> Descargar PDF
+        </a>
+        <button onclick="window.print()" class="btn btn-outline-primary">
+            <i class="bi bi-printer"></i> Imprimir
+        </button>
+    </div>
+
     <div class="row">
         <div class="col-12">
             <div class="invoice-container">

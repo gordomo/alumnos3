@@ -2,6 +2,8 @@
 
 {% block title %}Libreta · {{ alumno.apellido }}, {{ alumno.nombre }}{% endblock %}
 
+{% block panelTitle %}Libreta · {{ alumno.apellido }}, {{ alumno.nombre }}{% endblock %}
+
 {% set primario = configuracion and configuracion.colorPrimario ? configuracion.colorPrimario : '#0d6efd' %}
 {% set secundario = configuracion and configuracion.colorSecundario ? configuracion.colorSecundario : '#e7f1ff' %}
 

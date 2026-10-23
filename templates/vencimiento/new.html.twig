@@ -2,14 +2,13 @@
 
 {% block title %}Nuevo Vencimiento{% endblock %}
 
+{% block panelTitle %}Nuevo Vencimiento{% endblock %}
+
 {% block body %}
     <div class="container-fluid pagina">
         <div class="row">
             <div class="col-12">
                 <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">Nuevo Vencimiento</h3>
-                    </div>
                     <div class="card-body">
                         <form method="post">
                             <input type="hidden" name="_token" value="{{ csrf_token('vencimiento_new') }}">

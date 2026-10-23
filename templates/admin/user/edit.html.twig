@@ -2,10 +2,11 @@
 
 {% block title %}Editar Usuario Administrador{% endblock %}
 
+{% block panelTitle %}Editar Usuario Administrador{% endblock %}
+
 {% block body %}
 <div class="container-fluid pagina d-flex justify-content-center">
     <div class="col-lg-12">
-        <h1 class="mb-4 text-center">Editar Usuario Administrador</h1>
         <div class="card shadow-sm">
             <div class="card-body">
                 {{ include('admin/user/_form.html.twig', {'button_label': 'Guardar'}) }}

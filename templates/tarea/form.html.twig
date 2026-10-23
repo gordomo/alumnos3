@@ -15,7 +15,7 @@
     <div class="row">
         <div class="col-lg-8">
             <div class="card">
-                <div class="card-header bg-primary text-white">
+                <div class="card-header">
                     <h5 class="mb-0">
                         <i class="bi bi-{{ esNueva ? 'plus-circle' : 'pencil' }}"></i>
                         {{ esNueva ? 'Nueva tarea' : 'Editar tarea' }} <small>— {{ curso.nombre }}</small>
@@ -81,7 +81,7 @@
         {% if not esNueva %}
             <div class="col-lg-4">
                 <div class="card border-danger">
-                    <div class="card-header bg-light"><strong>Eliminar</strong></div>
+                    <div class="card-header"><strong>Eliminar</strong></div>
                     <div class="card-body">
                         <p class="small text-muted">
                             Se borra la tarea y las entregas que ya se hayan cargado. No se puede recuperar.

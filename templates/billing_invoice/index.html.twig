@@ -28,7 +28,7 @@
 {% set s = suscripcion %}
 {% set factura = s.factura %}
 
-<div class="container-fluid pagina" style="padding-bottom: 3rem;">
+<div class="container-fluid pagina">
 
     {# ---------- Estado, arriba y en una línea ---------- #}
     {% set encabezados = {
@@ -116,7 +116,7 @@
         <div class="col-lg-7 mb-3">
             {% if factura and not s.factura.isPaid() and s.estado != 'exenta' %}
                 <div class="card h-100">
-                    <div class="card-header bg-primary text-white">
+                    <div class="card-header">
                         <h6 class="mb-0"><i class="bi bi-credit-card"></i> Cómo pagar</h6>
                     </div>
                     <div class="card-body">
@@ -291,7 +291,7 @@
        cobramos lo que le cobramos. Antes ocupaba media pantalla al lado de la acción y competía
        con ella; acá sigue a mano pero no estorba. #}
     <details class="card mb-3">
-        <summary class="card-header bg-light" style="cursor: pointer;">
+        <summary class="card-header" style="cursor: pointer;">
             <strong>¿Cómo se calcula lo que pago?</strong>
         </summary>
         <div class="card-body">
@@ -342,7 +342,7 @@
        todos modos acá solo hay cosas cerradas: lo que importa es el período, el importe y en qué
        terminó. #}
     <div class="card">
-        <div class="card-header bg-light"><strong>Facturas anteriores</strong></div>
+        <div class="card-header"><strong>Facturas anteriores</strong></div>
         <div class="list-group list-group-flush lista-facturas">
             {% for f in anteriores %}
                 <div class="list-group-item d-flex justify-content-between align-items-center">

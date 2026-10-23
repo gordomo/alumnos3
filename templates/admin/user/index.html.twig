@@ -3,11 +3,17 @@
 {% block title %}Usuarios Administradores{% endblock %}
 
 {% block panelTitle %}
-    Usuarios Administradores <a href="{{ path('admin_user_new') }}" class="btn btn-success btn-sm">Nuevo Usuario</a>
+    Usuarios Administradores
 {% endblock %}
 
 {% block body %}
 <div class="container-fluid pagina">
+    <div class="pagina-acciones">
+        <a href="{{ path('admin_user_new') }}" class="pagina-boton-flotante">
+            <i class="bi bi-plus-circle"></i> Nuevo Usuario
+        </a>
+    </div>
+
     <div class="row">
         <div class="table-responsive">
             <table class="table table-striped table-hover">

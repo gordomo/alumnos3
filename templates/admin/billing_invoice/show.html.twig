@@ -2,15 +2,16 @@
 
 {% block title %}Factura #{{ invoice.id }}{% endblock %}
 
-{% block panelTitle %}
-    Factura #{{ invoice.id }}
-    <a href="{{ path('admin_billing_invoice_index') }}" class="btn btn-secondary btn-sm">
-        <i class="bi bi-arrow-left"></i> Volver
-    </a>
-{% endblock %}
+{% block panelTitle %}Factura #{{ invoice.id }}{% endblock %}
 
 {% block body %}
 <div class="container-fluid pagina">
+    <div class="mb-3">
+        <a href="{{ path('admin_billing_invoice_index') }}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Volver
+        </a>
+    </div>
+
     <div class="row">
         <div class="col-md-8">
             <!-- Información de la Factura -->
@@ -67,7 +68,7 @@
                     <div class="row mb-3">
                         <div class="col-12">
                             <h6 class="text-muted">Detalles de la Factura</h6>
-                            <table class="table table-bordered">
+                            <table class="table align-middle">
                                 <thead class="table-light">
                                     <tr>
                                         <th>Concepto</th>
@@ -128,7 +129,7 @@
             <!-- Comprobante de Pago -->
             {% if invoice.paymentProofPath %}
                 <div class="card mb-4">
-                    <div class="card-header bg-primary text-white">
+                    <div class="card-header">
                         <h6 class="mb-0"><i class="bi bi-file-earmark"></i> Comprobante de Pago</h6>
                     </div>
                     <div class="card-body">
