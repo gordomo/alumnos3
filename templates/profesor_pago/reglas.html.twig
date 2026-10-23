@@ -1,8 +1,8 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Pago por curso — {{ profesor.apellido }}, {{ profesor.nombre }}{% endblock %}
+{% block title %}Pago por {{ term('curso') }} — {{ profesor.apellido }}, {{ profesor.nombre }}{% endblock %}
 
-{% block panelTitle %}Pago por curso{% endblock %}
+{% block panelTitle %}Pago por {{ term('curso') }}{% endblock %}
 
 {% block body %}
 <div class="container-fluid mt-3" style="padding-bottom: 3rem;">

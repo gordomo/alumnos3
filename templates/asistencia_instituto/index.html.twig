@@ -1,8 +1,8 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Asistencias de Alumn@s - {{ app.user.instituto.nombre }}{% endblock %}
+{% block title %}Asistencias de {{ Term('alumnos') }} - {{ app.user.instituto.nombre }}{% endblock %}
 {% block panelTitle %}
-    Asistencias de Alumn@s
+    Asistencias de {{ Term('alumnos') }}
 {% endblock %}
 {% block stylesheets %}
     {{ parent() }}

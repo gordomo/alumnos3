@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Alumno index{% endblock %}
+{% block title %}{{ Term('alumno_formal') }} index{% endblock %}
 
 {% block stylesheets %}
     {{ parent() }}
@@ -272,7 +272,7 @@
 {% endblock %}
 
 {% block panelTitle %}
-    Alumn@s
+    {{ Term('alumnos') }}
 {% endblock %}
 
 {% block body %}

@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Configuración del Instituto{% endblock %}
+{% block title %}Configuración {{ term('del_instituto') }}{% endblock %}
 
 {% block stylesheets %}
     {{ parent() }}
@@ -152,7 +152,7 @@
 {% endblock %}
 
 {% block panelTitle %}
-    Configuración del Instituto
+    Configuración {{ term('del_instituto') }}
 {% endblock %}
 
 {% block body %}

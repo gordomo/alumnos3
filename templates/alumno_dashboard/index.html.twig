@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Dashboard Alumno{% endblock %}
+{% block title %}Dashboard {{ Term('alumno_formal') }}{% endblock %}
 
 {% block panelTitle %}
     Bienvenido, {{ alumno.nombre }} {{ alumno.apellido }}

@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Usuarios del Instituto{% endblock %}
+{% block title %}Usuarios {{ term('del_instituto') }}{% endblock %}
 
 {% block stylesheets %}
     {{ parent() }}
@@ -185,7 +185,7 @@
 {% endblock %}
 
 {% block panelTitle %}
-    Usuarios del Instituto
+    Usuarios {{ term('del_instituto') }}
 {% endblock %}
 
 {% block body %}

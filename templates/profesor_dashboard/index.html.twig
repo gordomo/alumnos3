@@ -1,12 +1,12 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Dashboard Profesor{% endblock %}
+{% block title %}Dashboard {{ Term('profesor') }}{% endblock %}
 
 {% block panelTitle %}
     {% if profesor %}
         Bienvenido, {{ profesor.nombre }} {{ profesor.apellido }}
     {% else %}
-        Dashboard Profesor
+        Dashboard {{ Term('profesor') }}
     {% endif %}
 {% endblock %}
 

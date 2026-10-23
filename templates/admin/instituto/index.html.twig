@@ -2,10 +2,10 @@
 
 {% extends 'base.html.twig' %}
 
-{% block title %}Lista de Institutos{% endblock %}
+{% block title %}Lista de {{ Term('instituto_plural') }}{% endblock %}
 
 {% block panelTitle %}
-    Lista de Institutos <a href="{{ path('admin_instituto_new') }}" class="btn btn-success btn-sm">Nuevo {{ term('instituto') }}</a>
+    Lista de {{ Term('instituto_plural') }} <a href="{{ path('admin_instituto_new') }}" class="btn btn-success btn-sm">Nuevo {{ term('instituto') }}</a>
 {% endblock %}
 
 {% block body %}

@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Profesor index{% endblock %}
+{% block title %}{{ Term('profesor') }} index{% endblock %}
 
 {% block stylesheets %}
     {{ parent() }}
@@ -236,7 +236,7 @@
 {% endblock %}
 
 {% block panelTitle %}
-    Profesores
+    {{ Term('profesores') }}
 {% endblock %}
 
 {% block body %}
