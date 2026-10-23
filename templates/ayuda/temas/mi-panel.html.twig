@@ -22,7 +22,7 @@
     <li><strong>Deudas pendientes</strong>: cuántas cuotas te figuran sin pagar.</li>
 </ul>
 
-{{ m.captura('alumno-dashboard.png', 'Mi Dashboard: resumen de cursos, asistencias, pagos y deudas') }}
+{{ m.captura('alumno-dashboard.png', 'Mi Dashboard: resumen de ' ~ term('cursos') ~ ', asistencias, pagos y deudas') }}
 
 <p>Más abajo están los detalles:</p>
 
@@ -57,7 +57,7 @@
     dejado el profesor.
 </p>
 
-{{ m.captura('alumno-notas.png', 'Mis Notas: evaluaciones y promedio por curso') }}
+{{ m.captura('alumno-notas.png', 'Mis Notas: evaluaciones y promedio por ' ~ term('curso')) }}
 
 <p>
     Según cómo lo tenga configurado {{ term('el_instituto') }}, la nota puede ser un número, un concepto

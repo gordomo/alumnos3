@@ -32,7 +32,7 @@
     <li>Clic en <strong>Guardar</strong>.</li>
 </ol>
 
-{{ m.captura('asistencia-grilla.png', 'Grilla de asistencia de una clase') }}
+{{ m.captura('asistencia-grilla.png', 'Grilla de asistencia de ' ~ term('la_clase')) }}
 
 {{ m.nota('info', 'Dejar un alumno sin marcar no es lo mismo que marcarlo ausente',
    'Un alumno que no tildaste queda <em>sin registro</em> para esa clase, y esa clase no le cuenta
@@ -54,7 +54,7 @@
     con la cantidad de presentes, ausentes y justificados.
 </p>
 
-{{ m.captura('asistencia-informe.png', 'Informe de asistencia por curso') }}
+{{ m.captura('asistencia-informe.png', 'Informe de asistencia por ' ~ term('curso')) }}
 
 <p>El informe se puede exportar para trabajarlo en una planilla.</p>
 

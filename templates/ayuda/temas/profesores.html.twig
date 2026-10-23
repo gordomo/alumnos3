@@ -46,7 +46,7 @@
     <li>Guardá.</li>
 </ol>
 
-{{ m.captura('profesor-reglas-pago.png', 'Pago por curso: una regla por cada curso del profesor') }}
+{{ m.captura('profesor-reglas-pago.png', 'Pago por ' ~ term('curso') ~ ': una regla por cada ' ~ term('curso') ~ ' del ' ~ term('profesor')) }}
 
 <p>
     El {{ term('curso') }} <strong>sin</strong> regla prendida se liquida con la modalidad de la ficha del

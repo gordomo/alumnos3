@@ -46,8 +46,8 @@
                 <form method="post" action="{{ path('app_importar_alumnos_confirmar') }}">
                     <input type="hidden" name="_token" value="{{ csrf_token('importar_alumnos_confirmar') }}">
                     <button type="submit" class="btn btn-primary"
-                            onclick="return confirm('¿Importar {{ resumen.importables }} alumn@(s)?');">
-                        <i class="bi bi-check2-circle"></i> Importar {{ resumen.importables }} alumn@(s)
+                            onclick="return confirm('¿Importar {{ resumen.importables }} {{ term('alumnos') }}?');">
+                        <i class="bi bi-check2-circle"></i> Importar {{ resumen.importables }} {{ term('alumnos') }}
                     </button>
                 </form>
             {% else %}

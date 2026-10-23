@@ -29,7 +29,7 @@
     <li>Guardar.</li>
 </ol>
 
-{{ m.captura('curso-nuevo.png', 'Formulario de creación de un curso') }}
+{{ m.captura('curso-nuevo.png', 'Formulario de creación de ' ~ term('un_curso')) }}
 
 <h2>Aumentar el precio de {{ term('un_curso') }}</h2>
 
@@ -90,7 +90,7 @@
     calificaciones.
 </p>
 
-{{ m.captura('curso-index.png', 'Listado de cursos con los botones de acción') }}
+{{ m.captura('curso-index.png', 'Listado de ' ~ term('cursos') ~ ' con los botones de acción') }}
 
 <h2>La ficha {{ term('del_curso') }}</h2>
 
@@ -99,7 +99,7 @@
     accesos directos a asistencias y calificaciones de ese {{ term('curso') }}.
 </p>
 
-{{ m.captura('curso-show.png', 'Ficha de un curso con sus alumnos inscriptos') }}
+{{ m.captura('curso-show.png', 'Ficha de ' ~ term('un_curso') ~ ' con sus ' ~ term('alumnos_formal') ~ ' inscriptos') }}
 
 <h2>El calendario</h2>
 
@@ -137,7 +137,7 @@
     <li>Confirmá. Ahí sí se escribe el resultado en el historial de cada {{ term('alumno_formal') }}.</li>
 </ol>
 
-{{ m.captura('curso-cierre-preview.png', 'Vista previa del cierre, alumno por alumno') }}
+{{ m.captura('curso-cierre-preview.png', 'Vista previa del cierre, ' ~ term('alumno_formal') ~ ' por ' ~ term('alumno_formal')) }}
 
 <p>Los criterios que se aplican son los que tengas activos en {{ m.ruta(['Configuración', 'Configuración académica']) }}. Si no activaste ninguno, todos los alumnos quedan finalizados.</p>
 

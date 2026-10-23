@@ -89,7 +89,7 @@
                             El {{ s.limiteSoloLectura|date('d/m/Y') }} el sistema pasa a modo consulta.
                         {% endif %}
                     {% elseif s.estado == 'solo_lectura' %}
-                        Podés ver todo y seguir registrando los pagos de tus alumn@s, pero no dar de alta ni
+                        Podés ver todo y seguir registrando los pagos de tus {{ term('alumnos') }}, pero no dar de alta ni
                         enviar comunicaciones.
                         {% if s.limiteBloqueo %}El {{ s.limiteBloqueo|date('d/m/Y') }} se bloquea el panel.{% endif %}
                     {% else %}
@@ -146,7 +146,7 @@
                                                 <span>
                                                     <span class="d-block">{{ f.formattedPeriod }}</span>
                                                     <span class="small text-muted">
-                                                        {{ f.activeStudentsCount }} alumn@s
+                                                        {{ f.activeStudentsCount }} {{ term('alumnos') }}
                                                         {% if f.diasDeAtraso > 0 %}
                                                             <span class="badge bg-danger ms-1">
                                                                 Vencida hace {{ f.diasDeAtraso }} día(s)
@@ -320,8 +320,8 @@
                 <div class="col-md-6">
                     <p class="small text-muted mb-0">
                         Se factura por mes cerrado: el 1° se emite la factura del mes anterior con los
-                        alumn@s que tuviste activos, y vence el {{ config.diaVencimiento }}. Si das de baja
-                        alumn@s, el mes siguiente pagás menos.
+                        {{ term('alumnos') }} que tuviste activos, y vence el {{ config.diaVencimiento }}. Si das de baja
+                        {{ term('alumnos') }}, el mes siguiente pagás menos.
                     </p>
                 </div>
             </div>
@@ -349,7 +349,7 @@
                     <div>
                         <div>{{ f.formattedPeriod }}</div>
                         <div class="small text-muted">
-                            {{ f.activeStudentsCount }} alumn@s
+                            {{ f.activeStudentsCount }} {{ term('alumnos') }}
                             {% if f.isPaid() %}
                                 <span class="badge bg-success ms-1">Pagada</span>
                             {% elseif f.isPendingApproval() %}

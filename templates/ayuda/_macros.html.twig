@@ -1,12 +1,18 @@
 {# Macros compartidos por los temas de ayuda. #}
 
 {# Captura de pantalla con epígrafe.
+
+   Hay un juego de capturas por producto: public/assets/ayuda/instituto/ y .../club/, con los
+   mismos nombres de archivo. El manual es el mismo texto para los dos, pero las fotos no
+   pueden serlo: en clubes el menú dice Deportes y Soci@s. Las dos carpetas tienen siempre los
+   34 archivos, así que la imagen nunca falta.
+
    Los archivos van en public/assets/ayuda/ y NO en public/ayuda/: un directorio con ese
    nombre hace que Apache redirija /ayuda -> /ayuda/, y como la ruta del controller es
    /ayuda sin barra, Symfony redirige de vuelta y queda un loop de redirecciones. #}
 {% macro captura(archivo, epigrafe) %}
     <figure>
-        <img src="{{ asset('assets/ayuda/' ~ archivo) }}" alt="{{ epigrafe }}" loading="lazy">
+        <img src="{{ asset('assets/ayuda/' ~ vertical ~ '/' ~ archivo) }}" alt="{{ epigrafe }}" loading="lazy">
         <figcaption><i class="bi bi-image"></i> {{ epigrafe }}</figcaption>
     </figure>
 {% endmacro %}

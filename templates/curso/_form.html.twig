@@ -44,7 +44,7 @@
                                     <strong>${{ precioDesfasado.precioAnterior|number_format(2, ',', '.') }}</strong>,
                                     así que guardar va a corregirlos.
                                 {% endif %}
-                                Las cuotas ya pagadas y los alumn@s dados de baja no se tocan.
+                                Las cuotas ya pagadas y los {{ term('alumnos') }} dados de baja no se tocan.
                             </small>
                             {% if curso is defined and curso.id %}
                                 {# Atajo a Comunicaciones con el aviso ya redactado y el curso elegido.

@@ -712,10 +712,10 @@
                                                         <th>Destinatarios de los emails:</th>
                                                         <td>
                                                             {% set etiquetasNotificarA = {
-                                                                'alumno': 'Solo al alumn@',
-                                                                'ambos': 'Al alumn@ y a su tutor'
+                                                                'alumno': 'Solo ' ~ term('al_alumno') ~ '',
+                                                                'ambos': 'Al ' ~ term('alumno') ~ ' y a su tutor'
                                                             } %}
-                                                            <span class="badge bg-primary">{{ etiquetasNotificarA[configuracion.notificarA]|default('Solo al alumn@') }}</span>
+                                                            <span class="badge bg-primary">{{ etiquetasNotificarA[configuracion.notificarA]|default('Solo ' ~ term('al_alumno')) }}</span>
                                                             <small class="text-muted d-block">Aplica a recibos, recordatorios de deuda y boletines</small>
                                                         </td>
                                                     </tr>

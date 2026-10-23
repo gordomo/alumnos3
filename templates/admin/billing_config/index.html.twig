@@ -83,7 +83,7 @@
                         <div class="alert alert-light border mt-3 mb-0 small">
                             Con estos valores: aviso {{ config.diasAvisoPrevio }} día(s) antes de vencer,
                             a los {{ config.diasGracia }} día(s) de atraso el instituto pasa a
-                            <strong>modo consulta</strong> (puede ver todo pero no cargar nada, salvo pagos de alumn@s)
+                            <strong>modo consulta</strong> (puede ver todo pero no cargar nada, salvo pagos de {{ term('alumnos') }})
                             y a los {{ config.diasHastaBloqueo }} día(s) queda con el
                             <strong>panel bloqueado</strong>. {{ Term('profesor') }}@s, {{ term('alumnos') }} y familias nunca se bloquean.
                         </div>

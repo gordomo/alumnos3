@@ -27,7 +27,7 @@
     <li>Guardar.</li>
 </ol>
 
-{{ m.captura('alumno-nuevo.png', 'Formulario de alta de un alumno') }}
+{{ m.captura('alumno-nuevo.png', 'Formulario de alta de ' ~ term('un_alumno')) }}
 
 <h2>Inscribirlo a {{ term('un_curso') }}</h2>
 
@@ -47,7 +47,7 @@
     <li>Guardar. En ese momento se generan las cuotas del período.</li>
 </ol>
 
-{{ m.captura('alumno-cursos.png', 'Cursos de un alumno, con la opción de inscribirlo a otro') }}
+{{ m.captura('alumno-cursos.png', Term('cursos') ~ ' de ' ~ term('un_alumno') ~ ', con la opción de inscribirlo a otro') }}
 
 {{ m.nota('info', 'La fecha de alta define desde cuándo debe',
    'Si inscribís en mayo a un alumno cuyo curso arrancó en marzo, poné la fecha de alta en mayo:
@@ -122,7 +122,7 @@
     gestión de sus deudas y pagos.
 </p>
 
-{{ m.captura('alumno-index.png', 'Listado de alumnos con su estado de deuda') }}
+{{ m.captura('alumno-index.png', 'Listado de ' ~ term('alumnos_formal') ~ ' con su estado de deuda') }}
 
 <h2>Dar de baja de {{ term('un_curso') }}</h2>
 

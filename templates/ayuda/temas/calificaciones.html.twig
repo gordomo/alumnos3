@@ -51,7 +51,7 @@
     tienen. Clic en {{ term('el_curso') }} para entrar.
 </p>
 
-{{ m.captura('notas-index.png', 'Listado de cursos con calificaciones') }}
+{{ m.captura('notas-index.png', 'Listado de ' ~ term('cursos') ~ ' con calificaciones') }}
 
 <h2>2. Crear una evaluación</h2>
 
@@ -87,7 +87,7 @@
     <strong>resumen por {{ term('alumno_formal') }}</strong>: cuántas notas tiene, su promedio y si está aprobando.
 </p>
 
-{{ m.captura('notas-curso.png', 'Evaluaciones del curso y resumen por alumno') }}
+{{ m.captura('notas-curso.png', 'Evaluaciones ' ~ term('del_curso') ~ ' y resumen por ' ~ term('alumno_formal')) }}
 
 {{ m.nota('info', 'Cada evaluación se queda con la escala del día que se creó',
    'Si el instituto cambia de escala más adelante, las evaluaciones ya creadas siguen
@@ -172,7 +172,7 @@
     evaluaciones con la nota de cada una, su promedio y su situación.
 </p>
 
-{{ m.captura('notas-boletin.png', 'Boletín de un alumno') }}
+{{ m.captura('notas-boletin.png', 'Boletín de ' ~ term('un_alumno')) }}
 
 <p>
     La columna <strong>Peso</strong> muestra cuánto pesó cada evaluación; un guión significa peso

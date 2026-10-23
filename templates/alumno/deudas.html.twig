@@ -110,7 +110,7 @@
                                                 <br><small class="text-muted">
                                                     Primera deuda: {{ historico.fechaInicioPeriodo|mes_es }}
                                                     {% if historico.fechaAlta > historico.fechaInicioPeriodo %}
-                                                        <br><em>Nota: El alumno se inscribió el {{ historico.fechaAlta|date('d/m/Y') }}, pero se le generan deudas desde el inicio del curso ({{ historico.fechaInicioPeriodo|date('d/m/Y') }}).</em>
+                                                        <br><em>Nota: {{ Term('el_alumno') }} se inscribió el {{ historico.fechaAlta|date('d/m/Y') }}, pero se le generan deudas desde el inicio {{ term('del_curso') }} ({{ historico.fechaInicioPeriodo|date('d/m/Y') }}).</em>
                                                     {% endif %}
                                                 </small>
                                             {% elseif modo == 'proximo_mes' %}
@@ -121,7 +121,7 @@
                                                 <br><small class="text-muted">
                                                     Primera deuda: {{ historico.fechaAlta|mes_es }}
                                                     {% if historico.fechaAlta > historico.fechaInicioPeriodo %}
-                                                        <br><em>Nota: El alumno se inscribió después del inicio del curso ({{ historico.fechaInicioPeriodo|date('d/m/Y') }}), por lo que las deudas comienzan desde su fecha de inscripción.</em>
+                                                        <br><em>Nota: {{ Term('el_alumno') }} se inscribió después del inicio {{ term('del_curso') }} ({{ historico.fechaInicioPeriodo|date('d/m/Y') }}), por lo que las deudas comienzan desde su fecha de inscripción.</em>
                                                     {% endif %}
                                                 </small>
                                             {% endif %}
@@ -136,7 +136,7 @@
                         
                         <div class="alert alert-warning">
                             <h5><i class="bi bi-calendar-check"></i> Vencimientos configurados</h5>
-                            <p>El instituto {{ alumno.instituto.nombre }} tiene configurados los siguientes vencimientos para las cuotas mensuales:</p>
+                            <p>{{ Term('el_instituto') }} {{ alumno.instituto.nombre }} tiene configurados los siguientes vencimientos para las cuotas mensuales:</p>
                             
                             {% set vencimientos = alumno.instituto.vencimientos %}
                             {% if vencimientos|length > 0 %}

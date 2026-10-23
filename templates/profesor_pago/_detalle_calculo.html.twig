@@ -25,7 +25,7 @@
     {% if modalidad == 'porcentaje' %}
         {{ c.porcentaje }}% de ${{ c.total_curso|number_format(2, ',', '.') }}
         <div class="text-muted">
-            {{ c.cantidad_alumnos }} alumn@s · precio ${{ c.precio_curso|number_format(2, ',', '.') }}
+            {{ c.cantidad_alumnos }} {{ term('alumnos') }} · precio ${{ c.precio_curso|number_format(2, ',', '.') }}
             {% if c.cobrado is defined %}
                 · cobrado ${{ c.cobrado|number_format(2, ',', '.') }}
                 · facturado ${{ c.facturado|number_format(2, ',', '.') }}
@@ -145,7 +145,7 @@
             <p class="small text-muted mt-2 mb-0">
                 El porcentaje se calcula sobre
                 {% if d.base_porcentaje == 'cobrado' %}
-                    <strong>lo efectivamente cobrado</strong> del curso en el mes.
+                    <strong>lo efectivamente cobrado</strong> {{ term('del_curso') }} en el mes.
                 {% else %}
                     <strong>lo facturado</strong> del mes, cobrado o no.
                 {% endif %}

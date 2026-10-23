@@ -136,11 +136,27 @@ cd /www/wwwroot/clubes.teambuilder.com.ar   && git pull origin version-3-saas &&
 Si el cambio trae migraciones, van en los dos. Si trae dependencias nuevas, el `composer install`
 también.
 
+## Las capturas del manual
+
+La ayuda tiene 34 capturas y hay un juego por producto, con los mismos nombres de archivo:
+
+    public/assets/ayuda/instituto/
+    public/assets/ayuda/club/
+
+El macro `captura()` elige la carpeta según `vertical`, así que el texto del manual es uno solo
+y la foto cambia con el producto. Las dos carpetas tienen que tener siempre los 34 archivos: si
+falta uno, en ese producto queda una imagen rota.
+
+Se sacan del sistema andando, con el instituto de prueba (`admin@demo.test`, `profesor@demo.test`
+y `elena@demo.test`, todos con `Demo1234!`), en dos pasadas: una con `APP_VERTICAL=instituto` y
+otra con `APP_VERTICAL=club`, limpiando la caché entre una y otra. El aviso de suscripción del
+instituto de prueba se esconde por CSS antes de cada foto, porque no es parte del manual.
+
+Cuando cambia una pantalla, hay que volver a sacar **las dos** versiones de esa captura. Si se
+saca solo una, el manual del otro producto queda mostrando una pantalla que ya no existe.
+
 ## Lo que falta
 
-- **El vocabulario**: hoy el sistema por dentro sigue diciendo "cursos" y "alumn@s". Son unas 1.900
-  apariciones en 119 plantillas y hay que ir módulo por módulo, porque cambia el género y el plural
-  ("el curso" → "la disciplina").
 - **Las capturas de la landing**: muestran datos de instituto (deudas por curso, Guitarra Inicial).
   Hay que sacarlas de un club de verdad.
 - **Los mails**: siguen con el azul escrito a mano, porque los clientes de correo no entienden las
