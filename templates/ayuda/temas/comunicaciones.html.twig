@@ -1,7 +1,7 @@
 {% extends 'ayuda/_tema.html.twig' %}
-{% import 'ayuda/_macros.html.twig' as m %}
 
 {% block contenido %}
+{% import 'ayuda/_macros.html.twig' as m %}
 <p>
     Sirve para mandar un aviso por email a varios {{ term('alumnos') }} de una vez: que cambia el valor de la
     cuota, que se mueve un horario, que el lunes no hay clases.
@@ -9,7 +9,7 @@
 
 <p>Se entra por {{ m.ruta(['Comunicaciones']) }} en el menú.</p>
 
-<h2>Cómo se manda</h2>
+<h2 id="como-se-manda">Cómo se manda</h2>
 
 <ol>
     <li>
@@ -34,7 +34,7 @@
     cada {{ term('alumno') }} por su nombre, así que no hace falta escribir el saludo.
 </p>
 
-<h2>Elegir {{ term('alumnos') }} de a uno</h2>
+<h2 id="elegir-alumnos-de-a-uno">Elegir {{ term('alumnos') }} de a uno</h2>
 
 <p>
     Cuando el aviso es para algunas familias y no para un grupo entero, se usa
@@ -57,7 +57,7 @@
 
 <p>
     Quien no tenga email cargado aparece marcado como <strong>sin email</strong>: se lo puede
-    elegir igual, pero el envío le va a figurar como fallido en el historial.
+    elegir igual. El envío falla si no hay ninguna dirección válida entre los destinatarios configurados.
 </p>
 
 {{ m.captura('comunicacion-seleccion.png', 'La lista de ' ~ term('alumnos') ~ ' con el buscador y el contador') }}
@@ -70,16 +70,18 @@
    'Si en Configuración → Notificaciones tenés "al alumno y al tutor", la comunicación llega a las
     dos direcciones. La pantalla te dice cuál es la configuración vigente antes de enviar.') }}
 
-<h2>Qué pasa después</h2>
+<h2 id="que-pasa-despues">Qué pasa después</h2>
 
 <p>
     Cada envío queda registrado en {{ m.ruta(['Historial de Emails']) }}, con el tipo
-    <strong>Comunicación</strong>. Ahí podés filtrar por ese tipo y confirmar a quién le llegó y
-    a quién no.
+    <strong>Comunicación</strong>. Ahí podés filtrar por ese tipo y revisar los destinatarios y
+    qué envíos fallaron. El estado enviado indica que el transporte aceptó el correo;
+    no confirma recepción ni lectura.
 </p>
 
 <ul>
-    <li>Al {{ term('alumno') }} <strong>sin email cargado</strong> no le llega nada, y queda como fallido en el historial.</li>
+    <li>Si no hay ninguna dirección válida, el envío queda como fallido. Si notificás a ambos,
+        un email válido del tutor permite enviar aunque no haya uno válido del alumno.</li>
     <li>A los {{ term('alumnos') }} <strong>dados de baja</strong> no se les manda: sólo a los activos.</li>
 </ul>
 
@@ -88,7 +90,7 @@
     el momento, no en segundo plano: con muchos alumn@s la pantalla puede tardar unos segundos, no
     la cierres hasta que confirme.') }}
 
-<h2>Avisar un cambio de precio</h2>
+<h2 id="avisar-un-cambio-de-precio">Avisar un cambio de precio</h2>
 
 <p>
     Es el caso más común, y tiene un atajo. Cuando editás {{ term('un_curso') }} que tiene {{ term('alumnos') }} inscript@s,

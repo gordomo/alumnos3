@@ -1,14 +1,14 @@
 {% extends 'ayuda/_tema.html.twig' %}
-{% import 'ayuda/_macros.html.twig' as m %}
 
 {% block contenido %}
+{% import 'ayuda/_macros.html.twig' as m %}
 <p>
     El sistema no lleva una "cuenta corriente" a mano: las deudas se
     <strong>calculan</strong> a partir de las inscripciones, el precio mensual, el período del
     {{ term('curso') }} y los pagos ya registrados. Por eso no hay que dar de alta cuotas una por una.
 </p>
 
-<h2>Registrar un pago</h2>
+<h2 id="registrar-un-pago">Registrar un pago</h2>
 
 <ol>
     <li>{{ m.ruta(['Pagos']) }} y clic en <strong>Registrar pago</strong>. También se llega desde la ficha del {{ term('alumno_formal') }}.</li>
@@ -22,9 +22,9 @@
     <li>Revisá el total y confirmá.</li>
 </ol>
 
-{{ m.captura('pago-nuevo.png', 'Pantalla de registrar pago: estado de ' ~ term('los_cursos') ~ ' y meses a pagar') }}
+{{ m.captura('pago-nuevo.png', 'Inicio del registro de pago: elegí ' ~ term('un_alumno') ~ ' para ver sus cuotas') }}
 
-<h2>Los recuadros de estado {{ term('del_curso') }}</h2>
+<h2 id="los-recuadros-de-estado-del-curso">Los recuadros de estado {{ term('del_curso') }}</h2>
 
 <p>Arriba de la lista de meses hay hasta cuatro recuadros. Cada uno dice algo distinto:</p>
 
@@ -61,7 +61,7 @@
     cobrar, pero su fecha de vencimiento todavía no llegó, así que no está vencida. El verde
     habla de <em>atraso</em>; la lista amarilla habla de <em>qué se puede cobrar</em>.') }}
 
-<h2>Los estados de cada mes</h2>
+<h2 id="los-estados-de-cada-mes">Los estados de cada mes</h2>
 
 <p>Dentro de <strong>Meses para Pagar</strong>, cada mes trae su propia etiqueta:</p>
 
@@ -76,7 +76,7 @@
     <strong>Seleccionar todos</strong> de cada {{ term('curso') }} tilda de una vez todo lo pendiente de ese {{ term('curso') }}.
 </p>
 
-<h2>Cobrar meses adelantados</h2>
+<h2 id="cobrar-meses-adelantados">Cobrar meses adelantados</h2>
 
 <p>
     Se pueden tildar meses futuros y cobrarlos junto con los del mes en {{ term('curso') }}. El total se
@@ -85,13 +85,14 @@
     historial quede legible.
 </p>
 
-<h2>El importe: cálculo y ajuste a mano</h2>
+<h2 id="el-importe-calculo-y-ajuste-a-mano">El importe: cálculo y ajuste a mano</h2>
 
 <p>
     El bloque <strong>Cálculo del Pago</strong> detalla cómo se llegó al total: qué meses entraron,
-    qué recargo se aplicó y por qué vencimiento, y qué descuento. El orden es
-    <strong>primero el interés, después el descuento</strong>: el recargo se calcula sobre el precio
-    base y el descuento se aplica sobre ese resultado.
+    qué recargo se aplicó y qué descuento. El orden depende de
+    <strong>Configuración → Descuentos</strong>: interés primero, descuento primero, o cálculo
+    sobre la base. Revisá la opción vigente y el total antes de confirmar. Los importes pendientes
+    ya descuentan los créditos aplicados a cada cuota.
 </p>
 
 <p>
@@ -104,7 +105,7 @@
     formas: el sistema no deja un saldo parcial pendiente. Si lo que querés es un pago parcial,
     cobrá menos meses en lugar de bajar el importe.') }}
 
-<h2>Cómo se calculan los recargos</h2>
+<h2 id="como-se-calculan-los-recargos">Cómo se calculan los recargos</h2>
 
 <p>
     El recargo viene de los <strong>vencimientos</strong> que definiste en
@@ -114,18 +115,26 @@
 
 <p>
     Una cuota de un mes anterior está vencida en su totalidad, así que arrastra el recargo más
-    alto configurado. Por eso el importe de una cuota atrasada crece a medida que pasan los meses.
+    alto configurado. Ese porcentaje <strong>no se acumula por cada mes de atraso</strong>.
+    Con base $10.000 y máximo 10%, una cuota anterior debe $11.000 aunque pasen varios meses,
+    salvo que cambien el precio, los vencimientos o se apliquen créditos.
 </p>
 
-<h2>Saldos a favor</h2>
+<h2 id="saldos-a-favor">Saldos a favor</h2>
 
-<p>
-    Si un {{ term('alumno_formal') }} paga de más —por ejemplo, entrega un importe redondo mayor al total—, la
-    diferencia queda registrada como <strong>saldo a favor</strong> y se descuenta
-    automáticamente del próximo pago que registres. No hay que anotarlo aparte.
-</p>
+<p>Un excedente puede imputarse a otras cuotas pendientes del mismo curso; lo que siga sobrando
+    queda como saldo a favor. También podés crear una nota de crédito manual.</p>
+<ol>
+    <li>Abrí <strong>Gestionar Deudas</strong> de la ficha y entrá en <strong>Saldos a Favor</strong>.</li>
+    <li>Elegí un saldo con importe disponible y pulsá <strong>Aplicar a deuda</strong>.</li>
+    <li>Elegí la cuota y el monto, y confirmá.</li>
+</ol>
+<p>La aplicación es <strong>manual</strong>: tener un saldo disponible no lo descuenta automáticamente
+    del próximo pago. Una vez aplicado, reduce el pendiente de esa cuota, primero su recargo y
+    luego su base. Si cubre todo, la cuota deja de ofrecerse para cobrar; si cubre una parte,
+    se cobra el resto. Aplicar crédito no registra una nueva entrada de dinero.</p>
 
-<h2>El listado de pagos</h2>
+<h2 id="el-listado-de-pagos">El listado de pagos</h2>
 
 <p>
     {{ m.ruta(['Pagos']) }} muestra todos los pagos registrados con su fecha, alumno, curso,
@@ -139,11 +148,15 @@
     como pendientes —y si ya pasó el vencimiento, con recargo. Es el comportamiento correcto,
     pero conviene tenerlo en cuenta antes de anular algo viejo.') }}
 
-<h2>Gestión de deudas de {{ term('un_curso') }}</h2>
+<h2 id="gestion-de-deudas-de-un-curso">Gestión de deudas de {{ term('un_curso') }}</h2>
 
 <p>
     Desde la ficha de {{ term('un_curso') }} se puede ver de una sola vez la situación de todos sus {{ term('alumnos_formal') }}:
     quién debe, cuántas cuotas y cuánto. Es la pantalla para revisar antes de cerrar {{ term('el_curso') }},
     sobre todo si tenés activado el criterio de pago total para aprobar.
 </p>
+<h2 id="cuotas-adelantadas">Cuotas adelantadas</h2>
+<p>Se ofrecen hasta el fin del curso; si no hay fecha de fin, hasta doce meses adelante.
+    No podés saltear meses futuros pendientes entre los seleccionados. Seleccionar varios meses
+    crea un pago por cada cuota y reparte el importe ingresado. Revisá la selección antes de confirmar.</p>
 {% endblock %}

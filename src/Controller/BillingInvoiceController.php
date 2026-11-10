@@ -95,7 +95,17 @@ class BillingInvoiceController extends AbstractController
             'instituto' => $instituto,
         ]);
 
-        $response = new Response($html);
+        $options = new \Dompdf\Options();
+        $options->setIsRemoteEnabled(false);
+        $options->setIsPhpEnabled(false);
+        $options->setIsJavascriptEnabled(false);
+        $options->setDefaultFont('DejaVu Sans');
+        $pdf = new \Dompdf\Dompdf($options);
+        $pdf->loadHtml($html, 'UTF-8');
+        $pdf->setPaper('A4');
+        $pdf->render();
+
+        $response = new Response($pdf->output());
         $response->headers->set('Content-Type', 'application/pdf');
         $response->headers->set('Content-Disposition', 'attachment; filename="factura-' . $billingInvoice->getId() . '.pdf"');
 

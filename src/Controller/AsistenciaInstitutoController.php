@@ -55,14 +55,14 @@ class AsistenciaInstitutoController extends AbstractController
         $modo = $request->get('modo') ?? $request->request->get('modo', 'edicion'); // 'edicion' o 'lectura'
         
         // Obtener todos los cursos del instituto
-        $cursos = $cursoRepository->findBy(['instituto' => $instituto]);
+        $cursos = $this->cursosPermitidos($cursoRepository);
         
         // Si se seleccionó un curso, obtener las asistencias de ese curso para la fecha seleccionada
         if ($cursoId) {
             $curso = $cursoRepository->find($cursoId);
             
             // Verificar que el curso pertenece al instituto del usuario
-            if ($curso->getInstituto() !== $instituto) {
+            if (!$curso || !$this->puedeConsultarCurso($curso)) {
                 throw $this->createAccessDeniedException('No tiene acceso a este curso.');
             }
 
@@ -295,7 +295,7 @@ class AsistenciaInstitutoController extends AbstractController
         $fecha = $fechaObj->format($dateFormat);
 
         // Obtener todos los cursos del instituto
-        $cursos = $cursoRepository->findBy(['instituto' => $instituto]);
+        $cursos = $this->cursosPermitidos($cursoRepository);
         
         // Inicializar variables
         $curso = null;
@@ -307,7 +307,7 @@ class AsistenciaInstitutoController extends AbstractController
             $curso = $cursoRepository->find($cursoId);
             
             // Verificar que el curso pertenece al instituto del usuario
-            if ($curso->getInstituto() !== $instituto) {
+            if (!$curso || !$this->puedeConsultarCurso($curso)) {
                 throw $this->createAccessDeniedException('No tiene acceso a este curso.');
             }
             
@@ -449,6 +449,13 @@ class AsistenciaInstitutoController extends AbstractController
         }
         $fecha = $fechaObj->format('Y-m-d');
         
+        if ($cursoId) {
+            $curso = $cursoRepository->find($cursoId);
+            if (!$curso || !$this->puedeConsultarCurso($curso)) {
+                throw $this->createAccessDeniedException('No tiene acceso a este curso.');
+            }
+        }
+
         // Validar formato
         if (!in_array($formato, ['pdf', 'excel', 'csv'])) {
             throw $this->createNotFoundException('Formato no soportado');
@@ -462,6 +469,27 @@ class AsistenciaInstitutoController extends AbstractController
             'formato' => $formato,
             'mensaje' => 'La función de exportación estará disponible próximamente.'
         ]);
+    }
+
+    private function puedeConsultarCurso(\App\Entity\Curso $curso): bool
+    {
+        if ($curso->getInstituto() !== $this->getUser()->getInstituto()) {
+            return false;
+        }
+        if ($this->isGranted('ROLE_ADMIN_INSTITUTO')) {
+            return true;
+        }
+        $profesor = $this->getUser()->getProfesor();
+
+        return $this->isGranted('ROLE_PROFESOR') && $profesor && $curso->getProfesores()->contains($profesor);
+    }
+
+    private function cursosPermitidos(CursoRepository $repository): array
+    {
+        return array_values(array_filter(
+            $repository->findBy(['instituto' => $this->getUser()->getInstituto()]),
+            fn ($curso) => $this->puedeConsultarCurso($curso)
+        ));
     }
 
     /**

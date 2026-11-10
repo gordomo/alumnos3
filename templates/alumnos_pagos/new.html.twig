@@ -432,7 +432,7 @@
                                 </h6>
                                 <p class="mb-1 text-muted">{{ motivoInteres }}</p>
                                 <p class="mb-0">
-                                    <strong class="text-dark">Interés aplicado: {{ porcentajeInteres }}%</strong>
+                                    <strong class="text-dark">Interés aplicado: {{ porcentajeInteres|number_format(2, ',', '.') }}%</strong>
                                 </p>
                             </div>
                         {% else %}

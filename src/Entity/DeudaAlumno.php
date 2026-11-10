@@ -268,7 +268,7 @@ class DeudaAlumno
      */
     public function isPagado(): bool
     {
-        return !$this->aplicaciones->isEmpty();
+        return !$this->aplicaciones->isEmpty() || $this->getMontoPendiente() <= 0.01;
     }
 
     /**

@@ -565,72 +565,21 @@ class AlumnosPagosController extends AbstractController
         $anoActual = (int)$fechaActual->format('Y');
         $diaActual = (int)$fechaActual->format('d');
 
-        // Calcular el monto base sumando los montos de cada mes adeudado
-        // Esto respeta el precio histórico de cada deuda (importante para cursos con cambios de precio)
-        $montoBase = 0;
+        $montoBase = 0.0;
+        $totalInteres = 0.0;
         foreach ($mesesAdeudados as $mesData) {
-            // Si el mes tiene un monto específico (deuda existente), usarlo
-            // Si no, usar el precio actual del curso (para meses futuros sin deuda creada aún)
-            if (isset($mesData['monto']) && $mesData['monto'] > 0) {
-                $montoBase += $mesData['monto'];
-            } else {
-                $montoBase += $curso->getPrecio();
-            }
+            $cuota = $this->deudaCalculator->calcularCuotaParaMes(
+                $alumno, $curso, (int) $mesData['mes'], (int) $mesData['ano'],
+                $this->getPrecioMensualHistoricoParaMes($alumno, $curso, (int) $mesData['mes'], (int) $mesData['ano'])
+            );
+            $montoBase += $cuota['monto'];
+            $totalInteres += $cuota['interes'];
         }
         $montoFinal = $montoBase;
-        $porcentajeInteres = 0;
-        $motivoInteres = "Sin interés aplicado";
+        $porcentajeInteres = $montoBase > 0 ? ($totalInteres / $montoBase) * 100 : 0;
+        $motivoInteres = $totalInteres > 0 ? 'Recargos de las cuotas seleccionadas, descontando créditos ya aplicados' : 'Sin interés pendiente';
         $descuentosAplicados = [];
         $porcentajeDescuentoTotal = 0;
-
-        // Ordenar vencimientos por día
-        $vencimientosOrdenados = [];
-        foreach ($vencimientos as $vencimiento) {
-            $vencimientosOrdenados[] = $vencimiento;
-        }
-        
-        usort($vencimientosOrdenados, function($a, $b) {
-            return $a->getDiaVencimiento() <=> $b->getDiaVencimiento();
-        });
-
-        // Determinar si hay meses estrictamente anteriores (no incluye el mes actual)
-        $tieneMesesAnteriores = false;
-        foreach ($mesesAdeudados as $mesData) {
-            $mes = is_array($mesData) ? ($mesData['mes'] ?? null) : ($mesData->mes ?? null);
-            $ano = is_array($mesData) ? ($mesData['ano'] ?? null) : ($mesData->ano ?? null);
-            if ($mes !== null && $ano !== null && ($ano < $anoActual || ($ano == $anoActual && $mes < $mesActual))) {
-                $tieneMesesAnteriores = true;
-                break;
-            }
-        }
-
-        // Solo aplicar interés máximo cuando hay meses anteriores vencidos (ej: pagando enero en febrero)
-        // Para el mes actual vencido (ej: febrero pagado el día 13, entre día 10 y 20), usar el escalón correspondiente
-        if ($tieneMesesAnteriores) {
-            // Para deudas de meses anteriores, aplicar el máximo interés configurado
-            $maxInteres = 0;
-            foreach ($vencimientosOrdenados as $vencimiento) {
-                if ($vencimiento->getPorcentajeInteres() > $maxInteres) {
-                    $maxInteres = $vencimiento->getPorcentajeInteres();
-                }
-            }
-            $porcentajeInteres = $maxInteres;
-            $motivoInteres = "Máximo interés aplicado por deudas anteriores (" . count($mesesAdeudados) . " meses)";
-        } else {
-            // Mes actual o solo meses futuros: determinar escalón según el día de pago
-            $vencimientoAplicado = null;
-            foreach ($vencimientosOrdenados as $vencimiento) {
-                if ($diaActual >= $vencimiento->getDiaVencimiento()) {
-                    $vencimientoAplicado = $vencimiento;
-                } else {
-                    break;
-                }
-            }
-            if ($vencimientoAplicado) {
-                $porcentajeInteres = $vencimientoAplicado->getPorcentajeInteres();
-                $motivoInteres = "Interés del " . $porcentajeInteres . "% por pago en/después del día " . $vencimientoAplicado->getDiaVencimiento();
-            }
-        }
 
         // Obtener la configuración del instituto
         $instituto = $alumno->getInstituto();
@@ -986,13 +935,21 @@ class AlumnosPagosController extends AbstractController
                             $fechaVerificacion->modify('+1 month');
                             continue;
                         }
+                        $cuotaFutura = $this->deudaCalculator->calcularCuotaParaMes(
+                            $alumno, $curso, $mesVerificar, $anoVerificar, $precioMensualHistorico
+                        );
+                        if ($cuotaFutura['monto'] + $cuotaFutura['interes'] <= 0.01) {
+                            $fechaVerificacion->modify('+1 month');
+                            continue;
+                        }
                         $mesesAdeudados[] = [
                             'mes' => $mesVerificar,
                             'ano' => $anoVerificar,
                             'nombre' => $nombresMeses[$mesVerificar] . ' ' . $anoVerificar,
                             'curso' => $curso->getNombre(),
                             'curso_obj' => $curso,
-                            'monto' => $precioMensualHistorico,
+                            'monto' => $cuotaFutura['monto'],
+                            'montoConInteres' => $cuotaFutura['monto'] + $cuotaFutura['interes'],
                             'esPendiente' => false,
                             'esAdelantado' => true,
                             'enMora' => false
@@ -1223,7 +1180,6 @@ class AlumnosPagosController extends AbstractController
                     $montoTotalBaseVencidos = 0;
                     $montoTotalBaseNoVencidos = 0;
                     $mesesInfo = [];
-                    $maxInteres = 0;
                     $motivoInteres = "Sin interés aplicado";
                     
                     // Separar meses vencidos de no vencidos y calcular montos
@@ -1241,16 +1197,20 @@ class AlumnosPagosController extends AbstractController
                         $deudaCalculada = $mapaDeudasOnDemand[$keyDeuda] ?? null;
 
                         // Usar monto calculado on-demand o precio histórico para meses adelantados
-                        $montoBaseCurso = $deudaCalculada
-                            ? (float)$deudaCalculada['monto']
-                            : $this->getPrecioMensualHistoricoParaMes($alumno, $curso, $mes, $ano);
+                        $cuota = $deudaCalculada ?? $this->deudaCalculator->calcularCuotaParaMes(
+                            $alumno, $curso, $mes, $ano, $this->getPrecioMensualHistoricoParaMes($alumno, $curso, $mes, $ano)
+                        );
+                        if ($cuota['monto'] + $cuota['interes'] <= 0.01) {
+                            continue;
+                        }
+                        $montoBaseCurso = (float) $cuota['monto'];
                         
                         // Determinar si el mes está vencido
                         $esVencido = false;
                         if ($ano < $anoActual || ($ano == $anoActual && $mes < $mesActual)) {
                             // Mes pasado, siempre vencido
                             $esVencido = true;
-                        } elseif ($ano == $anoActual && $mes == $mesActual && $diaActual > $primerDiaVencimiento) {
+                        } elseif ($ano == $anoActual && $mes == $mesActual && $diaActual >= $primerDiaVencimiento) {
                             // Mes actual pero ya venció
                             $esVencido = true;
                         }
@@ -1266,89 +1226,25 @@ class AlumnosPagosController extends AbstractController
                             'ano' => $ano,
                             'curso' => $curso,
                             'montoBase' => $montoBaseCurso,
+                            'interes' => (float) $cuota['interes'],
                             'esVencido' => $esVencido
                         ];
                     }
                     
-                    // Ahora calcular interés basándose en los meses vencidos seleccionados
-                    // Agrupar meses vencidos por curso
-                    $mesesVencidosPorCurso = [];
-                    foreach ($mesesInfo as $mesInfo) {
-                        if ($mesInfo['esVencido']) {
-                            $cursoId = $mesInfo['curso']->getId();
-                            if (!isset($mesesVencidosPorCurso[$cursoId])) {
-                                $mesesVencidosPorCurso[$cursoId] = [
-                                    'curso' => $mesInfo['curso'],
-                                    'meses' => []
-                                ];
-                            }
-                            $mesesVencidosPorCurso[$cursoId]['meses'][] = [
-                                'mes' => $mesInfo['mes'],
-                                'ano' => $mesInfo['ano'],
-                                'curso' => $mesInfo['curso']->getNombre(),
-                                'curso_obj' => $mesInfo['curso']
-                            ];
-                        }
+                    if (!$mesesInfo) {
+                        throw new \InvalidArgumentException('Las cuotas seleccionadas ya están cubiertas. Recargá la pantalla.');
                     }
-                    
-                    // Calcular interés para cada curso que tiene meses vencidos
-                    foreach ($mesesVencidosPorCurso as $cursoId => $datosCurso) {
-                        if (!empty($datosCurso['meses'])) {
-                            // El método calcularMonto espera un array de meses adeudados
-                            // Si hay meses vencidos seleccionados, debe aplicar el máximo interés
-                            $calculoTemporal = $this->calcularMonto($alumno, $datosCurso['curso'], $vencimientos, $datosCurso['meses'], []);
-                            if ($calculoTemporal['porcentajeInteres'] > $maxInteres) {
-                                $maxInteres = $calculoTemporal['porcentajeInteres'];
-                                $motivoInteres = $calculoTemporal['motivoInteres'];
-                            }
-                        }
-                    }
-                    
-                    // Si hay meses vencidos pero no se calculó interés, forzar el cálculo del máximo interés
-                    if ($montoTotalBaseVencidos > 0 && $maxInteres == 0) {
-                        // Obtener el máximo interés configurado
-                        $vencimientosOrdenados = [];
-                        foreach ($vencimientos as $vencimiento) {
-                            $vencimientosOrdenados[] = $vencimiento;
-                        }
-                        usort($vencimientosOrdenados, function($a, $b) {
-                            return $a->getDiaVencimiento() <=> $b->getDiaVencimiento();
-                        });
-                        
-                        foreach ($vencimientosOrdenados as $vencimiento) {
-                            if ($vencimiento->getPorcentajeInteres() > $maxInteres) {
-                                $maxInteres = $vencimiento->getPorcentajeInteres();
-                            }
-                        }
-                        
-                        if ($maxInteres > 0) {
-                            $motivoInteres = "Máximo interés aplicado por meses vencidos seleccionados";
-                        }
-                    }
-                    
-                    $montoTotalBase = $montoTotalBaseVencidos + $montoTotalBaseNoVencidos;
-                    $porcentajeInteres = $maxInteres;
-                    
-                    // Obtener configuración del orden de cálculo
-                    $configuracion = $alumno->getInstituto()->getConfiguracion();
-                    $ordenCalculo = $configuracion ? $configuracion->getOrdenCalculoInteresesDescuentos() : 'interes_primero';
-                    
-                    // Calcular porcentajes de descuento promocional
+                    $montoInteresPendiente = array_sum(array_column($mesesInfo, 'interes'));
+                    $porcentajeInteres = $montoTotalBaseVencidos > 0
+                        ? ($montoInteresPendiente / $montoTotalBaseVencidos) * 100 : 0;
                     $porcentajeDescuentoTotal = 0;
                     $descuentosAplicados = [];
                     foreach ($descuentosPromocionalesSeleccionados as $descuentoPromocional) {
-                        $porcentajeDescuentoPromocional = (float)$descuentoPromocional->getPorcentaje();
-                        $porcentajeDescuentoTotal += $porcentajeDescuentoPromocional;
-                        $descuentosAplicados[] = "Descuento promocional: " . $descuentoPromocional->getNombre() . " (" . $porcentajeDescuentoPromocional . "%)";
+                        $porcentajeDescuentoTotal += (float) $descuentoPromocional->getPorcentaje();
                     }
-                    
-                    // Aplicar intereses solo sobre meses vencidos, luego aplicar descuentos sobre el total
-                    // El interés solo se aplica sobre $montoTotalBaseVencidos
-                    $montoVencidosConInteres = $montoTotalBaseVencidos;
-                    if ($porcentajeInteres > 0 && $montoTotalBaseVencidos > 0) {
-                        $montoVencidosConInteres = $montoTotalBaseVencidos * (1 + ($porcentajeInteres / 100));
-                    }
-                    
+                    $montoTotalBase = $montoTotalBaseVencidos + $montoTotalBaseNoVencidos;
+                    $montoVencidosConInteres = $montoTotalBaseVencidos + $montoInteresPendiente;
+
                     // Monto total antes de descuentos = meses vencidos con interés + meses no vencidos sin interés
                     $montoTotalConInteres = $montoVencidosConInteres + $montoTotalBaseNoVencidos;
                     
@@ -1744,8 +1640,9 @@ class AlumnosPagosController extends AbstractController
                         $montoTotalBase += $deudaCalculada['monto'];
                     } else {
                         $precioHistorico = $this->getPrecioMensualHistoricoParaMes($alumno, $curso, $mes, $ano);
-                        $montoTotalConInteres += $precioHistorico;
-                        $montoTotalBase += $precioHistorico;
+                        $cuota = $this->deudaCalculator->calcularCuotaParaMes($alumno, $curso, $mes, $ano, $precioHistorico);
+                        $montoTotalConInteres += $cuota['monto'] + $cuota['interes'];
+                        $montoTotalBase += $cuota['monto'];
                     }
                 }
             }

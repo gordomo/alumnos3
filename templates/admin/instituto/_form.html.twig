@@ -21,6 +21,12 @@
     </div>
     <fieldset class="border rounded p-3 mb-3">
         <legend class="float-none w-auto px-2 fs-6 text-muted">Suscripción</legend>
+        {% if form.plan is defined %}
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">{{ form_row(form.plan) }}</div>
+                <div class="col-md-6">{{ form_row(form.ayudaIaPrueba) }}</div>
+            </div>
+        {% endif %}
         <div class="row g-3">
             <div class="col-md-4">
                 {{ form_label(form.precioPorAlumno, 'Precio por ' ~ term('alumno'), {'label_attr': {'class': 'form-label'}}) }}

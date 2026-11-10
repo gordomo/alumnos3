@@ -15,6 +15,24 @@
         </p>
     </div>
 
+    {{ include('ayuda/_chat.html.twig') }}
+
+    {% if temas is not empty %}
+        <form id="ayuda-busqueda-form" data-no-loading data-resultados-url="{{ path('app_ayuda_resultados') }}" method="get" action="{{ path('app_ayuda_index') }}" class="mb-4" role="search" aria-label="Buscar en la ayuda">
+            <label for="ayuda-consulta" class="form-label">¿Con qué necesitás ayuda?</label>
+            <div class="input-group">
+                <input type="search" id="ayuda-consulta" name="q" class="form-control" maxlength="300"
+                       value="{{ consulta }}" placeholder="Por ejemplo: cómo registrar un pago">
+                <button class="btn btn-primary" type="submit"><i class="bi bi-search" aria-hidden="true"></i> Buscar</button>
+            </div>
+            <p id="ayuda-busqueda-estado" class="small text-muted mt-2 mb-0" role="status"></p>
+        </form>
+    {% endif %}
+
+    <div id="ayuda-resultados-contenido" aria-live="polite" aria-atomic="true">
+        {{ include('ayuda/_resultados.html.twig') }}
+    </div>
+
     {% if temas is empty %}
         <div class="alert alert-info mb-0">
             Todavía no hay temas de ayuda disponibles para tu tipo de usuario.
@@ -45,4 +63,10 @@
         .ayuda-card { transition: box-shadow .15s ease, transform .15s ease; }
         .ayuda-card:hover { box-shadow: 0 .5rem 1rem rgba(0,0,0,.1); transform: translateY(-2px); }
     </style>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="{{ asset('assets/js/ayuda-busqueda.js') }}" defer></script>
+    <script src="{{ asset('assets/js/ayuda-chat.js') }}" defer></script>
 {% endblock %}

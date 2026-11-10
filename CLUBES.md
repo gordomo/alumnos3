@@ -138,17 +138,17 @@ también.
 
 ## Las capturas del manual
 
-La ayuda tiene 34 capturas y hay un juego por producto, con los mismos nombres de archivo:
+La ayuda tiene 33 capturas y hay un juego por producto, con los mismos nombres de archivo:
 
     public/assets/ayuda/instituto/
     public/assets/ayuda/club/
 
 El macro `captura()` elige la carpeta según `vertical`, así que el texto del manual es uno solo
-y la foto cambia con el producto. Las dos carpetas tienen que tener siempre los 34 archivos: si
+y la foto cambia con el producto. Las dos carpetas tienen que tener siempre los 33 archivos: si
 falta uno, en ese producto queda una imagen rota.
 
 Se sacan del sistema andando, con el instituto de prueba (`admin@demo.test`, `profesor@demo.test`
-y `elena@demo.test`, todos con `Demo1234!`), en dos pasadas: una con `APP_VERTICAL=instituto` y
+y `elena@demo.test`, todos con `Demo1233!`), en dos pasadas: una con `APP_VERTICAL=instituto` y
 otra con `APP_VERTICAL=club`, limpiando la caché entre una y otra. El aviso de suscripción del
 instituto de prueba se esconde por CSS antes de cada foto, porque no es parte del manual.
 

@@ -1,7 +1,7 @@
 {% extends 'ayuda/_tema.html.twig' %}
-{% import 'ayuda/_macros.html.twig' as m %}
 
 {% block contenido %}
+{% import 'ayuda/_macros.html.twig' as m %}
 <p>
     Como {{ term('alumno_formal') }} tenés varias pantallas, todas con tu propia información y nada más:
     <strong>Mi Dashboard</strong> con el resumen, <strong>Mis {{ Term('cursos') }}</strong> con lo que se dio en
@@ -9,7 +9,7 @@
     <strong>Mis Tareas</strong> y <strong>Mi Agenda</strong>.
 </p>
 
-<h2>Mi Dashboard</h2>
+<h2 id="mi-dashboard">Mi Dashboard</h2>
 
 <p>
     Se entra por {{ m.ruta(['Mi Dashboard']) }}. Arriba hay cuatro números que resumen todo:
@@ -17,8 +17,8 @@
 
 <ul>
     <li><strong>{{ Term('cursos') }} activos</strong>: en cuántos {{ term('cursos') }} estás inscripto ahora.</li>
-    <li><strong>Asistencias (30 días)</strong>: cuántas clases se te registraron en el último mes.</li>
-    <li><strong>Pagos (30 días)</strong>: cuántos pagos tuyos se registraron en el último mes.</li>
+    <li><strong>Asistencias (30 días)</strong>: total de registros del período. La lista inferior muestra solo los diez más recientes.</li>
+    <li><strong>Pagos (30 días)</strong>: total de pagos del período. La lista inferior muestra solo los diez más recientes.</li>
     <li><strong>Deudas pendientes</strong>: cuántas cuotas te figuran sin pagar.</li>
 </ul>
 
@@ -49,7 +49,7 @@
    'Una cuota vencida puede tener recargo por atraso, así que el monto a pagar puede ser mayor al
     precio del mes. El importe exacto te lo confirma la administración al momento de cobrar.') }}
 
-<h2>Mis Notas</h2>
+<h2 id="mis-notas">Mis Notas</h2>
 
 <p>
     Se entra por {{ m.ruta(['Mis Notas']) }}. Aparecen tus cursos y, dentro de cada uno, las
@@ -74,14 +74,14 @@
     encontrás algo que no coincide con lo que te devolvieron, hablalo con el {{ term('profesor') }} {{ term('del_curso') }}.
 </p>
 
-<h2>Mis {{ Term('cursos') }}</h2>
+<h2 id="mis-cursos">Mis {{ Term('cursos') }}</h2>
 
 <p>
     Por cada {{ term('curso') }}, los <strong>materiales de consulta</strong> que dejó el {{ term('profesor') }} y el detalle
     de <strong>qué se dio en cada clase</strong>. Es lo que hay que mirar cuando faltaste.
 </p>
 
-<h2>Mis Asistencias</h2>
+<h2 id="mis-asistencias">Mis Asistencias</h2>
 
 <p>
     Tu porcentaje de asistencia en cada {{ term('curso') }}, el resumen mes por mes y la lista de clases una por
@@ -89,7 +89,7 @@
     hablalo con él.
 </p>
 
-<h2>Mis Tareas</h2>
+<h2 id="mis-tareas">Mis Tareas</h2>
 
 <p>
     Se entra por {{ m.ruta(['Mis Tareas']) }}. Por cada curso ves las tareas que se pidieron,

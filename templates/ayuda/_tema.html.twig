@@ -18,7 +18,7 @@
     <div class="row">
         <div class="col-lg-9">
             <h1 class="h3 mb-3"><i class="bi {{ tema.icono }} text-primary"></i> {{ tema.titulo }}</h1>
-            <div class="ayuda-contenido">
+            <div class="ayuda-contenido" id="introduccion">
                 {% block contenido %}{% endblock %}
             </div>
             <hr class="mt-5">
@@ -45,6 +45,8 @@
 {% block stylesheets %}
     {{ parent() }}
     <style>
+        .ayuda-contenido [id] { scroll-margin-top: 1.5rem; }
+        .ayuda-contenido h2:target, .ayuda-contenido h3:target { background: var(--marca-tenue, #eef5fc); border-radius: 4px; }
         .ayuda-contenido h2 { font-size: 1.3rem; margin-top: 2rem; margin-bottom: .75rem; }
         .ayuda-contenido h3 { font-size: 1.08rem; margin-top: 1.5rem; margin-bottom: .5rem; }
         .ayuda-contenido p, .ayuda-contenido li { line-height: 1.7; }

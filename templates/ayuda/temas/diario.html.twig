@@ -1,7 +1,7 @@
 {% extends 'ayuda/_tema.html.twig' %}
-{% import 'ayuda/_macros.html.twig' as m %}
 
 {% block contenido %}
+{% import 'ayuda/_macros.html.twig' as m %}
 {% set esProfe = is_granted('ROLE_PROFESOR') and not is_granted('ROLE_ADMIN_INSTITUTO') %}
 
 <p>
@@ -15,7 +15,7 @@
     se elige el curso, y ahí están las dos cosas en la misma pantalla.
 </p>
 
-<h2>Qué se dio en clase</h2>
+<h2 id="que-se-dio-en-clase">Qué se dio en clase</h2>
 
 <ol>
     <li>La <strong>fecha</strong> viene con el día de hoy puesta.</li>
@@ -29,7 +29,7 @@
    'Si cargás una fecha que ya tenía clase anotada, se actualiza en lugar de duplicarse. Así se
     puede corregir el tema sin borrar nada.') }}
 
-<h2>Materiales de consulta</h2>
+<h2 id="materiales-de-consulta">Materiales de consulta</h2>
 
 <p>
     Se guarda el <strong>enlace</strong>, no el archivo: sirve un documento de Drive, un video de
@@ -47,7 +47,7 @@
     </li>
 </ul>
 
-<h2>Cómo lo ve {{ term('el_alumno') }}</h2>
+<h2 id="como-lo-ve-el-alumno">Cómo lo ve {{ term('el_alumno') }}</h2>
 
 <p>
     En {{ m.ruta(['Mis Cursos']) }} ve, por cada curso, los materiales visibles y las últimas 30
@@ -57,4 +57,7 @@
 {{ m.nota('info', 'Los materiales ocultos no se ven',
    'El alumn@ ve solamente los que tienen el tilde de "lo ven los alumn@s". Las clases, en
     cambio, se ven todas: si no querés que algo se vea, no lo anotes ahí.') }}
+<h2 id="curso-cerrado">Curso cerrado</h2>
+<p>Completá el diario y los materiales antes de cerrar: después del cierre no se permite abrir
+    su pantalla administrativa. Las vistas de consulta de alumnos conservan los materiales visibles.</p>
 {% endblock %}

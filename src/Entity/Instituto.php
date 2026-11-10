@@ -148,6 +148,31 @@ class Instituto
      */
     private $motivoBaja;
 
+    /** @ORM\Column(type="string", length=20, options={"default": "basico"}) */
+    private $plan = 'basico';
+
+    /** @ORM\Column(type="boolean", options={"default": false}) */
+    private $ayudaIaPrueba = false;
+
+    public function getPlan(): string { return $this->plan; }
+
+    public function setPlan(string $plan): self
+    {
+        if (!in_array($plan, ['basico', 'premium'], true)) {
+            throw new \InvalidArgumentException('Plan inválido.');
+        }
+        $this->plan = $plan;
+        return $this;
+    }
+
+    public function isAyudaIaPrueba(): bool { return (bool) $this->ayudaIaPrueba; }
+
+    public function setAyudaIaPrueba(bool $habilitada): self
+    {
+        $this->ayudaIaPrueba = $habilitada;
+        return $this;
+    }
+
     public function __construct()
     {
         $this->usuarios = new ArrayCollection();

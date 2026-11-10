@@ -33,7 +33,9 @@ class AlumnoDashboardController extends AbstractController
         CursoRepository $cursoRepository,
         AsistenciaAlumnosRepository $asistenciaAlumnosRepository,
         AlumnosPagosRepository $alumnosPagosRepository,
-        EscalaCalificacionService $escalaService
+        EscalaCalificacionService $escalaService,
+        InstitutoTimezoneService $institutoTimezoneService,
+        \App\Service\DeudaCalculatorService $deudaCalculator
     ): Response {
         $user = $this->getUser();
         if (!$user || !$user->getAlumno()) {
@@ -44,13 +46,22 @@ class AlumnoDashboardController extends AbstractController
         $alumno = $user->getAlumno();
         
         // Obtener los cursos del alumno
-        $cursos = $alumno->getCurso();
+        $cursos = [];
+        foreach ($alumno->getCursosHistoricos() as $historico) {
+            $curso = $historico->getCurso();
+            if ($historico->isActivo() && $curso && !$curso->getCerrado() && !$curso->getDisabled()) {
+                $cursos[$curso->getId()] = $curso;
+            }
+        }
         
         // Obtener asistencias recientes (últimos 30 días)
-        $fechaDesde = new \DateTime('-30 days');
+        $hoy = $institutoTimezoneService->getNowForInstituto($alumno->getInstituto());
+        $fechaDesde = $institutoTimezoneService->normalizeDateOnly($hoy->modify('-29 days'));
+        $fechaHasta = $institutoTimezoneService->normalizeDateOnly($hoy->modify('+1 day'));
         $asistenciasRecientes = $asistenciaAlumnosRepository->createQueryBuilder('a')
             ->where('a.alumno = :alumno')
-            ->andWhere('a.fecha >= :fechaDesde')
+            ->andWhere('a.fecha >= :fechaDesde AND a.fecha < :fechaHasta')
+            ->setParameter('fechaHasta', $fechaHasta)
             ->setParameter('alumno', $alumno)
             ->setParameter('fechaDesde', $fechaDesde)
             ->orderBy('a.fecha', 'DESC')
@@ -61,7 +72,8 @@ class AlumnoDashboardController extends AbstractController
         // Obtener pagos recientes (últimos 30 días)
         $pagosRecientes = $alumnosPagosRepository->createQueryBuilder('p')
             ->where('p.alumno = :alumno')
-            ->andWhere('p.fecha >= :fechaDesde')
+            ->andWhere('p.fecha >= :fechaDesde AND p.fecha < :fechaHasta')
+            ->setParameter('fechaHasta', $fechaHasta)
             ->setParameter('alumno', $alumno)
             ->setParameter('fechaDesde', $fechaDesde)
             ->orderBy('p.fecha', 'DESC')
@@ -70,15 +82,34 @@ class AlumnoDashboardController extends AbstractController
             ->getResult();
         
         // Calcular estadísticas básicas
-        $totalCursos = $cursos->count();
-        $totalAsistencias = count($asistenciasRecientes);
-        $totalPagos = count($pagosRecientes);
+        $totalCursos = count($cursos);
+        $totalAsistencias = (int) $asistenciaAlumnosRepository->createQueryBuilder('a')
+            ->select('COUNT(a.id)')->where('a.alumno = :alumno')
+            ->andWhere('a.fecha >= :desde AND a.fecha < :hasta')
+            ->setParameters(['alumno' => $alumno, 'desde' => $fechaDesde, 'hasta' => $fechaHasta])
+            ->getQuery()->getSingleScalarResult();
+        $totalPagos = (int) $alumnosPagosRepository->createQueryBuilder('p')
+            ->select('COUNT(p.id)')->where('p.alumno = :alumno')
+            ->andWhere('p.fecha >= :desde AND p.fecha < :hasta')
+            ->setParameters(['alumno' => $alumno, 'desde' => $fechaDesde, 'hasta' => $fechaHasta])
+            ->getQuery()->getSingleScalarResult();
         
         // Obtener deudas pendientes
         $deudasPendientes = [];
+        foreach ($deudaCalculator->calcularDeudasAlumno($alumno) as $deuda) {
+            $deudasPendientes[] = $deuda + ['montoTotal' => $deuda['monto'] + $deuda['interes']];
+        }
         foreach ($alumno->getDeudas() as $deuda) {
-            if (!$deuda->isPagado()) {
-                $deudasPendientes[] = $deuda;
+            // Las cuotas de inscripciones activas ya están calculadas con precio,
+            // recargo y crédito vigentes; se agregan inscripción anual y bajas.
+            if ($deuda->getCursoHistorico() && $deuda->getCursoHistorico()->isActivo()) {
+                continue;
+            }
+            if ($deuda->getMontoPendiente() > 0.01) {
+                $deudasPendientes[] = [
+                    'curso' => $deuda->getCurso(), 'mes' => $deuda->getMes(), 'ano' => $deuda->getAno(),
+                    'montoTotal' => $deuda->getMontoPendiente(),
+                ];
             }
         }
 

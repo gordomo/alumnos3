@@ -864,7 +864,8 @@ class AlumnoController extends AbstractController
         }
 
         foreach ($deudaAlumnoRepository->findBy(['alumno' => $alumno]) as $deudaFila) {
-            if ($deudaFila->getMontoPendiente() <= 0 || $deudaFila->getEsCuotaInscripcionAnual()) {
+            if ($deudaFila->getMontoPendiente() <= 0 || $deudaFila->getEsCuotaInscripcionAnual()
+                || ($deudaFila->getCursoHistorico() && $deudaFila->getCursoHistorico()->isActivo())) {
                 continue;
             }
 
@@ -899,8 +900,8 @@ class AlumnoController extends AbstractController
                 'cursoHistorico' => $deudaFila->getCursoHistorico(),
                 'mes' => (int) $deudaFila->getMes(),
                 'ano' => (int) $deudaFila->getAno(),
-                'monto' => (float) $deudaFila->getMonto(),
-                'interes' => (float) $deudaFila->getInteres(),
+                'monto' => $deudaFila->getMontoPendiente(),
+                'interes' => 0,
                 'montoPagado' => $deudaFila->getMontoPagado(),
                 'fechaCreacion' => $deudaFila->getFechaCreacion(),
                 'instituto' => $instituto,

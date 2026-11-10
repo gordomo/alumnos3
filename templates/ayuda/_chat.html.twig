@@ -1,0 +1,27 @@
+{% if ia.disponible %}
+<section class="card mb-4" aria-labelledby="ayuda-chat-titulo">
+    <div class="card-body">
+        <h2 id="ayuda-chat-titulo" class="h5">Asistente de ayuda <span class="badge bg-secondary">Prueba</span></h2>
+        <p class="text-muted small">Te guía sobre el uso del sistema a partir del manual disponible para tu usuario. No consulta ni modifica datos de cuentas. Puede equivocarse: verificá los artículos enlazados.</p>
+        <div id="ayuda-chat-mensajes" role="log" aria-label="Conversación de ayuda" aria-live="polite" aria-relevant="additions" style="max-height: 28rem; overflow-y: auto;"></div>
+        <form id="ayuda-chat-form" data-no-loading data-url="{{ path('app_ayuda_chat') }}" data-token="{{ csrf_token('ayuda_chat') }}">
+            <div class="form-check mb-3">
+                <input id="ayuda-chat-acepta" class="form-check-input" type="checkbox" required>
+                <label for="ayuda-chat-acepta" class="form-check-label small">Entiendo que mi pregunta y fragmentos del manual se envían a Google Gemini gratuito y pueden usarse para mejorar sus productos. No voy a incluir datos personales, contraseñas ni información de alumnos o pagos.</label>
+            </div>
+            <label for="ayuda-chat-pregunta" class="form-label">Preguntale al asistente</label>
+            <div class="input-group">
+                <input id="ayuda-chat-pregunta" class="form-control" type="text" maxlength="300" required placeholder="Por ejemplo: ¿cómo doy de alta un alumno?" autocomplete="off">
+                <button id="ayuda-chat-enviar" class="btn btn-primary" type="submit">Consultar IA</button>
+            </div>
+            <p class="small text-muted mt-2 mb-0">Hacé una pregunta completa en cada mensaje. La conversación dura hasta que cierres o recargues esta página.</p>
+            <p id="ayuda-chat-estado" class="small mt-2 mb-0" role="status"></p>
+        </form>
+        <button id="ayuda-chat-limpiar" type="button" class="btn btn-link btn-sm mt-2 px-0">Borrar conversación</button>
+    </div>
+</section>
+{% elseif ia.motivo == 'plan' %}
+<p class="small text-muted mb-4">Tu plan incluye el manual y la búsqueda. El asistente con IA estará disponible en los planes premium.</p>
+{% else %}
+<p class="small text-muted mb-4">La ayuda con IA todavía no está disponible para esta cuenta. Podés usar el manual y la búsqueda.</p>
+{% endif %}

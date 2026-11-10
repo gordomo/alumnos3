@@ -2,136 +2,60 @@
 
 namespace App\Controller;
 
+use App\Service\AyudaBusqueda;
+use App\Service\AyudaCatalogo;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Routing\Annotation\Route;
 
 /**
- * Manual de uso dentro del propio sistema.
- *
- * El índice se filtra por rol: cada usuario ve solo los temas de las pantallas a las que
- * realmente puede entrar, así el profesor no lee cómo se configura la facturación.
- *
- * El contenido vive en templates (templates/ayuda/temas/) para que quede versionado junto
- * al código y no dependa de la base.
- *
- * La ruta no necesita una linea propia en access_control: /ayuda cae en la regla catch-all
- * ^/ que exige IS_AUTHENTICATED_FULLY, o sea cualquier usuario logueado.
- *
  * @Route("/ayuda")
+ * Todas las rutas requieren sesión por access_control. El catálogo compartido
+ * decide qué contenido puede leer el usuario; no se aceptan roles desde el cliente.
  */
 class AyudaController extends AbstractController
 {
-    public function __construct(private \App\Service\Vocabulario $vocabulario)
+    public function __construct(private AyudaCatalogo $catalogo, private AyudaBusqueda $busqueda, private \App\Service\AyudaIaAcceso $iaAcceso)
     {
     }
 
-    /**
-     * Registro de temas. El orden es el del índice.
-     *
-     * roles: quién puede ver el tema. Un tema con varios roles lo ven todos ellos.
-     */
-    private const TEMAS = [
-        'primeros-pasos' => [
-            'titulo' => 'Primeros pasos',
-            'icono' => 'bi-compass',
-            'resumen' => 'Cómo está organizado el sistema y en qué orden conviene cargar las cosas.',
-            'roles' => ['ROLE_ADMIN_INSTITUTO'],
-        ],
-        'configuracion' => [
-            'titulo' => 'Configuración %del_instituto%',
-            'icono' => 'bi-gear',
-            'resumen' => 'Datos %del_instituto%, vencimientos e intereses, descuentos, métodos de pago y criterios de aprobación.',
-            'roles' => ['ROLE_ADMIN_INSTITUTO'],
-        ],
-        'agenda' => [
-            'titulo' => 'Agenda',
-            'icono' => 'bi-calendar3',
-            'resumen' => 'El calendario con %los_cursos%, las evaluaciones, las entregas, los vencimientos y los eventos %del_instituto%.',
-            'roles' => ['ROLE_ADMIN_INSTITUTO', 'ROLE_PROFESOR', 'ROLE_ALUMNO'],
-        ],
-        'cursos' => [
-            'titulo' => '%Cursos%',
-            'icono' => 'bi-journal-bookmark',
-            'resumen' => 'Crear %un_curso%, asignarle horarios y %profesores%, y cerrarlo al final del período.',
-            'roles' => ['ROLE_ADMIN_INSTITUTO'],
-        ],
-        'diario' => [
-            'titulo' => '%Clases% y materiales',
-            'icono' => 'bi-journal-text',
-            'resumen' => 'Anotar qué se dio en cada %clase% y dejar los materiales de consulta %del_curso%.',
-            'roles' => ['ROLE_ADMIN_INSTITUTO', 'ROLE_PROFESOR'],
-        ],
-        'alumnos' => [
-            'titulo' => '%Alumnos% e inscripciones',
-            'icono' => 'bi-people',
-            'resumen' => 'Dar de alta %un_alumno%, inscribirlo a %cursos% y entender desde cuándo se le genera deuda.',
-            'roles' => ['ROLE_ADMIN_INSTITUTO'],
-        ],
-        'profesores' => [
-            'titulo' => '%Profesores% y su liquidación',
-            'icono' => 'bi-person-workspace',
-            'resumen' => 'Cómo se le paga a cada %profesor%: por hora, fijo, porcentaje o distinto en cada %curso%.',
-            'roles' => ['ROLE_ADMIN_INSTITUTO'],
-        ],
-        'pagos' => [
-            'titulo' => 'Pagos y deudas',
-            'icono' => 'bi-cash-coin',
-            'resumen' => 'Registrar un pago, cobrar meses adelantados, cómo se calculan los recargos y qué son los saldos a favor.',
-            'roles' => ['ROLE_ADMIN_INSTITUTO'],
-        ],
-        'comunicaciones' => [
-            'titulo' => 'Comunicaciones',
-            'icono' => 'bi-megaphone',
-            'resumen' => 'Mandar un aviso por email a todo %el_instituto%, a %un_curso% o a los que deben.',
-            'roles' => ['ROLE_ADMIN_INSTITUTO'],
-        ],
-        'calificaciones' => [
-            'titulo' => 'Calificaciones',
-            'icono' => 'bi-mortarboard',
-            'resumen' => 'Elegir la escala, crear evaluaciones, cargar notas y enviar el boletín.',
-            'roles' => ['ROLE_ADMIN_INSTITUTO', 'ROLE_PROFESOR'],
-        ],
-        'tareas' => [
-            'titulo' => 'Tareas',
-            'icono' => 'bi-journal-text',
-            'resumen' => 'Pedir tareas a %un_curso%, marcar quién las entregó y verlo en la libreta.',
-            'roles' => ['ROLE_ADMIN_INSTITUTO', 'ROLE_PROFESOR'],
-        ],
-        'asistencias' => [
-            'titulo' => 'Asistencias',
-            'icono' => 'bi-clipboard-check',
-            'resumen' => 'Tomar asistencia de %la_clase%, corregirla después y ver los informes.',
-            'roles' => ['ROLE_ADMIN_INSTITUTO', 'ROLE_PROFESOR'],
-        ],
-        'suscripcion' => [
-            'titulo' => 'Suscripción %del_instituto%',
-            'icono' => 'bi-patch-check',
-            'resumen' => 'Cuánto se paga por el uso del sistema, cómo pagarlo y qué pasa si una factura queda impaga.',
-            'roles' => ['ROLE_ADMIN_INSTITUTO'],
-        ],
-        'mis-pagos' => [
-            'titulo' => 'Mis pagos',
-            'icono' => 'bi-cash-coin',
-            'resumen' => 'Lo que te corresponde por mes, lo que ya te pagaron y tus recibos.',
-            'roles' => ['ROLE_PROFESOR'],
-        ],
-        'mi-panel' => [
-            'titulo' => 'Mi panel',
-            'icono' => 'bi-person-circle',
-            'resumen' => 'Dónde ver tus %cursos%, tus asistencias, tus pagos y tus notas.',
-            'roles' => ['ROLE_ALUMNO'],
-        ],
-    ];
-
-    /**
-     * @Route("", name="app_ayuda_index", methods={"GET"})
-     */
-    public function index(): Response
+    /** @Route("", name="app_ayuda_index", methods={"GET"}) */
+    public function index(Request $request): Response
     {
-        return $this->render('ayuda/index.html.twig', [
-            'temas' => $this->temasVisibles(),
-        ]);
+        $consulta = $this->consulta($request);
+
+        return $this->sinCache($this->render('ayuda/index.html.twig', [
+            'temas' => $this->catalogo->temasVisibles(),
+            'ia' => $this->iaAcceso->estado($this->getUser()->getInstituto()),
+            'consulta' => $consulta,
+            'resultados' => $consulta !== '' ? $this->busqueda->buscar($consulta) : [],
+        ]));
+    }
+
+    /** @Route("/buscar", name="app_ayuda_buscar", methods={"GET"}) */
+    public function buscar(Request $request): Response
+    {
+        $consulta = $this->consulta($request);
+
+        return $this->sinCache($this->json([
+            'consulta' => $consulta,
+            'resultados' => $this->busqueda->buscar($consulta),
+        ]));
+    }
+
+    /** @Route("/resultados", name="app_ayuda_resultados", methods={"GET"}) */
+    public function resultados(Request $request): Response
+    {
+        $consulta = $this->consulta($request);
+        $response = $this->sinCache($this->render('ayuda/_resultados.html.twig', [
+            'consulta' => $consulta,
+            'resultados' => $this->busqueda->buscar($consulta),
+        ]));
+        $response->headers->set('X-Ayuda-Fragment', '1');
+
+        return $response;
     }
 
     /**
@@ -139,57 +63,35 @@ class AyudaController extends AbstractController
      */
     public function tema(string $tema): Response
     {
-        $visibles = $this->temasVisibles();
-
-        // Un tema que no corresponde al rol se trata como inexistente, para no revelar
-        // qué secciones existen para otros roles.
+        $visibles = $this->catalogo->temasVisibles();
         if (!isset($visibles[$tema])) {
             throw $this->createNotFoundException('El tema de ayuda no existe.');
         }
 
-        return $this->render('ayuda/temas/' . $tema . '.html.twig', [
+        return $this->sinCache($this->render('ayuda/temas/' . $tema . '.html.twig', [
             'tema' => $visibles[$tema] + ['slug' => $tema],
             'temas' => $visibles,
-        ]);
+        ]));
     }
 
-    /**
-     * Temas que el usuario actual puede ver, en el orden del registro.
-     *
-     * @return array<string, array<string, mixed>>
-     */
-    private function temasVisibles(): array
+    private function consulta(Request $request): string
     {
-        $visibles = [];
-        foreach (self::TEMAS as $slug => $datos) {
-            foreach ($datos['roles'] as $rol) {
-                if ($this->isGranted($rol)) {
-                    $datos['titulo'] = $this->conVocabulario($datos['titulo']);
-                    $datos['resumen'] = $this->conVocabulario($datos['resumen']);
-                    $visibles[$slug] = $datos;
-                    break;
-                }
-            }
+        $valor = $request->query->all()['q'] ?? '';
+        if (!is_string($valor)) {
+            throw new BadRequestHttpException('La búsqueda debe ser un texto.');
+        }
+        $consulta = trim($valor);
+        if (mb_strlen($consulta) > 300) {
+            throw new BadRequestHttpException('La búsqueda admite hasta 300 caracteres.');
         }
 
-        return $visibles;
+        return $consulta;
     }
 
-    /**
-     * Resuelve las marcas %clave% del índice con el glosario del producto.
-     *
-     * Los títulos y resúmenes de la ayuda viven en PHP y no en plantillas, así que no pueden
-     * usar term(). Con mayúscula inicial en la clave se pide la palabra capitalizada, que es lo
-     * que necesitan los títulos.
-     */
-    private function conVocabulario(string $texto): string
+    private function sinCache(Response $response): Response
     {
-        return preg_replace_callback('/%([A-Za-z_]+)%/', function (array $coincidencia) {
-            $clave = $coincidencia[1];
+        $response->headers->set('Cache-Control', 'private, no-store');
 
-            return ctype_upper($clave[0])
-                ? $this->vocabulario->terminoMayuscula(lcfirst($clave))
-                : $this->vocabulario->termino($clave);
-        }, $texto);
+        return $response;
     }
 }

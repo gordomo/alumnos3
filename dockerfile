@@ -17,6 +17,9 @@ RUN apt-get update && apt-get install -y \
     docker-php-ext-install intl pdo pdo_mysql gd zip && \
     a2enmod rewrite
 
+# OPcache está incluido en php:8.1-apache pero necesita cargarse como extensión Zend.
+RUN docker-php-ext-enable opcache
+
 # Instalar Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
@@ -39,8 +42,8 @@ WORKDIR /var/www/html
 RUN chown -R www-data:www-data /var/www/html && \
     chmod -R 755 /var/www/html
 
-# Ejecutar composer install
-RUN composer install
+# Instalar sin scripts: la configuración del entorno se monta al ejecutar el contenedor.
+RUN composer install --no-interaction --optimize-autoloader --no-scripts
 
 # Exponer el puerto 80
 EXPOSE 80

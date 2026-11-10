@@ -1,7 +1,7 @@
 {% extends 'ayuda/_tema.html.twig' %}
-{% import 'ayuda/_macros.html.twig' as m %}
 
 {% block contenido %}
+{% import 'ayuda/_macros.html.twig' as m %}
 {% set esAdmin = is_granted('ROLE_ADMIN_INSTITUTO') %}
 {% set esAlumno = is_granted('ROLE_ALUMNO') and not esAdmin %}
 
@@ -22,7 +22,7 @@
     horarios de los cursos tiene su propia pantalla en Cursos → Calendario, y por eso acá las
     clases arrancan apagadas. Si las querés ver encima, las prendés con el tilde de Clases.') }}
 
-<h2>Agendar algo</h2>
+<h2 id="agendar-algo">Agendar algo</h2>
 
 <ol>
     <li>
@@ -40,7 +40,7 @@
 
 {{ m.captura('agenda-mes.png', 'La agenda del mes, con las fuentes arriba') }}
 
-<h2>Los filtros de arriba</h2>
+<h2 id="los-filtros-de-arriba">Los filtros de arriba</h2>
 
 <p>
     Cada tilde prende o apaga una fuente, y el color del cuadradito es el que después tiene el
@@ -56,7 +56,7 @@
 
 <p>Clic en cualquier evento abre el detalle: de qué es, de qué {{ term('curso') }}, y la información que tenga.</p>
 
-<h2>De dónde sale cada cosa</h2>
+<h2 id="de-donde-sale-cada-cosa">De dónde sale cada cosa</h2>
 
 <ul>
     <li>
@@ -90,7 +90,7 @@
     fecha de una tarea, la agenda lo refleja sin tocar nada más.') }}
 
 {% if esAdmin %}
-<h2>Los datos del evento</h2>
+<h2 id="los-datos-del-evento">Los datos del evento</h2>
 
 <p>
     También se llega al formulario desde {{ m.ruta(['Agenda', 'Nuevo evento']) }}, sin pasar por el
@@ -119,7 +119,7 @@
 
 {{ m.captura('agenda-eventos.png', 'Los eventos cargados, con su tipo y quién los ve') }}
 
-<h3>El feriado tapa la clase</h3>
+<h3 id="el-feriado-tapa-la-clase">El feriado tapa la clase</h3>
 
 <p>
     Un día marcado como feriado o receso deja la clase en el calendario pero apagada y con el

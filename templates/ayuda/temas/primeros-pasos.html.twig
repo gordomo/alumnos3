@@ -1,14 +1,14 @@
 {% extends 'ayuda/_tema.html.twig' %}
-{% import 'ayuda/_macros.html.twig' as m %}
 
 {% block contenido %}
+{% import 'ayuda/_macros.html.twig' as m %}
 <p>
     El sistema se organiza alrededor de tres cosas: <strong>{{ term('cursos') }}</strong>,
     <strong>{{ term('alumnos_formal') }}</strong> y las <strong>inscripciones</strong> que los vinculan. Casi todo
     lo demás (deudas, asistencias, notas) se deriva de esas inscripciones.
 </p>
 
-<h2>En qué orden conviene cargar todo</h2>
+<h2 id="en-que-orden-conviene-cargar-todo">En qué orden conviene cargar todo</h2>
 
 <p>Si {{ term('el_instituto') }} arranca de cero, este orden evita tener que volver atrás:</p>
 
@@ -32,11 +32,11 @@
     </li>
 </ol>
 
-{{ m.nota('warning', 'El orden importa por las cuotas',
-   'Si inscribís un alumno antes de definir los vencimientos, sus cuotas ya generadas no
-    tendrán el recargo configurado. Se puede arreglar, pero es más trabajo que hacerlo en orden.') }}
+{{ m.nota('info', 'Revisá las reglas antes de cobrar',
+   'Las cuotas pendientes se calculan con el precio y los vencimientos vigentes. Cambiar esas
+    reglas puede modificar lo que se muestra como pendiente; los pagos registrados se conservan.') }}
 
-<h2>El menú</h2>
+<h2 id="el-menu">El menú</h2>
 
 <p>
     Todo se navega desde el menú de la izquierda. Lo que ves ahí depende de tu tipo de
@@ -46,7 +46,7 @@
 
 {{ m.captura('sidebar-admin.png', 'Menú de un administrador ' ~ term('del_instituto')) }}
 
-<h2>Tipos de usuario</h2>
+<h2 id="tipos-de-usuario">Tipos de usuario</h2>
 
 <ul>
     <li>
@@ -64,8 +64,16 @@
 </ul>
 
 <p>
-    Los usuarios se crean en {{ m.ruta(['Usuarios']) }}. Un profesor o un alumno necesita
-    tener su ficha cargada (en Profesores o en Alumn@s) <em>y</em> un usuario asociado para
-    poder entrar al sistema.
+    El alta manual de {{ term('un_alumno') }} o de un profesor crea su usuario con el email de la ficha.
+    {{ m.ruta(['Usuarios']) }} sirve para agregar administradores {{ term('del_instituto') }};
+    no tiene un selector para crear usuarios de alumnos o profesores.
 </p>
+<h2 id="entrar-por-primera-vez-o-recuperar-la-contrasena">Entrar por primera vez o recuperar la contraseña</h2>
+<p>En la pantalla de acceso, elegí <strong>¿Olvidaste tu contraseña?</strong> e ingresá el email
+    con el que se creó tu cuenta. El enlace del correo permite elegir una contraseña y vence
+    en una hora. Si no llega, revisá spam y pedí a la administración que compruebe tu email y
+    que exista un usuario asociado. Cargar una cuenta no significa que se haya enviado una contraseña.</p>
+<p>La importación de alumnos crea fichas, pero no crea usuarios. Si una ficha importada necesita
+    acceso, solicitá a soporte que revise su asociación. El enlace de familia es una alternativa
+    de consulta sin iniciar sesión.</p>
 {% endblock %}

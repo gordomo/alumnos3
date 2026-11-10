@@ -1,19 +1,21 @@
 {% extends 'ayuda/_tema.html.twig' %}
-{% import 'ayuda/_macros.html.twig' as m %}
 
 {% block contenido %}
+{% import 'ayuda/_macros.html.twig' as m %}
 <p>
-    El uso del sistema se paga por mes, según la cantidad de alumn@s que tuviste activ@s. Todo lo
+    El uso del sistema se paga por mes, según la cantidad de {{ term('alumnos') }} activos al emitir la factura. Todo lo
     de la suscripción está en {{ m.ruta(['Suscripción']) }}: cuánto te toca pagar, cómo pagarlo y
     las facturas de los meses anteriores.
 </p>
 
-<h2>Cómo se calcula</h2>
+<h2 id="como-se-calcula">Cómo se calcula</h2>
 
 <p>
-    Se factura por <strong>mes cerrado</strong>: el 1° de cada mes se emite la factura del mes
-    anterior, con la cantidad de {{ term('alumnos') }} que estuvieron activ@s en ese período, multiplicada por
-    el precio por {{ term('alumno') }} que tenés acordado.
+    La factura identifica un período mensual. Su cantidad se obtiene de los {{ term('alumnos') }}
+    activos <strong>al emitirla</strong>, multiplicada por el precio acordado; no reconstruye
+    quién estuvo activo en el mes histórico. La emisión mensual depende de una tarea programada.
+    Si hay un <strong>mínimo mensual</strong>, se cobra ese mínimo cuando supera el cálculo por alumnos.
+    Los institutos exentos no se facturan.
 </p>
 
 <p>
@@ -33,7 +35,7 @@
      alumn@s inactiv@s pero con la inscripción sin cerrar, no se te cobran, aunque conviene
      cerrarles la inscripción para que no les siga generando deuda a ell@s.') }}
 
-<h2>Cómo pagar</h2>
+<h2 id="como-pagar">Cómo pagar</h2>
 
 <p>Hay tres formas, en la pestaña <strong>Cómo pagar</strong>:</p>
 
@@ -44,8 +46,8 @@
         hasta 5 MB).
     </li>
     <li>
-        <strong>Efectivo</strong>: avisás que pagaste y lo confirmamos de nuestro lado. Acá el
-        comprobante es opcional.
+        <strong>Coordinar con cobrador</strong>: solicitás que pase un cobrador y coordinamos
+        el pago. El comprobante es opcional; pedir la visita no equivale a haber entregado dinero.
     </li>
     <li>
         <strong>Mercado Pago</strong>: cuando está habilitado, pagás desde el mismo sistema.
@@ -54,10 +56,12 @@
 
 <p>
     Mientras esperamos confirmar tu pago, la factura queda <strong>en revisión</strong>. En ese
-    estado no se te limita nada: la demora es nuestra, no tuya.
+    estado esa factura no genera restricciones mientras se revisa. Si tenés otras facturas
+    vencidas, pueden mantener las limitaciones. Podés declarar un pago conjunto para varias
+    facturas usando el mismo comprobante.
 </p>
 
-<h2>Qué pasa si no se paga</h2>
+<h2 id="que-pasa-si-no-se-paga">Qué pasa si no se paga</h2>
 
 <p>El sistema no se corta de golpe. Va avisando y limitando de a poco:</p>
 
@@ -87,14 +91,16 @@
      panel de administración.') }}
 
 {{ m.nota('success', 'Se reactiva solo',
-    'En cuanto confirmamos el pago, el sistema vuelve a la normalidad sin que tengas que hacer
-     nada. Tus datos nunca se tocan.') }}
+    'Al confirmar el pago se recalcula la suscripción. Si no quedan otras facturas que generen
+     restricciones, el panel vuelve a la normalidad. Los datos se conservan.') }}
 
-<h2>Facturas anteriores</h2>
+<h2 id="facturas-anteriores">Facturas anteriores</h2>
 
 <p>
     Abajo de la pantalla está la lista de todas tus facturas con el período, la cantidad de
     {{ term('alumnos') }}, el importe, la fecha de vencimiento y el estado. De cada una podés ver el detalle y
     descargar el <strong>PDF</strong>.
 </p>
+<p>Los días de aviso, gracia y bloqueo dependen de la configuración. La ayuda y la pantalla de
+    suscripción siguen disponibles aunque el panel esté bloqueado.</p>
 {% endblock %}

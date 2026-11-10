@@ -1,14 +1,14 @@
 {% extends 'ayuda/_tema.html.twig' %}
-{% import 'ayuda/_macros.html.twig' as m %}
 
 {% block contenido %}
+{% import 'ayuda/_macros.html.twig' as m %}
 <p>
     En {{ m.ruta(['Mis Pagos']) }} ves, mes por mes, lo que te corresponde por tus cursos, lo que
     el instituto ya te pagó y el saldo. Es de solo lectura: los pagos los registra la
     administración.
 </p>
 
-<h2>Los tres números de arriba</h2>
+<h2 id="los-tres-numeros-de-arriba">Los tres números de arriba</h2>
 
 <ul>
     <li><strong>Te corresponde</strong>: lo que da el cálculo del mes elegido.</li>
@@ -19,7 +19,7 @@
     </li>
 </ul>
 
-<h2>Cómo se llega a ese número</h2>
+<h2 id="como-se-llega-a-ese-numero">Cómo se llega a ese número</h2>
 
 <p>
     Abajo está el desglose, {{ term('curso') }} por {{ term('curso') }}, con la modalidad que se le aplicó a cada uno y la
@@ -40,7 +40,7 @@
     o receso en la agenda. El detalle lo dice, por ejemplo "3 de 5 clases · 2 sin dictar por
     feriado", así que se puede ver por qué un mes da menos que otro.') }}
 
-<h2>Los recibos</h2>
+<h2 id="los-recibos">Los recibos</h2>
 
 <p>
     Cada pago tiene su recibo, que se abre en una pestaña nueva y se puede imprimir o guardar como
@@ -52,4 +52,10 @@
    'Los montos los calcula el sistema con las clases y la modalidad que tenés acordada. Si ves algo
     que no cierra, hablalo con la administración del instituto: desde acá no se puede modificar
     nada.') }}
+<h2 id="fijo-mensual-y-acuerdos-de-cierre">Fijo mensual y acuerdos de cierre</h2>
+<p>Si tenés fijo mensual general, se suma una sola vez y no por cada curso. Si la administración
+    registra un pago que salda el mes, el pendiente queda en cero aunque se haya acordado un importe
+    menor; la diferencia queda visible en la liquidación.</p>
+<p>La comisión sobre lo cobrado se atribuye al mes de la cuota: una cuota de marzo cobrada en
+    mayo modifica marzo. Para explicar cualquier diferencia, revisá el desglose con administración.</p>
 {% endblock %}

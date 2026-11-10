@@ -238,7 +238,7 @@ class PagoService
         // Política: si se paga menos que lo pendiente, ajustamos el total de la deuda al monto efectivamente pagado
         // para que quede cancelada (no permitimos dejar deudas parcialmente pagadas).
         if ($cerrarDeudaSiMontoMenor && $montoAplicar < $montoPendiente) {
-            $montoPagadoAcumulado = $deuda->getMontoPagado() + $montoAplicar;
+            $montoPagadoAcumulado = $deuda->getMontoPagado() + $deuda->getMontoPagadoPorCreditos() + $montoAplicar;
             $deuda->setMonto($montoPagadoAcumulado);
             $deuda->setInteres(0);
         }

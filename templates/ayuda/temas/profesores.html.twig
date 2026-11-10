@@ -1,14 +1,14 @@
 {% extends 'ayuda/_tema.html.twig' %}
-{% import 'ayuda/_macros.html.twig' as m %}
 
 {% block contenido %}
+{% import 'ayuda/_macros.html.twig' as m %}
 <p>
     A un {{ term('profesor') }} se le puede pagar por hora, un fijo mensual, un porcentaje de lo que produce
     {{ term('el_curso') }}, o una combinación. La liquidación se arma sola con las asistencias y los pagos que
     ya están cargados.
 </p>
 
-<h2>La modalidad de cada {{ term('profesor') }}</h2>
+<h2 id="la-modalidad-de-cada-profesor">La modalidad de cada {{ term('profesor') }}</h2>
 
 <p>
     Se define al editar el profesor, en {{ m.ruta(['Profesores', 'Listado']) }}. Es la modalidad
@@ -32,11 +32,11 @@
    'Un profesor con fijo mensual de $100.000 y tres cursos cobra $100.000, no $300.000. Si además
     tiene porcentaje, el porcentaje sí se calcula curso por curso y se suma.') }}
 
-<h2>Cuando {{ term('un_curso') }} se paga distinto</h2>
+<h2 id="cuando-un-curso-se-paga-distinto">Cuando {{ term('un_curso') }} se paga distinto</h2>
 
 <p>
     Un profesor puede cobrar por hora en un curso y un porcentaje en otro. Eso se carga en
-    {{ m.ruta(['Pagos a profesores', 'Liquidación', 'Pago por curso']) }}.
+    {{ m.ruta(['Profesores', 'Liquidación', 'Pago por curso']) }}.
 </p>
 
 <ol>
@@ -59,7 +59,7 @@
    'Queda guardada con los valores que tenía, así que se puede volver a prender más adelante sin
     cargarla de nuevo. Mientras está apagada, el curso se liquida con la ficha del profesor.') }}
 
-<h2>Sobre qué se calcula el porcentaje</h2>
+<h2 id="sobre-que-se-calcula-el-porcentaje">Sobre qué se calcula el porcentaje</h2>
 
 <p>
     Lo elige el instituto en {{ m.ruta(['Configuración', 'Pagos y Vencimientos', 'Pago a profesores']) }}:
@@ -68,8 +68,9 @@
 <ul>
     <li>
         <strong>Lo efectivamente cobrado</strong> (por default): el porcentaje se aplica a la
-        plata que realmente entró por ese {{ term('curso') }} ese mes. Si una familia no pagó, no se paga
-        comisión por ella.
+        plata imputada a las cuotas de ese {{ term('curso') }} y período, descontando el excedente
+        que quedó como saldo disponible. El mes es el de la cuota, no la fecha de caja:
+        marzo cobrado en mayo modifica la liquidación de marzo.
     </li>
     <li>
         <strong>Lo facturado</strong>: inscriptos por el precio {{ term('del_curso') }}, cobrado o no. Le pagás
@@ -82,10 +83,10 @@
     Con "lo cobrado" el profesor cobra más tarde, cuando la familia paga. Conviene acordarlo con
     los profesores antes de cambiarlo.') }}
 
-<h2>La liquidación del mes</h2>
+<h2 id="la-liquidacion-del-mes">La liquidación del mes</h2>
 
 <p>
-    {{ m.ruta(['Pagos a profesores', 'Liquidación']) }} muestra, para el mes elegido, cuánto le
+    {{ m.ruta(['Profesores', 'Liquidación']) }} muestra, para el mes elegido, cuánto le
     corresponde a cada profesor, cuánto se le pagó ya y el saldo. El botón
     <strong>Detalle</strong> abre el desglose {{ term('curso') }} por {{ term('curso') }}, con la modalidad que se le aplicó
     a cada uno y la cuenta que se hizo.
@@ -98,7 +99,7 @@
     <strong>regla {{ term('del_curso') }}</strong>, así se ve de un vistazo cuáles no siguen la ficha.
 </p>
 
-<h2>Registrar el pago</h2>
+<h2 id="registrar-el-pago">Registrar el pago</h2>
 
 <ol>
     <li>En la liquidación, botón <strong>Pagar</strong> del {{ term('profesor') }}.</li>
@@ -115,7 +116,7 @@
     pagó.
 </p>
 
-<h2>Pagar menos y dar el mes por cerrado</h2>
+<h2 id="pagar-menos-y-dar-el-mes-por-cerrado">Pagar menos y dar el mes por cerrado</h2>
 
 <p>
     Si acordaste pagarle menos de lo calculado y con eso la cuenta queda cerrada, escribís el
@@ -153,7 +154,7 @@
     mostrar otro número y puede aparecer un saldo que no existe. Conviene registrar el pago del
     mes antes de tocar los valores.') }}
 
-<h2>Ausencias, feriados y reemplazos</h2>
+<h2 id="ausencias-feriados-y-reemplazos">Ausencias, feriados y reemplazos</h2>
 
 <p>
     En la modalidad por hora, las clases en las que el {{ term('profesor') }} figura ausente se descuentan de

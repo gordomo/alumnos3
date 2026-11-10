@@ -128,7 +128,7 @@ class BillingService
         $this->entityManager->persist($invoice);
         $this->entityManager->flush();
 
-        $this->logger->info("Factura mensual generada para {$instituto->getNombre()}: {$activeStudents} alumnos, total: ${$invoice->getTotalAmount()}");
+        $this->logger->info("Factura mensual generada para {$instituto->getNombre()}: {$activeStudents} alumnos, total: $" . $invoice->getTotalAmount());
 
         return $invoice;
     }

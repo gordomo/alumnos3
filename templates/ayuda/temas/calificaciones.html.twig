@@ -1,7 +1,7 @@
 {% extends 'ayuda/_tema.html.twig' %}
-{% import 'ayuda/_macros.html.twig' as m %}
 
 {% block contenido %}
+{% import 'ayuda/_macros.html.twig' as m %}
 {% set esProfe = is_granted('ROLE_PROFESOR') and not is_granted('ROLE_ADMIN_INSTITUTO') %}
 
 <p>
@@ -20,7 +20,7 @@
     </p>
 {% endif %}
 
-<h2>Antes de empezar: la escala</h2>
+<h2 id="antes-de-empezar-la-escala">Antes de empezar: la escala</h2>
 
 {% if esProfe %}
     <p>
@@ -44,7 +44,7 @@
     <li><strong>Ambas</strong>: el número y el concepto.</li>
 </ul>
 
-<h2>1. Elegir {{ term('el_curso') }}</h2>
+<h2 id="elegir-el-curso">1. Elegir {{ term('el_curso') }}</h2>
 
 <p>
     La primera pantalla lista {{ term('los_cursos') }} disponibles con la cantidad de evaluaciones que ya
@@ -53,7 +53,7 @@
 
 {{ m.captura('notas-index.png', 'Listado de ' ~ term('cursos') ~ ' con calificaciones') }}
 
-<h2>2. Crear una evaluación</h2>
+<h2 id="crear-una-evaluacion">2. Crear una evaluación</h2>
 
 <ol>
     <li>Dentro {{ term('del_curso') }}, clic en <strong>Nueva evaluación</strong>.</li>
@@ -94,7 +94,7 @@
     interpretándose con la escala con la que se cargaron. Así una nota nunca cambia de
     significado por una modificación posterior en la configuración.') }}
 
-<h2>3. Cargar las notas</h2>
+<h2 id="cargar-las-notas">3. Cargar las notas</h2>
 
 <ol>
     <li>Clic en <strong>Cargar notas</strong> en la evaluación.</li>
@@ -122,7 +122,7 @@
    'Una vez que el curso se cierra, la grilla se muestra pero no se puede modificar. Es a
     propósito: el cierre ya decidió aprobaciones sobre esas notas. Cargá todo antes de cerrar.') }}
 
-<h2>4. La libreta</h2>
+<h2 id="la-libreta">4. La libreta</h2>
 
 <p>
     Es la vista de siempre, la de papel: una <strong>grilla de áreas por período</strong> con el
@@ -131,7 +131,7 @@
 
 <p>Se llega desde el resumen {{ term('del_curso') }}, con el botón <strong>Libreta</strong> de cada {{ term('alumno_formal') }}.</p>
 
-<p>Tiene tres bloques:</p>
+<p>Tiene cuatro bloques:</p>
 
 <ul>
     <li><strong>Asistencia</strong>: presentes, ausentes y porcentaje de cada período.</li>
@@ -152,7 +152,7 @@
     las tareas que ya se marcaron. Lo único que hay que hacer es indicar el área y el período de
     cada evaluación, y el período de cada tarea.') }}
 
-<h3>Imprimirla o guardarla en PDF</h3>
+<h3 id="imprimirla-o-guardarla-en-pdf">Imprimirla o guardarla en PDF</h3>
 
 <p>
     El botón <strong>Imprimir / Guardar PDF</strong> abre el diálogo de impresión del navegador.
@@ -165,7 +165,7 @@
     <strong>Gráficos de fondo</strong>. Sin eso los encabezados de las tablas salen en blanco y
     la libreta pierde los colores del instituto.') }}
 
-<h2>5. El boletín</h2>
+<h2 id="el-boletin">5. El boletín</h2>
 
 <p>
     Desde el resumen {{ term('del_curso') }}, cada {{ term('alumno_formal') }} tiene un <strong>boletín</strong>: la lista de sus
@@ -187,7 +187,7 @@
 </p>
 
 {% if not esProfe %}
-<h2>Cómo se usan las notas al cerrar {{ term('el_curso') }}</h2>
+<h2 id="como-se-usan-las-notas-al-cerrar-el-curso">Cómo se usan las notas al cerrar {{ term('el_curso') }}</h2>
 
 <p>
     Por default las notas <strong>no</strong> intervienen en el cierre: se cargan, se muestran y
@@ -207,4 +207,9 @@
     de confirmar.
 </p>
 {% endif %}
+<h2 id="ausencias-y-evaluaciones-sin-promedio">Ausencias y evaluaciones sin promedio</h2>
+<p>Un ausente no se promedia como cero, pero cuenta como desaprobado con el criterio
+    <strong>Todas</strong>. Una evaluación que no cuenta para promedio tampoco interviene en
+    esa decisión. Si la escala conceptual no tiene equivalencias numéricas, el criterio por
+    promedio se resuelve según las aprobaciones individuales.</p>
 {% endblock %}

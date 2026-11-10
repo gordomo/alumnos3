@@ -192,7 +192,7 @@ class SaldoFavorController extends AbstractController
             // Crear la aplicación
             $aplicacion = new SaldoFavorAplicacion();
             $aplicacion->setSaldoFavor($saldoFavor);
-            $aplicacion->setDeuda($deuda);
+            $deuda->addCreditoAplicacion($aplicacion);
             $aplicacion->setMontoAplicado(number_format($montoAplicar, 2, '.', ''));
 
             // Reducir saldo disponible

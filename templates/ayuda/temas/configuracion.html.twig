@@ -1,7 +1,7 @@
 {% extends 'ayuda/_tema.html.twig' %}
-{% import 'ayuda/_macros.html.twig' as m %}
 
 {% block contenido %}
+{% import 'ayuda/_macros.html.twig' as m %}
 <p>
     Todo lo de esta pantalla se configura una vez y afecta a todo el instituto. Se entra
     desde {{ m.ruta(['Configuración']) }}. La pantalla muestra el resumen; el botón
@@ -10,7 +10,7 @@
 
 {{ m.captura('config-index.png', 'Resumen de la configuración ' ~ term('del_instituto')) }}
 
-<h2>Datos {{ term('del_instituto') }}</h2>
+<h2 id="datos-del-instituto">Datos {{ term('del_instituto') }}</h2>
 
 <p>
     Nombre, dirección, teléfono, email de contacto y <strong>zona horaria</strong>. La zona
@@ -18,7 +18,7 @@
     calculan los vencimientos y los recargos. Si está mal, las deudas vencen el día equivocado.
 </p>
 
-<h2>Vencimientos e intereses</h2>
+<h2 id="vencimientos-e-intereses">Vencimientos e intereses</h2>
 
 <p>
     Un vencimiento es una regla del tipo <em>"a partir del día 10 del mes, la cuota tiene un
@@ -39,7 +39,7 @@
    'Con dos vencimientos — día 10 al 5% y día 20 al 10% — una cuota de $10.000 se paga
     $10.000 hasta el 9, $10.500 del 10 al 19, y $11.000 del 20 en adelante.') }}
 
-<h2>Métodos de pago</h2>
+<h2 id="metodos-de-pago">Métodos de pago</h2>
 
 <p>
     La lista de formas de cobro que aparecerá en el desplegable al registrar un pago
@@ -52,14 +52,14 @@
     en pagos nuevos pero los pagos históricos siguen mostrando con qué se cobraron.
 </p>
 
-<h2>Descuentos promocionales</h2>
+<h2 id="descuentos-promocionales">Descuentos promocionales</h2>
 
 <p>
     Descuentos que se pueden aplicar al registrar un pago. Se definen con nombre y porcentaje,
     y quedan disponibles para elegir en el momento del cobro.
 </p>
 
-<h2>Cuota de inscripción anual</h2>
+<h2 id="cuota-de-inscripcion-anual">Cuota de inscripción anual</h2>
 
 <p>
     Es un cargo que se le hace al {{ term('alumno_formal') }} <strong>una vez por año</strong> y que no pertenece a
@@ -71,8 +71,9 @@
 
 <ul>
     <li>
-        A los {{ term('alumnos_formal') }} que <strong>inscribas de ahí en adelante</strong> se les genera sola al
-        momento de inscribirlos a cualquier {{ term('curso') }}.
+        A las nuevas inscripciones se les genera cuando ya llegó el <strong>mes de cobro</strong>,
+        siempre que no exista una cuota de inscripción de ese año. Antes de ese mes no se genera
+        por el solo hecho de inscribirse.
     </li>
     <li>
         A los que <strong>ya estaban inscriptos</strong> hay que generársela una vez. Eso lo hace
@@ -95,13 +96,13 @@
    'Cada cuota guarda el monto que estaba configurado cuando se creó. Un aumento afecta a las
     que se generen después, no a las que el alumno ya tiene pendientes.') }}
 
-<h2>Notificaciones por email</h2>
+<h2 id="notificaciones-por-email">Notificaciones por email</h2>
 
 <p>
     En la pestaña <strong>Notificaciones</strong> se define qué manda el sistema y a quién.
 </p>
 
-<h3>¿A quién le llegan?</h3>
+<h3 id="a-quien-le-llegan">¿A quién le llegan?</h3>
 
 <p>
     Un solo desplegable que vale para <strong>los recibos, los recordatorios de deuda y los
@@ -123,14 +124,14 @@
     es sobre él. Al instituto que la tenía puesta se le pasó a "al alumn@ y a su tutor", así que
     el tutor sigue recibiendo todo.') }}
 
-<h3>Recibo al pagar</h3>
+<h3 id="recibo-al-pagar">Recibo al pagar</h3>
 
 <p>
     Con <strong>enviar recibos</strong> activado, cada pago que registrás dispara el recibo
     automáticamente. No hay que hacer nada más.
 </p>
 
-<h3>Recordatorios de deuda</h3>
+<h3 id="recordatorios-de-deuda">Recordatorios de deuda</h3>
 
 <p>
     Se prenden con <strong>enviar recordatorios de deudas automáticamente</strong>, y después se
@@ -158,30 +159,31 @@
     está configurada, los recordatorios solo salen a mano desde la ficha del alumno. Los recibos
     al registrar un pago, en cambio, no dependen de eso: salen en el momento.') }}
 
-<h3>Texto personalizado</h3>
+<h3 id="texto-personalizado">Texto personalizado</h3>
 
 <p>
-    Un texto libre que se agrega al final de todos los emails. Sirve para el CBU, los horarios de
-    caja o cualquier aclaración que quieras que viaje en cada aviso.
+    Un texto libre para los <strong>recibos, recordatorios de deuda y boletines</strong>.
+    Sirve para el CBU o los horarios de caja. No se agrega automáticamente a las comunicaciones
+    libres ni a los correos de acceso o de la plataforma.
 </p>
 
-<h2>Configuración académica</h2>
+<h2 id="configuracion-academica">Configuración académica</h2>
 
 <p>Es el bloque que define <strong>cuándo un {{ term('alumno_formal') }} aprueba {{ term('un_curso') }}</strong>. Hay tres criterios, y cada uno se prende por separado:</p>
 
-<h3>1. Asistencia mínima</h3>
+<h3 id="asistencia-minima">1. Asistencia mínima</h3>
 <p>
     El porcentaje de clases al que el {{ term('alumno_formal') }} tiene que haber ido. Si lo dejás vacío, la
     asistencia no se tiene en cuenta para aprobar.
 </p>
 
-<h3>2. Pago total</h3>
+<h3 id="pago-total">2. Pago total</h3>
 <p>
     Si lo activás, un {{ term('alumno_formal') }} con deuda pendiente al cerrar {{ term('el_curso') }} queda como
     <em>no finalizado</em> aunque tenga la asistencia y las notas en regla.
 </p>
 
-<h3>Períodos académicos</h3>
+<h3 id="periodos-academicos">Períodos académicos</h3>
 
 <p>
     Si dividís el año en <strong>trimestres</strong> o <strong>bimestres</strong>, o si tomás
@@ -225,7 +227,7 @@
     columna de período aparece un guión.
 </p>
 
-<h3>Áreas de evaluación</h3>
+<h3 id="areas-de-evaluacion">Áreas de evaluación</h3>
 
 <p>
     Son los <strong>ejes</strong> sobre los que calificás: Writing, Listening, Speaking, o
@@ -259,7 +261,7 @@
     áreas es el orden de las filas de la libreta.
 </p>
 
-<h3>3. Notas</h3>
+<h3 id="notas">3. Notas</h3>
 <p>
     Para usar notas primero hay que elegir la <strong>escala</strong>. Mientras la escala esté
     en <em>"No usar calificaciones"</em>, todo el módulo de notas queda apagado.
@@ -289,4 +291,14 @@
 {{ m.nota('info', 'Si no cargaste notas, nadie se desaprueba por eso',
    'Un alumno sin evaluaciones o sin notas cargadas queda como <em>sin datos</em> en el cierre,
     y eso <strong>no</strong> lo desaprueba. La falta de información nunca perjudica al alumno.') }}
+<h2 id="descuentos-generales-y-orden-del-calculo">Descuentos generales y orden del cálculo</h2>
+<p>En la pestaña <strong>Descuentos</strong> se configuran los porcentajes por efectivo y por
+    hermanos, y si se permiten esos descuentos generales a quienes tienen cuotas vencidas.
+    Vinculá los hermanos en sus fichas para que se aplique esa condición. Los descuentos
+    promocionales se eligen por separado al registrar el pago.</p>
+<p>El orden puede ser interés primero, descuento primero o interés y descuento sobre la base.
+    La opción modifica el cálculo propuesto; verificá el desglose y el importe final al cobrar.</p>
+<h2 id="logo-colores-y-fechas">Logo, colores y fechas</h2>
+<p>La edición permite cambiar logo, colores de la libreta, zona horaria y formato de fechas.
+    Guardá los cambios de la sección que estés editando y revisá el resultado.</p>
 {% endblock %}

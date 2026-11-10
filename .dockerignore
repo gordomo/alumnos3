@@ -1,0 +1,11 @@
+.git
+.env
+.env.*
+!.env.example
+vendor
+var
+public/uploads
+.aws
+.agents
+.codex
+docker-compose*.yml

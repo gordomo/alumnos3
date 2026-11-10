@@ -1,7 +1,7 @@
 {% extends 'ayuda/_tema.html.twig' %}
-{% import 'ayuda/_macros.html.twig' as m %}
 
 {% block contenido %}
+{% import 'ayuda/_macros.html.twig' as m %}
 {% set esProfe = is_granted('ROLE_PROFESOR') and not is_granted('ROLE_ADMIN_INSTITUTO') %}
 
 <p>
@@ -18,7 +18,7 @@
     </p>
 {% endif %}
 
-<h2>1. Crear la tarea</h2>
+<h2 id="crear-la-tarea">1. Crear la tarea</h2>
 
 <ol>
     <li>Elegí {{ term('el_curso') }} y clic en <strong>Nueva tarea</strong>.</li>
@@ -44,7 +44,7 @@
 
 {{ m.captura('tarea-curso.png', 'Tareas de ' ~ term('un_curso') ~ ', con el resumen por ' ~ term('alumno') ~ ' debajo') }}
 
-<h2>2. Marcar quién entregó</h2>
+<h2 id="marcar-quien-entrego">2. Marcar quién entregó</h2>
 
 <ol>
     <li>En la lista de tareas {{ term('del_curso') }}, clic en <strong>Cargar entregas</strong>.</li>
@@ -60,7 +60,7 @@
     se guarda, así que podés volver a entrar y corregir cuantas veces quieras sin duplicar nada.
 </p>
 
-<h2>3. Ver cómo viene {{ term('el_curso') }}</h2>
+<h2 id="ver-como-viene-el-curso">3. Ver cómo viene {{ term('el_curso') }}</h2>
 
 <p>
     Abajo de la lista de tareas hay un <strong>resumen por {{ term('alumno') }}</strong>: cuántas entregó de
@@ -68,7 +68,7 @@
     abajo de 50.
 </p>
 
-<h2>Cómo aparece en la libreta</h2>
+<h2 id="como-aparece-en-la-libreta">Cómo aparece en la libreta</h2>
 
 <p>
     Si {{ term('el_instituto') }} usa períodos, la libreta trae un bloque <strong>Tareas</strong> con una
@@ -90,4 +90,7 @@
    'Al eliminar una tarea se borran también las entregas que ya se hayan cargado, y eso cambia
     los números de la libreta. No se puede recuperar.') }}
 {% endif %}
+<h2 id="despues-del-cierre">Después del cierre</h2>
+<p>Un curso cerrado permite consultar tareas, pero no crear, editar, eliminar ni cambiar entregas.
+    Revisá la información antes de cerrar.</p>
 {% endblock %}

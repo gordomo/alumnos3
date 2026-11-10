@@ -1,18 +1,18 @@
 {% extends 'ayuda/_tema.html.twig' %}
-{% import 'ayuda/_macros.html.twig' as m %}
 
 {% block contenido %}
+{% import 'ayuda/_macros.html.twig' as m %}
 <p>
     El {{ term('curso') }} es la pieza central: define el precio, el período y los días de clase. Todo lo
     demás —cuotas, asistencias, notas— se apoya en eso.
 </p>
 
-<h2>Crear {{ term('un_curso') }}</h2>
+<h2 id="crear-un-curso">Crear {{ term('un_curso') }}</h2>
 
 <ol>
     <li>{{ m.ruta(['Cursos', 'Listado']) }} y clic en <strong>Nuevo {{ term('curso') }}</strong>.</li>
     <li>
-        <strong>Nombre</strong> y <strong>descripción</strong>. El nombre es el que verán los
+        <strong>Nombre</strong>. Es el que verán los
         {{ term('alumnos_formal') }} y el que queda guardado en su historial.
     </li>
     <li>
@@ -23,7 +23,6 @@
         <strong>Precio mensual</strong>. Es el valor que se copia a la inscripción de cada {{ term('alumno_formal') }}
         en el momento de inscribirlo.
     </li>
-    <li><strong>Cupo</strong>, si querés limitar la cantidad de inscriptos.</li>
     <li><strong>Horarios</strong>: día de la semana, hora de inicio y hora de fin. Podés cargar varios.</li>
     <li><strong>{{ Term('profesores') }}</strong> asignados. Determina qué {{ term('profesores') }} pueden entrar a tomar asistencia y cargar notas de {{ term('este_curso') }}.</li>
     <li>Guardar.</li>
@@ -31,7 +30,7 @@
 
 {{ m.captura('curso-nuevo.png', 'Formulario de creación de ' ~ term('un_curso')) }}
 
-<h2>Aumentar el precio de {{ term('un_curso') }}</h2>
+<h2 id="aumentar-el-precio-de-un-curso">Aumentar el precio de {{ term('un_curso') }}</h2>
 
 <p>
     Cambiás el precio, guardás, y <strong>se le aplica a todos los inscriptos</strong>. No hay
@@ -82,7 +81,7 @@
     dejar saldo pendiente. El aumento se aplica a todos por igual; el arreglo puntual se hace al
     momento de cobrar.') }}
 
-<h2>El listado</h2>
+<h2 id="el-listado">El listado</h2>
 
 <p>
     Muestra cada {{ term('curso') }} con sus horarios, su cantidad de inscriptos y su estado. Desde los
@@ -92,7 +91,7 @@
 
 {{ m.captura('curso-index.png', 'Listado de ' ~ term('cursos') ~ ' con los botones de acción') }}
 
-<h2>La ficha {{ term('del_curso') }}</h2>
+<h2 id="la-ficha-del-curso">La ficha {{ term('del_curso') }}</h2>
 
 <p>
     Entrando a {{ term('un_curso') }} ves la lista de {{ term('alumnos_formal') }} inscriptos, los horarios, los {{ term('profesores') }}, y los
@@ -101,7 +100,7 @@
 
 {{ m.captura('curso-show.png', 'Ficha de ' ~ term('un_curso') ~ ' con sus ' ~ term('alumnos_formal') ~ ' inscriptos') }}
 
-<h2>El calendario</h2>
+<h2 id="el-calendario">El calendario</h2>
 
 <p>
     {{ m.ruta(['Cursos', 'Calendario']) }} muestra <strong>solo los horarios de {{ term('los_cursos') }}</strong>,
@@ -119,7 +118,7 @@
     instituto anota: feriados, actos, reuniones, mesas de examen. Si querés ver los horarios
     encima de la agenda, ahí se prenden con el tilde de Clases.') }}
 
-<h2>Cerrar {{ term('un_curso') }}</h2>
+<h2 id="cerrar-un-curso">Cerrar {{ term('un_curso') }}</h2>
 
 <p>
     Cerrar {{ term('un_curso') }} es la acción que <strong>decide qué {{ term('alumnos_formal') }} lo finalizaron</strong>. Se hace
@@ -145,4 +144,11 @@
    'Una vez confirmado el cierre, el resultado queda escrito en el historial de cada alumno y
     las notas del curso pasan a solo lectura. Leé la vista previa completa antes de confirmar,
     especialmente las filas marcadas como <em>sin datos</em>.') }}
+<h2 id="duplicar-para-otro-periodo">Duplicar para otro período</h2>
+<p>En el listado, <strong>Duplicar</strong> permite preparar otro curso con nuevas fechas.
+    Revisá sus datos antes de guardar. Si el curso original ya tiene inscripciones activas,
+    no se pueden cambiar sus fechas: la duplicación evita alterar ese historial.</p>
+<p>Los conflictos de horarios se muestran al guardar; revisá los profesores y horarios implicados.
+    Deshabilitar un curso y cerrarlo son estados diferentes: el cierre además registra resultados
+    y bloquea la carga de notas, tareas y el acceso administrativo a su diario.</p>
 {% endblock %}

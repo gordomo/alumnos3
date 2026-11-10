@@ -15,8 +15,22 @@ use Symfony\Component\Validator\Constraints\File;
 
 class InstitutoType extends AbstractType
 {
+    public function __construct(private \Symfony\Component\Security\Core\Security $security) {}
+
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
+        if ($this->security->isGranted('ROLE_SUPER_ADMIN')) {
+            $builder
+                ->add('plan', \Symfony\Component\Form\Extension\Core\Type\ChoiceType::class, [
+                    'label' => 'Plan',
+                    'choices' => ['Básico: manual y búsqueda' => 'basico', 'Premium: incluye ayuda con IA' => 'premium'],
+                    'help' => 'Define las funciones disponibles. No cambia el precio acordado ni las facturas.',
+                ])
+                ->add('ayudaIaPrueba', CheckboxType::class, [
+                    'label' => 'Habilitar prueba interna de IA', 'required' => false,
+                    'help' => 'Permite probar el chat en un plan básico. Requiere habilitar Gemini en el servidor.',
+                ]);
+        }
         $isEdit = $options['is_edit'];
         
         $builder

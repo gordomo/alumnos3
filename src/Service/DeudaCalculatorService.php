@@ -6,11 +6,13 @@ use App\Entity\Alumno;
 use App\Entity\AlumnoCursoHistorico;
 use App\Entity\AlumnosPagos;
 use App\Entity\Instituto;
+use App\Entity\Curso;
+use App\Entity\SaldoFavorAplicacion;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
  * Servicio para calcular deudas on-demand desde el historial de cursos
- * Sin depender de la tabla deuda_alumno
+ * Descuenta los créditos aplicados sobre las cuotas persistidas.
  */
 class DeudaCalculatorService
 {
@@ -49,6 +51,8 @@ class DeudaCalculatorService
      */
     private ?array $indicePagos = null;
 
+    private ?array $indiceCreditos = null;
+
     /**
      * Históricos activos precargados: id de alumno => AlumnoCursoHistorico[].
      * null = sin precargar (se cae al findBy por alumno).
@@ -75,6 +79,8 @@ class DeudaCalculatorService
             return [];
         }
 
+        $creditosAnterior = $this->indiceCreditos;
+        $this->indiceCreditos = $this->cargarIndiceCreditos($alumnos);
         $pagosAnterior = $this->indicePagos;
         $historicosAnterior = $this->indiceHistoricos;
         $this->indicePagos = $this->cargarIndicePagos($alumnos);
@@ -88,6 +94,7 @@ class DeudaCalculatorService
 
             return $porAlumno;
         } finally {
+            $this->indiceCreditos = $creditosAnterior;
             $this->indicePagos = $pagosAnterior;
             $this->indiceHistoricos = $historicosAnterior;
         }
@@ -148,7 +155,17 @@ class DeudaCalculatorService
      */
     public function calcularDeudasAlumno(Alumno $alumno): array
     {
-        $instituto = $alumno->getInstituto();
+        $creditosAnterior = $this->indiceCreditos;
+        $this->indiceCreditos ??= $this->cargarIndiceCreditos([$alumno]);
+        try {
+            return $this->calcularDeudasAlumnoConCreditos($alumno);
+        } finally {
+            $this->indiceCreditos = $creditosAnterior;
+        }
+    }
+
+    private function calcularDeudasAlumnoConCreditos(Alumno $alumno): array
+    {
         $deudas = [];
 
         // Obtener todos los históricos activos del alumno (precargados en cálculo masivo)
@@ -247,7 +264,11 @@ class DeudaCalculatorService
             
             if (!$tienePago) {
                 // Calcular interés basado en vencimientos
-                $interes = $this->calcularInteres($instituto, $precioMensual, $mes, $ano, $fechaActual);
+                $cuota = $this->calcularCuotaParaMes($alumno, $curso, $mes, $ano, (float) $precioMensual);
+                if ($cuota['monto'] + $cuota['interes'] <= 0.01) {
+                    $fechaIteracion->modify('first day of next month');
+                    continue;
+                }
                 
                 $deudas[] = [
                     'id' => null,
@@ -256,8 +277,9 @@ class DeudaCalculatorService
                     'cursoHistorico' => $historico,
                     'mes' => $mes,
                     'ano' => $ano,
-                    'monto' => $precioMensual,
-                    'interes' => $interes,
+                    'monto' => $cuota['monto'],
+                    'interes' => $cuota['interes'],
+                    'creditoAplicado' => $cuota['creditoAplicado'],
                     'montoPagado' => 0,
                     'fechaCreacion' => $fechaIteracion,
                     'instituto' => $instituto,
@@ -269,6 +291,56 @@ class DeudaCalculatorService
         }
         
         return $deudas;
+    }
+
+    /**
+     * Importe todavía cobrable de una cuota. Los créditos ya aplicados se imputan
+     * primero al recargo y luego al capital; nunca se vuelven a descontar del pago.
+     * También sirve para cuotas futuras, que aún no aparecen en la deuda del mes.
+     */
+    public function calcularCuotaParaMes(Alumno $alumno, Curso $curso, int $mes, int $ano, float $precioMensual): array
+    {
+        $interes = $this->calcularInteresParaMes($alumno->getInstituto(), $precioMensual, $mes, $ano);
+        $indice = $this->indiceCreditos ?? $this->cargarIndiceCreditos([$alumno]);
+        $aplicado = $indice[$alumno->getId() . '_' . $curso->getId() . '_' . $mes . '_' . $ano] ?? ['monto' => 0, 'saldada' => false];
+        $credito = (float) $aplicado['monto'];
+        // Una cuota cubierta por completo no revive al llegar el vencimiento o
+        // cambiar el precio de la inscripción, igual que una cuota pagada en efectivo.
+        if ($aplicado['saldada']) {
+            return ['monto' => 0.0, 'interes' => 0.0, 'creditoAplicado' => $credito];
+        }
+        $creditoAplicado = min($credito, $precioMensual + $interes);
+
+        return [
+            'monto' => round(max(0, $precioMensual - max(0, $credito - $interes)), 2),
+            'interes' => round(max(0, $interes - $credito), 2),
+            'creditoAplicado' => round($creditoAplicado, 2),
+        ];
+    }
+
+    private function cargarIndiceCreditos(array $alumnos): array
+    {
+        $filas = $this->entityManager->createQueryBuilder()
+            ->select('IDENTITY(d.alumno) AS alumnoId', 'IDENTITY(d.curso) AS cursoId', 'd.mes', 'd.ano', 'SUM(ca.montoAplicado) AS monto', 'd.monto + COALESCE(d.interes, 0) AS total')
+            ->from(SaldoFavorAplicacion::class, 'ca')
+            ->innerJoin('ca.deuda', 'd')
+            ->where('d.alumno IN (:alumnos)')
+            ->andWhere('d.curso IS NOT NULL')
+            ->setParameter('alumnos', $alumnos)
+            ->groupBy('d.id', 'd.alumno', 'd.curso', 'd.mes', 'd.ano', 'd.monto', 'd.interes')
+            ->getQuery()->getArrayResult();
+
+        $indice = [];
+        foreach ($filas as $fila) {
+            $clave = $fila['alumnoId'] . '_' . $fila['cursoId'] . '_' . $fila['mes'] . '_' . $fila['ano'];
+            $anterior = $indice[$clave] ?? ['monto' => 0, 'saldada' => false];
+            $indice[$clave] = [
+                'monto' => $anterior['monto'] + (float) $fila['monto'],
+                'saldada' => $anterior['saldada'] || (float) $fila['monto'] >= (float) $fila['total'] - 0.01,
+            ];
+        }
+
+        return $indice;
     }
 
     /**

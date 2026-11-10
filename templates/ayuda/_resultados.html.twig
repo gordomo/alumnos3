@@ -1,0 +1,22 @@
+    {% if consulta != '' %}
+        <section class="mb-4" aria-labelledby="ayuda-resultados">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                <h2 id="ayuda-resultados" class="h5 mb-0">Resultados para «{{ consulta }}»</h2>
+                <a href="{{ path('app_ayuda_index') }}" data-ayuda-limpiar data-no-loading>Limpiar búsqueda</a>
+            </div>
+            {% if resultados is empty %}
+                <p class="alert alert-info">No encontramos una sección para esa consulta entre los temas disponibles para tu usuario.
+                    Probá con otras palabras o elegí uno de los temas de abajo.</p>
+            {% else %}
+                <div class="list-group">
+                    {% for resultado in resultados %}
+                        <a href="{{ resultado.url }}" class="list-group-item list-group-item-action py-3">
+                            <span class="text-muted small">{{ resultado.tituloTema }}{% if resultado.contexto %} · {{ resultado.contexto }}{% endif %}</span>
+                            <h3 class="h6 mt-1 mb-2">{{ resultado.titulo }}</h3>
+                            <p class="mb-0 small">{{ resultado.extracto }}</p>
+                        </a>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </section>
+    {% endif %}
