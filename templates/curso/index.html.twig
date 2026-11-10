@@ -207,16 +207,15 @@
     {# Barra de búsqueda y filtros #}
     <div class="row mb-3 curso-toolbar ui-filter-card">
         <div class="col-md-6">
-            <form method="get" action="{{ path('app_curso_index') }}" class="d-flex gap-2 curso-search-form ui-filter-search">
+            <form method="get" action="{{ path('app_curso_index') }}" id="curso-busqueda-form" class="curso-search-form ui-filter-search">
+                <input type="hidden" name="tab" value="{{ currentTab }}">
+                <input type="hidden" name="sort" value="{{ sort }}">
+                <input type="hidden" name="order" value="{{ order }}">
                 <div class="input-group">
-                    <input name="busqueda" type="text" class="form-control" placeholder="Buscar por nombre" value="{{ busqueda is defined ? busqueda : '' }}" aria-label="Buscar {{ term('curso') }}">
-                    <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i></button>
+                    <input name="busqueda" type="search" class="form-control" placeholder="Buscar por nombre" value="{{ busqueda|default('') }}" aria-label="Buscar {{ term('curso') }}">
+                    <button class="btn btn-primary" type="submit"><i class="bi bi-search" aria-hidden="true"></i> Buscar</button>
+                    <a class="btn btn-outline-secondary" href="{{ path('app_curso_index', {'tab': currentTab, 'sort': sort, 'order': order}) }}" id="curso-limpiar-busqueda" aria-label="Limpiar búsqueda"><i class="bi bi-x-lg" aria-hidden="true"></i> Limpiar</a>
                 </div>
-                {% if busqueda %}
-                    <a class="btn btn-outline-secondary" href="{{ path('app_curso_index') }}" title="Limpiar búsqueda">
-                        <i class="bi bi-x-lg"></i>
-                    </a>
-                {% endif %}
             </form>
         </div>
         <div class="col-md-6 d-flex justify-content-end align-items-center">
@@ -409,4 +408,9 @@
         <i class="bi bi-calendar3"></i> Ver Calendario
     </a>
 </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="{{ asset('assets/js/curso-listado.js') }}" defer></script>
 {% endblock %}

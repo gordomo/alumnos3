@@ -333,11 +333,8 @@
                         <div class="col-md-4">
                             <div class="input-group">
                                 <input type="text" name="busqueda" class="form-control" placeholder="Buscar {{ term('alumno_formal') }}..." value="{{ busqueda }}">
-                                <div class="input-group-append">
-                                    <button class="btn btn-outline-secondary" type="submit">
-                                        <i class="bi bi-search"></i>
-                                    </button>
-                                </div>
+                                <button class="btn btn-primary" type="submit"><i class="bi bi-search" aria-hidden="true"></i> Buscar</button>
+                                <a class="btn btn-outline-secondary" href="{{ path('dashboard_index', {'sort': sort, 'order': order}) }}" aria-label="Limpiar búsqueda"><i class="bi bi-x-lg" aria-hidden="true"></i> Limpiar</a>
                             </div>
                         </div>
                         <div class="col-md-4">

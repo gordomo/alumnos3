@@ -220,14 +220,14 @@
                                 <div class="col-auto">
                                     <label class="form-label small text-muted mb-1 d-block">&nbsp;</label>
                                     <button type="submit" class="btn btn-primary" title="Buscar">
-                                        <i class="bi bi-search"></i>
+                                        <i class="bi bi-search" aria-hidden="true"></i> Buscar
                                     </button>
                                 </div>
                                 {% if fechaDesde or fechaHasta or busqueda or cursoSelected or metodoSelected or alumnoSelected or (alumnoId is defined and alumnoId) %}
                                 <div class="col-auto">
                                     <label class="form-label small text-muted mb-1 d-block">&nbsp;</label>
                                     <a href="{{ path('app_alumnos_pagos_index', {'tab': 'pagos'}) }}" class="btn btn-outline-secondary" title="Limpiar filtros">
-                                        <i class="bi bi-x-circle"></i> Limpiar
+                                        <i class="bi bi-x-lg" aria-hidden="true"></i> Limpiar
                                     </a>
                                 </div>
                                 {% endif %}
@@ -523,14 +523,14 @@
                                 <div class="col-auto">
                                     <label class="form-label small text-muted mb-1 d-block">&nbsp;</label>
                                     <button type="submit" class="btn btn-primary" title="Buscar">
-                                        <i class="bi bi-search"></i>
+                                        <i class="bi bi-search" aria-hidden="true"></i> Buscar
                                     </button>
                                 </div>
                                 {% if busqueda or cursoSelected or alumnoSelected or estadoDeuda or fechaDesde or fechaHasta or (alumnoId is defined and alumnoId) %}
                                 <div class="col-auto">
                                     <label class="form-label small text-muted mb-1 d-block">&nbsp;</label>
                                     <a href="{{ path('app_alumnos_pagos_index', {'tab': 'deudas'}) }}" class="btn btn-outline-secondary" title="Limpiar filtros">
-                                        <i class="bi bi-x-circle"></i> Limpiar
+                                        <i class="bi bi-x-lg" aria-hidden="true"></i> Limpiar
                                     </a>
                                 </div>
                                 {% endif %}

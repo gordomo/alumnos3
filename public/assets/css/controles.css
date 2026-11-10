@@ -1,0 +1,110 @@
+/* Criterio común para todas las pantallas del panel autenticado.
+   Los estados (asistencias, avisos y errores) conservan su significado. */
+body.app-panel .btn,
+body.app-panel .pagina-boton-flotante {
+    min-height: 40px;
+    border-radius: var(--ui-radio-chico);
+    border-width: 1px;
+    font-size: .875rem;
+    font-weight: 600;
+    line-height: 1.4;
+    padding: .5rem .85rem;
+    box-shadow: none;
+    text-decoration: none;
+}
+body.app-panel .btn:not(.btn-profes),
+body.app-panel .pagina-boton-flotante { display: inline-flex; align-items: center; justify-content: center; gap: .4rem; }
+body.app-panel .btn-sm { min-height: 36px; padding: .35rem .65rem; }
+body.app-panel .btn-lg { min-height: 44px; padding: .65rem 1rem; }
+body.app-panel .btn-primary,
+body.app-panel .btn-success:not(.btn-profes):not(.control-estado),
+body.app-panel .pagina-boton-flotante { color: #fff; background: var(--marca-legible); border-color: var(--marca-legible); }
+body.app-panel .btn-primary:hover,
+body.app-panel .btn-success:not(.btn-profes):not(.control-estado):hover,
+body.app-panel .pagina-boton-flotante:hover { color: #fff; background: var(--marca-oscuro); border-color: var(--marca-oscuro); }
+body.app-panel :is(.btn-secondary, .btn-outline-secondary, .btn-info, .btn-outline-info, .btn-outline-primary, .btn-outline-success):not(.active):not(.control-estado) { color: var(--ui-texto); background: var(--ui-superficie); border-color: var(--ui-borde-campo); }
+body.app-panel :is(.btn-secondary, .btn-outline-secondary, .btn-info, .btn-outline-info, .btn-outline-primary, .btn-outline-success):not(.active):not(.control-estado):hover { color: var(--marca-legible); background: var(--marca-suave); border-color: var(--marca-legible); }
+body.app-panel .btn-check:checked + .btn:not(.control-estado),
+body.app-panel .btn.active:not(.btn-danger):not(.btn-warning):not(.control-estado) { color: #fff; background: var(--marca-legible); border-color: var(--marca-legible); }
+body.app-panel .btn:focus-visible,
+body.app-panel .pagina-boton-flotante:focus-visible { outline: 3px solid var(--marca-tenue); outline-offset: 2px; box-shadow: none; }
+body.app-panel .btn :is(.bi, .fa, .fas) { font-size: 1rem; line-height: 1; }
+body.app-panel .btn-link { color: var(--marca-legible); background: transparent; border-color: transparent; }
+body.app-panel .actions-group { display: inline-flex; gap: .4rem; align-items: center; }
+body.app-panel .btn-action-icon,
+body.app-panel .actions-group .btn { width: 38px !important; min-width: 38px !important; height: 38px !important; min-height: 38px; padding: .25rem; display: inline-flex; align-items: center; justify-content: center; border-radius: var(--ui-radio-chico); }
+body.app-panel input.form-control:not([type="checkbox"]):not([type="radio"]),
+body.app-panel .form-select,
+body.app-panel select.form-control { min-height: 40px; font-size: .875rem; border-radius: var(--ui-radio-chico); border-color: var(--ui-borde-campo); }
+body.app-panel .input-group-text { font-size: .875rem; border-color: var(--ui-borde-campo); }
+body.app-panel textarea.form-control { font-size: .875rem; border-radius: var(--ui-radio-chico); }
+body.app-panel .form-control:focus,
+body.app-panel .form-select:focus { border-color: var(--marca-legible); box-shadow: 0 0 0 .2rem var(--marca-tenue); }
+
+body.app-panel :is(.listado-toolbar, .ui-filter-card, .sa-filters, .dashboard-filter) .form-control,
+body.app-panel :is(.listado-toolbar, .ui-filter-card, .sa-filters, .dashboard-filter) .form-select,
+body.app-panel :is(.listado-toolbar, .ui-filter-card, .sa-filters, .dashboard-filter) .btn,
+body.app-panel :is(.listado-toolbar, .ui-filter-card, .sa-filters, .dashboard-filter) .nav-link {
+    min-height: 40px;
+    height: 40px;
+    font-size: .875rem;
+    line-height: 1.4;
+    border-radius: var(--ui-radio-chico);
+    border: 1px solid var(--ui-borde-campo);
+}
+body.app-panel :is(.listado-toolbar, .ui-filter-card, .sa-filters, .dashboard-filter) .btn,
+body.app-panel :is(.listado-toolbar, .ui-filter-card, .sa-filters, .dashboard-filter) .nav-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .4rem;
+    padding: .5rem .85rem;
+    font-weight: 600;
+    white-space: nowrap;
+    box-shadow: none;
+    text-decoration: none;
+}
+body.app-panel :is(.listado-toolbar, .ui-filter-card, .sa-filters, .dashboard-filter) .btn .bi { font-size: 1rem; line-height: 1; }
+body.app-panel :is(.listado-toolbar, .ui-filter-card, .sa-filters, .dashboard-filter) .btn-primary,
+body.app-panel :is(.listado-toolbar, .ui-filter-card, .sa-filters, .dashboard-filter) .nav-link.active {
+    color: #fff;
+    background: var(--marca-legible);
+    border-color: var(--marca-legible);
+    box-shadow: none;
+}
+body.app-panel :is(.listado-toolbar, .ui-filter-card, .sa-filters, .dashboard-filter) .btn-primary:hover,
+body.app-panel :is(.listado-toolbar, .ui-filter-card, .sa-filters, .dashboard-filter) .nav-link.active:hover { background: var(--marca-oscuro); border-color: var(--marca-oscuro); }
+body.app-panel :is(.listado-toolbar, .ui-filter-card, .sa-filters, .dashboard-filter) .btn-outline-secondary,
+body.app-panel :is(.listado-toolbar, .ui-filter-card, .sa-filters, .dashboard-filter) .nav-link:not(.active) { color: var(--ui-texto); background: var(--ui-superficie); border-color: var(--ui-borde-campo); }
+body.app-panel :is(.listado-toolbar, .ui-filter-card, .sa-filters, .dashboard-filter) .btn-outline-secondary:hover,
+body.app-panel :is(.listado-toolbar, .ui-filter-card, .sa-filters, .dashboard-filter) .nav-link:not(.active):hover { background: var(--marca-suave); border-color: var(--marca-legible); color: var(--marca-legible); }
+body.app-panel :is(.listado-toolbar, .ui-filter-card, .sa-filters, .dashboard-filter) .btn:focus-visible,
+body.app-panel :is(.listado-toolbar, .ui-filter-card, .sa-filters, .dashboard-filter) .nav-link:focus-visible { outline: 3px solid var(--marca-tenue); outline-offset: 2px; }
+body.app-panel :is(.listado-toolbar, .ui-filter-card, .sa-filters, .dashboard-filter) .form-control,
+body.app-panel :is(.listado-toolbar, .ui-filter-card, .sa-filters, .dashboard-filter) .form-select { color: var(--ui-texto); background-color: var(--ui-superficie); box-shadow: none; }
+body.app-panel :is(.listado-toolbar, .ui-filter-card, .sa-filters, .dashboard-filter) .form-control:focus,
+body.app-panel :is(.listado-toolbar, .ui-filter-card, .sa-filters, .dashboard-filter) .form-select:focus { border-color: var(--marca-legible); box-shadow: 0 0 0 .2rem var(--marca-tenue); }
+body.app-panel :is(.listado-toolbar, .ui-filter-card, .sa-filters, .dashboard-filter) .form-select { max-width: 100%; }
+body.app-panel :is(.listado-toolbar, .ui-filter-card, .sa-filters, .dashboard-filter) .nav { align-items: center; gap: .5rem; }
+body.app-panel :is(.listado-toolbar, .ui-filter-card, .sa-filters, .dashboard-filter) .input-group { gap: .5rem; flex-wrap: nowrap; }
+body.app-panel :is(.listado-toolbar, .ui-filter-card, .sa-filters, .dashboard-filter) .input-group > .form-control,
+body.app-panel :is(.listado-toolbar, .ui-filter-card, .sa-filters, .dashboard-filter) .input-group > .btn { border-radius: var(--ui-radio-chico) !important; margin-left: 0 !important; }
+@media (max-width: 575.98px) {
+    body.app-panel :is(.listado-toolbar, .ui-filter-card, .sa-filters, .dashboard-filter) .input-group { flex-wrap: wrap; }
+    body.app-panel :is(.listado-toolbar, .ui-filter-card, .sa-filters, .dashboard-filter) .input-group > .form-control { flex-basis: 100%; width: 100%; }
+    body.app-panel :is(.listado-toolbar, .ui-filter-card, .sa-filters, .dashboard-filter) .input-group > .btn { flex: 1; }
+}
+
+/* Controles equivalentes de los componentes de calendario y selección. */
+body.app-panel .fc { --fc-button-bg-color: var(--ui-superficie); --fc-button-border-color: var(--ui-borde-campo); --fc-button-text-color: var(--ui-texto); --fc-button-hover-bg-color: var(--marca-suave); --fc-button-hover-border-color: var(--marca-legible); --fc-button-active-bg-color: var(--marca-legible); --fc-button-active-border-color: var(--marca-legible); }
+body.app-panel .fc .fc-button { min-height: 40px; padding: .5rem .85rem; border-radius: var(--ui-radio-chico); font-size: .875rem; font-weight: 600; line-height: 1.4; box-shadow: none; }
+body.app-panel .fc .fc-button-primary:not(:disabled).fc-button-active { color: #fff; }
+body.app-panel .chosen-container { font-size: .875rem; }
+body.app-panel .chosen-container-single .chosen-single { height: 40px; line-height: 38px; border-radius: var(--ui-radio-chico); border-color: var(--ui-borde-campo); background: var(--ui-superficie); box-shadow: none; }
+body.app-panel .chosen-container-multi .chosen-choices { min-height: 40px; border-radius: var(--ui-radio-chico); border-color: var(--ui-borde-campo); background: var(--ui-superficie); box-shadow: none; }
+body.app-panel .form-control:disabled,
+body.app-panel .form-select:disabled { background-color: #f5f7f7; color: var(--ui-apagado); }
+@media (max-width: 991.98px) {
+    body.app-panel .ui-filter-card .row.flex-nowrap { flex-wrap: wrap !important; }
+    body.app-panel .ui-filter-card .row.flex-nowrap > .col { flex: 1 1 10rem; }
+}

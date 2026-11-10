@@ -22,8 +22,12 @@
         <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
         <link rel="stylesheet" type="text/css" href="{{ asset('assets/css/chosen.css') }}" />
     {% endblock %}
+    {% if app.user %}
+        {# Se carga después de los estilos particulares para mantener un criterio único. #}
+        <link rel="stylesheet" href="{{ asset('assets/css/controles.css') }}?v=20261110-global">
+    {% endif %}
 </head>
-<body>
+<body{% if app.user %} class="app-panel"{% endif %}>
     <div class="d-flex" id="wrapper">
         {% if app.user %}
             {{ include('_sidebar.html.twig') }}

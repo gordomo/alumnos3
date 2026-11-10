@@ -49,19 +49,19 @@
                                                             <input type="radio" class="btn-check asistencia-radio" name="asistencias[{{ asistencia.alumno.id }}]" 
                                                                    id="sin_registro_{{ asistencia.alumno.id }}" value="sin_registro"
                                                                    {% if asistencia.presente is null %}checked{% endif %}>
-                                                            <label class="btn btn-outline-secondary" for="sin_registro_{{ asistencia.alumno.id }}" title="Sin dato registrado (no afecta el porcentaje)">
+                                                            <label class="btn btn-outline-secondary control-estado" for="sin_registro_{{ asistencia.alumno.id }}" title="Sin dato registrado (no afecta el porcentaje)">
                                                                 -
                                                             </label>
                                                             <input type="radio" class="btn-check asistencia-radio" name="asistencias[{{ asistencia.alumno.id }}]" 
                                                                    id="presente_{{ asistencia.alumno.id }}" value="1"
                                                                    {% if asistencia.presente is same as(true) %}checked{% endif %}>
-                                                            <label class="btn btn-outline-success" for="presente_{{ asistencia.alumno.id }}" title="Presente">
+                                                            <label class="btn btn-outline-success control-estado" for="presente_{{ asistencia.alumno.id }}" title="Presente">
                                                                 <i class="bi bi-check"></i>
                                                             </label>
                                                             <input type="radio" class="btn-check asistencia-radio" name="asistencias[{{ asistencia.alumno.id }}]" 
                                                                    id="ausente_{{ asistencia.alumno.id }}" value="0"
                                                                    {% if asistencia.presente is same as(false) %}checked{% endif %}>
-                                                            <label class="btn btn-outline-danger" for="ausente_{{ asistencia.alumno.id }}" title="Ausente">
+                                                            <label class="btn btn-outline-danger control-estado" for="ausente_{{ asistencia.alumno.id }}" title="Ausente">
                                                                 <i class="bi bi-x"></i>
                                                             </label>
                                                         </div>

@@ -201,7 +201,7 @@
                                                 {% set reemplazante = asistencias[curso.id][fecha][profe.id].reemplazante %}
                                             {% endif %}
                                         {% endif %}
-                                        <button class="btn {{ btnClass }} btn-sm dropdown-toggle btn-profes" type="button" id="dropdownMenuButton{{ curso.id }}_{{ dayIndex }}_{{ profe.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <button class="btn {{ btnClass }} btn-sm dropdown-toggle btn-profes control-estado" type="button" id="dropdownMenuButton{{ curso.id }}_{{ dayIndex }}_{{ profe.id }}" data-bs-toggle="dropdown" aria-expanded="false">
                                             {{ profe.apellido }}, {{ profe.nombre }}
                                             {% if reemplazante %}
                                                 <br><i style="color: yellow;">{{ reemplazante }}</i>

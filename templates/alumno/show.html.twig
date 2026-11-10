@@ -217,7 +217,7 @@
                 <a href="{{ path('app_alumno_edit', {'id': alumno.id}) }}" class="btn btn-primary" style="white-space: nowrap;">
                     <i class="bi bi-pencil"></i> Editar
                 </a>
-                <a href="{{ path('app_alumno_deudas', {'id': alumno.id, 'return_url': app.request.uri}) }}" class="btn btn-warning" style="white-space: nowrap;">
+                <a href="{{ path('app_alumno_deudas', {'id': alumno.id, 'return_url': app.request.uri}) }}" class="btn btn-outline-secondary" style="white-space: nowrap;">
                     <i class="bi bi-cash-coin"></i> Gestionar Deudas
                 </a>
                 <a href="{{ path('app_alumnos_pagos_new', {'id': alumno.id}) }}" class="btn btn-success" style="white-space: nowrap;">
