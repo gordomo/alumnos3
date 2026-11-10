@@ -1,0 +1,71 @@
+/* Esta hoja se carga exclusivamente desde templates/admin/_layout.html.twig. */
+.superadmin-panel { max-width: 1440px; margin: 0 auto; padding: 1.25rem .75rem 2.5rem; color: var(--ui-texto); }
+.superadmin-panel > .pagina { padding: 0; margin: 0; }
+.superadmin-panel .sa-toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem; }
+.superadmin-panel .sa-toolbar p { margin: 0; color: var(--ui-apagado); max-width: 65ch; font-size: .9rem; line-height: 1.6; }
+.superadmin-panel .sa-toolbar-actions { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem; }
+.superadmin-panel .card { box-shadow: none; border-color: var(--ui-borde); margin-bottom: 1rem; }
+.superadmin-panel .card-body { padding: 1.3rem; }
+.superadmin-panel .card-header { padding: 1.1rem 1.3rem; background: var(--ui-superficie); border-color: var(--ui-borde); font-size: .95rem; }
+.superadmin-panel .card-header h2, .superadmin-panel .card-header h3, .superadmin-panel .card-header h4, .superadmin-panel .card-header h5, .superadmin-panel .card-header h6 { font-size: 1rem; font-weight: 650; line-height: 1.5; }
+.superadmin-panel .card-header > .bi { display: inline-flex; align-items: center; justify-content: center; width: 2rem; height: 2rem; margin-right: .45rem; color: var(--marca-legible); background: var(--marca-suave); border-radius: .6rem; }
+.superadmin-panel .sa-section-title { font-size: 1rem; font-weight: 650; margin: 0 0 .3rem; }
+.superadmin-panel .sa-description { color: var(--ui-apagado); font-size: .82rem; line-height: 1.6; margin: 0 0 1rem; }
+.superadmin-panel .form-label { font-size: .875rem; font-weight: 600; }
+.superadmin-panel .form-control, .superadmin-panel .form-select { min-height: 42px; }
+.superadmin-panel .form-text { color: var(--ui-apagado); font-size: .82rem; line-height: 1.6; }
+.superadmin-panel .form-control:disabled { background: #f5f7f7; }
+.superadmin-panel .sa-filters { padding: 1.2rem 1.3rem; background: var(--ui-superficie); border: 1px solid var(--ui-borde); border-radius: var(--ui-radio); margin-bottom: 1.25rem; }
+.superadmin-panel .sa-filter-title { font-size: .8rem; color: var(--ui-apagado); font-weight: 600; margin: 0 0 1rem; }
+.superadmin-panel .sa-tabs { display: flex; flex-wrap: wrap; gap: .5rem; }
+.superadmin-panel .sa-tabs .btn { border-radius: 2rem; padding: .45rem .95rem; }
+.superadmin-panel .table { margin-bottom: 0; font-size: .875rem; }
+.superadmin-panel .table > :not(caption) > * > * { padding: .95rem 1rem; border-bottom-color: var(--ui-borde); vertical-align: middle; }
+.superadmin-panel .table > thead > tr > th { background: #f7faf9; color: var(--ui-apagado); font-size: .78rem; font-weight: 600; white-space: nowrap; }
+.superadmin-panel .table-striped > tbody > tr:nth-of-type(odd) > * { --bs-table-accent-bg: transparent; }
+.superadmin-panel .sa-table-card > .card-body { padding: 0; }
+.superadmin-panel .sa-table-footer { border-top: 1px solid var(--ui-borde); padding: 1rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .75rem; }
+.superadmin-panel .sa-table-footer .pagination { margin: 0; }
+.superadmin-panel .sa-row-actions { display: flex; align-items: center; justify-content: flex-end; gap: .4rem; white-space: nowrap; }
+.superadmin-panel .sa-secondary { color: var(--ui-apagado); font-size: .78rem; margin-top: .25rem; line-height: 1.5; overflow-wrap: anywhere; }
+.superadmin-panel .sa-name { font-weight: 600; overflow-wrap: anywhere; }
+.superadmin-panel .sa-empty { padding: 2.5rem 1.25rem; text-align: center; color: var(--ui-apagado); font-size: .9rem; }
+.superadmin-panel .sa-empty > .bi { display: block; font-size: 1.7rem; margin-bottom: .65rem; color: var(--marca-legible); }
+.superadmin-panel .sa-empty p { margin: 0; }
+.superadmin-panel .badge { padding: .4rem .6rem; font-size: .73rem; font-weight: 600; border-radius: .4rem; }
+.superadmin-panel .badge.bg-success { background: #eaf6ee !important; color: #24683a !important; }
+.superadmin-panel .badge.bg-warning { background: #fff1d6 !important; color: #795211 !important; }
+.superadmin-panel .badge.bg-danger { background: #fcecee !important; color: #a62d3c !important; }
+.superadmin-panel .badge.bg-secondary { background: #eef1f2 !important; color: #53616a !important; }
+.superadmin-panel .badge.bg-primary { background: var(--marca-suave) !important; color: var(--marca-legible) !important; }
+.superadmin-panel .sa-metric { height: 100%; padding: 1.15rem 1.3rem; border: 1px solid var(--ui-borde); border-radius: var(--ui-radio); background: var(--ui-superficie); }
+.superadmin-panel .sa-metric > span { display: block; color: var(--ui-apagado); font-size: .8rem; }
+.superadmin-panel .sa-metric strong { display: block; font-size: 1.8rem; font-weight: 650; margin: .35rem 0; letter-spacing: -.04em; line-height: 1.25; }
+.superadmin-panel .sa-metric small { color: var(--ui-apagado); }
+.superadmin-panel a.sa-metric { display: block; color: inherit; text-decoration: none; }
+.superadmin-panel a.sa-metric:hover { border-color: var(--marca-legible); }
+.superadmin-panel .sa-actions { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-top: 1.25rem; padding: 1rem 1.25rem; border: 1px solid var(--ui-borde); border-radius: var(--ui-radio); background: var(--ui-superficie); }
+.superadmin-panel .sa-actions-sticky { position: sticky; bottom: 1rem; z-index: 5; box-shadow: 0 4px 18px rgba(19,44,43,.08); }
+.superadmin-panel .sa-detail-list dt { color: var(--ui-apagado); font-size: .82rem; font-weight: 500; }
+.superadmin-panel .sa-detail-list dd { font-size: .9rem; margin-bottom: 1rem; overflow-wrap: anywhere; }
+.superadmin-panel .sa-danger { margin-top: 1.5rem; border: 1px solid var(--ui-borde); border-radius: var(--ui-radio-chico); background: var(--ui-superficie); }
+.superadmin-panel .sa-danger summary { padding: 1rem 1.25rem; cursor: pointer; color: #a62d3c; font-weight: 600; font-size: .875rem; }
+.superadmin-panel .sa-danger > div { padding: 0 1.25rem 1.25rem; }
+.superadmin-panel .sa-form-errors ul { list-style: none; padding: 0; color: #a62d3c; font-size: .82rem; margin: .35rem 0; }
+.superadmin-panel .sa-compact { max-width: 900px; margin: 0 auto; }
+.superadmin-panel .sa-config .row.g-4 { --bs-gutter-x: 1rem; --bs-gutter-y: 1rem; }
+.superadmin-panel .sa-config .card-header { border-bottom: 0; padding-bottom: 0; }
+.superadmin-panel .sa-config .form-check { padding: 1rem 1rem 1rem 2.7rem; border: 1px solid var(--ui-borde); border-radius: var(--ui-radio-chico); background: #fafcfb; }
+.superadmin-panel .sa-config .form-check-input { cursor: pointer; }
+@media (max-width: 767.98px) {
+    .superadmin-panel { padding: 1rem .25rem 2rem; }
+    .superadmin-panel .card-body, .superadmin-panel .sa-filters { padding: 1rem; }
+    .superadmin-panel .sa-toolbar { align-items: flex-start; }
+    .superadmin-panel .sa-toolbar-actions { width: 100%; }
+    .superadmin-panel .sa-metric strong { font-size: 1.5rem; }
+    .superadmin-panel .sa-actions-sticky { bottom: .5rem; }
+}
+.superadmin-panel .sa-cobranza-metric .display-6, .superadmin-panel .sa-cobranza-metric .h3 { font-size: clamp(1.3rem, 2vw, 1.8rem); font-weight: 650; letter-spacing: -.04em; color: var(--ui-texto) !important; margin: .4rem 0 !important; }
+.superadmin-panel .sa-cobranza-metric .text-uppercase { text-transform: none !important; font-size: .8rem; }
+.superadmin-panel .sa-cobranza-metric { margin-bottom: 0; }
+.superadmin-panel .sa-cobranza-metric:hover { border-color: var(--marca-legible); }

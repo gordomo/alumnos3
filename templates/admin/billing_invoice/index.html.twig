@@ -1,14 +1,16 @@
-{% extends 'base.html.twig' %}
+{% extends 'admin/_layout.html.twig' %}
 
 {% block title %}Cobranzas{% endblock %}
 
 {% block panelTitle %}Cobranzas{% endblock %}
 
-{% block body %}
+{% block admin_body %}
 <div class="container-fluid pagina">
+    <div class="sa-toolbar"><p>Consultá saldos, revisá comprobantes y seguí el estado de las cobranzas.</p></div>
     <!-- Filtros -->
     <div class="card mb-4">
         <div class="card-body">
+            <h2 class="sa-filter-title">Buscar y filtrar</h2>
             <form method="get" action="{{ path('admin_billing_invoice_index') }}" class="row g-3">
                 <div class="col-md-4">
                     <label for="instituto" class="form-label">{{ Term('instituto') }}</label>
@@ -35,7 +37,7 @@
                     <button type="submit" class="btn btn-primary">
                         <i class="bi bi-funnel"></i> Filtrar
                     </button>
-                    <a href="{{ path('admin_billing_invoice_index') }}" class="btn btn-secondary ms-2">
+                    <a href="{{ path('admin_billing_invoice_index') }}" class="btn btn-outline-secondary ms-2">
                         <i class="bi bi-x-circle"></i> Limpiar
                     </a>
                 </div>
@@ -45,9 +47,9 @@
 
     <!-- Estadísticas -->
     <div class="row g-3 mb-4">
-        <div class="col-md-3">
+        <div class="col-6 col-xl-3">
             <a href="{{ path('admin_billing_invoice_index', {'status': 'pending_approval'}) }}" class="text-decoration-none">
-                <div class="card border-warning h-100">
+                <div class="card h-100 sa-cobranza-metric">
                     <div class="card-body">
                         <div class="text-uppercase text-muted small">Esperan que revisemos</div>
                         <div class="display-6 mb-0 text-warning">{{ stats.pending_approval }}</div>
@@ -56,9 +58,9 @@
                 </div>
             </a>
         </div>
-        <div class="col-md-3">
+        <div class="col-6 col-xl-3">
             <a href="{{ path('admin_billing_invoice_index', {'status': 'pending'}) }}" class="text-decoration-none">
-                <div class="card border-danger h-100">
+                <div class="card h-100 sa-cobranza-metric">
                     <div class="card-body">
                         <div class="text-uppercase text-muted small">Vencidas sin pagar</div>
                         <div class="display-6 mb-0 text-danger">{{ stats.vencidas }}</div>
@@ -67,8 +69,8 @@
                 </div>
             </a>
         </div>
-        <div class="col-md-3">
-            <div class="card border-primary h-100">
+        <div class="col-6 col-xl-3">
+            <div class="card h-100 sa-cobranza-metric">
                 <div class="card-body">
                     <div class="text-uppercase text-muted small">A cobrar</div>
                     <div class="h3 mb-0 text-primary">${{ stats.a_cobrar|number_format(2, ',', '.') }}</div>
@@ -76,8 +78,8 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card border-success h-100">
+        <div class="col-6 col-xl-3">
+            <div class="card h-100 sa-cobranza-metric">
                 <div class="card-body">
                     <div class="text-uppercase text-muted small">Pagadas</div>
                     <div class="display-6 mb-0 text-success">{{ stats.paid }}</div>
@@ -102,7 +104,7 @@
                                 <th>{{ Term('instituto') }}</th>
                                 <th>Período</th>
                                 <th>{{ Term('alumnos') }}</th>
-                                <th>Monto</th>
+                                <th class="text-end">Monto</th>
                                 <th>Vence</th>
                                 <th>Estado</th>
                                 <th>Método</th>
@@ -111,12 +113,12 @@
                         </thead>
                         <tbody>
                             {% for invoice in invoices %}
-                                <tr class="{% if invoice.isPendingApproval %}table-warning{% elseif invoice.isPending and invoice.diasDeAtraso > 0 %}table-danger{% endif %}">
+                                <tr>
                                     <td>#{{ invoice.id }}</td>
                                     <td>{{ invoice.instituto.nombre }}</td>
                                     <td>{{ invoice.getFormattedPeriod() }}</td>
                                     <td>{{ invoice.activeStudentsCount }}</td>
-                                    <td>${{ invoice.totalAmount|number_format(2, ',', '.') }}</td>
+                                    <td class="text-end text-nowrap">${{ invoice.totalAmount|number_format(2, ',', '.') }}</td>
                                     <td>
                                         {% if invoice.dueDate %}
                                             {{ invoice.dueDate|date('d/m/Y') }}
@@ -148,7 +150,7 @@
                                         {% endif %}
                                     </td>
                                     <td>
-                                        <a href="{{ path('admin_billing_invoice_show', {'id': invoice.id}) }}" class="btn btn-sm btn-primary">
+                                        <a href="{{ path('admin_billing_invoice_show', {'id': invoice.id}) }}" class="btn btn-sm btn-outline-primary">
                                             <i class="bi bi-eye"></i> Ver
                                         </a>
                                     </td>

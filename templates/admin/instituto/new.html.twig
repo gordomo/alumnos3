@@ -1,4 +1,4 @@
-{% extends 'base.html.twig' %}
+{% extends 'admin/_layout.html.twig' %}
 
 {% block title %}Nuevo {{ Term('instituto') }}{% endblock %}
 {% block panelTitle %}Nuevo {{ Term('instituto') }}{% endblock %}
@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="{{ asset('assets/css/instituto-form.css') }}?v=20261110">
 {% endblock %}
 
-{% block body %}
+{% block admin_body %}
 <div class="container-fluid pagina">
     <div class="instituto-editor">
         <div class="instituto-editor-intro">

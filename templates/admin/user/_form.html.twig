@@ -1,29 +1,23 @@
-{{ form_start(form, {'attr': {'class': 'form-horizontal'}}) }}
-<div class="form-group">
-    <div class="row mb-3">
-        <div class="col-md-6">
-            {{ form_label(form.email, 'Email', {'label_attr': {'class': 'form-label'}}) }}
-            {{ form_widget(form.email, {'attr': {'class': 'form-control'}}) }}
-            <small class="form-error text-danger">
+{{ form_start(form, {'attr': {'class': 'sa-form-errors'}}) }}
+{{ form_errors(form) }}
+<section class="card">
+    <div class="card-header"><i class="bi bi-key" aria-hidden="true"></i> Datos de acceso</div>
+    <div class="card-body">
+        <p class="sa-description">Estas credenciales permiten ingresar a la administración de la plataforma.</p>
+        <div class="row g-3">
+            <div class="col-md-6">
+                {{ form_label(form.email, 'Correo electrónico', {'label_attr': {'class': 'form-label'}}) }}
+                {{ form_widget(form.email, {'attr': {'class': 'form-control', 'autocomplete': 'off'}}) }}
                 {{ form_errors(form.email) }}
-            </small>
-        </div>
-        <div class="col-md-6">
-            {{ form_label(form.password, 'Contraseña', {'label_attr': {'class': 'form-label'}}) }}
-            {{ form_widget(form.password, {'attr': {'class': 'form-control'}}) }}
-            {% if form.password.vars.help %}
-                <small class="form-text text-muted">{{ form.password.vars.help }}</small>
-            {% endif %}
-            <small class="form-error text-danger">
+            </div>
+            <div class="col-md-6">
+                {{ form_label(form.password, form.password.vars.required ? 'Contraseña inicial' : 'Nueva contraseña', {'label_attr': {'class': 'form-label'}}) }}
+                {{ form_widget(form.password, {'attr': {'class': 'form-control', 'autocomplete': 'new-password', 'aria-describedby': form.password.vars.id ~ '_help'}}) }}
+                <p id="{{ form.password.vars.id }}_help" class="form-text mb-0">{{ form.password.vars.help }}</p>
                 {{ form_errors(form.password) }}
-            </small>
+            </div>
         </div>
     </div>
-    <div class="row">
-        <div class="col text-end">
-            {{ include('components/back_button.html.twig', {'default_path': path('admin_user_index')}) }}
-            <button class="btn btn-success">{{ button_label|default('Guardar') }}</button>
-        </div>
-    </div>
-</div>
+</section>
+<div class="sa-actions sa-actions-sticky"><span class="small text-muted">Los cambios se aplican al guardar.</span><div class="d-flex gap-2">{{ include('components/back_button.html.twig', {'default_path': path('admin_user_index')}) }}<button type="submit" class="btn btn-primary">{{ button_label|default('Guardar cambios') }}</button></div></div>
 {{ form_end(form) }}

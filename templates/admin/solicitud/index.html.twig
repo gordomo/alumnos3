@@ -1,11 +1,12 @@
-{% extends 'base.html.twig' %}
+{% extends 'admin/_layout.html.twig' %}
 
 {% block title %}Solicitudes de alta{% endblock %}
 {% block panelTitle %}Solicitudes de alta{% endblock %}
 
-{% block body %}
+{% block admin_body %}
 <div class="container-fluid pagina">
-    <div class="d-flex flex-wrap gap-2 mb-4">
+    <div class="sa-toolbar"><p>Revisá las solicitudes y seguí el alta de nuevas instituciones.</p></div>
+    <div class="sa-filters sa-tabs" aria-label="Filtrar solicitudes por estado">
         {% set filtros = {'': 'Todas', 'pendiente': 'Pendientes', 'confirmada': 'Confirmadas', 'descartada': 'Descartadas'} %}
         {% for valor, etiqueta in filtros %}
             <a href="{{ path('admin_solicitud_index', valor ? {'estado': valor} : {}) }}"
@@ -18,7 +19,7 @@
         {% endfor %}
     </div>
 
-    <div class="card shadow-sm">
+    <div class="card sa-table-card">
         <div class="card-body p-0">
             {% if solicitudes|length > 0 %}
                 <div class="table-responsive">
@@ -35,7 +36,7 @@
                         </thead>
                         <tbody>
                             {% for solicitud in solicitudes %}
-                                <tr class="{{ solicitud.estado == 'pendiente' ? 'table-warning' : '' }}">
+                                <tr>
                                     <td class="text-nowrap">{{ solicitud.fechaSolicitud|date('d/m/Y H:i') }}</td>
                                     <td>
                                         <strong>{{ solicitud.nombreInstituto }}</strong>
@@ -66,7 +67,7 @@
                                         {% endif %}
                                     </td>
                                     <td class="text-end">
-                                        <a href="{{ path('admin_solicitud_show', {'id': solicitud.id}) }}" class="btn btn-sm btn-primary">
+                                        <a href="{{ path('admin_solicitud_show', {'id': solicitud.id}) }}" class="btn btn-sm btn-outline-primary">
                                             <i class="bi bi-eye"></i> Ver
                                         </a>
                                     </td>

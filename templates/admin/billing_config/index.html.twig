@@ -1,12 +1,13 @@
-{% extends 'base.html.twig' %}
+{% extends 'admin/_layout.html.twig' %}
 
 {% block title %}Configuración de la suscripción{% endblock %}
 
 {% block panelTitle %}Configuración de la suscripción{% endblock %}
 
-{% block body %}
+{% block admin_body %}
 <div class="container-fluid pagina">
-    <form method="post">
+    <div class="sa-toolbar"><p>Definí precios, plazos y medios de pago de las suscripciones.</p></div>
+    <form method="post" class="sa-config">
         <input type="hidden" name="_token" value="{{ csrf_token('billing_config') }}">
 
         <div class="row g-4">
@@ -26,7 +27,7 @@
                             </div>
                             <div class="form-text">
                                 Es el valor por defecto. Cada {{ term('instituto') }} puede tener su propio precio y un mínimo
-                                mensual desde su ficha, y ese pisa a este.
+                                mensual desde su ficha, Ese importe tiene prioridad sobre el global.
                             </div>
                         </div>
                         <div class="mb-0">
@@ -116,7 +117,7 @@
                     <div class="card-body">
                         <div class="mb-3">
                             <label class="form-label" for="mp_access_token">Access Token</label>
-                            <input type="text" class="form-control font-monospace" id="mp_access_token"
+                            <input type="password" autocomplete="new-password" class="form-control font-monospace" id="mp_access_token"
                                    name="mp_access_token" value="{{ config.mpAccessToken }}"
                                    placeholder="APP_USR-... o TEST-...">
                         </div>
@@ -151,7 +152,7 @@
             </div>
         </div>
 
-        <div class="mt-4 mb-5">
+        <div class="sa-actions sa-actions-sticky">
             <button class="btn btn-primary"><i class="bi bi-save"></i> Guardar configuración</button>
             {% if config.updatedAt %}
                 <span class="text-muted ms-2 small">Última modificación: {{ config.updatedAt|date('d/m/Y H:i') }}</span>

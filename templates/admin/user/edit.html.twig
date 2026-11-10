@@ -1,20 +1,10 @@
-{% extends 'base.html.twig' %}
-
-{% block title %}Editar Usuario Administrador{% endblock %}
-
-{% block panelTitle %}Editar Usuario Administrador{% endblock %}
-
-{% block body %}
-<div class="container-fluid pagina d-flex justify-content-center">
-    <div class="col-lg-12">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                {{ include('admin/user/_form.html.twig', {'button_label': 'Guardar'}) }}
-            </div>
-        </div>
-        <div class="mt-3 text-center">
-            {{ include('admin/user/_delete_form.html.twig') }}
-        </div>
-    </div>
-</div>
+{% extends 'admin/_layout.html.twig' %}
+{% block title %}Editar administrador{% endblock %}
+{% block panelTitle %}Editar administrador{% endblock %}
+{% block admin_body %}
+<div class="container-fluid pagina"><div class="sa-compact">
+    <div class="sa-toolbar"><p>Actualizá el correo de acceso o asigná una nueva contraseña.</p></div>
+    {{ include('admin/user/_form.html.twig', {'button_label': 'Guardar cambios'}) }}
+    {{ include('admin/user/_delete_form.html.twig') }}
+</div></div>
 {% endblock %}

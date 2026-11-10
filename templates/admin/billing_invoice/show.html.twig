@@ -1,32 +1,33 @@
-{% extends 'base.html.twig' %}
+{% extends 'admin/_layout.html.twig' %}
 
 {% block title %}Factura #{{ invoice.id }}{% endblock %}
 
 {% block panelTitle %}Factura #{{ invoice.id }}{% endblock %}
 
-{% block body %}
+{% block admin_body %}
 <div class="container-fluid pagina">
+    <div class="sa-toolbar"><p>Revisá el detalle de la factura y la documentación del pago.</p></div>
     <div class="mb-3">
-        <a href="{{ path('admin_billing_invoice_index') }}" class="btn btn-secondary">
+        <a href="{{ path('admin_billing_invoice_index') }}" class="btn btn-outline-secondary">
             <i class="bi bi-arrow-left"></i> Volver
         </a>
     </div>
 
-    <div class="row">
-        <div class="col-md-8">
+    <div class="row g-3">
+        <div class="col-lg-8">
             <!-- Información de la Factura -->
             <div class="card mb-4">
-                <div class="card-header {% if invoice.isPaid %}bg-success{% elseif invoice.isPendingApproval %}bg-warning{% elseif invoice.isRejected %}bg-danger{% else %}bg-secondary{% endif %} text-white">
+                <div class="card-header">
                     <h5 class="mb-0">
                         Factura #{{ invoice.id }}
                         {% if invoice.isPaid %}
-                            <span class="badge bg-light text-success ms-2">Pagada</span>
+                            <span class="badge bg-success ms-2">Pagada</span>
                         {% elseif invoice.isPendingApproval %}
-                            <span class="badge bg-light text-warning ms-2">Pendiente de Aprobación</span>
+                            <span class="badge bg-warning ms-2">Pendiente de Aprobación</span>
                         {% elseif invoice.isPending %}
-                            <span class="badge bg-light text-info ms-2">Pendiente</span>
+                            <span class="badge bg-secondary ms-2">Pendiente</span>
                         {% elseif invoice.isRejected %}
-                            <span class="badge bg-light text-danger ms-2">Rechazada</span>
+                            <span class="badge bg-danger ms-2">Rechazada</span>
                         {% else %}
                             <span class="badge bg-light text-secondary ms-2">Cancelada</span>
                         {% endif %}
@@ -68,7 +69,7 @@
                     <div class="row mb-3">
                         <div class="col-12">
                             <h6 class="text-muted">Detalles de la Factura</h6>
-                            <table class="table align-middle">
+                            <div class="table-responsive"><table class="table align-middle">
                                 <thead class="table-light">
                                     <tr>
                                         <th>Concepto</th>
@@ -109,7 +110,7 @@
                                         </th>
                                     </tr>
                                 </tfoot>
-                            </table>
+                            </table></div>
                         </div>
                     </div>
 
@@ -125,7 +126,7 @@
             </div>
         </div>
 
-        <div class="col-md-4">
+        <div class="col-lg-4">
             <!-- Comprobante de Pago -->
             {% if invoice.paymentProofPath %}
                 <div class="card mb-4">
@@ -134,7 +135,7 @@
                     </div>
                     <div class="card-body">
                         <p><strong>Archivo:</strong> {{ invoice.paymentProofPath }}</p>
-                        <a href="{{ asset('uploads/payment_proofs/' ~ invoice.paymentProofPath) }}" target="_blank" class="btn btn-primary w-100">
+                        <a href="{{ asset('uploads/payment_proofs/' ~ invoice.paymentProofPath) }}" target="_blank" rel="noopener" class="btn btn-primary w-100">
                             <i class="bi bi-eye"></i> Ver Comprobante
                         </a>
                     </div>
@@ -144,7 +145,7 @@
             <!-- Acciones -->
             {% if invoice.isPendingApproval %}
                 <div class="card">
-                    <div class="card-header bg-warning text-white">
+                    <div class="card-header">
                         <h6 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Acciones</h6>
                     </div>
                     <div class="card-body">
@@ -159,7 +160,7 @@
                         </form>
 
                         <!-- Rechazar -->
-                        <button type="button" class="btn btn-danger w-100" data-bs-toggle="modal" data-bs-target="#rejectModal">
+                        <button type="button" class="btn btn-outline-danger w-100" data-bs-toggle="modal" data-bs-target="#rejectModal">
                             <i class="bi bi-x-circle"></i> Rechazar Pago
                         </button>
                     </div>
@@ -176,7 +177,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="rejectModalLabel">Rechazar Pago</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
             <form method="post" action="{{ path('admin_billing_invoice_reject', {'id': invoice.id}) }}">
                 <div class="modal-body">
@@ -198,7 +199,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-danger">
                         <i class="bi bi-x-circle"></i> Rechazar Pago
                     </button>
