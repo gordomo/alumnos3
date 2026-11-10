@@ -18,6 +18,8 @@ class EmailService
     public function __construct(
         MailerInterface $mailer,
         UrlGeneratorInterface $urlGenerator,
+        private string $projectDir,
+        private string $baseUrl,
         string $senderEmail = 'contacto@teambuilder.com.ar',
         string $senderName = 'Team Builder'
     ) {
@@ -32,29 +34,19 @@ class EmailService
      */
     public function sendPasswordResetEmail(string $toEmail, string $resetToken, string $username): void
     {
-        try {
-            // Generar la URL base para las imágenes en el email
-            $baseUrl = $this->urlGenerator->generate('app_start', [], UrlGeneratorInterface::ABSOLUTE_URL);
-            // Remover la ruta final para obtener solo el dominio
-            $baseUrl = rtrim($baseUrl, '/');
-        } catch (\Exception $e) {
-            // Si falla, usar el default_uri configurado en routing.yaml
-            $baseUrl = 'http://localhost:8000';
-        }
-        
-        // Construir la URL completa del logo
-        $logoUrl = $baseUrl . '/assets/img/logoteam.png';
-        
+        // APP_URL es el dominio de esta instalación, también detrás del proxy HTTPS.
+        $resetUrl = rtrim($this->baseUrl, '/') . $this->urlGenerator->generate('app_reset_password_confirm', ['token' => $resetToken], UrlGeneratorInterface::ABSOLUTE_PATH);
+
         $email = (new TemplatedEmail())
             ->from(new Address($this->senderEmail, $this->senderName))
             ->to($toEmail)
             ->subject('Recuperación de Contraseña')
             ->htmlTemplate('emails/password_reset.html.twig')
+            ->embedFromPath($this->projectDir . '/public/assets/img/logoteam.png', 'logo-team-builder', 'image/png')
             ->context([
-                'resetToken' => $resetToken,
+                'resetUrl' => $resetUrl,
                 'username' => $username,
-                'expirationMessageHours' => 24,
-                'logo_url' => $logoUrl
+                'expirationMessageHours' => 1
             ]);
 
         $this->mailer->send($email);
