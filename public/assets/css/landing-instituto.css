@@ -29,7 +29,7 @@ h2{font-size:clamp(28px,3.5vw,40px);line-height:1.15;letter-spacing:-1.2px;margi
 .orbita-dos{width:450px;height:450px;left:auto;bottom:auto;right:-190px;top:-180px;border-color:var(--acento)}
 .logo-lienzo{display:grid;place-items:center;background:white;width:210px;height:210px;border-radius:32px;box-shadow:0 20px 60px #182d4312;transform:rotate(-4deg);padding:28px}
 .logo-lienzo img{width:100%;height:100%;object-fit:contain;transform:rotate(4deg)}
-.logo-lienzo>span{font-size:100px;line-height:1;color:var(--principal);font-weight:750}
+.logo-lienzo>span{font-size:100px;line-height:1;color:var(--tinta-marca,var(--principal));font-weight:750}
 .visual-etiqueta{position:absolute;bottom:27px;background:#fff;padding:12px 18px;border-radius:12px;font-size:12px;box-shadow:0 8px 25px #182d4308;display:flex;align-items:center;gap:9px}
 .estrella{position:absolute;top:30px;right:35px;color:var(--acento);font-size:62px;line-height:1}
 .catalogo{background:#f6f8fa;border-top:1px solid #edf0f3;border-bottom:1px solid #edf0f3;padding:72px 0 80px}
@@ -54,7 +54,7 @@ h2{font-size:clamp(28px,3.5vw,40px);line-height:1.15;letter-spacing:-1.2px;margi
 .precio-label{font-size:11px;color:#718094;display:block}
 .consulta-precio{font-size:12px;color:#627083}
 .consultar{font-size:13px;font-weight:700;border:1px solid #dce2e8;border-radius:9px;padding:9px 12px}
-.consultar:hover{background:var(--principal);color:var(--contraste);border-color:var(--principal)}
+.consultar:hover{background:var(--principal);color:var(--contraste);border-color:var(--tinta-marca,var(--principal))}
 .sin-cursos{grid-column:1/-1;padding:40px;text-align:center;background:#fff;border:1px dashed #d6dee8;border-radius:18px}
 .sin-cursos h3{font-size:23px}
 .sin-cursos p{color:#627083}
@@ -105,3 +105,58 @@ h1{letter-spacing:-1.6px}
 *{transition:none!important}
 }
 
+
+/* Identidad editorial de las páginas públicas; no afecta al panel. */
+body{background:#fdfcf9;color:#202c37;-webkit-font-smoothing:antialiased}
+.cabecera-banda{background:var(--principal);color:var(--contraste);font-size:11px;letter-spacing:.4px}
+.cabecera-banda .wrap{display:flex;justify-content:space-between;gap:20px;padding-block:9px}
+.cabecera-banda a{font-weight:650}
+.header{padding-block:20px;border-color:#202c3718}
+.marca{max-width:55%;gap:18px}
+.marca-logo{display:flex;align-items:center;justify-content:center;width:112px;height:70px;flex-shrink:0}
+.marca-logo img{display:block;width:100%;height:100%;max-height:70px;object-fit:contain}
+.marca-nombre{font-size:19px;letter-spacing:-.5px;overflow-wrap:anywhere}
+.marca-nombre small{display:block;margin-top:6px;font-size:10px;font-weight:500;letter-spacing:1.6px;text-transform:uppercase;color:#64707a}
+.header nav{gap:26px;font-size:13px}
+.acceso{border-color:#202c3726;border-radius:6px;background:transparent;padding:12px 17px}
+.hero{grid-template-columns:1.13fr 1fr;gap:60px;padding-block:68px 70px;align-items:center}
+.hero-texto{min-width:0}.eyebrow{font-size:10px;letter-spacing:1.8px;font-weight:650;color:#52606d}
+h1{font-size:clamp(42px,5.3vw,72px);letter-spacing:-3.2px;line-height:1.06;font-weight:650;margin:26px 0}
+h1 em,h2 em{font-family:Georgia,"Times New Roman",serif;font-weight:400;color:var(--tinta-marca,var(--principal));letter-spacing:-2.6px}
+.presentacion{font-size:16px;line-height:1.85;color:#65717c;max-width:510px;margin-bottom:0}
+.hero-acciones{gap:12px;margin-top:29px}.boton{border-radius:6px;padding:14px 20px;min-height:50px;font-size:12px;gap:24px}
+.secundario{border-color:#202c3726;background:transparent}.ubicacion{margin-top:24px;font-size:12px}
+.hero-visual{height:464px;min-height:0;display:flex;align-items:center;justify-content:center;overflow:visible;background:transparent;border-radius:0;padding:42px 26px 36px}
+.hero-visual:before{inset:20px 0 18px 18px;opacity:1;background:var(--principal);border-radius:120px 8px 110px 8px;z-index:-2}
+.visual-palabra{position:absolute;top:20px;left:43px;font:italic 82px/1 Georgia,"Times New Roman",serif;letter-spacing:-5px;color:var(--contraste);opacity:.28;z-index:-1;transform:rotate(-9deg)}
+.visual-trazo{position:absolute;width:100%;height:100%;inset:0;color:var(--contraste);opacity:.24;z-index:-1;overflow:visible}
+.identidad-tarjeta{width:100%;max-width:340px;min-width:0;background:#fff;box-shadow:0 22px 50px #101d3529;border:1px solid #17283b0d;border-radius:8px;padding:20px 24px 16px;transform:rotate(-3deg)}
+.identidad-label{display:block;text-align:center;font-size:9px;text-transform:uppercase;letter-spacing:2px;color:#7a828b}
+.logo-lienzo{position:relative;display:block;width:100%;height:202px;min-width:0;min-height:0;overflow:hidden;transform:none;padding:0;margin:15px 0 17px;background:#fff;border-radius:0;box-shadow:none}
+.logo-lienzo img{position:absolute;inset:0;width:100%;height:100%;max-width:100%;max-height:100%;object-fit:contain;transform:none}
+.logo-lienzo>span{display:grid;place-items:center;width:100%;height:100%;font:90px Georgia,serif}
+.identidad-firma{display:flex;justify-content:space-between;align-items:center;gap:12px;border-top:1px solid #e9ecef;padding-top:14px;font-size:12px;font-weight:650;overflow-wrap:anywhere}
+.identidad-firma>span{color:var(--tinta-marca,var(--principal));font-size:22px;flex-shrink:0}
+.visual-etiqueta{position:absolute;bottom:7px;right:-4px;display:flex;gap:12px;background:#f6e9cb;color:#493d28;padding:15px 19px;box-shadow:0 10px 30px #14223c0e;border:1px solid #f0e1c1;border-radius:6px;transform:rotate(3deg);font-size:12px}
+.visual-etiqueta strong{display:block;font-size:10px;font-weight:450;margin-top:3px}.etiqueta-icono{font-size:33px;line-height:1}
+.manifiesto{border-block:1px solid #202c3718;background:#f5f2eb}
+.manifiesto .wrap{display:flex;align-items:center;justify-content:space-between;gap:24px;padding-block:23px}
+.manifiesto .wrap>span{font:italic 24px Georgia,serif;letter-spacing:-.5px;color:var(--tinta-marca,var(--principal))}
+.manifiesto p{font-size:12px;margin:0;color:#65717c}.manifiesto a{font-size:22px;line-height:1;border:1px solid #cbd0cf;display:grid;place-items:center;width:34px;height:34px;border-radius:50%}
+.catalogo{background:#fdfcf9;border:none;padding:70px 0 80px}.seccion-cabecera{margin-bottom:33px}
+h2{font-weight:600;font-size:clamp(28px,3vw,39px);letter-spacing:-1.5px}.seccion-cabecera>p{font-size:13px;line-height:1.8;max-width:275px}
+.curso{border:1px solid #dfe3e2;border-radius:8px;padding:25px;background:#fff;position:relative;overflow:hidden}
+.curso:before{content:"";position:absolute;left:0;top:0;right:0;height:3px;background:var(--principal)}
+.curso-numero{font:italic 23px Georgia,serif;color:var(--tinta-marca,var(--principal))}.estado{font-size:10px;background:#f6f8f6}
+.curso h3{font-size:23px;font-weight:600;margin:22px 0}.consultar{border-radius:5px;font-size:12px}.precio{font-size:21px}.horarios{margin-bottom:22px}
+.sin-cursos{border:1px solid #e2e5df;border-radius:8px;padding:38px;background:linear-gradient(120deg,#fff,#f4f2eb);text-align:left;position:relative}
+.sin-cursos:before{content:"↗";font-size:62px;color:var(--tinta-marca,var(--principal));float:right;line-height:1;margin-left:16px}
+.sin-cursos h3{font-size:24px;letter-spacing:-.5px;margin:0 0 10px;font-weight:550}.sin-cursos p{font-size:14px;max-width:500px;margin:0 0 22px}
+.contacto{position:relative;padding-block:60px 72px;gap:80px;border-top:1px solid #dddeda}.contacto h2{font-size:40px;line-height:1.2}
+.contacto-intro>p{font-size:14px;line-height:1.8}.contacto-datos{gap:0;border-top:1px solid #dddeda}
+.contacto-item{padding:20px 0;border-bottom:1px solid #dddeda;gap:18px}.contacto-icono{border:1px solid #d7ddda;background:transparent;color:var(--tinta-marca,var(--principal));border-radius:50%;width:42px;height:42px;font-size:20px}
+.contacto-item h3{font-size:10px;letter-spacing:1px;text-transform:uppercase}.contacto-item a,.contacto-item p{font-size:14px}
+.footer{padding-block:24px;border-color:#202c3718}.footer-marca{display:flex;align-items:center;gap:12px}.footer-marca img{width:64px;height:42px;object-fit:contain}.footer strong{font-size:13px}
+@media(max-width:1000px){.header nav{gap:15px}.hero{gap:30px}.hero-visual{height:430px;padding-inline:22px}.identidad-tarjeta{padding-inline:20px}.logo-lienzo{height:180px}.marca-nombre{font-size:16px}.contacto{gap:40px}}
+@media(max-width:760px){.header{gap:16px;flex-wrap:wrap}.marca{max-width:100%}.marca-logo{width:90px;height:60px}.header nav{width:100%;justify-content:space-between}.cabecera-banda .wrap{justify-content:center}.cabecera-banda a{display:none}.hero{grid-template-columns:1fr;padding-block:39px 45px;gap:28px}.hero-texto{max-width:570px}h1{font-size:clamp(42px,8vw,66px);letter-spacing:-2px}.hero-visual{width:100%;max-width:480px;justify-self:center;height:420px;padding:40px 32px}.identidad-tarjeta{max-width:320px}.logo-lienzo{height:190px}.manifiesto .wrap{flex-wrap:wrap;gap:10px;padding-block:20px}.manifiesto .wrap>span{font-size:23px}.manifiesto p{order:3;width:100%;font-size:11px}.manifiesto a{margin-left:auto}.catalogo{padding-block:44px}.contacto{grid-template-columns:1fr;gap:22px;padding-block:42px}.contacto h2{font-size:35px}.footer{align-items:flex-start}.sin-cursos{padding:25px}.sin-cursos h3{font-size:21px}.sin-cursos:before{font-size:43px}.contacto-intro>p{max-width:100%}.visual-etiqueta{right:4px}}
+@media(max-width:380px){.hero-visual{height:370px;padding:32px 20px}.logo-lienzo{height:155px}.identidad-label{font-size:8px;letter-spacing:1px}.visual-etiqueta{font-size:11px;padding:12px}.hero-acciones .boton{gap:15px;padding-inline:14px}.marca-nombre{font-size:15px}.marca-logo{width:74px}}

@@ -5,34 +5,61 @@
     <title>{{ sitio.nombre }} · {{ Term('cursos') }} y actividades</title>
     <meta name="description" content="{{ sitio.presentacion ?: 'Conocé ' ~ term('los_cursos') ~ ', horarios y datos de contacto de ' ~ sitio.nombre ~ '.' }}">
     {% if preview %}<meta name="robots" content="noindex,nofollow">{% else %}<link rel="canonical" href="{{ urlPublica }}">{% endif %}
-    <link rel="stylesheet" href="{{ asset('assets/css/landing-instituto.css') }}?v=20261110">
-    <style>:root{--principal:{{ sitio.principal }};--acento:{{ sitio.acento }};--contraste:{{ sitio.contraste }};--contraste-acento:{{ sitio.contrasteAcento }}}</style>
+    <link rel="stylesheet" href="{{ asset('assets/css/landing-instituto.css') }}?v=20261110-english">
+    {% if sitio.logo %}
+        <link rel="icon" href="{{ asset('uploads/logos/' ~ sitio.logo) }}">
+        <link rel="apple-touch-icon" href="{{ asset('uploads/logos/' ~ sitio.logo) }}">
+    {% else %}
+        {% set icono %}<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="{{ sitio.principal }}"/><text x="32" y="44" text-anchor="middle" font-family="Arial,sans-serif" font-size="40" fill="{{ sitio.contraste }}">{{ sitio.nombre|slice(0,1)|upper }}</text></svg>{% endset %}
+        <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,{{ icono|url_encode }}">
+    {% endif %}
+    <style>:root{--principal:{{ sitio.principal }};--acento:{{ sitio.acento }};--contraste:{{ sitio.contraste }};--contraste-acento:{{ sitio.contrasteAcento }};--tinta-marca:{{ sitio.contraste == '#111827' ? '#202c37' : sitio.principal }}}</style>
 </head>
-<body>
+<body class="{{ vertical == 'club' ? 'landing-club' : 'landing-ingles' }}">
 <a class="skip-link" href="#contenido">Ir al contenido</a>
 {% if preview %}<aside class="preview">Vista previa · Los cambios guardados se muestran acá. <a href="{{ path('instituto_pagina_publica_config') }}">Volver a configuración</a></aside>{% endif %}
+<div class="cabecera-banda"><div class="wrap"><span>{{ vertical == 'club' ? 'Un lugar para moverte, un equipo para crecer.' : 'Un nuevo idioma. Un mundo de posibilidades.' }}</span><a href="#contacto">Tu próximo paso empieza acá <span aria-hidden="true">↗</span></a></div></div>
 <header class="header wrap">
-    <a class="marca" href="#inicio">{% if sitio.logo %}<img src="{{ asset('uploads/logos/' ~ sitio.logo) }}" alt="" width="46" height="46">{% else %}<span class="marca-inicial" aria-hidden="true">{{ sitio.nombre|slice(0,1)|upper }}</span>{% endif %}<span>{{ sitio.nombre }}</span></a>
+    <a class="marca" href="#inicio">
+        {% if sitio.logo %}<span class="marca-logo"><img src="{{ asset('uploads/logos/' ~ sitio.logo) }}" alt="Logo de {{ sitio.nombre }}" width="112" height="64"></span>{% else %}<span class="marca-inicial" aria-hidden="true">{{ sitio.nombre|slice(0,1)|upper }}</span>{% endif %}
+        <span class="marca-nombre">{{ sitio.nombre }}<small>{{ vertical == 'club' ? 'Deporte y comunidad' : 'Instituto de inglés' }}</small></span>
+    </a>
     <nav aria-label="Navegación principal"><a href="#cursos">{{ Term('cursos') }}</a><a href="#contacto">Contacto</a><a class="acceso" href="{{ path('app_login') }}">Ingresar al sistema <span aria-hidden="true">↗</span></a></nav>
 </header>
 <main id="contenido">
     <section class="hero wrap" id="inicio">
-        <div class="hero-texto"><span class="eyebrow"><span class="punto"></span> Un espacio para aprender y crecer</span><h1>{{ sitio.nombre }}</h1><p class="presentacion">{{ sitio.presentacion ?: 'Descubrí nuestra propuesta y actividades. Encontrá una opción para vos y contactanos para conocer más.' }}</p><div class="hero-acciones"><a class="boton principal" href="#cursos">Explorar {{ term('cursos') }} <span aria-hidden="true">↗</span></a><a class="boton secundario" href="#contacto">Hablemos</a></div>{% if sitio.direccion %}<p class="ubicacion"><span aria-hidden="true">⌖</span> {{ sitio.direccion }}</p>{% endif %}</div>
-        <div class="hero-visual" aria-hidden="true"><div class="orbita orbita-uno"></div><div class="orbita orbita-dos"></div><div class="logo-lienzo">{% if sitio.logo %}<img src="{{ asset('uploads/logos/' ~ sitio.logo) }}" alt="" fetchpriority="high">{% else %}<span>{{ sitio.nombre|slice(0,1)|upper }}</span>{% endif %}</div><div class="visual-etiqueta"><span class="punto"></span> Tu próximo paso empieza acá</div><span class="estrella">✳</span></div>
+        <div class="hero-texto">
+            <span class="eyebrow"><span class="punto"></span> {{ sitio.nombre }}</span>
+            <h1>{{ vertical == 'club' ? 'Encontrá tu lugar.' : 'El inglés te abre' }}<br><em>{{ vertical == 'club' ? 'Viví el deporte.' : 'nuevas puertas.' }}</em></h1>
+            <p class="presentacion">{{ sitio.presentacion ?: (vertical == 'club' ? 'Descubrí nuestras actividades y sumate a una nueva experiencia. Estamos para acompañarte en tu próximo paso.' : 'Hay conversaciones, viajes y oportunidades que empiezan con un “hello”. Descubrí nuestra propuesta y empezá a escribir tu próximo capítulo en inglés.') }}</p>
+            <div class="hero-acciones"><a class="boton principal" href="#cursos">Conocé {{ term('los_cursos') }} <span aria-hidden="true">↗</span></a><a class="boton secundario" href="#contacto">Hacé tu consulta</a></div>
+            {% if sitio.direccion %}<p class="ubicacion"><span aria-hidden="true">⌖</span> {{ sitio.direccion }}</p>{% endif %}
+        </div>
+        <div class="hero-visual">
+            <span class="visual-palabra" aria-hidden="true">{{ vertical == 'club' ? 'Let’s go!' : 'Hello!' }}</span>
+            <svg class="visual-trazo" viewBox="0 0 440 380" fill="none" aria-hidden="true"><path d="M-30 280C90 390 430 300 410 130C390-30 80 0 65 135C50 270 340 260 470 125" stroke="currentColor" stroke-width="1.5"/><path d="m375 30 10 22 24 2-18 16 6 24-22-13-22 13 6-24-18-16 24-2z" fill="currentColor" stroke="none"/></svg>
+            <div class="identidad-tarjeta">
+                <span class="identidad-label">{{ vertical == 'club' ? 'Tu club. Tu comunidad.' : 'Your next chapter starts here' }}</span>
+                <div class="logo-lienzo">{% if sitio.logo %}<img src="{{ asset('uploads/logos/' ~ sitio.logo) }}" alt="{{ sitio.nombre }}" fetchpriority="high">{% else %}<span>{{ sitio.nombre|slice(0,1)|upper }}</span>{% endif %}</div>
+                <span class="identidad-firma">{{ sitio.nombre }}<span aria-hidden="true">↗</span></span>
+            </div>
+            <div class="visual-etiqueta"><span class="etiqueta-icono" aria-hidden="true">✳</span><span>{{ vertical == 'club' ? 'Más que un deporte.' : 'Mucho más que palabras.' }}<strong>{{ vertical == 'club' ? 'Una experiencia para compartir.' : 'Una nueva forma de conectar.' }}</strong></span></div>
+        </div>
     </section>
-    <section class="catalogo" id="cursos"><div class="wrap"><div class="seccion-cabecera"><div><span class="eyebrow">Nuestras propuestas</span><h2>Encontrá {{ term('tu_instituto') == 'tu club' ? 'tu próximo deporte.' : 'tu próximo curso.' }}</h2></div><p>Conocé las opciones disponibles y consultanos para dar el primer paso.</p></div>
+    <div class="manifiesto"><div class="wrap"><span>{{ vertical == 'club' ? 'Move. Play. Connect.' : 'Learn. Speak. Connect.' }}</span><p>{{ vertical == 'club' ? 'Encontrá lo que te mueve.' : 'Tu mundo se hace más grande cuando te animás.' }}</p><a href="#cursos" aria-label="Ver {{ term('los_cursos') }}"><span aria-hidden="true">↓</span></a></div></div>
+    <section class="catalogo" id="cursos"><div class="wrap"><div class="seccion-cabecera"><div><span class="eyebrow">01 / Nuestra propuesta</span><h2>Encontrá {{ term('tu_instituto') == 'tu club' ? 'tu próximo deporte.' : 'tu próximo curso.' }}</h2></div><p>Conocé las opciones disponibles y consultanos para dar el primer paso.</p></div>
         <div class="cursos-grid">{% for curso in sitio.cursos %}<article class="curso"><div class="curso-top"><span class="curso-numero">{{ loop.index < 10 ? '0' ~ loop.index : loop.index }}</span><span class="estado">{{ curso.proximo ? 'Próximamente' : 'En curso' }}</span></div><h3>{{ curso.nombre }}</h3>
             <div class="curso-detalles">{% if curso.inicio %}<p><span class="detalle-label">Inicio</span><span>{{ curso.inicio }}</span></p>{% endif %}{% if curso.fin %}<p><span class="detalle-label">Finalización</span><span>{{ curso.fin }}</span></p>{% endif %}</div>
             <div class="horarios"><span class="detalle-label">Días y horarios</span>{% for horario in curso.horarios %}<div><strong>{{ horario.dia|capitalize }}</strong>{% if horario.inicio %}<span>{{ horario.inicio }}{% if horario.fin %} – {{ horario.fin }}{% endif %}</span>{% endif %}</div>{% else %}<p>Consultanos por los horarios.</p>{% endfor %}</div>
             <div class="curso-pie"><div>{% if sitio.mostrarPrecios and curso.precio is not null %}<span class="precio">${{ curso.precio|number_format(2, ',', '.') }}</span><span class="precio-label">Precio {{ term('del_curso') }}</span>{% else %}<span class="consulta-precio">Consultá los detalles</span>{% endif %}</div><a class="consultar" href="#contacto" aria-label="Consultar por {{ curso.nombre }}">Consultar <span aria-hidden="true">↗</span></a></div>
         </article>{% else %}<div class="sin-cursos"><h3>Estamos preparando nuestras propuestas.</h3><p>Contactanos para conocer las próximas actividades y novedades.</p><a class="boton principal" href="#contacto">Consultar</a></div>{% endfor %}</div>
     </div></section>
-    <section class="contacto wrap" id="contacto"><div class="contacto-intro"><span class="eyebrow">Estamos cerca</span><h2>¿Tenés alguna consulta?<br>Hablemos.</h2><p>Escribinos para conocer más sobre {{ term('los_cursos') }}, horarios e inscripciones.</p></div><div class="contacto-datos">
+    <section class="contacto wrap" id="contacto"><div class="contacto-intro"><span class="eyebrow">02 / Conectemos</span><h2>Tu próximo capítulo<br>empieza con un <em>hola.</em></h2><p>Escribinos para conocer más sobre {{ term('los_cursos') }}, horarios e inscripciones.</p></div><div class="contacto-datos">
         {% if sitio.direccion %}<div class="contacto-item"><span class="contacto-icono" aria-hidden="true">⌖</span><div><h3>Encontranos</h3><p>{{ sitio.direccion }}</p><a target="_blank" rel="noopener noreferrer" href="https://www.google.com/maps/search/?api=1&amp;query={{ sitio.direccion|url_encode }}">Cómo llegar ↗</a></div></div>{% endif %}
         {% if sitio.telefono %}<div class="contacto-item"><span class="contacto-icono" aria-hidden="true">↗</span><div><h3>Llamanos</h3>{% if sitio.telLink %}<a href="tel:{{ sitio.telLink }}">{{ sitio.telefono }}</a>{% else %}<p>{{ sitio.telefono }}</p>{% endif %}</div></div>{% endif %}
         {% if sitio.email %}<div class="contacto-item"><span class="contacto-icono" aria-hidden="true">@</span><div><h3>Escribinos</h3><a href="mailto:{{ sitio.email }}">{{ sitio.email }}</a></div></div>{% endif %}
         {% if not sitio.direccion and not sitio.telefono and not sitio.email %}<p>Pronto compartiremos nuestros canales de contacto.</p>{% endif %}
     </div></section>
 </main>
-<footer class="wrap footer"><strong>{{ sitio.nombre }}</strong><span>{{ Term('cursos') }}, actividades y nuevas posibilidades.</span><a href="{{ path('app_login') }}">Acceso al sistema ↗</a></footer>
+<footer class="wrap footer"><a class="footer-marca" href="#inicio">{% if sitio.logo %}<img src="{{ asset('uploads/logos/' ~ sitio.logo) }}" alt="" width="64" height="42" loading="lazy">{% endif %}<strong>{{ sitio.nombre }}</strong></a><span>{{ Term('cursos') }}, actividades y nuevas posibilidades.</span><a href="{{ path('app_login') }}">Acceso al sistema ↗</a></footer>
 </body></html>
