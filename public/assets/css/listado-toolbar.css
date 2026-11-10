@@ -1,0 +1,54 @@
+/* Controles compartidos por los listados de alumnos y profesores. */
+.listado-toolbar .form-control,
+.listado-toolbar .form-select,
+.listado-toolbar .btn,
+.listado-toolbar .nav-link {
+    min-height: 40px;
+    height: 40px;
+    font-size: .875rem;
+    line-height: 1.4;
+    border-radius: var(--ui-radio-chico);
+    border: 1px solid var(--ui-borde-campo);
+}
+.listado-toolbar .btn,
+.listado-toolbar .nav-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .4rem;
+    padding: .5rem .85rem;
+    font-weight: 600;
+    white-space: nowrap;
+    box-shadow: none;
+    text-decoration: none;
+}
+.listado-toolbar .btn .bi { font-size: 1rem; line-height: 1; }
+.listado-toolbar .btn-primary,
+.listado-toolbar .nav-link.active {
+    color: #fff;
+    background: var(--marca-legible);
+    border-color: var(--marca-legible);
+    box-shadow: none;
+}
+.listado-toolbar .btn-primary:hover,
+.listado-toolbar .nav-link.active:hover { background: var(--marca-oscuro); border-color: var(--marca-oscuro); }
+.listado-toolbar .btn-outline-secondary,
+.listado-toolbar .nav-link:not(.active) { color: var(--ui-texto); background: var(--ui-superficie); border-color: var(--ui-borde-campo); }
+.listado-toolbar .btn-outline-secondary:hover,
+.listado-toolbar .nav-link:not(.active):hover { background: var(--marca-suave); border-color: var(--marca-legible); color: var(--marca-legible); }
+.listado-toolbar .btn:focus-visible,
+.listado-toolbar .nav-link:focus-visible { outline: 3px solid var(--marca-tenue); outline-offset: 2px; }
+.listado-toolbar .form-control,
+.listado-toolbar .form-select { color: var(--ui-texto); background-color: var(--ui-superficie); box-shadow: none; }
+.listado-toolbar .form-control:focus,
+.listado-toolbar .form-select:focus { border-color: var(--marca-legible); box-shadow: 0 0 0 .2rem var(--marca-tenue); }
+.listado-toolbar .form-select { max-width: 100%; min-width: 11rem; }
+.listado-toolbar .nav { align-items: center; gap: .5rem; }
+.listado-toolbar .input-group { gap: .5rem; flex-wrap: nowrap; }
+.listado-toolbar .input-group > .form-control,
+.listado-toolbar .input-group > .btn { border-radius: var(--ui-radio-chico) !important; margin-left: 0 !important; }
+@media (max-width: 575.98px) {
+    .listado-toolbar .input-group { flex-wrap: wrap; }
+    .listado-toolbar .input-group > .form-control { flex-basis: 100%; width: 100%; }
+    .listado-toolbar .input-group > .btn { flex: 1; }
+}

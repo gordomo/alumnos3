@@ -17,32 +17,6 @@
             margin-right: 0;
         }
 
-        .profesor-search .form-control,
-        .profesor-search .btn {
-            height: 40px;
-            border-radius: 10px;
-        }
-
-        .profesor-search .form-control {
-            border-color: #d9e4e2;
-            box-shadow: none;
-        }
-
-        .profesor-search .form-control:focus {
-            border-color: var(--ui-secundario);
-            box-shadow: 0 0 0 0.2rem var(--marca-tenue);
-        }
-
-        .profesor-search .btn-outline-secondary {
-            border-color: #d9e4e2;
-            color: #556067;
-        }
-
-        .profesor-search .btn-outline-secondary:hover {
-            background: #f1f6f5;
-            color: #3f4a50;
-        }
-
         .profesor-panel {
             background: var(--ui-superficie);
             border: 1px solid var(--ui-borde);
@@ -168,6 +142,7 @@
 
         }
     </style>
+    <link rel="stylesheet" href="{{ asset('assets/css/listado-toolbar.css') }}?v=20261110">
 {% endblock %}
 
 {% block panelTitle %}
@@ -177,7 +152,7 @@
 {% block body %}
 <div class="container-fluid pagina profesor-page">
     {% set parametrosBusqueda = {'cursoSelected': cursoSelected, 'sort': sort, 'order': order, 'limit': app.request.query.get('limit', 10)} %}
-    <div class="row profesor-toolbar ui-filter-card">
+    <div class="row profesor-toolbar ui-filter-card listado-toolbar">
         <div class="col-md-6">
             <form method="get" action="{{ path('app_profesor_index') }}" class="profesor-search">
                 <input type="hidden" name="cursoSelected" value="{{ cursoSelected }}">
@@ -186,8 +161,8 @@
                 <input type="hidden" name="limit" value="{{ parametrosBusqueda.limit }}">
                 <div class="input-group">
                     <input id="profesor-busqueda" name="busqueda" type="search" class="form-control" placeholder="Buscar por nombre y apellido" value="{{ busqueda }}" aria-label="Buscar {{ term('profesor') }}">
-                    <button class="btn btn-outline-secondary" type="submit" aria-label="Buscar {{ term('profesores') }}"><i class="bi bi-search" aria-hidden="true"></i></button>
-                    <a class="btn btn-outline-secondary d-inline-flex align-items-center gap-1" href="{{ path('app_profesor_index', parametrosBusqueda) }}" aria-label="Limpiar búsqueda"><i class="bi bi-x-lg" aria-hidden="true"></i> Limpiar</a>
+                    <button class="btn btn-primary" type="submit" aria-label="Buscar {{ term('profesores') }}"><i class="bi bi-search" aria-hidden="true"></i> Buscar</button>
+                    <a class="btn btn-outline-secondary" href="{{ path('app_profesor_index', parametrosBusqueda) }}" aria-label="Limpiar búsqueda"><i class="bi bi-x-lg" aria-hidden="true"></i> Limpiar</a>
                 </div>
             </form>
         </div>
@@ -201,7 +176,7 @@
                     <option value="0">Todos los {{ term('cursos') }}</option>
                     {% for curso in cursos %}<option value="{{ curso.id }}" {{ cursoSelected == curso.id ? 'selected' : '' }}>{{ curso.nombre }}</option>{% endfor %}
                 </select>
-                <button type="submit" class="btn btn-outline-primary"><i class="bi bi-funnel" aria-hidden="true"></i> Filtrar</button>
+                <button type="submit" class="btn btn-primary"><i class="bi bi-funnel" aria-hidden="true"></i> Filtrar</button>
             </form>
         </div>
     </div>

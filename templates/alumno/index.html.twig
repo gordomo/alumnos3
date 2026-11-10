@@ -31,56 +31,6 @@
             padding-right: 0;
         }
 
-        .alumno-search .form-control,
-        .alumno-search .btn {
-            height: 40px;
-            border-radius: 10px;
-        }
-
-        .alumno-search .form-control {
-            border-color: #d9e4e2;
-            box-shadow: none;
-        }
-
-        .alumno-search .form-control:focus {
-            border-color: var(--ui-secundario);
-            box-shadow: 0 0 0 0.2rem var(--marca-tenue);
-        }
-
-        .alumno-search .btn-outline-secondary {
-            border-color: #d9e4e2;
-            color: #556067;
-        }
-
-        .alumno-search .btn-outline-secondary:hover {
-            background: #f1f6f5;
-            color: #3f4a50;
-        }
-
-        .alumno-tabs.nav-pills .nav-link {
-            border-radius: 10px;
-            color: #3f5359;
-            border: 1px solid #dbe5e3;
-            background: #f8fbfa;
-            font-weight: 600;
-            padding: 0.4rem 0.75rem;
-        }
-
-        .alumno-tabs.nav-pills .nav-link.active {
-            background: linear-gradient(135deg, var(--ui-primario), var(--ui-secundario));
-            border-color: transparent;
-            color: #fff;
-            box-shadow: 0 8px 22px var(--marca-tenue);
-        }
-
-        #filtroCursos {
-            border-radius: 10px;
-            border-color: #d9e4e2;
-            min-width: 180px;
-            height: 40px;
-            font-size: 0.88rem;
-        }
-
         .alumno-alert-inline {
             border-radius: 10px;
             border: 1px solid #f1cccc;
@@ -212,6 +162,7 @@
 
         }
     </style>
+    <link rel="stylesheet" href="{{ asset('assets/css/listado-toolbar.css') }}?v=20261110">
 {% endblock %}
 
 {% block panelTitle %}
@@ -220,30 +171,30 @@
 
 {% block body %}
 <div class="container-fluid pagina alumno-page">
-    <div class="row alumno-toolbar ui-filter-card">
+    <div class="row alumno-toolbar ui-filter-card listado-toolbar">
         <div class="col-md-5">
             {% set parametrosBusqueda = {'activo': activo, 'cursoSelected': cursoSelected, 'sort': sort, 'order': order, 'limit': app.request.query.get('limit', 10)} %}
             <form method="post" action="{{ path('app_alumno_index', parametrosBusqueda) }}">
                 <div class="input-group alumno-search">
                     <input id="alumno-busqueda" name="busqueda" type="search" class="form-control" placeholder="Buscar por nombre y apellido" value="{{ busqueda }}" aria-label="Buscar por nombre o apellido">
-                    <button class="btn btn-outline-secondary" type="submit" id="button-addon2" aria-label="Buscar {{ term('alumnos') }}"><i class="bi bi-search" aria-hidden="true"></i></button>
-                    <a class="btn btn-outline-secondary d-inline-flex align-items-center gap-1" href="{{ path('app_alumno_index', parametrosBusqueda) }}" aria-label="Limpiar búsqueda"><i class="bi bi-x-lg" aria-hidden="true"></i> Limpiar</a>
+                    <button class="btn btn-primary" type="submit" id="button-addon2" aria-label="Buscar {{ term('alumnos') }}"><i class="bi bi-search" aria-hidden="true"></i> Buscar</button>
+                    <a class="btn btn-outline-secondary" href="{{ path('app_alumno_index', parametrosBusqueda) }}" aria-label="Limpiar búsqueda"><i class="bi bi-x-lg" aria-hidden="true"></i> Limpiar</a>
                 </div>
             </form>
         </div>
         <div class="col-md-7 d-flex justify-content-md-end align-items-center">
             <ul class="nav nav-pills alumno-tabs">
                 <li class="nav-item">
-                    <a class="nav-link {% if activo == 'todos' %} active {% endif %}" aria-current="page" href="{{ path('app_alumno_index') }}">Todos</a>
+                    <a class="nav-link {% if activo == 'todos' %} active {% endif %}" {% if activo == 'todos' %}aria-current="page"{% endif %} href="{{ path('app_alumno_index') }}">Todos</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {% if activo == '1' %} active {% endif %}" href="{{ path('app_alumno_index', {'activo': 1}) }}">Activos</a>
+                    <a class="nav-link {% if activo == '1' %} active {% endif %}" {% if activo == '1' %}aria-current="page"{% endif %} href="{{ path('app_alumno_index', {'activo': 1}) }}">Activos</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link {% if activo == '0' %} active {% endif %}" href="{{ path('app_alumno_index', {'activo': 0}) }}">Inactivos</a>
+                    <a class="nav-link {% if activo == '0' %} active {% endif %}" {% if activo == '0' %}aria-current="page"{% endif %} href="{{ path('app_alumno_index', {'activo': 0}) }}">Inactivos</a>
                 </li>
                 <li class="nav-item">
-                    <a class="btn btn-outline-primary" href="{{ path('app_importar_alumnos') }}">
+                    <a class="btn btn-outline-secondary" href="{{ path('app_importar_alumnos') }}">
                         <i class="bi bi-file-earmark-spreadsheet"></i> Importar desde Excel
                     </a>
                 </li>
