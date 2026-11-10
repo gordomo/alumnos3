@@ -1,63 +1,131 @@
-{{ form_start(form, {'attr': {'class': 'form-horizontal'}}) }}
+{% set instituto = form.vars.data %}
+{% set es_edicion = instituto.id is not null %}
+{{ form_start(form, {'attr': {'class': 'instituto-form'}}) }}
 <input type="hidden" name="timezone" id="instituto_timezone" value="">
-<div class="form-group">
-    <div class="row g-3 mb-3">
-        {% for field in [
-            {form: form.nombre, label: 'Nombre'},
-            {form: form.dir, label: 'Dirección'},
-            {form: form.email, label: 'Email'},
-            {form: form.password, label: 'Password'},
-            {form: form.tel, label: 'Teléfono'},
-            {form: form.logo, label: 'Logo'},
-        ] %}
-            <div class="col-md-4">
-                {{ form_label(field.form, field.label, {'label_attr': {'class': 'form-label'}}) }}
-                {{ form_widget(field.form, {'attr': {'class': 'form-control'}}) }}
-                <small class="form-error text-danger">
-                    {{ form_errors(field.form) }}
-                </small>
+{{ form_errors(form) }}
+
+<div class="instituto-form-grid">
+    <section class="instituto-seccion" aria-labelledby="instituto-datos-titulo">
+        <div class="instituto-seccion-cabecera">
+            <span class="instituto-seccion-icono"><i class="bi bi-building" aria-hidden="true"></i></span>
+            <div><h2 id="instituto-datos-titulo">Datos {{ term('del_instituto') }}</h2><p>Identificación y datos de contacto.</p></div>
+        </div>
+        <div class="instituto-campos">
+            <div>
+                {{ form_label(form.nombre, 'Nombre', {'label_attr': {'class': 'form-label'}}) }}
+                {{ form_widget(form.nombre, {'attr': {'class': 'form-control', 'autocomplete': 'organization'}}) }}
+                {{ form_errors(form.nombre) }}
             </div>
-        {% endfor %}
-    </div>
-    <fieldset class="border rounded p-3 mb-3">
-        <legend class="float-none w-auto px-2 fs-6 text-muted">Suscripción</legend>
-        {% if form.plan is defined %}
-            <div class="row g-3 mb-3">
-                <div class="col-md-6">{{ form_row(form.plan) }}</div>
-                <div class="col-md-6">{{ form_row(form.ayudaIaPrueba) }}</div>
-            </div>
-        {% endif %}
-        <div class="row g-3">
-            <div class="col-md-4">
-                {{ form_label(form.precioPorAlumno, 'Precio por ' ~ term('alumno'), {'label_attr': {'class': 'form-label'}}) }}
-                {{ form_widget(form.precioPorAlumno, {'attr': {'class': 'form-control'}}) }}
-                <div class="form-text">{{ form_help(form.precioPorAlumno) }}</div>
-                <small class="form-error text-danger">{{ form_errors(form.precioPorAlumno) }}</small>
-            </div>
-            <div class="col-md-4">
-                {{ form_label(form.minimoMensual, 'Mínimo mensual', {'label_attr': {'class': 'form-label'}}) }}
-                {{ form_widget(form.minimoMensual, {'attr': {'class': 'form-control'}}) }}
-                <div class="form-text">{{ form_help(form.minimoMensual) }}</div>
-                <small class="form-error text-danger">{{ form_errors(form.minimoMensual) }}</small>
-            </div>
-            <div class="col-md-4">
-                <span class="form-label d-block invisible" aria-hidden="true">&nbsp;</span>
-                <div class="form-check">
-                    {{ form_widget(form.suscripcionExenta, {'attr': {'class': 'form-check-input'}}) }}
-                    {{ form_label(form.suscripcionExenta, 'Exento de suscripción', {'label_attr': {'class': 'form-check-label'}}) }}
-                    <div class="form-text">{{ form_help(form.suscripcionExenta) }}</div>
+            <div class="row g-3">
+                <div class="col-sm-7">
+                    {{ form_label(form.dir, 'Dirección', {'label_attr': {'class': 'form-label'}}) }}
+                    {{ form_widget(form.dir, {'attr': {'class': 'form-control', 'autocomplete': 'street-address'}}) }}
+                    {{ form_errors(form.dir) }}
+                </div>
+                <div class="col-sm-5">
+                    {{ form_label(form.tel, 'Teléfono', {'label_attr': {'class': 'form-label'}}) }}
+                    {{ form_widget(form.tel, {'type': 'tel', 'attr': {'class': 'form-control', 'autocomplete': 'tel'}}) }}
+                    {{ form_errors(form.tel) }}
                 </div>
             </div>
+            <div>
+                {{ form_label(form.logo, 'Logo', {'label_attr': {'class': 'form-label'}}) }}
+                {% if instituto.logo %}
+                    <div class="instituto-logo-actual">
+                        <img src="{{ asset('uploads/logos/' ~ instituto.logo) }}" alt="Logo actual de {{ instituto.nombre }}">
+                        <span class="small text-muted">Logo actual. Elegí un archivo solo si querés reemplazarlo.</span>
+                    </div>
+                {% endif %}
+                {{ form_widget(form.logo, {'attr': {'class': 'form-control', 'accept': 'image/jpeg,image/png', 'aria-describedby': form.logo.vars.id ~ '_ayuda'}}) }}
+                <p id="{{ form.logo.vars.id }}_ayuda" class="instituto-ayuda">JPG o PNG, hasta 1 MB.</p>
+                {{ form_errors(form.logo) }}
+            </div>
         </div>
-    </fieldset>
+    </section>
 
-    <div class="row mb-3">
-        <div class="col text-end">
-            {{ include('components/back_button.html.twig', {'default_path': path('admin_instituto_index')}) }}
-            <button class="btn btn-success">{{ button_label|default('Guardar') }}</button>
+    <section class="instituto-seccion" aria-labelledby="instituto-acceso-titulo">
+        <div class="instituto-seccion-cabecera">
+            <span class="instituto-seccion-icono"><i class="bi bi-key" aria-hidden="true"></i></span>
+            <div><h2 id="instituto-acceso-titulo">Acceso principal</h2><p>Credenciales de la cuenta administradora.</p></div>
+        </div>
+        <div class="instituto-campos">
+            <div>
+                {{ form_label(form.email, 'Correo electrónico', {'label_attr': {'class': 'form-label'}}) }}
+                {{ form_widget(form.email, {'type': 'email', 'attr': {'class': 'form-control', 'autocomplete': 'off', 'aria-describedby': form.email.vars.id ~ '_ayuda'}}) }}
+                <p id="{{ form.email.vars.id }}_ayuda" class="instituto-ayuda">Se usa para iniciar sesión. Si lo cambiás, avisale a quien administra {{ term('el_instituto') }}.</p>
+                {{ form_errors(form.email) }}
+            </div>
+            <div>
+                {{ form_label(form.password, es_edicion ? 'Nueva contraseña' : 'Contraseña inicial', {'label_attr': {'class': 'form-label'}}) }}
+                {{ form_widget(form.password, {'attr': {'class': 'form-control', 'autocomplete': 'new-password', 'aria-describedby': form.password.vars.id ~ '_ayuda'}}) }}
+                <p id="{{ form.password.vars.id }}_ayuda" class="instituto-ayuda">{{ es_edicion ? 'Dejá este campo vacío para conservar la contraseña actual.' : 'La cuenta usará esta contraseña para su primer acceso.' }}</p>
+                {{ form_errors(form.password) }}
+            </div>
+        </div>
+    </section>
+</div>
+
+{% if form.plan is defined %}
+<section class="instituto-seccion mt-3" aria-labelledby="instituto-plan-titulo">
+    <div class="instituto-seccion-cabecera">
+        <span class="instituto-seccion-icono"><i class="bi bi-stars" aria-hidden="true"></i></span>
+        <div><h2 id="instituto-plan-titulo">Plan y asistente de ayuda</h2><p>Elegí las funciones disponibles para esta institución.</p></div>
+    </div>
+    <div class="instituto-form-grid">
+        <div>
+            {{ form_label(form.plan, 'Plan', {'label_attr': {'class': 'form-label'}}) }}
+            {{ form_widget(form.plan, {'attr': {'class': 'form-select', 'aria-describedby': form.plan.vars.id ~ '_ayuda'}}) }}
+            <p id="{{ form.plan.vars.id }}_ayuda" class="instituto-ayuda">Básico incluye manual y búsqueda. Premium agrega el asistente con IA. El precio se configura por separado.</p>
+            {{ form_errors(form.plan) }}
+        </div>
+        <div>
+            <label class="instituto-opcion" for="{{ form.ayudaIaPrueba.vars.id }}">
+                <span><span class="instituto-opcion-titulo">Habilitar prueba de IA <span class="instituto-etiqueta">Prueba</span></span><span class="instituto-opcion-descripcion">Permite probar el asistente sin cambiar el plan.</span></span>
+                <span class="form-check form-switch">{{ form_widget(form.ayudaIaPrueba, {'attr': {'class': 'form-check-input', 'role': 'switch', 'aria-describedby': form.ayudaIaPrueba.vars.id ~ '_ayuda'}}) }}</span>
+            </label>
+            <p id="{{ form.ayudaIaPrueba.vars.id }}_ayuda" class="instituto-ayuda">En el modo de pruebas, activá esta opción también para Premium. Después de guardar, el asistente aparece en Ayuda.</p>
+            {{ form_errors(form.ayudaIaPrueba) }}
         </div>
     </div>
+</section>
+{% endif %}
+
+<section class="instituto-seccion mt-3" aria-labelledby="instituto-facturacion-titulo">
+    <div class="instituto-seccion-cabecera">
+        <span class="instituto-seccion-icono"><i class="bi bi-receipt" aria-hidden="true"></i></span>
+        <div><h2 id="instituto-facturacion-titulo">Facturación</h2><p>Condiciones de cobro de la suscripción.</p></div>
+    </div>
+    <div class="row g-3">
+        <div class="col-md-6 col-xl-4">
+            {{ form_label(form.precioPorAlumno, 'Precio por ' ~ term('alumno'), {'label_attr': {'class': 'form-label'}}) }}
+            {{ form_widget(form.precioPorAlumno, {'attr': {'class': 'form-control', 'placeholder': 'Usar precio global', 'aria-describedby': form.precioPorAlumno.vars.id ~ '_ayuda'}}) }}
+            <p id="{{ form.precioPorAlumno.vars.id }}_ayuda" class="instituto-ayuda">Opcional. Si queda vacío, se aplica el precio global.</p>
+            {{ form_errors(form.precioPorAlumno) }}
+        </div>
+        <div class="col-md-6 col-xl-4">
+            {{ form_label(form.minimoMensual, 'Mínimo mensual', {'label_attr': {'class': 'form-label'}}) }}
+            {{ form_widget(form.minimoMensual, {'attr': {'class': 'form-control', 'placeholder': 'Sin mínimo', 'aria-describedby': form.minimoMensual.vars.id ~ '_ayuda'}}) }}
+            <p id="{{ form.minimoMensual.vars.id }}_ayuda" class="instituto-ayuda">Opcional. Es el importe mínimo a facturar cada mes.</p>
+            {{ form_errors(form.minimoMensual) }}
+        </div>
+        <div class="col-xl-4">
+            <label class="instituto-opcion" for="{{ form.suscripcionExenta.vars.id }}">
+                <span><span class="instituto-opcion-titulo">Exento de suscripción</span><span class="instituto-opcion-descripcion">No se factura ni se limita el acceso por falta de pago.</span></span>
+                <span class="form-check form-switch">{{ form_widget(form.suscripcionExenta, {'attr': {'class': 'form-check-input', 'role': 'switch'}}) }}</span>
+            </label>
+            {{ form_errors(form.suscripcionExenta) }}
+        </div>
+    </div>
+</section>
+
+<div class="instituto-acciones">
+    <span class="small text-muted">Los cambios se aplican al guardar.</span>
+    <div class="d-flex gap-2">
+        {{ include('components/back_button.html.twig', {'default_path': path('admin_instituto_index')}) }}
+        <button type="submit" class="btn btn-primary"><i class="bi bi-check2" aria-hidden="true"></i> {{ button_label|default(es_edicion ? 'Guardar cambios' : 'Crear ' ~ term('instituto')) }}</button>
+    </div>
 </div>
+{{ form_end(form) }}
 <script>
 (function() {
     try {
@@ -67,4 +135,3 @@
     } catch (e) {}
 })();
 </script>
-{{ form_end(form) }}

@@ -1,17 +1,21 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Editar {{instituto.nombre}}{% endblock %}
+{% block title %}Editar {{ instituto.nombre }}{% endblock %}
+{% block panelTitle %}Editar {{ instituto.nombre }}{% endblock %}
 
-{% block panelTitle %}Editar {{instituto.nombre}}{% endblock %}
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('assets/css/instituto-form.css') }}?v=20261110">
+{% endblock %}
 
 {% block body %}
-<div class="container-fluid pagina d-flex justify-content-center">
-    <div class="col-lg-12">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                {{ include('admin/instituto/_form.html.twig', {'button_label': 'Guardar'}) }}
-            </div>
+<div class="container-fluid pagina">
+    <div class="instituto-editor">
+        <div class="instituto-editor-intro">
+            <p>Administrá los datos, el acceso y las condiciones de esta institución.</p>
+            <span class="instituto-estado {{ not instituto.activo ? 'instituto-estado-inactivo' : '' }}"><i class="bi {{ instituto.activo ? 'bi-check-circle' : 'bi-pause-circle' }}" aria-hidden="true"></i> {{ instituto.activo ? 'Activo' : 'Dado de baja' }}</span>
         </div>
+        {{ include('admin/instituto/_form.html.twig') }}
         {{ include('admin/instituto/_delete_form.html.twig') }}
     </div>
 </div>

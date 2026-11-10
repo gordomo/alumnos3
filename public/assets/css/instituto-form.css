@@ -1,0 +1,51 @@
+.instituto-editor { max-width: 1180px; margin: 0 auto; padding-bottom: 1.5rem; }
+.instituto-editor-intro { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.25rem; }
+.instituto-editor-intro p { color: var(--ui-apagado); margin: 0; }
+.instituto-estado { flex-shrink: 0; display: inline-flex; align-items: center; gap: .4rem; border-radius: 2rem; padding: .35rem .75rem; font-size: .8rem; font-weight: 600; background: #eaf6ee; color: #24683a; }
+.instituto-estado-inactivo { background: #fff4df; color: #805710; }
+.instituto-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.instituto-seccion { min-width: 0; padding: 1.4rem; background: var(--ui-superficie); border: 1px solid var(--ui-borde); border-radius: var(--ui-radio); }
+.instituto-seccion-cabecera { display: flex; align-items: flex-start; gap: .75rem; margin-bottom: 1.25rem; }
+.instituto-seccion-icono { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 2.15rem; height: 2.15rem; border-radius: .65rem; color: var(--marca-legible); background: var(--marca-suave); }
+.instituto-seccion-cabecera h2 { font-size: 1rem; font-weight: 650; color: var(--ui-texto); margin: 0 0 .25rem; }
+.instituto-seccion-cabecera p, .instituto-ayuda { color: var(--ui-apagado); font-size: .82rem; line-height: 1.5; }
+.instituto-seccion-cabecera p { margin: 0; }
+.instituto-campos { display: grid; gap: 1rem; }
+.instituto-form ul { list-style: none; padding: 0; margin: .35rem 0 0; color: #b02a37; font-size: .82rem; }
+.instituto-form .form-label { font-size: .875rem; font-weight: 600; margin-bottom: .45rem; }
+.instituto-form .form-control, .instituto-form .form-select { width: 100%; min-height: 42px; }
+.instituto-ayuda { margin: .45rem 0 0; }
+.instituto-opcion { display: flex; align-items: center; justify-content: space-between; gap: 1rem; width: 100%; height: auto; min-height: 98px; padding: 1rem; margin: 0; border: 1px solid var(--ui-borde-campo); border-radius: var(--ui-radio-chico); background: #fafcfb; cursor: pointer; }
+.instituto-opcion:hover { border-color: var(--marca-legible); }
+.instituto-opcion:focus-within { outline: 3px solid var(--marca-tenue); outline-offset: 2px; }
+.instituto-opcion-titulo { display: block; color: var(--ui-texto); font-size: .875rem; font-weight: 600; }
+.instituto-opcion-descripcion { display: block; color: var(--ui-apagado); font-size: .82rem; line-height: 1.5; margin-top: .3rem; }
+.instituto-opcion .form-switch { padding: 0; margin: 0; flex-shrink: 0; }
+.instituto-opcion .form-check-input { float: none; margin: 0; width: 2.5rem; height: 1.35rem; cursor: pointer; }
+.instituto-etiqueta { display: inline-block; padding: .15rem .4rem; margin-left: .35rem; background: var(--marca-suave); color: var(--marca-legible); border-radius: .35rem; font-size: .7rem; vertical-align: middle; }
+.instituto-logo-actual { display: flex; align-items: center; gap: .75rem; margin-bottom: .65rem; }
+.instituto-logo-actual img { width: 46px; height: 46px; object-fit: contain; border: 1px solid var(--ui-borde); border-radius: .5rem; background: white; }
+.instituto-acciones { position: sticky; bottom: 1rem; z-index: 5; display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: .9rem 1.15rem; margin: 1rem 0 0; background: var(--ui-superficie); border: 1px solid var(--ui-borde); border-radius: var(--ui-radio); box-shadow: 0 4px 18px rgba(19, 44, 43, .08); }
+.instituto-gestion { margin-top: 2rem; border-top: 1px solid var(--ui-borde); padding-top: 1.25rem; }
+.instituto-gestion > h2 { font-size: .85rem; color: var(--ui-apagado); margin-bottom: .85rem; }
+.instituto-gestion details { background: var(--ui-superficie); border: 1px solid var(--ui-borde); border-radius: var(--ui-radio-chico); margin-top: .65rem; }
+.instituto-gestion summary { display: flex; align-items: center; gap: .75rem; padding: 1rem 1.15rem; cursor: pointer; list-style: none; }
+.instituto-gestion summary::-webkit-details-marker { display: none; }
+.instituto-gestion summary:focus-visible { outline: 3px solid var(--marca-tenue); outline-offset: 2px; border-radius: inherit; }
+.instituto-gestion summary strong { display: block; font-size: .875rem; color: var(--ui-texto); }
+.instituto-gestion summary small { display: block; color: var(--ui-apagado); font-size: .8rem; margin-top: .2rem; }
+.instituto-gestion .instituto-desplegar { margin-left: auto; color: var(--ui-apagado); transition: transform .15s; }
+.instituto-gestion details[open] .instituto-desplegar { transform: rotate(180deg); }
+.instituto-gestion-contenido { padding: 0 1.15rem 1.15rem; font-size: .875rem; }
+.instituto-gestion .instituto-peligro > summary > .bi { color: #b02a37; }
+@media (max-width: 767.98px) {
+    .instituto-form-grid { grid-template-columns: minmax(0, 1fr); }
+    .instituto-seccion { padding: 1.1rem; }
+    .instituto-editor-intro { align-items: flex-start; }
+}
+@media (max-width: 575.98px) {
+    .instituto-acciones { bottom: .5rem; padding: .75rem; flex-wrap: wrap; gap: .5rem; }
+    .instituto-acciones > span { display: none; }
+    .instituto-acciones > div { width: 100%; }
+    .instituto-acciones .btn { flex: 1; }
+}

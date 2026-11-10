@@ -1,17 +1,20 @@
 {% extends 'base.html.twig' %}
 
 {% block title %}Nuevo {{ Term('instituto') }}{% endblock %}
-
 {% block panelTitle %}Nuevo {{ Term('instituto') }}{% endblock %}
 
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('assets/css/instituto-form.css') }}?v=20261110">
+{% endblock %}
+
 {% block body %}
-<div class="container-fluid pagina d-flex justify-content-center">
-    <div class="col-lg-12">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                {{ include('admin/instituto/_form.html.twig', {'button_label': 'Guardar'}) }}
-            </div>
+<div class="container-fluid pagina">
+    <div class="instituto-editor">
+        <div class="instituto-editor-intro">
+            <p>Completá los datos para crear la institución y su cuenta de acceso.</p>
         </div>
+        {{ include('admin/instituto/_form.html.twig') }}
     </div>
 </div>
 {% endblock %}
