@@ -10,6 +10,7 @@ use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormError;
 use Symfony\Component\Form\FormEvent;
@@ -32,6 +33,12 @@ class CursoType extends AbstractType
                 'attr' => ['class' => 'form-control'],
                 'label_attr' => ['class' => 'form-label required'],
                 'label' => 'Nombre'
+            ])
+            ->add('descripcionPublica', TextareaType::class, [
+                'required' => false,
+                'label' => 'Descripción pública',
+                'attr' => ['class' => 'form-control', 'rows' => 5, 'maxlength' => 3000],
+                'help' => 'Se muestra en «Más info» de la página pública. Podés contar el nivel, a quién está dirigido, los objetivos y los contenidos. No incluyas información privada.',
             ])
             ->add('precio', TextType::class, [
                 'required' => true,

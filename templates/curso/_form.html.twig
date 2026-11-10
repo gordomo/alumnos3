@@ -72,6 +72,16 @@
     </div>
 </div>
 
+<div class="card mb-4 shadow-sm">
+    <div class="card-header"><h4 class="mb-0 text-dark"><i class="bi bi-globe"></i> Información para la página pública</h4></div>
+    <div class="card-body">
+        {{ form_label(form.descripcionPublica, null, {'label_attr': {'class': 'form-label fw-semibold'}}) }}
+        {{ form_widget(form.descripcionPublica) }}
+        {{ form_errors(form.descripcionPublica) }}
+        <div class="form-text">{{ form.descripcionPublica.vars.help }} Hasta 3000 caracteres; es opcional.</div>
+    </div>
+</div>
+
 {# Fechas #}
 <div class="card mb-4 shadow-sm">
     <div class="card-header" style="background-color: #e7f1ff; border-bottom: 2px solid #0d6efd;">

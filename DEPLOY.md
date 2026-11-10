@@ -319,8 +319,8 @@ guardados y está protegida por sesión. Nombre, logo, dirección, teléfono y e
 general. La dirección `APP_URL/nombre-instituto` se conserva aunque cambie el nombre; nombres repetidos
 o reservados reciben un sufijo. Verificar que `APP_URL` sea el dominio HTTPS de cada instalación.
 
-El catálogo público contiene exclusivamente cursos de esa institución habilitados, abiertos y sin
-fecha de finalización vencida, según su zona horaria. No publica alumnos, profesores, pagos ni usuarios.
+El catálogo público contiene exclusivamente cursos de esa institución habilitados y abiertos.
+Los que ya pasaron su fecha de fin se identifican como «Edición finalizada», según su zona horaria. No publica alumnos, profesores, pagos ni usuarios.
 Desactivar precios elimina los importes de la respuesta, no solo de su apariencia. Una institución dada
 de baja o una página en borrador devuelve 404. El acceso público usa un firewall que coincide únicamente
 con la ruta de la landing; las rutas privadas conservan su autenticación. Las páginas se entregan sin
@@ -329,3 +329,17 @@ caché compartida para reflejar inmediatamente los cambios de visibilidad.
 Verificación local: `php tests/regression_landing_publica.php` (MySQL, tablas temporales) y
 `php tests/regression_landing_config.php` (render, formulario y rechazo de POST sin CSRF), además de
 `php bin/console lint:container` y `php bin/console lint:twig templates/instituto_pagina_publica`.
+
+
+### Descripción y catálogo de cursos (2026-11-10)
+
+Aplicar exclusivamente `DoctrineMigrations\Version20261110200000` con el procedimiento de respaldo
+previo y ejecución explícita usado para las páginas públicas. Agrega `curso.descripcion_publica`
+nullable, sin modificar precios, inscripciones, fechas ni estados de cursos existentes.
+
+En alta y edición de cursos, «Información para la página pública» permite una descripción opcional
+de hasta 3000 caracteres de texto sin HTML. Se conserva al duplicar el curso. La landing la presenta
+en «Más info», con los horarios y la cuota mensual (cuando se habilita mostrar precios).
+Los cursos con fecha de fin pasada siguen en el catálogo como «Edición finalizada», con una consulta
+por la próxima edición y el precio identificado como cuota de esa edición; no se anuncian como vigentes.
+Los deshabilitados y cerrados no se muestran. Verificar `php tests/regression_landing_publica.php`.

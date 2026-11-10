@@ -160,3 +160,12 @@ h2{font-weight:600;font-size:clamp(28px,3vw,39px);letter-spacing:-1.5px}.seccion
 @media(max-width:1000px){.header nav{gap:15px}.hero{gap:30px}.hero-visual{height:430px;padding-inline:22px}.identidad-tarjeta{padding-inline:20px}.logo-lienzo{height:180px}.marca-nombre{font-size:16px}.contacto{gap:40px}}
 @media(max-width:760px){.header{gap:16px;flex-wrap:wrap}.marca{max-width:100%}.marca-logo{width:90px;height:60px}.header nav{width:100%;justify-content:space-between}.cabecera-banda .wrap{justify-content:center}.cabecera-banda a{display:none}.hero{grid-template-columns:1fr;padding-block:39px 45px;gap:28px}.hero-texto{max-width:570px}h1{font-size:clamp(42px,8vw,66px);letter-spacing:-2px}.hero-visual{width:100%;max-width:480px;justify-self:center;height:420px;padding:40px 32px}.identidad-tarjeta{max-width:320px}.logo-lienzo{height:190px}.manifiesto .wrap{flex-wrap:wrap;gap:10px;padding-block:20px}.manifiesto .wrap>span{font-size:23px}.manifiesto p{order:3;width:100%;font-size:11px}.manifiesto a{margin-left:auto}.catalogo{padding-block:44px}.contacto{grid-template-columns:1fr;gap:22px;padding-block:42px}.contacto h2{font-size:35px}.footer{align-items:flex-start}.sin-cursos{padding:25px}.sin-cursos h3{font-size:21px}.sin-cursos:before{font-size:43px}.contacto-intro>p{max-width:100%}.visual-etiqueta{right:4px}}
 @media(max-width:380px){.hero-visual{height:370px;padding:32px 20px}.logo-lienzo{height:155px}.identidad-label{font-size:8px;letter-spacing:1px}.visual-etiqueta{font-size:11px;padding:12px}.hero-acciones .boton{gap:15px;padding-inline:14px}.marca-nombre{font-size:15px}.marca-logo{width:74px}}
+.curso-mas-info{border-block:1px solid #edf0f3;margin:0 0 18px;font-size:13px}
+.curso-mas-info summary{display:flex;align-items:center;justify-content:space-between;gap:16px;cursor:pointer;list-style:none;padding:12px 0;font-weight:650;color:var(--tinta-marca,var(--principal))}
+.curso-mas-info summary::-webkit-details-marker{display:none}
+.curso-mas-info summary:focus-visible{outline:2px solid var(--principal);outline-offset:3px}
+.curso-mas-info summary span{font-size:20px;line-height:1;transition:transform .15s}
+.curso-mas-info[open] summary span{transform:rotate(45deg)}
+.curso-descripcion{white-space:pre-line;overflow-wrap:anywhere;color:#586573;line-height:1.8;padding-bottom:17px}
+.curso-aviso{font-size:12px;color:#766447;line-height:1.6;margin:-8px 0 18px}
+.estado-finalizado{background:#faf3e8;color:#766447;border-color:#e8dcc6}

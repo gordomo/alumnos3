@@ -22,6 +22,10 @@
                                 <td>{{ curso.nombre }}</td>
                             </tr>
                             <tr>
+                                <th>Descripción pública</th>
+                                <td style="white-space:pre-line;overflow-wrap:anywhere">{{ curso.descripcionPublica ?: 'Sin descripción pública' }}</td>
+                            </tr>
+                            <tr>
                                 <th>Precio</th>
                                 <td>${{ curso.precio | number_format(2, ',', '.') }}</td>
                             </tr>

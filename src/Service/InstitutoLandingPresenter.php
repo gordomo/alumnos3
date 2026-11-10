@@ -16,8 +16,7 @@ class InstitutoLandingPresenter
         $cursos = $this->em->getRepository(Curso::class)->createQueryBuilder('c')
             ->leftJoin('c.horarios', 'h')->addSelect('h')
             ->where('c.instituto = :instituto AND c.disabled = false AND c.cerrado = false')
-            ->andWhere('c.fechaFin IS NULL OR c.fechaFin >= :hoy')
-            ->setParameter('instituto', $instituto)->setParameter('hoy', $hoy)->orderBy('c.nombre', 'ASC')->getQuery()->getResult();
+            ->setParameter('instituto', $instituto)->orderBy('c.nombre', 'ASC')->getQuery()->getResult();
         $email = filter_var($instituto->getEmail(), FILTER_VALIDATE_EMAIL) ?: null;
         $telefono = trim($instituto->getTel() ?? '');
         $principal = self::color($pagina->getColorPrincipal(), '#1b4f9c');
@@ -42,7 +41,13 @@ class InstitutoLandingPresenter
                     $horarios[] = ['dia' => $dia, 'inicio' => $curso->getHorarioInicio()?->format('H:i'), 'fin' => $curso->getHorarioFin()?->format('H:i')];
                 }
             }
-            $item = ['nombre' => $curso->getNombre(), 'inicio' => $curso->getFechaInicio()?->format('d/m/Y'), 'fin' => $curso->getFechaFin()?->format('d/m/Y'), 'proximo' => $curso->getFechaInicio() > $hoy, 'horarios' => $horarios];
+            $ordenDias = ['lunes'=>1,'martes'=>2,'miercoles'=>3,'jueves'=>4,'viernes'=>5,'sabado'=>6,'domingo'=>7];
+            usort($horarios, static function (array $a, array $b) use ($ordenDias): int {
+                $diaA = strtr(mb_strtolower($a['dia'] ?? ''), ['é'=>'e','á'=>'a']);
+                $diaB = strtr(mb_strtolower($b['dia'] ?? ''), ['é'=>'e','á'=>'a']);
+                return (($ordenDias[$diaA] ?? 8) <=> ($ordenDias[$diaB] ?? 8)) ?: strcmp($a['inicio'] ?? '', $b['inicio'] ?? '');
+            });
+            $item = ['nombre' => $curso->getNombre(), 'descripcion' => $curso->getDescripcionPublica(), 'finalizado' => $curso->getFechaFin() !== null && $curso->getFechaFin() < $hoy, 'inicio' => $curso->getFechaInicio()?->format('d/m/Y'), 'fin' => $curso->getFechaFin()?->format('d/m/Y'), 'proximo' => $curso->getFechaInicio() > $hoy, 'horarios' => $horarios];
             if ($pagina->isMostrarPrecios()) { $item['precio'] = is_numeric($curso->getPrecio()) && (float) $curso->getPrecio() >= 0 ? $curso->getPrecio() : null; }
             $datos['cursos'][] = $item;
         }
