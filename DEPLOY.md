@@ -341,3 +341,41 @@ En alta y edición de cursos, «Información para la página pública» permite 
 de hasta 3000 caracteres de texto sin HTML. Se conserva al duplicar el curso. La landing la presenta
 en «Más info», con los horarios y la cuota mensual (cuando se habilita mostrar precios).
 Solo se publican ediciones vigentes o próximas: las finalizadas, deshabilitadas y cerradas no se muestran. Verificar `php tests/regression_landing_publica.php`.
+
+### Contacto y preinscripciones públicas (2026-11-10)
+
+Migración aditiva `DoctrineMigrations\Version20261110210000`: tabla `solicitud_pagina_publica`.
+Aplicar únicamente esta versión con respaldo previo, conservando las migraciones históricas propias de
+cada instalación. No crea alumnos, usuarios, inscripciones ni deudas. Después limpiar y calentar caché.
+
+La landing conserva el acceso al sistema en el footer. Contacto está disponible en la página publicada;
+la preinscripción aparece cuando hay cursos vigentes o próximos. Elegir «Preinscribirme» selecciona
+el curso en el formulario. La vista previa muestra los formularios deshabilitados. Nombre, apellido
+(obligatorio para preinscripción), email de contacto, teléfono opcional y mensaje se guardan separados
+de los alumnos. Se pide consentimiento para gestionar la solicitud. El aviso llega al email de
+Información general; si el envío de correo falla, la solicitud permanece en la bandeja.
+
+«Consultas y preinscripciones» del menú del instituto lista por defecto las pendientes y permite
+filtrar estados, revisar, atender consultas, descartar y confirmar preinscripciones. La confirmación
+es una revisión administrativa, no una inscripción automática ni una reserva de vacante. Permite
+continuar con un alta nueva, precargando los datos recibidos y el curso; los campos obligatorios y
+las reglas de deuda del alta habitual se mantienen. Si se guarda el alumno con el curso solicitado,
+la solicitud queda inscrita y vinculada con su ficha. Para alumnos existentes, la bandeja muestra
+coincidencias del correo dentro de la institución: se completa su inscripción por el flujo habitual
+y luego se vincula. La vinculación comprueba que el alumno sea del instituto y esté en el curso.
+No se envía un correo automático al solicitante al confirmar: el administrador coordina los detalles
+por los canales de contacto que dejó la persona.
+
+Protección local sin claves externas: campo trampa, firma HMAC ligada a institución y tipo de formulario,
+ventana de llenado entre 2 segundos y 2 horas, rechazo de envíos cross-site identificados por el navegador,
+5 intentos por conexión cada 15 minutos y 5 por correo e instituto al día. IP y correo se usan como
+claves HMAC en el limitador, no se guardan IPs en la solicitud. Tokens únicos impiden repetir el mismo
+envío; una clave única impide dos preinscripciones activas por instituto, curso y correo. Validación
+de campos, curso vigente propio y consentimiento se hace en servidor. La bandeja requiere administrador,
+filtra siempre por instituto y las acciones llevan CSRF. Confirmar usa bloqueo de fila e impide
+repetir transiciones. Esta protección reduce el abuso; si hiciera falta un desafío de terceros se
+puede añadir después sin cambiar el circuito de solicitudes.
+
+Validar `php tests/regression_solicitudes_publicas.php`, `php tests/regression_landing_publica.php`,
+`php tests/regression_landing_config.php`, `php bin/console lint:container` y las plantillas nuevas.
+Las pruebas usan tablas temporales de MySQL, instituciones ficticias sin email y no envían correos.

@@ -49,7 +49,7 @@ class InstitutoLandingPresenter
                 $diaB = strtr(mb_strtolower($b['dia'] ?? ''), ['é'=>'e','á'=>'a']);
                 return (($ordenDias[$diaA] ?? 8) <=> ($ordenDias[$diaB] ?? 8)) ?: strcmp($a['inicio'] ?? '', $b['inicio'] ?? '');
             });
-            $item = ['nombre' => $curso->getNombre(), 'descripcion' => $curso->getDescripcionPublica(), 'inicio' => $curso->getFechaInicio()?->format('d/m/Y'), 'fin' => $curso->getFechaFin()?->format('d/m/Y'), 'proximo' => $curso->getFechaInicio() !== null && $curso->getFechaInicio()->format('Y-m-d') > $hoy->format('Y-m-d'), 'horarios' => $horarios];
+            $item = ['id' => $curso->getId(), 'nombre' => $curso->getNombre(), 'descripcion' => $curso->getDescripcionPublica(), 'inicio' => $curso->getFechaInicio()?->format('d/m/Y'), 'fin' => $curso->getFechaFin()?->format('d/m/Y'), 'proximo' => $curso->getFechaInicio() !== null && $curso->getFechaInicio()->format('Y-m-d') > $hoy->format('Y-m-d'), 'horarios' => $horarios];
             if ($pagina->isMostrarPrecios()) { $item['precio'] = is_numeric($curso->getPrecio()) && (float) $curso->getPrecio() >= 0 ? $curso->getPrecio() : null; }
             $datos['cursos'][] = $item;
         }

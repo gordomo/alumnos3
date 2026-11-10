@@ -1,0 +1,9 @@
+{% extends 'emails/base_email.html.twig' %}
+{% block title %}{{ solicitud.tipo == 'contacto' ? 'Nueva consulta' : 'Nueva preinscripción' }}{% endblock %}
+{% block content %}
+<p>Recibiste una solicitud desde la página pública de {{ solicitud.instituto.nombre }}.</p>
+<p><strong>Nombre:</strong> {{ solicitud.nombre }} {{ solicitud.apellido }}<br><strong>Email:</strong> {{ solicitud.email }}{% if solicitud.telefono %}<br><strong>Teléfono:</strong> {{ solicitud.telefono }}{% endif %}{% if solicitud.curso %}<br><strong>Curso:</strong> {{ solicitud.curso.nombre }}{% endif %}</p>
+{% if solicitud.mensaje %}<p style="white-space:pre-line">{{ solicitud.mensaje }}</p>{% endif %}
+<p><a href="{{ bandejaUrl }}" class="button">Revisar en el panel</a></p>
+<p>La solicitud está pendiente. Revisá los datos antes de confirmar una preinscripción.</p>
+{% endblock %}

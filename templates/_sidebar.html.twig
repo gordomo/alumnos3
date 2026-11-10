@@ -201,6 +201,8 @@
                 </li>
             </ul>
 
+            <ul class="nav nav-tabs sidebar-dropdown-ul"><li class="nav-item"><a class="list-group-item list-group-item-action bg-light {% if app.request.get('_route') starts with 'instituto_solicitudes_' %}active{% endif %}" href="{{ path('instituto_solicitudes_index') }}"><i class="bi bi-inbox"></i> Consultas y preinscripciones</a></li></ul>
+
             <ul class="nav nav-tabs sidebar-dropdown-ul">
                 <li class="nav-item">
                     <a class="list-group-item list-group-item-action bg-light {% if app.request.get('_route') starts with 'app_comunicacion_' %}active{% endif %}" href="{{ path('app_comunicacion_index') }}">

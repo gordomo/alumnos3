@@ -152,6 +152,18 @@ class AlumnoController extends AbstractController
         $alumno = new Alumno();
         $alumno->setInstituto($instituto);
 
+        $preinscripcion = null;
+        if ($request->query->getInt('preinscripcion') > 0) {
+            $preinscripcion = $this->entityManager->getRepository(\App\Entity\SolicitudPaginaPublica::class)->findOneBy(['id'=>$request->query->getInt('preinscripcion'),'instituto'=>$instituto,'tipo'=>'preinscripcion','estado'=>'confirmada']);
+            if (!$preinscripcion) { throw $this->createNotFoundException(); }
+            $cursoPre = $preinscripcion->getCurso();
+            if (!$cursoPre || $cursoPre->getInstituto()->getId() !== $instituto->getId() || $cursoPre->getDisabled() || $cursoPre->getCerrado() || ($cursoPre->getFechaFin() && $cursoPre->getFechaFin()->format('Y-m-d') < $this->institutoTimezoneService->getTodayForInstituto($instituto))) {
+                $this->addFlash('warning','El curso de la preinscripción ya no está disponible.');
+                return $this->redirectToRoute('instituto_solicitudes_show',['id'=>$preinscripcion->getId()]);
+            }
+            $alumno->setNombre($preinscripcion->getNombre())->setApellido($preinscripcion->getApellido())->setEmail($preinscripcion->getEmail())->setCelular($preinscripcion->getTelefono())->addCurso($cursoPre);
+        }
+
         $form = $this->createForm(AlumnoType::class, $alumno, ['is_edit' => false, 'instituto' => $instituto]);
 
         $form->handleRequest($request);
@@ -226,6 +238,10 @@ class AlumnoController extends AbstractController
                     // Pero necesitamos establecer la relación bidireccional
                     $this->setearHermandadBidireccional($alumno, $alumnoRepository);
                     
+                    // Se vincula al alta solo después de pasar todas las validaciones habituales.
+                    if ($preinscripcion && $alumno->getCurso()->contains($preinscripcion->getCurso())) {
+                        $preinscripcion->completarConAlumno($alumno);
+                    }
                     // Guardar todo
                     $this->entityManager->flush();
 

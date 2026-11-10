@@ -8,6 +8,6 @@ class PaginaPublicaRequestMatcher implements RequestMatcherInterface
 {
     public function matches(Request $request): bool
     {
-        return $request->attributes->get('_route') === 'app_instituto_landing_publica';
+        return in_array($request->attributes->get('_route'), ['app_instituto_landing_publica', 'app_instituto_landing_publica_solicitud'], true);
     }
 }

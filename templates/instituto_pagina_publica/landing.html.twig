@@ -5,7 +5,7 @@
     <title>{{ sitio.nombre }} · {{ Term('cursos') }} y actividades</title>
     <meta name="description" content="{{ sitio.presentacion ?: 'Conocé ' ~ term('los_cursos') ~ ', horarios y datos de contacto de ' ~ sitio.nombre ~ '.' }}">
     {% if preview %}<meta name="robots" content="noindex,nofollow">{% else %}<link rel="canonical" href="{{ urlPublica }}">{% endif %}
-    <link rel="stylesheet" href="{{ asset('assets/css/landing-instituto.css') }}?v=20261110-catalogo">
+    <link rel="stylesheet" href="{{ asset('assets/css/landing-instituto.css') }}?v=20261110-formularios">
     {% if sitio.logo %}
         <link rel="icon" href="{{ asset('uploads/logos/' ~ sitio.logo) }}">
         <link rel="apple-touch-icon" href="{{ asset('uploads/logos/' ~ sitio.logo) }}">
@@ -24,7 +24,7 @@
         {% if sitio.logo %}<span class="marca-logo"><img src="{{ asset('uploads/logos/' ~ sitio.logo) }}" alt="Logo de {{ sitio.nombre }}" width="112" height="64"></span>{% else %}<span class="marca-inicial" aria-hidden="true">{{ sitio.nombre|slice(0,1)|upper }}</span>{% endif %}
         <span class="marca-nombre">{{ sitio.nombre }}<small>{{ vertical == 'club' ? 'Deporte y comunidad' : 'Instituto de inglés' }}</small></span>
     </a>
-    <nav aria-label="Navegación principal"><a href="#cursos">{{ Term('cursos') }}</a><a href="#contacto">Contacto</a><a class="acceso" href="{{ path('app_login') }}">Ingresar al sistema <span aria-hidden="true">↗</span></a></nav>
+    <nav aria-label="Navegación principal"><a href="#cursos">{{ Term('cursos') }}</a><a href="#contacto">Contacto</a></nav>
 </header>
 <main id="contenido">
     <section class="hero wrap" id="inicio">
@@ -52,15 +52,17 @@
             {% if curso.descripcion %}<details class="curso-mas-info"><summary>Más info <span aria-hidden="true">+</span></summary><div class="curso-descripcion">{{ curso.descripcion }}</div></details>{% endif %}
             <div class="curso-detalles">{% if curso.inicio %}<p><span class="detalle-label">Inicio</span><span>{{ curso.inicio }}</span></p>{% endif %}{% if curso.fin %}<p><span class="detalle-label">Finalización</span><span>{{ curso.fin }}</span></p>{% endif %}</div>
             <div class="horarios"><span class="detalle-label">Días y horarios</span>{% for horario in curso.horarios %}<div><strong>{{ horario.dia|capitalize }}</strong>{% if horario.inicio %}<span>{{ horario.inicio }}{% if horario.fin %} – {{ horario.fin }}{% endif %}</span>{% endif %}</div>{% else %}<p>Consultanos por los horarios.</p>{% endfor %}</div>
-            <div class="curso-pie"><div>{% if sitio.mostrarPrecios and curso.precio is not null %}<span class="precio">${{ curso.precio|number_format(2, ',', '.') }}</span><span class="precio-label">Cuota mensual</span>{% else %}<span class="consulta-precio">Consultá los detalles</span>{% endif %}</div><a class="consultar" href="#contacto" aria-label="Consultar por {{ curso.nombre }}">Consultar <span aria-hidden="true">↗</span></a></div>
+            <div class="curso-pie"><div>{% if sitio.mostrarPrecios and curso.precio is not null %}<span class="precio">${{ curso.precio|number_format(2, ',', '.') }}</span><span class="precio-label">Cuota mensual</span>{% else %}<span class="consulta-precio">Consultá los detalles</span>{% endif %}</div><a class="consultar preinscribir-curso" href="#preinscripcion" data-curso="{{ curso.id }}" aria-label="Preinscribirme a {{ curso.nombre }}">Preinscribirme <span aria-hidden="true">↗</span></a></div>
         </article>{% else %}<div class="sin-cursos"><h3>Estamos preparando nuestras propuestas.</h3><p>Contactanos para conocer las próximas actividades y novedades.</p><a class="boton principal" href="#contacto">Consultar</a></div>{% endfor %}</div>
     </div></section>
+    {% if formularios is defined and sitio.cursos %}<section class="preinscripcion-seccion" id="preinscripcion"><div class="wrap preinscripcion-grid"><div><span class="eyebrow">Tu próximo paso</span><h2>¿Ya encontraste<br>{{ term('tu_instituto') == 'tu club' ? 'tu deporte?' : 'tu curso?' }}</h2><p>Dejanos tus datos para que podamos orientarte y coordinar tu inscripción.</p><p class="preinscripcion-aclaracion">La solicitud queda pendiente hasta que el instituto la revise. Te contactarán para confirmar los detalles.</p></div><div>{{ include('instituto_pagina_publica/_form_solicitud.html.twig', {tipo: 'preinscripcion'}) }}</div></div></section>{% endif %}
     <section class="contacto wrap" id="contacto"><div class="contacto-intro"><span class="eyebrow">02 / Conectemos</span><h2>Tu próximo capítulo<br>empieza con un <em>hola.</em></h2><p>Escribinos para conocer más sobre {{ term('los_cursos') }}, horarios e inscripciones.</p></div><div class="contacto-datos">
         {% if sitio.direccion %}<div class="contacto-item"><span class="contacto-icono" aria-hidden="true">⌖</span><div><h3>Encontranos</h3><p>{{ sitio.direccion }}</p><a target="_blank" rel="noopener noreferrer" href="https://www.google.com/maps/search/?api=1&amp;query={{ sitio.direccion|url_encode }}">Cómo llegar ↗</a></div></div>{% endif %}
         {% if sitio.telefono %}<div class="contacto-item"><span class="contacto-icono" aria-hidden="true">↗</span><div><h3>Llamanos</h3>{% if sitio.telLink %}<a href="tel:{{ sitio.telLink }}">{{ sitio.telefono }}</a>{% else %}<p>{{ sitio.telefono }}</p>{% endif %}</div></div>{% endif %}
         {% if sitio.email %}<div class="contacto-item"><span class="contacto-icono" aria-hidden="true">@</span><div><h3>Escribinos</h3><a href="mailto:{{ sitio.email }}">{{ sitio.email }}</a></div></div>{% endif %}
         {% if not sitio.direccion and not sitio.telefono and not sitio.email %}<p>Pronto compartiremos nuestros canales de contacto.</p>{% endif %}
-    </div></section>
+    </div>{% if formularios is defined %}<div class="contacto-formulario">{{ include('instituto_pagina_publica/_form_solicitud.html.twig', {tipo: 'contacto'}) }}</div>{% endif %}</section>
 </main>
 <footer class="wrap footer"><a class="footer-marca" href="#inicio">{% if sitio.logo %}<img src="{{ asset('uploads/logos/' ~ sitio.logo) }}" alt="" width="64" height="42" loading="lazy">{% endif %}<strong>{{ sitio.nombre }}</strong></a><span>{{ Term('cursos') }}, actividades y nuevas posibilidades.</span><a href="{{ path('app_login') }}">Acceso al sistema ↗</a></footer>
+<script src="{{ asset('assets/js/landing-formularios.js') }}?v=20261110" defer></script>
 </body></html>

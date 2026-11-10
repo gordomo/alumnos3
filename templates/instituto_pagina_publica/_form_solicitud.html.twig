@@ -1,0 +1,21 @@
+{% set valores = formularios.valores[tipo]|default({}) %}
+{% set errores = formularios.errores[tipo]|default([]) %}
+<form class="landing-form" method="post" action="{{ path('app_instituto_landing_publica_solicitud', {slug: formularios.slug, tipo: tipo}) }}#{{ tipo == 'contacto' ? 'contacto' : 'preinscripcion' }}" id="form-{{ tipo }}">
+    {% if errores %}<div class="form-aviso form-error" role="alert"><strong>Revisá el formulario</strong><ul>{% for error in errores %}<li>{{ error }}</li>{% endfor %}</ul></div>{% endif %}
+    {% if app.request and app.request.query.get('enviado') == tipo %}<div class="form-aviso" role="status">{{ tipo == 'contacto' ? 'Recibimos tu consulta. El instituto se pondrá en contacto con vos.' : 'Recibimos tu preinscripción. Está pendiente de revisión: el instituto debe confirmarla y completar la inscripción.' }}</div>{% endif %}
+    <fieldset {{ formularios.preview ? 'disabled' : '' }}>
+        <legend class="form-legend">{{ tipo == 'contacto' ? 'Dejanos tu mensaje' : 'Solicitá tu preinscripción' }}</legend>
+        {% if tipo == 'preinscripcion' %}<p class="form-intro">Completá los datos de quien quiere inscribirse y un contacto. El envío no reserva una vacante ni genera pagos.</p>{% endif %}
+        <input type="hidden" name="_firma" value="{{ formularios.tokens[tipo] }}">
+        <div class="campo-trampa" aria-hidden="true"><label for="{{ tipo }}-website">Dejá este campo vacío</label><input type="text" name="website" id="{{ tipo }}-website" tabindex="-1" autocomplete="off"></div>
+        {% if tipo == 'preinscripcion' %}<label for="{{ tipo }}-curso">{{ Term('curso') }} <span aria-hidden="true">*</span></label><select id="{{ tipo }}-curso" name="curso" required><option value="">Elegí {{ term('un_curso') }}</option>{% for curso in sitio.cursos %}<option value="{{ curso.id }}" {{ valores.curso|default('') == curso.id ? 'selected' : '' }}>{{ curso.nombre }}</option>{% endfor %}</select>{% endif %}
+        <div class="form-fila"><div><label for="{{ tipo }}-nombre">Nombre <span aria-hidden="true">*</span></label><input id="{{ tipo }}-nombre" name="nombre" value="{{ valores.nombre|default('') }}" autocomplete="given-name" required maxlength="100"></div><div><label for="{{ tipo }}-apellido">Apellido {{ tipo == 'preinscripcion' ? '*' : '(opcional)' }}</label><input id="{{ tipo }}-apellido" name="apellido" value="{{ valores.apellido|default('') }}" autocomplete="family-name" {{ tipo == 'preinscripcion' ? 'required' : '' }} maxlength="100"></div></div>
+        <label for="{{ tipo }}-email">Email de contacto <span aria-hidden="true">*</span></label><input type="email" id="{{ tipo }}-email" name="email" value="{{ valores.email|default('') }}" autocomplete="email" required maxlength="180">
+        <label for="{{ tipo }}-telefono">Teléfono (opcional)</label><input type="tel" id="{{ tipo }}-telefono" name="telefono" value="{{ valores.telefono|default('') }}" autocomplete="tel" maxlength="50">
+        <label for="{{ tipo }}-mensaje">{{ tipo == 'contacto' ? 'Tu consulta *' : '¿Querés contarnos algo? (opcional)' }}</label><textarea id="{{ tipo }}-mensaje" name="mensaje" rows="4" maxlength="3000" {{ tipo == 'contacto' ? 'required' : '' }}>{{ valores.mensaje|default('') }}</textarea>
+        <label class="form-consentimiento"><input type="checkbox" name="consentimiento" value="1" required><span>Autorizo a {{ sitio.nombre }} a usar estos datos para gestionar esta solicitud y contactarme al respecto.</span></label>
+        <p class="form-nota">Los campos con * son obligatorios. No incluyas datos sensibles en el mensaje.</p>
+        <button class="boton principal" type="submit">{{ tipo == 'contacto' ? 'Enviar consulta' : 'Enviar preinscripción' }} <span aria-hidden="true">↗</span></button>
+    </fieldset>
+    {% if formularios.preview %}<p class="form-nota">Vista previa: los formularios se habilitan en la página publicada.</p>{% endif %}
+</form>
