@@ -9,32 +9,33 @@
 .calendario-panel {
     background: #fff;
     padding: 1rem;
-    border-radius: 14px;
+    border: 1px solid var(--ui-borde);
+    border-radius: var(--ui-radio);
 }
 
 /* FullCalendar agrega sus clases (.fc, .fc-theme-standard) a este mismo div, así que las
    variables van acá y no en un descendiente. */
 .calendario-panel {
-    --fc-border-color: #dde6f4;
+    --fc-border-color: var(--ui-borde);
     --fc-page-bg-color: #ffffff;
-    --fc-neutral-bg-color: #f4f8ff;
-    /* El día de hoy: azul suave en lugar del amarillo pálido del tema por defecto. */
-    --fc-today-bg-color: #eaf2fe;
-    --fc-list-event-hover-bg-color: #f4f8ff;
-    --fc-highlight-color: rgba(47, 126, 240, 0.14);
+    --fc-neutral-bg-color: #f7faf9;
+    /* El día de hoy se destaca con el tono suave de la marca. */
+    --fc-today-bg-color: var(--marca-suave);
+    --fc-list-event-hover-bg-color: #f7faf9;
+    --fc-highlight-color: var(--marca-tenue);
 }
 
-/* Encabezado de los días: azul del sistema en lugar del gris. */
+/* Encabezados neutros: el color se reserva para selección y categorías. */
 .calendario-panel .fc-col-header-cell {
-    background: var(--marca-legible);
-    border-color: var(--marca-legible);
-    padding: 0.55rem 0;
+    background: #f7faf9;
+    border-color: var(--ui-borde);
+    padding: 0.25rem 0;
 }
 
 .calendario-panel .fc-col-header-cell-cushion {
-    color: #fff;
+    color: var(--ui-texto);
     font-weight: 600;
-    font-size: 0.92rem;
+    font-size: 0.85rem;
     letter-spacing: 0.02em;
     /* Los nombres de los días son <a>: sin esto van subrayados. */
     text-decoration: none;
@@ -50,9 +51,12 @@
 }
 
 .calendario-panel .fc-day-other .fc-daygrid-day-number {
-    color: #aab4c2;
+    color: var(--ui-apagado);
     font-weight: 400;
 }
+
+/* Las fechas de otro mes siguen siendo legibles, sin competir con las del mes actual. */
+.calendario-panel .fc-day-other .fc-daygrid-day-top { opacity: 1; }
 
 /* Hoy, con el número en un círculo lleno. */
 .calendario-panel .fc-day-today .fc-daygrid-day-number {
@@ -70,31 +74,41 @@
     text-underline-offset: 3px;
 }
 
-/* Barra de botones: los mismos azules que el resto del sistema. */
-.calendario-panel .fc-button-primary {
-    background: var(--marca-legible);
-    border-color: var(--marca-legible);
+/* Botones secundarios neutros; solo la vista seleccionada usa el color de marca. */
+body.app-panel .calendario-panel .fc-button-primary {
+    color: var(--ui-texto);
+    background: var(--ui-superficie);
+    border-color: var(--ui-borde-campo);
     box-shadow: none;
 }
-
-.calendario-panel .fc-button-primary:hover {
-    background: var(--marca-oscuro);
-    border-color: var(--marca-oscuro);
+body.app-panel .calendario-panel .fc-button-primary:not(:disabled):hover {
+    color: var(--marca-legible);
+    background: var(--marca-suave);
+    border-color: var(--marca-legible);
 }
-
-.calendario-panel .fc-button-primary:disabled,
-.calendario-panel .fc-button-primary.fc-button-active {
-    background: var(--marca-mas-oscuro);
-    border-color: var(--marca-mas-oscuro);
+body.app-panel .calendario-panel .fc-button-primary:not(:disabled).fc-button-active {
+    color: #fff;
+    background: var(--marca-legible);
+    border-color: var(--marca-legible);
 }
-
-.calendario-panel .fc-button-primary:focus,
-.calendario-panel .fc-button-primary:not(:disabled):active:focus {
-    box-shadow: 0 0 0 0.2rem rgba(47, 126, 240, 0.3);
+body.app-panel .calendario-panel .fc-button-primary:disabled {
+    color: var(--ui-apagado);
+    background: #f5f7f7;
+    border-color: var(--ui-borde);
+    opacity: .65;
 }
+body.app-panel .calendario-panel .fc-button:focus-visible {
+    outline: 3px solid var(--marca-tenue);
+    outline-offset: 2px;
+    box-shadow: none;
+}
+.calendario-panel .fc-button-group { gap: .4rem; }
+.calendario-panel .fc-button-group > .fc-button { margin-left: 0; border-radius: var(--ui-radio-chico) !important; }
+.calendario-panel .fc-header-toolbar { gap: .75rem; }
+.calendario-panel .fc-daygrid-dot-event { color: var(--ui-texto); }
 
 .calendario-panel .fc-toolbar-title {
-    font-size: 1.4rem;
+    font-size: 1.25rem;
     font-weight: 700;
     color: #1f2d3d;
     /* Solo la primera letra en mayúscula: con capitalize quedaba "Septiembre De 2026". */

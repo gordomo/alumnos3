@@ -7,68 +7,54 @@
 {% block stylesheets %}
     {{ parent() }}
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="{{ asset('assets/css/calendario.css') }}">
-    <style>
-        .agenda-filtros .form-check { margin-right: 1.25rem; }
-        .agenda-color {
-            display: inline-block; width: .75rem; height: .75rem;
-            border-radius: 2px; margin-right: .35rem; vertical-align: middle;
-        }
-    </style>
+    <link rel="stylesheet" href="{{ asset('assets/css/calendario.css') }}?v=20261110-agenda">
+    <link rel="stylesheet" href="{{ asset('assets/css/agenda.css') }}?v=20261110">
+
 {% endblock %}
 
 {% block body %}
-<div class="container-fluid pagina">
-    <div class="card mb-3">
-        <div class="card-body">
-            <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
-                <div class="agenda-filtros d-flex flex-wrap align-items-center">
-                    {% for clave in fuentes %}
-                        {% set fuente = catalogoFuentes[clave] %}
-                        <div class="form-check">
-                            <input class="form-check-input filtro-fuente" type="checkbox" value="{{ clave }}"
-                                   id="fuente_{{ clave }}" {% if clave in fuentesPorDefecto %}checked{% endif %}>
-                            <label class="form-check-label" for="fuente_{{ clave }}">
-                                <span class="agenda-color" style="background: {{ fuente.color }}"></span>
-                                <i class="bi {{ fuente.icono }}"></i> {{ fuente.etiqueta }}
-                            </label>
-                        </div>
-                    {% endfor %}
-                </div>
-
-                {% if puedeCargarEventos %}
-                    <div class="d-flex gap-2">
-                        <a href="{{ path('app_agenda_eventos_listado') }}" class="btn btn-sm btn-outline-secondary">
-                            <i class="bi bi-list-ul"></i> Eventos cargados
-                        </a>
-                        <a href="{{ path('app_agenda_evento_nuevo', {'volver': 'agenda'}) }}" class="btn btn-sm btn-primary">
-                            <i class="bi bi-plus-circle"></i> Nuevo evento
-                        </a>
-                    </div>
-                {% endif %}
+<div class="container-fluid pagina agenda-page">
+    <section class="agenda-toolbar" aria-label="Filtros y acciones de la agenda">
+        <fieldset class="agenda-filtros">
+            <legend>Mostrar en la agenda</legend>
+            <div class="agenda-fuentes">
+                {% for clave in fuentes %}
+                    {% set fuente = catalogoFuentes[clave] %}
+                    <label class="agenda-fuente" for="fuente_{{ clave }}">
+                        <input class="form-check-input filtro-fuente" type="checkbox" value="{{ clave }}"
+                               id="fuente_{{ clave }}" {% if clave in fuentesPorDefecto %}checked{% endif %}>
+                        <span class="agenda-color" style="background: {{ fuente.color }}" aria-hidden="true"></span>
+                        <span>{{ fuente.etiqueta }}</span>
+                    </label>
+                {% endfor %}
             </div>
-        </div>
-    </div>
-
+        </fieldset>
+        {% if puedeCargarEventos %}
+            <div class="agenda-acciones">
+                <a href="{{ path('app_agenda_eventos_listado') }}" class="btn btn-outline-secondary"><i class="bi bi-list-ul" aria-hidden="true"></i> Eventos cargados</a>
+                <a href="{{ path('app_agenda_evento_nuevo', {'volver': 'agenda'}) }}" class="btn btn-primary"><i class="bi bi-plus-circle" aria-hidden="true"></i> Nuevo evento</a>
+            </div>
+        {% endif %}
+    </section>
+    <p id="agenda-sin-fuentes" class="agenda-aviso" role="status" hidden>Seleccioná al menos una categoría para mostrar eventos.</p>
     {% if puedeCargarEventos %}
-        <p class="small text-muted mb-2">
-            <i class="bi bi-hand-index"></i>
-            Clic en un día (o arrastrá sobre varios) para agendar algo ahí. Lo que agregues se puede
-            mover arrastrándolo. Los horarios de {{ term('los_cursos') }} están en
-            <a href="{{ path('app_curso_calendario') }}">{{ Term('cursos') }} → Calendario</a>; acá se prenden con
-            el tilde de <em>Clases</em> si los querés ver encima.
-        </p>
+        <details class="agenda-ayuda">
+            <summary><i class="bi bi-info-circle" aria-hidden="true"></i> Cómo usar la agenda</summary>
+            <p>Hacé clic en un día o arrastrá sobre varios para crear un evento. Los eventos propios se pueden mover arrastrándolos.
+                Los horarios se administran en <a href="{{ path('app_curso_calendario') }}">{{ Term('cursos') }} → Calendario</a>.
+                Activá la categoría <strong>{{ catalogoFuentes['clase'].etiqueta|default('Clases') }}</strong> para verlos también acá.</p>
+        </details>
     {% endif %}
 
     <div id="calendario" class="calendario-panel"></div>
 </div>
 
-<div class="modal fade" id="modalEvento" tabindex="-1">
+<div class="modal fade" id="modalEvento" tabindex="-1" aria-labelledby="modalEventoTitulo" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="modalEventoTitulo">Evento</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
             <div class="modal-body">
                 <p class="mb-1"><strong>Cuándo:</strong> <span id="modalEventoCuando">-</span></p>
@@ -167,7 +153,13 @@
                     start: info.startStr,
                     end: info.endStr
                 });
-                fuentesElegidas().forEach(f => params.append('fuentes[]', f));
+                const fuentes = fuentesElegidas();
+                document.getElementById('agenda-sin-fuentes').hidden = fuentes.length > 0;
+                if (fuentes.length === 0) {
+                    exito([]);
+                    return;
+                }
+                fuentes.forEach(f => params.append('fuentes[]', f));
 
                 fetch(urlEventos + '?' + params.toString(), { headers: { 'Accept': 'application/json' } })
                     .then(r => r.ok ? r.json() : Promise.reject(r.status))
@@ -252,23 +244,20 @@
         }
         {% endif %}
 
-        // Celdas cuadradas en la vista de mes: el alto se saca del ancho de la columna por la
-        // cantidad de semanas que tenga el mes. En pantalla chica se deja el alto por contenido,
-        // porque una celda cuadrada de 50px no muestra nada.
+        // El calendario se adapta al espacio disponible, sin forzar celdas cuadradas
+        // que vuelvan interminable un mes en pantallas anchas.
         function ajustarAlto() {
-            if (calendario.view.type !== 'dayGridMonth' || !anchoComodo()) {
+            const tipo = calendario.view.type;
+            if (tipo === 'listMonth' || (tipo === 'dayGridMonth' && !anchoComodo())) {
                 calendario.setOption('height', 'auto');
                 return;
             }
-
             const panel = document.getElementById('calendario');
-            const filas = panel.querySelectorAll('.fc-daygrid-body tbody tr').length || 6;
-            const anchoColumna = panel.clientWidth / 7;
-            const alrededor = panel.querySelector('.fc-header-toolbar').offsetHeight
-                + (panel.querySelector('.fc-col-header') ? panel.querySelector('.fc-col-header').offsetHeight : 40)
-                + 40;
-
-            calendario.setOption('height', Math.round(anchoColumna * filas + alrededor));
+            const disponible = window.innerHeight - Math.max(0, panel.getBoundingClientRect().top) - 24;
+            const altura = Math.round(Math.max(520, Math.min(840, disponible)));
+            if (calendario.getOption('height') !== altura) {
+                calendario.setOption('height', altura);
+            }
         }
 
         calendario.render();
