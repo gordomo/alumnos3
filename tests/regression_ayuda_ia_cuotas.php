@@ -15,12 +15,12 @@ try {
     $ahora = 2000000000;
     $cuota = new App\Service\AyudaIaCuota($db, 2, 4, 3);
     cuotaCheck($cuota->consumir(1, $ahora) === 0 && $cuota->consumir(1, $ahora) === 0, 'Cuota: llamadas dentro del límite');
-    cuotaCheck($cuota->consumir(1, $ahora) > 0, 'Cuota: institución agotada');
+    cuotaCheck($cuota->reservar(1, $ahora)['motivo'] === 'instituto_dia', 'Cuota: institución agotada identifica el motivo');
     cuotaCheck((int) $db->fetchOne('SELECT MAX(usos) FROM ayuda_ia_cuota WHERE clave LIKE ?', ['global-dia-%']) === 2, 'Cuota: rechazo revierte contadores globales');
     cuotaCheck($cuota->consumir(2, $ahora) === 0, 'Cuota: otra institución conserva su cupo');
-    cuotaCheck($cuota->consumir(2, $ahora) > 0, 'Cuota: límite global por minuto');
+    cuotaCheck($cuota->reservar(2, $ahora) === ['reintentarEn' => 60 - ($ahora % 60), 'motivo' => 'global_minuto'], 'Cuota: frecuencia identifica motivo y segundos exactos');
     cuotaCheck($cuota->consumir(2, $ahora + 60) === 0, 'Cuota: ventana de minuto se renueva');
-    cuotaCheck($cuota->consumir(3, $ahora + 60) > 0, 'Cuota: límite diario global');
+    cuotaCheck($cuota->reservar(3, $ahora + 60)['motivo'] === 'global_dia', 'Cuota: límite diario global identifica el motivo');
     cuotaCheck($cuota->consumir(1, $ahora + 86400) === 0, 'Cuota: ventana diaria se renueva');
     $nuevaInstancia = new App\Service\AyudaIaCuota($db, 2, 4, 3);
     cuotaCheck($nuevaInstancia->consumir(1, $ahora + 86400) === 0 && $nuevaInstancia->consumir(1, $ahora + 86400) > 0, 'Cuota: se comparte entre instancias y usuarios');

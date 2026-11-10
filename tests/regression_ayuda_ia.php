@@ -23,8 +23,9 @@ $cliente = new class('', 'gemini-3.5-flash-lite') extends GeminiAyudaCliente {
 $cuota = new class extends AyudaIaCuota {
     public int $llamadas = 0;
     public int $espera = 0;
+    public string $motivo = 'global_minuto';
     public function __construct() {}
-    public function consumir(int $institutoId, ?int $ahora = null): int { $this->llamadas++; return $this->espera; }
+    public function reservar(int $institutoId, ?int $ahora = null): array { $this->llamadas++; return ['reintentarEn' => $this->espera, 'motivo' => $this->espera > 0 ? $this->motivo : null]; }
 };
 $instituto = (new Instituto())->setNombre('Dato privado NO enviar');
 (new ReflectionProperty(Instituto::class, 'id'))->setValue($instituto, 42);
@@ -59,6 +60,13 @@ $auth->roles = ['ROLE_ADMIN_INSTITUTO'];
 $cuota->espera = 60;
 $antes = $cliente->llamadas;
 verificar($ia->responder('cómo registrar un pago', $instituto)['estado'] === 'limite' && $cliente->llamadas === $antes, 'IA: cuota agotada no llama al proveedor');
+$limitada = $ia->responder('cómo registrar un pago', $instituto);
+verificar($limitada['motivoLimite'] === 'global_minuto' && str_contains($limitada['respuesta'], '60 segundo(s)') && str_contains($limitada['respuesta'], 'No se agotó el cupo diario'), 'IA: frecuencia indica espera y no se confunde con cupo diario');
+foreach (['instituto_dia', 'global_dia'] as $motivo) {
+    $cuota->motivo = $motivo; $cuota->espera = 3660;
+    $limitada = $ia->responder('cómo registrar un pago', $instituto);
+    verificar($limitada['motivoLimite'] === $motivo && str_contains($limitada['respuesta'], '1 h y 1 min') && !str_contains($limitada['respuesta'], 'No se agotó'), 'IA: cupo diario identifica alcance y renovación');
+}
 $cuota->espera = 0; $cliente->fallar = true;
 $resultado = $ia->responder('cómo registrar un pago', $instituto);
 verificar($resultado['estado'] === 'no_disponible' && $resultado['fuentes'] && !str_contains(json_encode($resultado), 'simulado'), 'IA: error del proveedor conserva manual y oculta detalles');

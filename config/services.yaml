@@ -21,9 +21,9 @@ parameters:
     ayuda_ia_solo_pruebas_default: '1'
     gemini_key_default: ''
     gemini_model_default: 'gemini-3.5-flash-lite'
-    ayuda_ia_instituto_dia_default: '10'
-    ayuda_ia_global_dia_default: '20'
-    ayuda_ia_global_minuto_default: '3'
+    ayuda_ia_instituto_dia_default: '100'
+    ayuda_ia_global_dia_default: '200'
+    ayuda_ia_global_minuto_default: '6'
 
     # Cómo se llama el producto y cómo se llama su cliente, en cada vertical. Es el primer
     # pedazo del vocabulario: las pantallas de acceso decían "Team Builder Institute" y

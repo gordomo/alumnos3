@@ -252,9 +252,9 @@ GEMINI_API_KEY=clave_creada_en_google_ai_studio
 GEMINI_MODEL=gemini-3.5-flash-lite
 AYUDA_IA_ENABLED=1
 AYUDA_IA_SOLO_PRUEBAS=1
-AYUDA_IA_INSTITUTO_DIA=10
-AYUDA_IA_GLOBAL_DIA=20
-AYUDA_IA_GLOBAL_MINUTO=3
+AYUDA_IA_INSTITUTO_DIA=100
+AYUDA_IA_GLOBAL_DIA=200
+AYUDA_IA_GLOBAL_MINUTO=6
 ```
 
 La API key debe pertenecer a un proyecto sin facturación habilitada para esta prueba
@@ -295,3 +295,12 @@ Los enlaces proceden exclusivamente de la fuente local. Se valida la estructura,
 la finalización y los IDs citados; eso no demuestra por sí solo la exactitud de
 la respuesta. La restricción temática combina búsqueda y reglas del modelo:
 requiere evaluación con preguntas reales antes de habilitar clientes.
+
+
+Ajuste de la prueba del 10/11/2026: ambos sitios usan 100 consultas por institución
+al día, 200 por sitio al día y 6 por sitio por minuto. Al compartir proyecto Gemini,
+los máximos de ambas instalaciones suman 400 por día y 12 por minuto; otros usos del
+proyecto (incluido localhost) también consumen la cuota del proveedor. Estos son
+límites internos configurables, no la cuota que informa Google. Un bloqueo por
+frecuencia ahora indica segundos de espera; uno diario indica alcance y renovación.
+No hace falta borrar contadores al aumentar los límites: los usos previos se conservan.

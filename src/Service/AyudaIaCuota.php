@@ -14,26 +14,32 @@ class AyudaIaCuota
         private int $limiteGlobalMinuto
     ) {}
 
-    /** Devuelve segundos para reintentar, o cero si reservó una llamada. */
+    /** Compatibilidad para consumidores que solo necesitan el tiempo de espera. */
     public function consumir(int $institutoId, ?int $ahora = null): int
+    {
+        return $this->reservar($institutoId, $ahora)['reintentarEn'];
+    }
+
+    /** @return array{reintentarEn: int, motivo: ?string} */
+    public function reservar(int $institutoId, ?int $ahora = null): array
     {
         $ahora = $ahora ?? time();
         $dia = intdiv($ahora, 86400);
         $minuto = intdiv($ahora, 60);
         // Orden fijo para evitar interbloqueos entre instituciones concurrentes.
         $ventanas = [
-            ['global-dia-' . $dia, $this->limiteGlobalDia, ($dia + 1) * 86400],
-            ['global-minuto-' . $minuto, $this->limiteGlobalMinuto, ($minuto + 1) * 60],
-            ['instituto-' . $institutoId . '-dia-' . $dia, $this->limiteInstitutoDia, ($dia + 1) * 86400],
+            ['global-dia-' . $dia, $this->limiteGlobalDia, ($dia + 1) * 86400, 'global_dia'],
+            ['instituto-' . $institutoId . '-dia-' . $dia, $this->limiteInstitutoDia, ($dia + 1) * 86400, 'instituto_dia'],
+            ['global-minuto-' . $minuto, $this->limiteGlobalMinuto, ($minuto + 1) * 60, 'global_minuto'],
         ];
         $this->conexion->beginTransaction();
         try {
-            foreach ($ventanas as [$clave, $limite, $vence]) {
+            foreach ($ventanas as [$clave, $limite, $vence, $motivo]) {
                 $this->conexion->executeStatement('INSERT IGNORE INTO ayuda_ia_cuota (clave, usos, vence) VALUES (?, 0, ?)', [$clave, $vence]);
                 $cambio = $this->conexion->executeStatement('UPDATE ayuda_ia_cuota SET usos = usos + 1 WHERE clave = ? AND usos < ?', [$clave, max(0, $limite)]);
                 if ($cambio !== 1) {
                     $this->conexion->rollBack();
-                    return max(1, $vence - $ahora);
+                    return ['reintentarEn' => max(1, $vence - $ahora), 'motivo' => $motivo];
                 }
             }
             $this->conexion->commit();
@@ -41,6 +47,6 @@ class AyudaIaCuota
             $this->conexion->rollBack();
             throw $error;
         }
-        return 0;
+        return ['reintentarEn' => 0, 'motivo' => null];
     }
 }

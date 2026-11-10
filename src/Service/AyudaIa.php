@@ -24,9 +24,20 @@ class AyudaIa
             'id' => $s['id'], 'tema' => $s['tituloTema'], 'titulo' => $s['titulo'],
             'texto' => mb_substr($s['texto'], 0, 3000),
         ], $secciones);
-        $espera = $this->cuota->consumir($instituto->getId());
+        $reserva = $this->cuota->reservar($instituto->getId());
+        $espera = $reserva['reintentarEn'];
         if ($espera > 0) {
-            return $this->resultado('limite', 'Alcanzamos el límite de consultas de la prueba. Podés seguir usando la búsqueda y estos artículos del manual.', $fuentes) + ['reintentarEn' => $espera];
+            if ($reserva['motivo'] === 'global_minuto') {
+                $mensaje = 'Se hicieron varias consultas seguidas. Podés volver a consultar en ' . $espera . ' segundo(s). No se agotó el cupo diario.';
+            } else {
+                $alcance = $reserva['motivo'] === 'instituto_dia' ? 'esta institución' : 'este sitio';
+                $horas = intdiv($espera, 3600);
+                $minutos = (int) ceil(($espera % 3600) / 60);
+                if ($minutos === 60) { $horas++; $minutos = 0; }
+                $mensaje = 'Se alcanzó el cupo diario de la prueba para ' . $alcance . '. Se renueva en ' . $horas . ' h y ' . $minutos . ' min.';
+            }
+            return $this->resultado('limite', $mensaje . ' Podés seguir usando la búsqueda y estos artículos del manual.', $fuentes)
+                + ['reintentarEn' => $espera, 'motivoLimite' => $reserva['motivo']];
         }
         try {
             $respuesta = $this->cliente->responder($pregunta, $documentos);
