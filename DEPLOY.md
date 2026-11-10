@@ -404,3 +404,60 @@ Los intentos enviados y fallidos se registran también como «Respuesta a consul
 
 Pruebas: `php tests/regression_respuestas_solicitudes.php` (tablas temporales y mailer en memoria,
 sin correos reales), más la regresión de solicitudes públicas y lint de contenedor y plantillas.
+
+### Recepción central de conversaciones (2026-11-10)
+
+Se eligieron casillas por producto para evitar un buzón y credenciales nuevos en cada alta:
+`comunicacion_institutos@teambuilder.com.ar` y `comunicacion_clubes@teambuilder.com.ar`.
+Las instituciones actuales y futuras quedan cubiertas por la configuración de su instalación.
+No se usa el remitente como única clave de enrutamiento: cada solicitud recibe un token aleatorio de
+128 bits y cada salida un Message-ID único persistido. Reply-To lleva `casilla+token@teambuilder.com.ar`.
+Al recibir se exige una conversación inequívoca por ese token o por In-Reply-To/References, y además
+que From coincida con el email del contacto original. Nunca se asocia un correo solo por su remitente
+ni se usa el asunto para decidir el instituto. Las casillas/productos se validan por separado.
+
+Migración aditiva explícita: `DoctrineMigrations\Version20261110230000`, con respaldo previo. Agrega
+token y marca de mensajes nuevos a solicitudes, Message-ID a salidas y `mensaje_entrante_solicitud`.
+`CORREO_CONVERSACIONES_ACTIVO=1` activa From/Reply-To central y la recepción; por defecto está apagado.
+No modifica MAILER_DSN ni las contraseñas SMTP existentes. Postfix permite al remitente autenticado
+actual enviar desde estas dos direcciones del mismo dominio; las casillas también tienen credenciales
+propias guardadas solo en `/root/alumnos-correo/casillas.json` (600), nunca en git o el panel del instituto.
+Los tokens se crean antes de la primera salida central, sin requerir otra operación en el alta.
+
+El servidor ya tiene Postfix/Dovecot con Maildir local. El recolector de biblioteca estándar de Python
+lee únicamente INBOX/new y cur de esas dos casillas; evita depender de una extensión IMAP en PHP o
+leer las casillas particulares de cada instituto. No borra mensajes. Se instala una copia de
+`scripts/recibir_correo_conversaciones.py` como `/root/alumnos-correo/recibir.py`, propiedad de root y
+modo 700: no ejecutar como root una copia editable por www-data. Su configuración, también privada,
+es una lista JSON con `casilla`, `maildir`, `sitio` y `estado` (SQLite fuera del webroot). Las rutas,
+casillas y contenedores permitidos están acotados. Invoca `docker exec --user www-data` en el contenedor
+fijo correspondiente, sin leer docker-compose.yml de la aplicación ni interpolar contenido de correos
+en comandos. El JSON va por stdin al comando CLI `app:correo:importar`; no hay endpoint HTTP de ingreso.
+
+Cron cada minuto, con flock para impedir solapamientos. Se procesan hasta 50 mensajes por casilla en
+cada pasada. El estado SQLite evita releer los correos terminados; ante fallo temporal se reintenta
+la próxima vez. La unicidad en base evita duplicados incluso si se pierde el estado local. Los no
+asociados, ambiguos, automáticos, con remitente diferente o mayores a 5 MiB se conservan en su buzón,
+pero no se muestran a ningún instituto. Su motivo queda en el estado privado para revisión del operador.
+La carpeta Junk no se importa. No se cambian reglas globales de spam, DNS o permisos de otros buzones.
+
+El texto MIME se decodifica sin ejecutar HTML, scripts ni imágenes externas. Se conserva el original
+EML hasta 5 MiB fuera del webroot en `var/correo_recibido`, con nombres aleatorios y permisos 600; debe
+incluirse en respaldos privados junto con la base. Los adjuntos se listan y permanecen incluidos en
+ese original descargable desde la ficha (sesión, rol e instituto comprobados; attachment/nosniff).
+No se abren ni se ejecutan adjuntos en el servidor. Texto muy extenso se abrevia a 50.000 caracteres,
+con acceso al original. El tamaño completo máximo de ingestión es 5 MiB por correo. Revisar el buzón
+central ante mensajes superiores a ese límite; no se borran silenciosamente.
+
+La ficha muestra entradas y salidas juntas y destaca mensajes nuevos. Una respuesta a una consulta
+atendida la devuelve a pendiente; una preinscripción mantiene su estado administrativo. La bandeja
+«Pendientes y mensajes nuevos» incluye ambas situaciones siempre dentro del instituto. Se puede
+marcar leído expresamente y, al responder, se limpia la marca. Se avisa al email de Información general
+si es válido y distinto de la casilla central; un fallo del aviso no pierde el mensaje recibido.
+Los correos enviados antes de activar esta función conservan su Reply-To anterior: sus contestaciones
+siguen llegando al email del instituto. Los nuevos envíos desde el panel ya usan el circuito central.
+
+Comprobaciones: `python3 tests/test_correo_mime.py`, `php tests/regression_correo_entrante.php`,
+`php tests/regression_respuestas_solicitudes.php`, regresiones públicas, lint de contenedor y Twig.
+Las pruebas de PHP usan tablas temporales y mailer en memoria. El ensayo real de SMTP/recepción se
+hace solo entre las dos casillas técnicas, con fixtures propias que luego se eliminan.

@@ -9,7 +9,9 @@ class SolicitudPaginaPublicaRepository extends ServiceEntityRepository
     public function bandeja(Instituto $instituto, string $estado): \Doctrine\ORM\QueryBuilder
     {
         $qb=$this->createQueryBuilder('s')->leftJoin('s.curso','c')->addSelect('c')->where('s.instituto = :instituto')->setParameter('instituto',$instituto);
-        if ($estado !== 'todas') { $qb->andWhere('s.estado = :estado')->setParameter('estado',$estado); }
+        if ($estado==='nuevos') { $qb->andWhere('s.correosNuevos = true'); }
+        elseif ($estado==='pendiente') { $qb->andWhere('(s.estado = :estado OR s.correosNuevos = true)')->setParameter('estado','pendiente'); }
+        elseif ($estado !== 'todas') { $qb->andWhere('s.estado = :estado')->setParameter('estado',$estado); }
         return $qb->orderBy('s.fecha','DESC')->addOrderBy('s.id','DESC');
     }
 }

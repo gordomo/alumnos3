@@ -21,7 +21,8 @@ class EmailService
         private string $projectDir,
         private string $baseUrl,
         string $senderEmail = 'contacto@teambuilder.com.ar',
-        string $senderName = 'Team Builder'
+        string $senderName = 'Team Builder',
+        private ?CorreoConversaciones $correo=null
     ) {
         $this->mailer = $mailer;
         $this->urlGenerator = $urlGenerator;
@@ -75,9 +76,13 @@ class EmailService
     public function sendSolicitudReply(\App\Entity\RespuestaSolicitudPublica $respuesta): void
     {
         $solicitud=$respuesta->getSolicitud();$instituto=$solicitud->getInstituto();
-        if (!filter_var($instituto->getEmail(),FILTER_VALIDATE_EMAIL)) { throw new \InvalidArgumentException('El instituto necesita un email válido para recibir respuestas.'); }
-        $email=(new TemplatedEmail())->from(new Address($this->senderEmail,$instituto->getNombre()))->to($respuesta->getDestinatario())->replyTo(new Address($instituto->getEmail(),$instituto->getNombre()))
+        $central=$this->correo && $this->correo->isActivo();
+        if (!$central && !filter_var($instituto->getEmail(),FILTER_VALIDATE_EMAIL)) { throw new \InvalidArgumentException('El instituto necesita un email válido para recibir respuestas.'); }
+        $remitente=$central?$this->correo->casilla():$this->senderEmail;
+        $replyTo=$central?$this->correo->direccionRespuesta($solicitud):$instituto->getEmail();
+        $email=(new TemplatedEmail())->from(new Address($remitente,$instituto->getNombre()))->to($respuesta->getDestinatario())->replyTo(new Address($replyTo,$instituto->getNombre()))
             ->subject($respuesta->getAsunto())->htmlTemplate('emails/respuesta_solicitud.html.twig')->context(['respuesta'=>$respuesta]);
+        if ($central && $respuesta->getCorreoMessageId()) { $email->getHeaders()->addIdHeader('Message-ID',$respuesta->getCorreoMessageId()); }
         $this->mailer->send($email);
     }
 

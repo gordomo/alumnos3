@@ -1,0 +1,3 @@
+{% extends 'emails/base_email.html.twig' %}
+{% block title %}Nueva respuesta recibida{% endblock %}
+{% block content %}<p>{{ solicitud.nombre }} {{ solicitud.apellido }} respondió a la conversación de tu página pública.</p><p>El mensaje ya está disponible en la bandeja de {{ solicitud.instituto.nombre }}.</p><p><a href="{{ bandejaUrl }}" class="button">Abrir conversación</a></p>{% endblock %}

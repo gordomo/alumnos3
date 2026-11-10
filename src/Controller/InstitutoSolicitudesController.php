@@ -1,10 +1,11 @@
 <?php
 namespace App\Controller;
 
-use App\Entity\{Alumno, SolicitudPaginaPublica, RespuestaSolicitudPublica};
+use App\Entity\{Alumno, SolicitudPaginaPublica, RespuestaSolicitudPublica, MensajeEntranteSolicitud};
 use App\Repository\SolicitudPaginaPublicaRepository;
 use App\Service\InstitutoTimezoneService;
 use App\Service\RespuestaSolicitudService;
+use App\Service\CorreoConversaciones;
 use App\Form\RespuestaSolicitudPublicaType;
 use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
@@ -16,6 +17,7 @@ use Symfony\Component\Routing\Annotation\Route;
 /** @Route("/instituto/solicitudes") */
 class InstitutoSolicitudesController extends AbstractController
 {
+    public function __construct(private ?CorreoConversaciones $correo=null) {}
     private function propia(int $id, SolicitudPaginaPublicaRepository $repo): SolicitudPaginaPublica
     {
         $this->denyAccessUnlessGranted('ROLE_ADMIN_INSTITUTO');
@@ -32,7 +34,7 @@ class InstitutoSolicitudesController extends AbstractController
         $instituto=$this->getUser()->getInstituto();
         if (!$instituto) { throw $this->createAccessDeniedException(); }
         $estado=(string)$request->query->get('estado','pendiente');
-        if (!in_array($estado,['pendiente','confirmada','atendida','descartada','inscrita','todas'],true)) { $estado='pendiente'; }
+        if (!in_array($estado,['pendiente','confirmada','atendida','descartada','inscrita','nuevos','todas'],true)) { $estado='pendiente'; }
         return $this->render('instituto_solicitudes/index.html.twig',['solicitudes'=>$paginador->paginate($repo->bandeja($instituto,$estado),max(1,$request->query->getInt('page',1)),20),'estado'=>$estado]);
     }
     /** @Route("/{id}", name="instituto_solicitudes_show", requirements={"id"="\d+"}, methods={"GET"}) */
@@ -54,7 +56,12 @@ class InstitutoSolicitudesController extends AbstractController
     {
         $existentes=$em->getRepository(Alumno::class)->findBy(['instituto'=>$s->getInstituto(),'email'=>$s->getEmail()]);
         $respuestas=$em->getRepository(RespuestaSolicitudPublica::class)->findBy(['solicitud'=>$s],['fecha'=>'DESC','id'=>'DESC'],50);
-        $response=$this->render('instituto_solicitudes/show.html.twig',['solicitud'=>$s,'existentes'=>$existentes,'respuestaForm'=>$form->createView(),'respuestas'=>$respuestas,'puedeResponder'=>filter_var($s->getInstituto()->getEmail(),FILTER_VALIDATE_EMAIL)!==false]);
+        $entrantes=$em->getRepository(MensajeEntranteSolicitud::class)->findBy(['solicitud'=>$s],['fecha'=>'DESC','id'=>'DESC'],50);
+        $conversacion=[];
+        foreach($respuestas as $r) { $conversacion[]=['direccion'=>'saliente','item'=>$r,'fecha'=>$r->getFecha()]; }
+        foreach($entrantes as $r) { $conversacion[]=['direccion'=>'entrante','item'=>$r,'fecha'=>$r->getFecha()]; }
+        usort($conversacion,static fn($a,$b)=>($a['fecha']<=>$b['fecha'])?:strcmp($b['direccion'],$a['direccion']));
+        $response=$this->render('instituto_solicitudes/show.html.twig',['solicitud'=>$s,'existentes'=>$existentes,'respuestaForm'=>$form->createView(),'respuestas'=>$respuestas,'conversacion'=>$conversacion,'recepcionActiva'=>$this->correo && $this->correo->isActivo(),'casillaConversaciones'=>$this->correo?$this->correo->casilla():null,'puedeResponder'=>($this->correo && $this->correo->isActivo()) || filter_var($s->getInstituto()->getEmail(),FILTER_VALIDATE_EMAIL)!==false]);
         $response->setStatusCode($status);return $response;
     }
     /** @Route("/{id}/responder", name="instituto_solicitudes_responder", requirements={"id"="\d+"}, methods={"POST"}) */
@@ -67,6 +74,22 @@ class InstitutoSolicitudesController extends AbstractController
         catch (\InvalidArgumentException $e) { $form->addError(new \Symfony\Component\Form\FormError($e->getMessage()));return $this->renderDetalle($s,$em,$form,422); }
         $this->addFlash($respuesta->getEstado()==='enviada'?'success':'warning', $respuesta->getEstado()==='enviada'?'La respuesta fue enviada por email y quedó guardada en el historial.':($respuesta->getEstado()==='fallida'?'No se pudo confirmar el envío. El texto quedó guardado en el historial; revisá el correo antes de reintentarlo.':'El envío ya está en proceso. No lo repitas; revisá su estado en el historial.'));
         return $this->redirectToRoute('instituto_solicitudes_show',['id'=>$id,'_fragment'=>'respuestas'],303);
+    }
+    /** @Route("/{id}/correo/leido", name="instituto_solicitudes_correo_leido", requirements={"id"="\d+"}, methods={"POST"}) */
+    public function leido(int $id, Request $request, SolicitudPaginaPublicaRepository $repo, EntityManagerInterface $em): Response
+    {
+        $s=$this->propia($id,$repo);
+        if (!$this->isCsrfTokenValid('correo_leido_'.$id,(string)$request->request->get('_token'))) { throw $this->createAccessDeniedException(); }
+        $s->marcarCorreosLeidos();$em->flush();return $this->redirectToRoute('instituto_solicitudes_show',['id'=>$id],303);
+    }
+    /** @Route("/{id}/correo/{mensaje}/original", name="instituto_solicitudes_correo_original", requirements={"id"="\d+","mensaje"="\d+"}, methods={"GET"}) */
+    public function original(int $id,int $mensaje,SolicitudPaginaPublicaRepository $repo,EntityManagerInterface $em): Response
+    {
+        $s=$this->propia($id,$repo);$m=$em->getRepository(MensajeEntranteSolicitud::class)->findOneBy(['id'=>$mensaje,'solicitud'=>$s]);
+        if (!$m || !preg_match('/^[a-f0-9]{64}\.eml$/D',$m->getArchivoOriginal())) { throw $this->createNotFoundException(); }
+        $archivo=$this->getParameter('kernel.project_dir').'/var/correo_recibido/'.$m->getArchivoOriginal();
+        if (!is_file($archivo)) { throw $this->createNotFoundException(); }
+        $r=$this->file($archivo,'correo-'.$m->getId().'.eml');$r->headers->set('Content-Type','message/rfc822');$r->headers->set('X-Content-Type-Options','nosniff');$r->headers->set('Content-Security-Policy','sandbox');$r->headers->set('Cache-Control','private, no-store');return $r;
     }
     /** @Route("/{id}/resolver", name="instituto_solicitudes_resolver", requirements={"id"="\d+"}, methods={"POST"}) */
     public function resolver(int $id, Request $request, SolicitudPaginaPublicaRepository $repo, EntityManagerInterface $em, InstitutoTimezoneService $timezone): Response
@@ -88,6 +111,7 @@ class InstitutoSolicitudesController extends AbstractController
                 if (!$alumno || !$s->getCurso() || !$alumno->getCurso()->contains($s->getCurso())) { $this->addFlash('warning','Primero completá la inscripción del alumno en este curso.'); }
                 else { $s->completarConAlumno($alumno);$this->addFlash('success','La solicitud quedó vinculada con la inscripción del alumno.'); }
             } elseif ($s->resolver($accion)) {
+                $s->marcarCorreosLeidos();
                 $this->addFlash('success',$accion==='confirmada'?'Preinscripción confirmada para continuar el alta. Contactá a la persona para coordinar los detalles.':'Solicitud actualizada.');
             }
             $em->flush();$em->getConnection()->commit();

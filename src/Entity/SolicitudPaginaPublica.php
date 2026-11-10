@@ -42,6 +42,20 @@ class SolicitudPaginaPublica
     /** @ORM\ManyToOne(targetEntity=Alumno::class) @ORM\JoinColumn(nullable=true, onDelete="SET NULL") */
     private $alumno;
 
+    /** @ORM\Column(type="string", length=32, nullable=true, unique=true) */
+    private $correoToken;
+    /** @ORM\Column(type="boolean", options={"default":false}) */
+    private $correosNuevos=false;
+    public function getCorreoToken(): ?string { return $this->correoToken; }
+    public function prepararCorreo(): void { if (!$this->correoToken) { $this->correoToken=bin2hex(random_bytes(16)); } }
+    public function isCorreosNuevos(): bool { return (bool)$this->correosNuevos; }
+    public function marcarCorreosLeidos(): void { $this->correosNuevos=false; }
+    public function recibirCorreo(): void
+    {
+        $this->correosNuevos=true;
+        if ($this->tipo==='contacto' && $this->estado==='atendida') { $this->estado='pendiente';$this->fechaResolucion=null; }
+    }
+
     public function __construct() { $this->fecha = new \DateTimeImmutable(); }
     public function getId(): ?int { return $this->id; }
     public function getInstituto(): ?Instituto { return $this->instituto; }

@@ -11,6 +11,7 @@ parameters:
     # diga el request: detras del nginx del servidor el pedido llega por http plano y Symfony
     # genera http://, que Mercado Pago rechaza.
     app.url: '%env(APP_URL)%'
+    correo_conversaciones_activo_default: '0'
 
     # Qué producto es esta instalación: 'instituto' (Team Builder Institute) o 'club'
     # (Team Builder Clubes). Es el mismo código; cambia la paleta, la landing y el vocabulario.
@@ -94,6 +95,16 @@ services:
             $limiteInstitutoDia: '%env(int:default:ayuda_ia_instituto_dia_default:AYUDA_IA_INSTITUTO_DIA)%'
             $limiteGlobalDia: '%env(int:default:ayuda_ia_global_dia_default:AYUDA_IA_GLOBAL_DIA)%'
             $limiteGlobalMinuto: '%env(int:default:ayuda_ia_global_minuto_default:AYUDA_IA_GLOBAL_MINUTO)%'
+
+    App\Service\CorreoConversaciones:
+        arguments:
+            $activo: '%env(bool:default:correo_conversaciones_activo_default:CORREO_CONVERSACIONES_ACTIVO)%'
+            $vertical: '%app.vertical%'
+
+    App\Service\ImportarCorreoConversacion:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+            $baseUrl: '%app.url%'
 
     App\Service\FormularioPublicoProteccion:
         arguments:

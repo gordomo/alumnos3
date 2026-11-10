@@ -26,6 +26,10 @@ class RespuestaSolicitudPublica
     private $fecha;
     /** @ORM\Column(type="string", length=64, unique=true) */
     private $claveEnvio;
+    /** @ORM\Column(type="string", length=180, nullable=true, unique=true) */
+    private $correoMessageId;
+    public function getCorreoMessageId(): ?string { return $this->correoMessageId; }
+    public function prepararCorreo(): void { if (!$this->correoMessageId) { $this->correoMessageId='tb-'.bin2hex(random_bytes(16)).'@teambuilder.com.ar'; } }
     public function __construct(SolicitudPaginaPublica $solicitud, User $autor, string $asunto, string $mensaje, string $clave)
     {
         $this->solicitud=$solicitud;$this->autor=$autor;$this->destinatario=$solicitud->getEmail();$this->asunto=$asunto;$this->mensaje=$mensaje;$this->claveEnvio=$clave;$this->fecha=new \DateTimeImmutable();
