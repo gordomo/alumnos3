@@ -108,3 +108,9 @@ body.app-panel .form-select:disabled { background-color: #f5f7f7; color: var(--u
     body.app-panel .ui-filter-card .row.flex-nowrap { flex-wrap: wrap !important; }
     body.app-panel .ui-filter-card .row.flex-nowrap > .col { flex: 1 1 10rem; }
 }
+/* Las pestañas del contenido siguen la misma jerarquía que los filtros de estado. */
+body.app-panel #page-content-wrapper :is(.nav-pills, .nav-tabs) { gap: .5rem; }
+body.app-panel #page-content-wrapper :is(.nav-pills, .nav-tabs) .nav-link { display: inline-flex; align-items: center; justify-content: center; gap: .4rem; min-height: 40px; padding: .5rem .85rem; border: 1px solid var(--ui-borde-campo); border-radius: var(--ui-radio-chico); font-size: .875rem; font-weight: 600; line-height: 1.4; color: var(--ui-texto); background: var(--ui-superficie); box-shadow: none; }
+body.app-panel #page-content-wrapper :is(.nav-pills, .nav-tabs) .nav-link:hover { color: var(--marca-legible); background: var(--marca-suave); border-color: var(--marca-legible); }
+body.app-panel #page-content-wrapper :is(.nav-pills, .nav-tabs) .nav-link.active { color: #fff; background: var(--marca-legible); border-color: var(--marca-legible); }
+body.app-panel #page-content-wrapper :is(.nav-pills, .nav-tabs) .nav-link:is(.disabled, :disabled, [aria-disabled="true"]) { color: var(--ui-apagado); background: #f5f7f7; opacity: .65; pointer-events: none; }
