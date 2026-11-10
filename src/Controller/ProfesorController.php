@@ -8,6 +8,8 @@ use App\Form\ProfesorType;
 use App\Repository\AsistenciaProfesoresRepository;
 use App\Repository\CursoRepository;
 use App\Repository\ProfesorRepository;
+use App\Repository\ProfesorCursoPagoRepository;
+use App\Service\ProfesorPagoService;
 use App\Repository\UserRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -63,7 +65,14 @@ class ProfesorController extends AbstractController
     /**
      * @Route("/", name="app_profesor_index", methods={"GET"})
      */
-    public function index(Request $request, ProfesorRepository $profesorRepository, PaginatorInterface $paginator, CursoRepository $cursoRepository): Response
+    public function index(
+        Request $request,
+        ProfesorRepository $profesorRepository,
+        PaginatorInterface $paginator,
+        CursoRepository $cursoRepository,
+        ProfesorCursoPagoRepository $reglaRepository,
+        ProfesorPagoService $pagoService
+    ): Response
     {
         $limit = $request->get('limit', 10);
         $currentPage = $request->get('page', 1);
@@ -87,8 +96,16 @@ class ProfesorController extends AbstractController
             $limit
         );
 
+        $profesoresPagina = iterator_to_array($profesors);
+        $reglas = $reglaRepository->findParaListado($instituto, $profesoresPagina);
+        $pagosProfesores = [];
+        foreach ($profesoresPagina as $profesor) {
+            $pagosProfesores[$profesor->getId()] = $pagoService->resumirConfiguracion($profesor, $reglas[$profesor->getId()] ?? []);
+        }
+
         return $this->render('profesor/index.html.twig', [
             'profesors' => $profesors,
+            'pagosProfesores' => $pagosProfesores,
             'busqueda' => $busqueda,
             'total' => $profesors->getTotalItemCount(),
             'order' => $order,

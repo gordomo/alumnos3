@@ -108,6 +108,14 @@
             text-decoration: none;
         }
 
+        .profesor-pago { min-width: 200px; max-width: 320px; }
+        .profesor-pago-modalidad { display: inline-block; font-weight: 650; color: var(--ui-texto); }
+        .profesor-pago-valores { font-size: .82rem; line-height: 1.6; color: var(--ui-apagado); }
+        .profesor-pago-general { margin-top: .35rem; }
+        .profesor-pago-detalle { margin-top: .4rem; font-size: .82rem; }
+        .profesor-pago-detalle summary { cursor: pointer; color: var(--marca-legible); }
+        .profesor-pago-acuerdo { border-left: 2px solid var(--ui-borde); padding: .35rem .6rem; margin-top: .45rem; }
+        .profesor-pago-acuerdo > strong { display: block; }
         .money-value {
             font-weight: 700;
             color: #218c58;
@@ -218,8 +226,7 @@
                 <th>Teléfono</th>
                 <th>Email</th>
                 <th>{{ Term('cursos') }}</th>
-                <th>Precio/Hora</th>
-                <th>Viatico</th>
+                <th>Forma de pago</th>
                 <th>Acciones</th>
             </tr>
         </thead>
@@ -237,10 +244,24 @@
                         <span class="text-muted">Sin {{ term('cursos') }}</span>
                     {% endfor %}
                 </td>
-                <td>
-                    <span class="money-value">${{ profesor.precioHora }}</span>
+                <td class="profesor-pago">
+                    {% set pago = pagosProfesores[profesor.id] %}
+                    {% if pago.por_curso is not empty %}
+                        <span class="profesor-pago-modalidad">Por curso</span>
+                        {% if pago.general %}
+                            <div class="profesor-pago-general"><span class="text-muted small">{{ pago.fijo_reemplazado ? '' : 'General:' }}</span> {{ include('profesor/_pago_valores.html.twig', {'valores': pago.general}) }}</div>
+                        {% endif %}
+                        <details class="profesor-pago-detalle">
+                            <summary>{{ pago.por_curso|length }} acuerdo(s) vigente(s)</summary>
+                            {% for acuerdo in pago.por_curso %}
+                                <div class="profesor-pago-acuerdo"><strong>{{ acuerdo.curso.nombre }}</strong>{{ include('profesor/_pago_valores.html.twig', {'valores': acuerdo.valores}) }}</div>
+                            {% endfor %}
+                        </details>
+                        {% if pago.fijo_reemplazado %}<div class="small text-muted">Los acuerdos por curso reemplazan el fijo general.</div>{% endif %}
+                    {% else %}
+                        {{ include('profesor/_pago_valores.html.twig', {'valores': pago.general}) }}
+                    {% endif %}
                 </td>
-                <td><span class="money-value">${{ profesor.viatico }}</span></td>
                 <td>
                     {{ include('components/action_buttons.html.twig', {
                         'show_url': path('app_profesor_show', {'id': profesor.id}),
@@ -250,7 +271,7 @@
             </tr>
         {% else %}
             <tr>
-                <td colspan="8" class="text-center profesor-empty py-4">No se encontraron registros</td>
+                <td colspan="7" class="text-center profesor-empty py-4">No se encontraron registros</td>
             </tr>
         {% endfor %}
         </tbody>

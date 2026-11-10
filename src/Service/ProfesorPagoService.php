@@ -145,6 +145,44 @@ class ProfesorPagoService
     }
 
     /**
+     * Configuración vigente para el listado, sin calcular importes de una liquidación.
+     * Comparte la resolución de reglas y el criterio de reemplazo del fijo con el cálculo.
+     */
+    public function resumirConfiguracion(Profesor $profesor, array $reglas): array
+    {
+        $tipo = $profesor->getTipoPago() ?: 'por_hora';
+        if (!in_array($tipo, ['por_hora', 'fijo_mensual', 'porcentaje', 'combinado'], true)) { $tipo = 'por_hora'; }
+        $propias = [];
+        $cantidadCursos = 0;
+        foreach ($profesor->getCursos() as $curso) {
+            if ($curso->getInstituto()?->getId() !== $profesor->getInstituto()?->getId()) { continue; }
+            ++$cantidadCursos;
+            $regla = $this->reglaEfectiva($profesor, $curso, $reglas, $tipo);
+            if ($regla !== null && $regla['origen'] === 'curso') {
+                if ($regla['modalidad'] === ProfesorCursoPago::MODALIDAD_PORCENTAJE) { $regla['base_porcentaje'] = $this->basePorcentaje($profesor); }
+                $propias[] = ['curso' => $curso, 'valores' => $regla];
+            }
+        }
+        $tieneFijo = in_array($tipo, ['fijo_mensual', 'combinado'], true);
+        $fijoReemplazado = $tieneFijo && (float) $profesor->getMontoFijoMensual() > 0
+            && !$profesor->isFijoSeSuma() && $cantidadCursos > 0 && count($propias) === $cantidadCursos;
+        $usaGeneral = $cantidadCursos === 0 || count($propias) < $cantidadCursos;
+        $general = null;
+        if ($usaGeneral || ($tieneFijo && !$fijoReemplazado)) {
+            $modalidad = $usaGeneral ? $tipo : 'fijo_mensual';
+            $general = [
+                'modalidad' => $modalidad,
+                'precio_hora' => (float) $profesor->getPrecioHora(),
+                'viatico' => $usaGeneral ? (float) $profesor->getViatico() : 0.0,
+                'porcentaje' => (float) ($profesor->getPorcentajeCurso() ?? 0),
+                'monto_fijo' => $tieneFijo && !$fijoReemplazado ? (float) ($profesor->getMontoFijoMensual() ?? 0) : 0.0,
+                'base_porcentaje' => in_array($modalidad, ['porcentaje', 'combinado'], true) ? $this->basePorcentaje($profesor) : null,
+            ];
+        }
+        return ['general' => $general, 'por_curso' => $propias, 'fijo_reemplazado' => $fijoReemplazado];
+    }
+
+    /**
      * Qué regla se aplica a este curso: la del curso si está cargada y completa, y si no la
      * configuración del profesor.
      *

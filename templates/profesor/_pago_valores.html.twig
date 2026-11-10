@@ -1,0 +1,15 @@
+{% set etiquetas = {'por_hora': 'Por hora', 'fijo_mensual': 'Fijo mensual', 'porcentaje': 'Porcentaje', 'combinado': 'Combinado'} %}
+<div class="profesor-pago-modalidad">{{ etiquetas[valores.modalidad]|default('Por hora') }}</div>
+<div class="profesor-pago-valores">
+    {% if valores.modalidad == 'fijo_mensual' or valores.modalidad == 'combinado' %}
+        <span class="money-value">${{ valores.monto_fijo|number_format(2, ',', '.') }}</span> / mes
+    {% elseif valores.modalidad == 'por_hora' %}
+        <span class="money-value">${{ valores.precio_hora|number_format(2, ',', '.') }}</span> / hora
+    {% endif %}
+    {% if valores.modalidad == 'porcentaje' or valores.modalidad == 'combinado' %}
+        {% if valores.modalidad == 'combinado' %}<br>+ {% endif %}<span class="money-value">{{ valores.porcentaje|number_format(2, ',', '.') }}%</span> de {{ valores.base_porcentaje|default('cobrado') == 'facturado' ? 'lo facturado' : 'lo cobrado' }}
+    {% endif %}
+    {% if (valores.modalidad == 'por_hora' or (valores.modalidad == 'fijo_mensual' and valores.origen|default('profesor') == 'profesor')) and valores.viatico > 0 %}
+        <div>Viático: ${{ valores.viatico|number_format(2, ',', '.') }} / clase</div>
+    {% endif %}
+</div>

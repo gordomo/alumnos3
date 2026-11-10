@@ -66,3 +66,13 @@ temporales MySQL que ocultan las tablas reales solo en la conexión del test.
 Verifica combinación de nombre y curso, orden, inclusión de docentes sin curso y
 rechazo de cursos ajenos incluso con una asociación cruzada. No modifica datos reales.
 No hay filtro activo/inactivo: ese estado no existe en la entidad Profesor.
+
+
+## Forma de pago en el listado de profesores
+
+`docker compose exec -T app php tests/regression_profesores_pago_resumen.php` no
+usa base de datos ni calcula liquidaciones. Cubre las cuatro modalidades generales,
+los acuerdos por curso, reglas apagadas o incompletas, valores heredados y ceros
+explícitos, y el reemplazo o suma del fijo mensual. Verifica que no se muestren
+valores de hora o viáticos que no se usan en la modalidad efectiva. La prueba de
+filtros también verifica el aislamiento de la consulta masiva de reglas de pago.

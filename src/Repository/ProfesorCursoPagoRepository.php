@@ -45,6 +45,25 @@ class ProfesorCursoPagoRepository extends ServiceEntityRepository
         return $porCurso;
     }
 
+    /** Reglas de la página actual, limitadas a la institución en sus tres relaciones. */
+    public function findParaListado(Instituto $instituto, array $profesores): array
+    {
+        if (!$profesores) { return []; }
+        $filas = $this->createQueryBuilder('r')
+            ->innerJoin('r.profesor', 'p')
+            ->innerJoin('r.curso', 'c')->addSelect('c')
+            ->andWhere('r.instituto = :instituto AND p.instituto = :instituto AND c.instituto = :instituto')
+            ->andWhere('r.profesor IN (:profesores)')
+            ->setParameter('instituto', $instituto)
+            ->setParameter('profesores', $profesores)
+            ->getQuery()->getResult();
+        $resultado = [];
+        foreach ($filas as $regla) {
+            $resultado[$regla->getProfesor()->getId()][$regla->getCurso()->getId()] = $regla;
+        }
+        return $resultado;
+    }
+
     /**
      * Cuántas reglas activas tiene cada profesor del instituto, para el listado.
      *

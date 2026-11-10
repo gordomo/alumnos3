@@ -10,7 +10,7 @@ function comprobarProfesor(bool $ok, string $msg): void {
     echo 'OK: ' . $msg . PHP_EOL;
 }
 try {
-    foreach (['profesor', 'curso', 'curso_profesor'] as $tabla) {
+    foreach (['profesor', 'curso', 'curso_profesor', 'profesor_curso_pago'] as $tabla) {
         $definicion = $db->fetchAssociative('SHOW CREATE TABLE ' . $tabla)['Create Table'];
         $definicion = preg_replace('/^CREATE TABLE/', 'CREATE TEMPORARY TABLE', $definicion);
         // MySQL no admite claves foráneas en tablas temporales.
@@ -44,6 +44,15 @@ try {
     comprobarProfesor($buscar(101, 'Bruno') === [], 'Búsqueda y curso se combinan');
     comprobarProfesor($buscar(102, 'Bruno') === [12], 'Búsqueda encuentra al profesor dentro del curso');
     comprobarProfesor($buscar(102, '', 'nombre', 'desc') === [12, 11], 'Mantiene el orden seleccionado al filtrar');
+    foreach ([[1, 991, 11, 101], [2, 991, 11, 201], [3, 992, 11, 102], [4, 991, 21, 101], [5, 991, 12, 102]] as [$id, $instituto, $profesor, $curso]) {
+        $db->insert('profesor_curso_pago', ['id' => $id, 'instituto_id' => $instituto, 'profesor_id' => $profesor, 'curso_id' => $curso, 'modalidad' => 'por_hora', 'activo' => 1, 'updated_at' => '2026-11-10 12:00:00']);
+    }
+    $reglas = $em->getRepository(App\Entity\ProfesorCursoPago::class)->findParaListado($inst, [
+        $em->getReference(App\Entity\Profesor::class, 11), $em->getReference(App\Entity\Profesor::class, 12),
+    ]);
+    comprobarProfesor(array_keys($reglas[11]) === [101] && array_keys($reglas[12]) === [102], 'Resumen de pagos excluye reglas con institución, profesor o curso ajenos');
+    comprobarProfesor($em->getRepository(App\Entity\ProfesorCursoPago::class)->findParaListado($inst, []) === [], 'Página vacía no consulta reglas de otros profesores');
+
 } finally {
     foreach (array_reverse($tablas) as $tabla) $db->executeStatement('DROP TEMPORARY TABLE ' . $tabla);
     $kernel->shutdown();
