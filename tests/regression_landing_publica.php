@@ -14,12 +14,12 @@ try {
         $db->executeStatement($ddl); $tablas[] = $tabla;
     }
     foreach ([991,992,993] as $id) $db->insert('instituto', ['id'=>$id,'nombre'=>$id===993?'Ayuda':'Institución Prueba','activo'=>1,'email'=>'contacto@example.test','dir'=>'Calle Pública 123','tel'=>'+54 341 5551234']);
-    foreach ([[101,991,0,0,'2099-12-31'],[102,991,1,0,'2099-12-31'],[103,991,0,1,'2099-12-31'],[104,991,0,0,'2000-12-31'],[201,992,0,0,'2099-12-31']] as [$id,$inst,$disabled,$cerrado,$fin]) {
+    foreach ([[101,991,0,0,'2099-12-31'],[102,991,1,0,'2099-12-31'],[103,991,0,1,'2099-12-31'],[104,991,0,0,'2000-12-31'],[105,991,0,0,'2099-12-31'],[201,992,0,0,'2099-12-31']] as [$id,$inst,$disabled,$cerrado,$fin]) {
         $db->insert('curso',['id'=>$id,'instituto_id'=>$inst,'nombre'=>'Curso '.$id,'dias'=>'["lunes"]','horario_inicio'=>'08:00:00','horario_fin'=>'09:00:00','fecha_inicio'=>'2020-01-01','fecha_fin'=>$fin,'duracion'=>1,'disabled'=>$disabled,'cerrado'=>$cerrado,'precio'=>'87654.32']);
     }
     $db->update('curso', ['descripcion_publica'=>"Inglés para conversar.\nObjetivos y contenidos <script>alert('x')</script>"], ['id'=>101]);
-    $db->insert('curso_horario', ['curso_id'=>104, 'dia'=>'Martes', 'horario_inicio'=>'18:00:00', 'horario_fin'=>'19:30:00']);
-    $db->insert('curso_horario', ['curso_id'=>104, 'dia'=>'Jueves', 'horario_inicio'=>'18:30:00', 'horario_fin'=>'20:00:00']);
+    $db->insert('curso_horario', ['curso_id'=>105, 'dia'=>'Martes', 'horario_inicio'=>'18:00:00', 'horario_fin'=>'19:30:00']);
+    $db->insert('curso_horario', ['curso_id'=>105, 'dia'=>'Jueves', 'horario_inicio'=>'18:30:00', 'horario_fin'=>'20:00:00']);
     $router=$kernel->getContainer()->get('router');
     $paginas=new App\Service\InstitutoPaginaPublicaService($em->getRepository(App\Entity\InstitutoPaginaPublica::class),$em,new Symfony\Component\String\Slugger\AsciiSlugger(),$router,'https://example.test','instituto');
     $uno=$paginas->obtenerOCrear($em->find(App\Entity\Instituto::class,991));
@@ -34,14 +34,13 @@ try {
     landingCheck($repo->findPublicada($uno->getSlug())!==null,'Publicar habilita solo esa página');
     $timezone=new App\Service\InstitutoTimezoneService($em->getRepository(App\Entity\InstitutoConfiguracion::class));
     $presenter=new App\Service\InstitutoLandingPresenter($em,$timezone);$datos=$presenter->datos($uno);
-    landingCheck(array_column($datos['cursos'],'nombre')===['Curso 101','Curso 104'],'Catálogo incluye ediciones finalizadas y excluye ajenos, deshabilitados y cerrados');
+    landingCheck(array_column($datos['cursos'],'nombre')===['Curso 101','Curso 105'],'Catálogo excluye ediciones finalizadas, ajenos, deshabilitados y cerrados');
     landingCheck($datos['cursos'][0]['horarios'][0]['inicio']==='08:00' && isset($datos['cursos'][0]['precio']),'Horarios y precios visibles');
-    landingCheck(!$datos['cursos'][0]['finalizado'] && $datos['cursos'][1]['finalizado'], 'Las ediciones finalizadas no se anuncian como vigentes');
     landingCheck(count($datos['cursos'][1]['horarios'])===2 && in_array('18:30',array_column($datos['cursos'][1]['horarios'],'inicio'),true), 'Se muestran todos los horarios por día y también el formato anterior');
     $twig=$kernel->getContainer()->get('twig');
     $html=$twig->render('instituto_pagina_publica/landing.html.twig',['sitio'=>$datos,'preview'=>false,'urlPublica'=>$paginas->url($uno)]);
     landingCheck(str_contains($html,'87.654,32') && !str_contains($html,'<script>'),'Render con precio y presentación escapada');
-    landingCheck(str_contains($html,'Más info') && str_contains($html,'Inglés para conversar.') && str_contains($html,'&lt;script&gt;') && str_contains($html,'Edición finalizada') && str_contains($html,'Próxima edición'),'Descripción pública escapada y consulta por próximas ediciones');
+    landingCheck(str_contains($html,'Más info') && str_contains($html,'Inglés para conversar.') && str_contains($html,'&lt;script&gt;') && !str_contains($html,'Curso 104'),'Descripción pública escapada y sin ediciones finalizadas');
     $validador=$kernel->getContainer()->get('validator');
     $curso=$em->find(App\Entity\Curso::class,101);$curso->setDescripcionPublica(str_repeat('a',3001));
     landingCheck(count($validador->validateProperty($curso,'descripcionPublica'))>0,'La descripción tiene límite de 3000 caracteres');

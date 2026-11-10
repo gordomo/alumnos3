@@ -320,7 +320,7 @@ general. La dirección `APP_URL/nombre-instituto` se conserva aunque cambie el n
 o reservados reciben un sufijo. Verificar que `APP_URL` sea el dominio HTTPS de cada instalación.
 
 El catálogo público contiene exclusivamente cursos de esa institución habilitados y abiertos.
-Los que ya pasaron su fecha de fin se identifican como «Edición finalizada», según su zona horaria. No publica alumnos, profesores, pagos ni usuarios.
+Los que ya pasaron su fecha de fin se excluyen del catálogo, según su zona horaria. No publica alumnos, profesores, pagos ni usuarios.
 Desactivar precios elimina los importes de la respuesta, no solo de su apariencia. Una institución dada
 de baja o una página en borrador devuelve 404. El acceso público usa un firewall que coincide únicamente
 con la ruta de la landing; las rutas privadas conservan su autenticación. Las páginas se entregan sin
@@ -340,6 +340,4 @@ nullable, sin modificar precios, inscripciones, fechas ni estados de cursos exis
 En alta y edición de cursos, «Información para la página pública» permite una descripción opcional
 de hasta 3000 caracteres de texto sin HTML. Se conserva al duplicar el curso. La landing la presenta
 en «Más info», con los horarios y la cuota mensual (cuando se habilita mostrar precios).
-Los cursos con fecha de fin pasada siguen en el catálogo como «Edición finalizada», con una consulta
-por la próxima edición y el precio identificado como cuota de esa edición; no se anuncian como vigentes.
-Los deshabilitados y cerrados no se muestran. Verificar `php tests/regression_landing_publica.php`.
+Solo se publican ediciones vigentes o próximas: las finalizadas, deshabilitadas y cerradas no se muestran. Verificar `php tests/regression_landing_publica.php`.

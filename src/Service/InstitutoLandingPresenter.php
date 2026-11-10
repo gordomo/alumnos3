@@ -16,6 +16,8 @@ class InstitutoLandingPresenter
         $cursos = $this->em->getRepository(Curso::class)->createQueryBuilder('c')
             ->leftJoin('c.horarios', 'h')->addSelect('h')
             ->where('c.instituto = :instituto AND c.disabled = false AND c.cerrado = false')
+            ->andWhere('c.fechaFin IS NULL OR c.fechaFin >= :hoy')
+            ->setParameter('hoy', $hoy)
             ->setParameter('instituto', $instituto)->orderBy('c.nombre', 'ASC')->getQuery()->getResult();
         $email = filter_var($instituto->getEmail(), FILTER_VALIDATE_EMAIL) ?: null;
         $telefono = trim($instituto->getTel() ?? '');
@@ -47,7 +49,7 @@ class InstitutoLandingPresenter
                 $diaB = strtr(mb_strtolower($b['dia'] ?? ''), ['é'=>'e','á'=>'a']);
                 return (($ordenDias[$diaA] ?? 8) <=> ($ordenDias[$diaB] ?? 8)) ?: strcmp($a['inicio'] ?? '', $b['inicio'] ?? '');
             });
-            $item = ['nombre' => $curso->getNombre(), 'descripcion' => $curso->getDescripcionPublica(), 'finalizado' => $curso->getFechaFin() !== null && $curso->getFechaFin() < $hoy, 'inicio' => $curso->getFechaInicio()?->format('d/m/Y'), 'fin' => $curso->getFechaFin()?->format('d/m/Y'), 'proximo' => $curso->getFechaInicio() > $hoy, 'horarios' => $horarios];
+            $item = ['nombre' => $curso->getNombre(), 'descripcion' => $curso->getDescripcionPublica(), 'inicio' => $curso->getFechaInicio()?->format('d/m/Y'), 'fin' => $curso->getFechaFin()?->format('d/m/Y'), 'proximo' => $curso->getFechaInicio() !== null && $curso->getFechaInicio()->format('Y-m-d') > $hoy->format('Y-m-d'), 'horarios' => $horarios];
             if ($pagina->isMostrarPrecios()) { $item['precio'] = is_numeric($curso->getPrecio()) && (float) $curso->getPrecio() >= 0 ? $curso->getPrecio() : null; }
             $datos['cursos'][] = $item;
         }
