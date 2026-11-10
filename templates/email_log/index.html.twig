@@ -137,6 +137,7 @@
                 <select name="tipo" id="tipo" class="form-select">
                     <option value="">Todos</option>
                     <option value="recibo" {% if filtroTipo == 'recibo' %}selected{% endif %}>Recibos</option>
+                    <option value="respuesta_consulta" {% if filtroTipo == 'respuesta_consulta' %}selected{% endif %}>Respuestas a consultas</option>
                     <option value="recordatorio" {% if filtroTipo == 'recordatorio' %}selected{% endif %}>Recordatorios</option>
                     <option value="boletin" {% if filtroTipo == 'boletin' %}selected{% endif %}>Boletines de notas</option>
                     <option value="comunicacion" {% if filtroTipo == 'comunicacion' %}selected{% endif %}>Comunicaciones</option>
@@ -189,6 +190,8 @@
                                     <i class="bi bi-bell"></i> Recordatorio
                                 {% elseif email.tipo == 'boletin' %}
                                     <i class="bi bi-mortarboard"></i> Boletín
+                                {% elseif email.tipo == 'respuesta_consulta' %}
+                                    <i class="bi bi-reply"></i> Respuesta a consulta
                                 {% elseif email.tipo == 'comunicacion' %}
                                     <i class="bi bi-megaphone"></i> Comunicación
                                 {% else %}

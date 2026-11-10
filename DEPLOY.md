@@ -379,3 +379,28 @@ puede añadir después sin cambiar el circuito de solicitudes.
 Validar `php tests/regression_solicitudes_publicas.php`, `php tests/regression_landing_publica.php`,
 `php tests/regression_landing_config.php`, `php bin/console lint:container` y las plantillas nuevas.
 Las pruebas usan tablas temporales de MySQL, instituciones ficticias sin email y no envían correos.
+
+### Responder consultas desde la bandeja (2026-11-10)
+
+Aplicar exclusivamente `DoctrineMigrations\Version20261110220000` con respaldo previo. Crea la tabla
+`respuesta_solicitud_publica`, sin cambiar las solicitudes existentes. Responder requiere administrador
+del instituto propietario, POST y CSRF ligado a la solicitud y a una clave de envío de un solo uso.
+El destinatario se toma de la solicitud, nunca de un campo editable del navegador.
+
+La ficha muestra asunto, mensaje y «Enviar respuesta», además de las últimas 50 respuestas con autor,
+fecha y estado. Se requiere un email válido del instituto en Información general: se usa como Reply-To;
+el remitente SMTP continúa siendo el autorizado del sistema. Las contestaciones posteriores llegan
+a ese correo del instituto; no se importan automáticamente a la bandeja. El cuerpo admite texto sin
+HTML de hasta 5000 caracteres y asunto de hasta 180 caracteres en una sola línea.
+
+El envío se reserva en base antes del SMTP; repetir el mismo formulario no vuelve a enviarlo. Solo
+cuando el transporte acepta el envío se registra como enviada y, si es una consulta pendiente, pasa
+a atendida. Responder una preinscripción no la confirma ni crea alumnos o deudas. Si el transporte
+falla, el texto se conserva y la consulta sigue pendiente. Como un fallo de conexión puede producirse
+después de que el servidor de correo lo reciba, se indica «Envío no confirmado» y no se reintenta
+solo. Una interrupción entre reserva y registro final puede dejar «En proceso»; revisar antes de
+redactar un nuevo envío. No se promete confirmación de lectura o recepción en la casilla destinataria.
+Los intentos enviados y fallidos se registran también como «Respuesta a consulta» en Historial de Emails.
+
+Pruebas: `php tests/regression_respuestas_solicitudes.php` (tablas temporales y mailer en memoria,
+sin correos reales), más la regresión de solicitudes públicas y lint de contenedor y plantillas.

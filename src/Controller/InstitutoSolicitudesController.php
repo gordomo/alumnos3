@@ -1,9 +1,11 @@
 <?php
 namespace App\Controller;
 
-use App\Entity\{Alumno, SolicitudPaginaPublica};
+use App\Entity\{Alumno, SolicitudPaginaPublica, RespuestaSolicitudPublica};
 use App\Repository\SolicitudPaginaPublicaRepository;
 use App\Service\InstitutoTimezoneService;
+use App\Service\RespuestaSolicitudService;
+use App\Form\RespuestaSolicitudPublicaType;
 use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
 use Knp\Component\Pager\PaginatorInterface;
@@ -37,8 +39,34 @@ class InstitutoSolicitudesController extends AbstractController
     public function show(int $id, SolicitudPaginaPublicaRepository $repo, EntityManagerInterface $em): Response
     {
         $s=$this->propia($id,$repo);
+        return $this->renderDetalle($s,$em,$this->formRespuesta($s));
+    }
+    private function formRespuesta(SolicitudPaginaPublica $s, ?Request $request = null): \Symfony\Component\Form\FormInterface
+    {
+        $nonce=bin2hex(random_bytes(16));
+        if ($request) {
+            $entrada=$request->request->all('respuesta_solicitud_publica');
+            if (isset($entrada['envio']) && is_string($entrada['envio']) && preg_match('/^[a-f0-9]{32}$/D',$entrada['envio'])) { $nonce=$entrada['envio']; }
+        }
+        return $this->createForm(RespuestaSolicitudPublicaType::class,['asunto'=>'Respuesta de '.$s->getInstituto()->getNombre(),'mensaje'=>'','envio'=>$nonce],['action'=>$this->generateUrl('instituto_solicitudes_responder',['id'=>$s->getId()]),'csrf_token_id'=>'respuesta_solicitud_'.$s->getId().'_'.$nonce]);
+    }
+    private function renderDetalle(SolicitudPaginaPublica $s, EntityManagerInterface $em, \Symfony\Component\Form\FormInterface $form, int $status = 200): Response
+    {
         $existentes=$em->getRepository(Alumno::class)->findBy(['instituto'=>$s->getInstituto(),'email'=>$s->getEmail()]);
-        return $this->render('instituto_solicitudes/show.html.twig',['solicitud'=>$s,'existentes'=>$existentes]);
+        $respuestas=$em->getRepository(RespuestaSolicitudPublica::class)->findBy(['solicitud'=>$s],['fecha'=>'DESC','id'=>'DESC'],50);
+        $response=$this->render('instituto_solicitudes/show.html.twig',['solicitud'=>$s,'existentes'=>$existentes,'respuestaForm'=>$form->createView(),'respuestas'=>$respuestas,'puedeResponder'=>filter_var($s->getInstituto()->getEmail(),FILTER_VALIDATE_EMAIL)!==false]);
+        $response->setStatusCode($status);return $response;
+    }
+    /** @Route("/{id}/responder", name="instituto_solicitudes_responder", requirements={"id"="\d+"}, methods={"POST"}) */
+    public function responder(int $id, Request $request, SolicitudPaginaPublicaRepository $repo, EntityManagerInterface $em, RespuestaSolicitudService $servicio): Response
+    {
+        $s=$this->propia($id,$repo);$form=$this->formRespuesta($s,$request);$form->handleRequest($request);
+        if (!$form->isSubmitted() || !$form->isValid()) { return $this->renderDetalle($s,$em,$form,422); }
+        $datos=$form->getData();
+        try { $respuesta=$servicio->enviar($s,$this->getUser(),$datos['asunto'],$datos['mensaje'],$datos['envio']); }
+        catch (\InvalidArgumentException $e) { $form->addError(new \Symfony\Component\Form\FormError($e->getMessage()));return $this->renderDetalle($s,$em,$form,422); }
+        $this->addFlash($respuesta->getEstado()==='enviada'?'success':'warning', $respuesta->getEstado()==='enviada'?'La respuesta fue enviada por email y quedó guardada en el historial.':($respuesta->getEstado()==='fallida'?'No se pudo confirmar el envío. El texto quedó guardado en el historial; revisá el correo antes de reintentarlo.':'El envío ya está en proceso. No lo repitas; revisá su estado en el historial.'));
+        return $this->redirectToRoute('instituto_solicitudes_show',['id'=>$id,'_fragment'=>'respuestas'],303);
     }
     /** @Route("/{id}/resolver", name="instituto_solicitudes_resolver", requirements={"id"="\d+"}, methods={"POST"}) */
     public function resolver(int $id, Request $request, SolicitudPaginaPublicaRepository $repo, EntityManagerInterface $em, InstitutoTimezoneService $timezone): Response

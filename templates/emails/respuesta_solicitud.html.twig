@@ -1,0 +1,7 @@
+{% extends 'emails/base_email.html.twig' %}
+{% block title %}{{ respuesta.solicitud.instituto.nombre }}{% endblock %}
+{% block content %}
+<p>Hola {{ respuesta.solicitud.nombre }},</p>
+<div style="white-space:pre-line;overflow-wrap:anywhere;line-height:1.8">{{ respuesta.mensaje }}</div>
+<p style="margin-top:28px"><strong>{{ respuesta.solicitud.instituto.nombre }}</strong><br>Podés responder a este correo para continuar la conversación con el instituto.</p>
+{% endblock %}

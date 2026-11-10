@@ -71,6 +71,16 @@ class EmailService
         $this->mailer->send($email);
     }
 
+    /** Responde desde el remitente autorizado; las contestaciones van al instituto. */
+    public function sendSolicitudReply(\App\Entity\RespuestaSolicitudPublica $respuesta): void
+    {
+        $solicitud=$respuesta->getSolicitud();$instituto=$solicitud->getInstituto();
+        if (!filter_var($instituto->getEmail(),FILTER_VALIDATE_EMAIL)) { throw new \InvalidArgumentException('El instituto necesita un email válido para recibir respuestas.'); }
+        $email=(new TemplatedEmail())->from(new Address($this->senderEmail,$instituto->getNombre()))->to($respuesta->getDestinatario())->replyTo(new Address($instituto->getEmail(),$instituto->getNombre()))
+            ->subject($respuesta->getAsunto())->htmlTemplate('emails/respuesta_solicitud.html.twig')->context(['respuesta'=>$respuesta]);
+        $this->mailer->send($email);
+    }
+
     /**
      * Envía un correo de bienvenida al usuario
      */
