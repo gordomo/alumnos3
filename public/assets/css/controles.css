@@ -114,3 +114,30 @@ body.app-panel #page-content-wrapper :is(.nav-pills, .nav-tabs) .nav-link { disp
 body.app-panel #page-content-wrapper :is(.nav-pills, .nav-tabs) .nav-link:hover { color: var(--marca-legible); background: var(--marca-suave); border-color: var(--marca-legible); }
 body.app-panel #page-content-wrapper :is(.nav-pills, .nav-tabs) .nav-link.active { color: #fff; background: var(--marca-legible); border-color: var(--marca-legible); }
 body.app-panel #page-content-wrapper :is(.nav-pills, .nav-tabs) .nav-link:is(.disabled, :disabled, [aria-disabled="true"]) { color: var(--ui-apagado); background: #f5f7f7; opacity: .65; pointer-events: none; }
+
+/* El listado de alumnos conserva sus acciones compactas y colores anteriores. */
+body.app-panel .acciones-alumnos { gap: .3rem; }
+body.app-panel .acciones-alumnos .btn.btn {
+    height: 30px !important;
+    min-height: 30px;
+    border-radius: 8px;
+    padding: .2rem;
+    font-size: .875rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: var(--accion-color);
+    background: transparent;
+    border-color: var(--accion-borde, var(--accion-color));
+}
+body.app-panel .acciones-alumnos .btn-outline-primary { --accion-color: var(--marca-legible); --accion-borde: var(--marca); --accion-hover: var(--marca); }
+body.app-panel .acciones-alumnos .btn-outline-secondary { --accion-color: #6c757d; --accion-hover: #6c757d; }
+body.app-panel .acciones-alumnos .btn-outline-info { --accion-color: #0dcaf0; --accion-hover: #0dcaf0; }
+body.app-panel .acciones-alumnos .btn-outline-success { --accion-color: #198754; --accion-hover: #198754; }
+body.app-panel .acciones-alumnos .btn.btn:hover,
+body.app-panel .acciones-alumnos .btn.btn:active { color: #fff; background: var(--accion-hover); border-color: var(--accion-hover); }
+body.app-panel .acciones-alumnos .btn.btn-outline-info:hover,
+body.app-panel .acciones-alumnos .btn.btn-outline-info:active { color: #000; }
+body.app-panel .acciones-alumnos .btn.btn-success { color: #fff; background: #198754; border-color: #198754; }
+body.app-panel .acciones-alumnos .btn.btn-success:hover,
+body.app-panel .acciones-alumnos .btn.btn-success:active { color: #fff; background: #157347; border-color: #146c43; }
+body.app-panel .acciones-alumnos .btn .bi { font-size: inherit; }
