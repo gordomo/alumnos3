@@ -95,6 +95,11 @@ services:
             $limiteGlobalDia: '%env(int:default:ayuda_ia_global_dia_default:AYUDA_IA_GLOBAL_DIA)%'
             $limiteGlobalMinuto: '%env(int:default:ayuda_ia_global_minuto_default:AYUDA_IA_GLOBAL_MINUTO)%'
 
+    App\Service\InstitutoPaginaPublicaService:
+        arguments:
+            $baseUrl: '%app.url%'
+            $vertical: '%app.vertical%'
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
 

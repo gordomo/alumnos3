@@ -1,0 +1,31 @@
+{% extends 'base.html.twig' %}
+{% form_theme form 'bootstrap_5_layout.html.twig' %}
+{% block title %}Página pública{% endblock %}
+{% block body %}
+<div class="container-fluid pagina py-3" style="max-width:1100px">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <div><h2 class="h4 mb-1">Tu página pública</h2><p class="text-muted mb-0">Una presentación de {{ term('tu_instituto') }} para compartir con quienes quieran conocerlo.</p></div>
+        <a class="btn btn-outline-secondary" href="{{ path('instituto_config_index') }}">Volver a configuración</a>
+    </div>
+    {% for mensaje in app.flashes('success') %}<div class="alert alert-success" role="status">{{ mensaje }}</div>{% endfor %}
+    <div class="card mb-3"><div class="card-body">
+        <div class="d-flex justify-content-between flex-wrap gap-3 align-items-center">
+            <div><span class="badge {{ pagina.publicada ? 'bg-success' : 'bg-secondary' }} mb-2">{{ pagina.publicada ? 'Publicada' : 'Borrador: solo vos podés verla' }}</span><h3 class="h6">Dirección de tu página</h3><p class="mb-0 text-break">{{ urlPublica }}</p></div>
+            <div class="d-flex gap-2 flex-wrap"><a class="btn btn-outline-primary" target="_blank" rel="noopener" href="{{ path('instituto_pagina_publica_preview') }}">Vista previa</a>{% if pagina.publicada %}<a class="btn btn-outline-primary" target="_blank" rel="noopener" href="{{ urlPublica }}">Abrir página</a>{% endif %}</div>
+        </div>
+    </div></div>
+    {{ form_start(form) }}
+    {{ form_errors(form) }}
+    <div class="card mb-3"><div class="card-body p-4"><h3 class="h5">Presentación e identidad</h3><p class="text-muted">El logo, nombre y datos de contacto se toman de <a href="{{ path('instituto_config_edit', {section: 'general'}) }}">Información general</a>. Los cursos vigentes y sus horarios se actualizan automáticamente.</p>
+        {{ form_row(form.presentacion, {label: 'Contá qué ofrece tu institución', help: 'Hasta 600 caracteres. Podés dejarlo vacío para usar la presentación general.'}) }}
+        <div class="row mt-3"><div class="col-sm-6">{{ form_row(form.colorPrincipal, {label: 'Color principal', help: 'Botones y elementos destacados.'}) }}</div><div class="col-sm-6">{{ form_row(form.colorAcento, {label: 'Color de acento', help: 'Detalles y elementos decorativos.'}) }}</div></div>
+    </div></div>
+    <div class="card mb-3"><div class="card-body p-4"><h3 class="h5">Contenido y publicación</h3>
+        <div class="my-3">{{ form_row(form.mostrarPrecios, {label: 'Mostrar los precios de los cursos', help: 'Si lo desactivás, los visitantes deberán consultar el precio por los canales de contacto.'}) }}</div>
+        <div class="my-3">{{ form_row(form.publicada, {label: 'Publicar mi página', help: 'Al activarlo, cualquier persona con el enlace podrá verla. Podés desactivarla cuando quieras.'}) }}</div>
+        <p class="small text-muted mb-0">Se muestran cursos habilitados, abiertos y sin fecha de finalización vencida. Los datos de alumnos, usuarios y pagos son privados.</p>
+    </div></div>
+    <div class="d-flex align-items-center gap-3 mb-4"><button class="btn btn-primary" type="submit">Guardar cambios</button><span class="small text-muted">Guardá los cambios antes de abrir la vista previa.</span></div>
+    {{ form_end(form) }}
+</div>
+{% endblock %}

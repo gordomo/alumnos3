@@ -1,0 +1,20 @@
+<?php
+require dirname(__DIR__).'/vendor/autoload.php';
+(new Symfony\Component\Dotenv\Dotenv())->bootEnv(dirname(__DIR__).'/.env');
+$k=new App\Kernel($_SERVER['APP_ENV'],false);$k->boot();$c=$k->getContainer();
+$r=Symfony\Component\HttpFoundation\Request::create('/instituto/config/pagina-publica');$r->attributes->set('_route','instituto_pagina_publica_config');$r->setSession(new Symfony\Component\HttpFoundation\Session\Session(new Symfony\Component\HttpFoundation\Session\Storage\MockArraySessionStorage()));$c->get('request_stack')->push($r);
+$u=(new App\Entity\User())->setEmail('test@example.test')->setRoles(['ROLE_ADMIN_INSTITUTO']);$c->get('security.token_storage')->setToken(new Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken($u,'main',$u->getRoles()));
+$p=(new App\Entity\InstitutoPaginaPublica())->setInstituto(new App\Entity\Instituto())->setSlug('ejemplo');
+$f=$c->get('form.factory')->create(App\Form\InstitutoPaginaPublicaType::class,$p);
+$html=$c->get('twig')->render('instituto_pagina_publica/config.html.twig',['form'=>$f->createView(),'pagina'=>$p,'urlPublica'=>'https://example.test/ejemplo']);
+if(!str_contains($html,'name="instituto_pagina_publica[_token]"'))throw new RuntimeException('CSRF ausente');
+if(!str_contains($html,'Vista previa'))throw new RuntimeException('Vista previa ausente');
+echo 'OK: Render de configuración con rol del instituto, campos y CSRF'.PHP_EOL;
+$f->submit(['presentacion'=>'prueba','colorPrincipal'=>'#112233','colorAcento'=>'#445566','publicada'=>'1']);if($f->isValid())throw new RuntimeException('Aceptó POST sin CSRF');echo 'OK: Rechaza cambios sin CSRF'.PHP_EOL;
+$f=$c->get('form.factory')->create(App\Form\InstitutoPaginaPublicaType::class,$p);$view=$f->createView();$token=$view->children['_token']->vars['value'];
+$f->submit(['presentacion'=>'Nueva presentación','colorPrincipal'=>'#112233','colorAcento'=>'#445566','publicada'=>'1','_token'=>$token]);
+if(!$f->isValid() || !$p->isPublicada() || $p->isMostrarPrecios() || $p->getColorPrincipal()!=='#112233')throw new RuntimeException('No aplicó configuración válida');
+echo 'OK: Formulario aplica publicación, colores y ocultar precios'.PHP_EOL;
+$f=$c->get('form.factory')->create(App\Form\InstitutoPaginaPublicaType::class,$p);$view=$f->createView();
+$f->submit(['colorPrincipal'=>'red','colorAcento'=>'#445566','instituto'=>'992','_token'=>$view->children['_token']->vars['value']]);
+if($f->isValid())throw new RuntimeException('Aceptó campos ajenos o color inválido');echo 'OK: Rechaza campos ajenos y colores inválidos'.PHP_EOL;

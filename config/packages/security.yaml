@@ -20,6 +20,10 @@ security:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
+        # Se elige después del router: solo esta ruta pública omite la sesión.
+        pagina_publica:
+            request_matcher: App\Security\PaginaPublicaRequestMatcher
+            security: false
         main:
             lazy: true
             provider: app_user_provider

@@ -304,3 +304,28 @@ proyecto (incluido localhost) también consumen la cuota del proveedor. Estos so
 límites internos configurables, no la cuota que informa Google. Un bloqueo por
 frecuencia ahora indica segundos de espera; uno diario indica alcance y renovación.
 No hace falta borrar contadores al aumentar los límites: los usos previos se conservan.
+
+### Páginas públicas por institución (2026-11-10)
+
+Aplicar únicamente la migración aditiva `DoctrineMigrations\Version20261110183000` con
+`php bin/console doctrine:migrations:execute 'DoctrineMigrations\Version20261110183000' --up --no-interaction`.
+Después, `php bin/console app:paginas-publicas:preparar` reserva las direcciones para las instituciones
+activas, sin publicar ninguna y sin cambiar las que ya existen. Es idempotente. Tomar respaldo antes
+como en los demás despliegues con cambios de esquema; no ejecutar todas las migraciones históricas.
+
+Cada administrador configura su página en **Configuración → Página pública**: presentación,
+color principal, color de acento, precios visibles y publicación. La vista previa usa los cambios
+guardados y está protegida por sesión. Nombre, logo, dirección, teléfono y email salen de Información
+general. La dirección `APP_URL/nombre-instituto` se conserva aunque cambie el nombre; nombres repetidos
+o reservados reciben un sufijo. Verificar que `APP_URL` sea el dominio HTTPS de cada instalación.
+
+El catálogo público contiene exclusivamente cursos de esa institución habilitados, abiertos y sin
+fecha de finalización vencida, según su zona horaria. No publica alumnos, profesores, pagos ni usuarios.
+Desactivar precios elimina los importes de la respuesta, no solo de su apariencia. Una institución dada
+de baja o una página en borrador devuelve 404. El acceso público usa un firewall que coincide únicamente
+con la ruta de la landing; las rutas privadas conservan su autenticación. Las páginas se entregan sin
+caché compartida para reflejar inmediatamente los cambios de visibilidad.
+
+Verificación local: `php tests/regression_landing_publica.php` (MySQL, tablas temporales) y
+`php tests/regression_landing_config.php` (render, formulario y rechazo de POST sin CSRF), además de
+`php bin/console lint:container` y `php bin/console lint:twig templates/instituto_pagina_publica`.

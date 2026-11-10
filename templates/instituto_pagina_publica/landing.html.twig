@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ sitio.nombre }} · Cursos y actividades</title>
+    <meta name="description" content="{{ sitio.presentacion ?: 'Conocé los cursos, horarios y datos de contacto de ' ~ sitio.nombre ~ '.' }}">
+    {% if preview %}<meta name="robots" content="noindex,nofollow">{% else %}<link rel="canonical" href="{{ urlPublica }}">{% endif %}
+    <link rel="stylesheet" href="{{ asset('assets/css/landing-instituto.css') }}?v=20261110">
+    <style>:root{--principal:{{ sitio.principal }};--acento:{{ sitio.acento }};--contraste:{{ sitio.contraste }};--contraste-acento:{{ sitio.contrasteAcento }}}</style>
+</head>
+<body>
+<a class="skip-link" href="#contenido">Ir al contenido</a>
+{% if preview %}<aside class="preview">Vista previa · Los cambios guardados se muestran acá. <a href="{{ path('instituto_pagina_publica_config') }}">Volver a configuración</a></aside>{% endif %}
+<header class="header wrap">
+    <a class="marca" href="#inicio">{% if sitio.logo %}<img src="{{ asset('uploads/logos/' ~ sitio.logo) }}" alt="" width="46" height="46">{% else %}<span class="marca-inicial" aria-hidden="true">{{ sitio.nombre|slice(0,1)|upper }}</span>{% endif %}<span>{{ sitio.nombre }}</span></a>
+    <nav aria-label="Navegación principal"><a href="#cursos">Cursos</a><a href="#contacto">Contacto</a><a class="acceso" href="{{ path('app_login') }}">Ingresar al sistema <span aria-hidden="true">↗</span></a></nav>
+</header>
+<main id="contenido">
+    <section class="hero wrap" id="inicio">
+        <div class="hero-texto"><span class="eyebrow"><span class="punto"></span> Un espacio para aprender y crecer</span><h1>{{ sitio.nombre }}</h1><p class="presentacion">{{ sitio.presentacion ?: 'Descubrí nuestros cursos y actividades. Encontrá una propuesta para vos y contactanos para conocer más.' }}</p><div class="hero-acciones"><a class="boton principal" href="#cursos">Explorar cursos <span aria-hidden="true">↗</span></a><a class="boton secundario" href="#contacto">Hablemos</a></div>{% if sitio.direccion %}<p class="ubicacion"><span aria-hidden="true">⌖</span> {{ sitio.direccion }}</p>{% endif %}</div>
+        <div class="hero-visual" aria-hidden="true"><div class="orbita orbita-uno"></div><div class="orbita orbita-dos"></div><div class="logo-lienzo">{% if sitio.logo %}<img src="{{ asset('uploads/logos/' ~ sitio.logo) }}" alt="" fetchpriority="high">{% else %}<span>{{ sitio.nombre|slice(0,1)|upper }}</span>{% endif %}</div><div class="visual-etiqueta"><span class="punto"></span> Tu próximo paso empieza acá</div><span class="estrella">✳</span></div>
+    </section>
+    <section class="catalogo" id="cursos"><div class="wrap"><div class="seccion-cabecera"><div><span class="eyebrow">Nuestras propuestas</span><h2>Encontrá tu próximo curso.</h2></div><p>Conocé las opciones disponibles y consultanos para dar el primer paso.</p></div>
+        <div class="cursos-grid">{% for curso in sitio.cursos %}<article class="curso"><div class="curso-top"><span class="curso-numero">{{ loop.index < 10 ? '0' ~ loop.index : loop.index }}</span><span class="estado">{{ curso.proximo ? 'Próximamente' : 'En curso' }}</span></div><h3>{{ curso.nombre }}</h3>
+            <div class="curso-detalles">{% if curso.inicio %}<p><span class="detalle-label">Inicio</span><span>{{ curso.inicio }}</span></p>{% endif %}{% if curso.fin %}<p><span class="detalle-label">Finalización</span><span>{{ curso.fin }}</span></p>{% endif %}</div>
+            <div class="horarios"><span class="detalle-label">Días y horarios</span>{% for horario in curso.horarios %}<div><strong>{{ horario.dia|capitalize }}</strong>{% if horario.inicio %}<span>{{ horario.inicio }}{% if horario.fin %} – {{ horario.fin }}{% endif %}</span>{% endif %}</div>{% else %}<p>Consultanos por los horarios.</p>{% endfor %}</div>
+            <div class="curso-pie"><div>{% if sitio.mostrarPrecios and curso.precio is not null %}<span class="precio">${{ curso.precio|number_format(2, ',', '.') }}</span><span class="precio-label">Precio del curso</span>{% else %}<span class="consulta-precio">Consultá los detalles</span>{% endif %}</div><a class="consultar" href="#contacto" aria-label="Consultar por {{ curso.nombre }}">Consultar <span aria-hidden="true">↗</span></a></div>
+        </article>{% else %}<div class="sin-cursos"><h3>Estamos preparando nuestras propuestas.</h3><p>Contactanos para conocer las próximas actividades y novedades.</p><a class="boton principal" href="#contacto">Consultar</a></div>{% endfor %}</div>
+    </div></section>
+    <section class="contacto wrap" id="contacto"><div class="contacto-intro"><span class="eyebrow">Estamos cerca</span><h2>¿Tenés alguna consulta?<br>Hablemos.</h2><p>Escribinos para conocer más sobre nuestros cursos, horarios e inscripciones.</p></div><div class="contacto-datos">
+        {% if sitio.direccion %}<div class="contacto-item"><span class="contacto-icono" aria-hidden="true">⌖</span><div><h3>Encontranos</h3><p>{{ sitio.direccion }}</p><a target="_blank" rel="noopener noreferrer" href="https://www.google.com/maps/search/?api=1&amp;query={{ sitio.direccion|url_encode }}">Cómo llegar ↗</a></div></div>{% endif %}
+        {% if sitio.telefono %}<div class="contacto-item"><span class="contacto-icono" aria-hidden="true">↗</span><div><h3>Llamanos</h3>{% if sitio.telLink %}<a href="tel:{{ sitio.telLink }}">{{ sitio.telefono }}</a>{% else %}<p>{{ sitio.telefono }}</p>{% endif %}</div></div>{% endif %}
+        {% if sitio.email %}<div class="contacto-item"><span class="contacto-icono" aria-hidden="true">@</span><div><h3>Escribinos</h3><a href="mailto:{{ sitio.email }}">{{ sitio.email }}</a></div></div>{% endif %}
+        {% if not sitio.direccion and not sitio.telefono and not sitio.email %}<p>Pronto compartiremos nuestros canales de contacto.</p>{% endif %}
+    </div></section>
+</main>
+<footer class="wrap footer"><strong>{{ sitio.nombre }}</strong><span>Cursos, actividades y nuevas posibilidades.</span><a href="{{ path('app_login') }}">Acceso al sistema ↗</a></footer>
+</body></html>

@@ -39,6 +39,7 @@ class SuscripcionSubscriber implements EventSubscriberInterface
         'app_login',
         'app_start',
         'app_ayuda',
+        'app_instituto_landing_publica',
         'app_familia',
         'app_reset_password',
     ];
