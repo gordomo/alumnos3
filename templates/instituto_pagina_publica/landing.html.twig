@@ -5,7 +5,7 @@
     <title>{{ sitio.nombre }} · {{ Term('cursos') }} y actividades</title>
     <meta name="description" content="{{ sitio.presentacion ?: 'Conocé ' ~ term('los_cursos') ~ ', horarios y datos de contacto de ' ~ sitio.nombre ~ '.' }}">
     {% if preview %}<meta name="robots" content="noindex,nofollow">{% else %}<link rel="canonical" href="{{ urlPublica }}">{% endif %}
-    <link rel="stylesheet" href="{{ asset('assets/css/landing-instituto.css') }}?v=20261110-formularios">
+    <link rel="stylesheet" href="{{ asset('assets/css/landing-instituto.css') }}?v=20261110-acento">
     {% if sitio.logo %}
         <link rel="icon" href="{{ asset('uploads/logos/' ~ sitio.logo) }}">
         <link rel="apple-touch-icon" href="{{ asset('uploads/logos/' ~ sitio.logo) }}">

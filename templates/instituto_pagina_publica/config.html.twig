@@ -19,7 +19,7 @@
     {{ form_errors(form) }}
     <div class="card mb-3"><div class="card-body p-4"><h3 class="h5">Presentación e identidad</h3><p class="text-muted">El logo, nombre y datos de contacto se toman de <a href="{{ path('instituto_config_edit', {section: 'general'}) }}">Información general</a>. {{ Term('los_cursos') }} vigentes y sus horarios se actualizan automáticamente.</p>
         {{ form_row(form.presentacion, {label: 'Contá qué ofrece tu institución', help: 'Hasta 600 caracteres. Podés dejarlo vacío para usar la presentación general.'}) }}
-        <div class="row mt-3"><div class="col-sm-6">{{ form_row(form.colorPrincipal, {label: 'Color principal', help: 'Botones y elementos destacados.'}) }}</div><div class="col-sm-6">{{ form_row(form.colorAcento, {label: 'Color de acento', help: 'Detalles y elementos decorativos.'}) }}</div></div>
+        <div class="row mt-3"><div class="col-sm-6">{{ form_row(form.colorPrincipal, {label: 'Color principal', help: 'Botones y elementos destacados.'}) }}</div><div class="col-sm-6">{{ form_row(form.colorAcento, {label: 'Color de acento', help: 'Tarjeta junto al logo, detalles de los cursos e iconos de contacto.'}) }}</div></div>
     </div></div>
     <div class="card mb-3"><div class="card-body p-4"><h3 class="h5">Contenido y publicación</h3>
         <div class="my-3">{{ form_row(form.mostrarPrecios, {label: 'Mostrar los precios de ' ~ term('los_cursos'), help: 'Si lo desactivás, los visitantes deberán consultar el precio por los canales de contacto.'}) }}</div>

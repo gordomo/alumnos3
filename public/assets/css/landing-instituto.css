@@ -137,16 +137,16 @@ h1 em,h2 em{font-family:Georgia,"Times New Roman",serif;font-weight:400;color:va
 .logo-lienzo>span{display:grid;place-items:center;width:100%;height:100%;font:90px Georgia,serif}
 .identidad-firma{display:flex;justify-content:space-between;align-items:center;gap:12px;border-top:1px solid #e9ecef;padding-top:14px;font-size:12px;font-weight:650;overflow-wrap:anywhere}
 .identidad-firma>span{color:var(--tinta-marca,var(--principal));font-size:22px;flex-shrink:0}
-.visual-etiqueta{position:absolute;bottom:7px;right:-4px;display:flex;gap:12px;background:#f6e9cb;color:#493d28;padding:15px 19px;box-shadow:0 10px 30px #14223c0e;border:1px solid #f0e1c1;border-radius:6px;transform:rotate(3deg);font-size:12px}
+.visual-etiqueta{position:absolute;bottom:7px;right:-4px;display:flex;gap:12px;background:var(--acento);color:var(--contraste-acento);padding:15px 19px;box-shadow:0 10px 30px #14223c0e;border:1px solid var(--acento);border-radius:6px;transform:rotate(3deg);font-size:12px}
 .visual-etiqueta strong{display:block;font-size:10px;font-weight:450;margin-top:3px}.etiqueta-icono{font-size:33px;line-height:1}
 .manifiesto{border-block:1px solid #202c3718;background:#f5f2eb}
 .manifiesto .wrap{display:flex;align-items:center;justify-content:space-between;gap:24px;padding-block:23px}
 .manifiesto .wrap>span{font:italic 24px Georgia,serif;letter-spacing:-.5px;color:var(--tinta-marca,var(--principal))}
-.manifiesto p{font-size:12px;margin:0;color:#65717c}.manifiesto a{font-size:22px;line-height:1;border:1px solid #cbd0cf;display:grid;place-items:center;width:34px;height:34px;border-radius:50%}
+.manifiesto p{font-size:12px;margin:0;color:#65717c}.manifiesto a{font-size:22px;line-height:1;border:1px solid var(--acento);background:var(--acento);color:var(--contraste-acento);display:grid;place-items:center;width:34px;height:34px;border-radius:50%}
 .catalogo{background:#fdfcf9;border:none;padding:70px 0 80px}.seccion-cabecera{margin-bottom:33px}
 h2{font-weight:600;font-size:clamp(28px,3vw,39px);letter-spacing:-1.5px}.seccion-cabecera>p{font-size:13px;line-height:1.8;max-width:275px}
 .curso{border:1px solid #dfe3e2;border-radius:8px;padding:25px;background:#fff;position:relative;overflow:hidden}
-.curso:before{content:"";position:absolute;left:0;top:0;right:0;height:3px;background:var(--principal)}
+.curso:before{content:"";position:absolute;left:0;top:0;right:0;height:3px;background:var(--acento)}
 .curso-numero{font:italic 23px Georgia,serif;color:var(--tinta-marca,var(--principal))}.estado{font-size:10px;background:#f6f8f6}
 .curso h3{font-size:23px;font-weight:600;margin:22px 0}.consultar{border-radius:5px;font-size:12px}.precio{font-size:21px}.horarios{margin-bottom:22px}
 .sin-cursos{border:1px solid #e2e5df;border-radius:8px;padding:38px;background:linear-gradient(120deg,#fff,#f4f2eb);text-align:left;position:relative}
@@ -154,7 +154,7 @@ h2{font-weight:600;font-size:clamp(28px,3vw,39px);letter-spacing:-1.5px}.seccion
 .sin-cursos h3{font-size:24px;letter-spacing:-.5px;margin:0 0 10px;font-weight:550}.sin-cursos p{font-size:14px;max-width:500px;margin:0 0 22px}
 .contacto{position:relative;padding-block:60px 72px;gap:80px;border-top:1px solid #dddeda}.contacto h2{font-size:40px;line-height:1.2}
 .contacto-intro>p{font-size:14px;line-height:1.8}.contacto-datos{gap:0;border-top:1px solid #dddeda}
-.contacto-item{padding:20px 0;border-bottom:1px solid #dddeda;gap:18px}.contacto-icono{border:1px solid #d7ddda;background:transparent;color:var(--tinta-marca,var(--principal));border-radius:50%;width:42px;height:42px;font-size:20px}
+.contacto-item{padding:20px 0;border-bottom:1px solid #dddeda;gap:18px}.contacto-icono{border:1px solid var(--acento);background:var(--acento);color:var(--contraste-acento);border-radius:50%;width:42px;height:42px;font-size:20px}
 .contacto-item h3{font-size:10px;letter-spacing:1px;text-transform:uppercase}.contacto-item a,.contacto-item p{font-size:14px}
 .footer{padding-block:24px;border-color:#202c3718}.footer-marca{display:flex;align-items:center;gap:12px}.footer-marca img{width:64px;height:42px;object-fit:contain}.footer strong{font-size:13px}
 @media(max-width:1000px){.header nav{gap:15px}.hero{gap:30px}.hero-visual{height:430px;padding-inline:22px}.identidad-tarjeta{padding-inline:20px}.logo-lienzo{height:180px}.marca-nombre{font-size:16px}.contacto{gap:40px}}
