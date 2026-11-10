@@ -9,3 +9,9 @@ public/uploads
 .agents
 .codex
 docker-compose*.yml
+*.sql
+*.sql.gz
+*.log
+_aapanel
+.well-known
+.user.ini
