@@ -63,11 +63,12 @@ class ProfesorController extends AbstractController
     /**
      * @Route("/", name="app_profesor_index", methods={"GET"})
      */
-    public function index(Request $request, ProfesorRepository $profesorRepository, PaginatorInterface $paginator): Response
+    public function index(Request $request, ProfesorRepository $profesorRepository, PaginatorInterface $paginator, CursoRepository $cursoRepository): Response
     {
         $limit = $request->get('limit', 10);
         $currentPage = $request->get('page', 1);
-        $busqueda = $request->get('busqueda', 0);
+        $busqueda = $request->query->get('busqueda', '');
+        $cursoSelected = max(0, $request->query->getInt('cursoSelected', 0));
         $order = $request->get('order', 'asc');
         $sort = $request->get('sort', 'apellido');
         
@@ -78,7 +79,7 @@ class ProfesorController extends AbstractController
         }
         $instituto = $user->getInstituto();
         
-        $profesorsQuery = $this->createQuery($profesorRepository, $instituto, $sort, $order, $busqueda);
+        $profesorsQuery = $this->createQuery($profesorRepository, $instituto, $sort, $order, $busqueda, $cursoSelected);
 
         $profesors = $paginator->paginate(
             $profesorsQuery, 
@@ -91,7 +92,9 @@ class ProfesorController extends AbstractController
             'busqueda' => $busqueda,
             'total' => $profesors->getTotalItemCount(),
             'order' => $order,
-            'sort' => $sort
+            'sort' => $sort,
+            'cursos' => $cursoRepository->findBy(['instituto' => $instituto], ['nombre' => 'ASC']),
+            'cursoSelected' => $cursoSelected,
         ]);
     }
 
@@ -103,7 +106,8 @@ class ProfesorController extends AbstractController
         $instituto,
         string $sort,
         string $order,
-        ?string $busqueda = null
+        ?string $busqueda = null,
+        int $cursoSelected = 0
     ) {
         $qb = $profesorRepository->createQueryBuilder('p')
             ->where('p.instituto = :instituto')
@@ -112,6 +116,13 @@ class ProfesorController extends AbstractController
         if ($busqueda) {
             $qb->andWhere('p.apellido LIKE :busqueda OR p.nombre LIKE :busqueda')
                ->setParameter('busqueda', '%' . $busqueda . '%');
+        }
+
+        if ($cursoSelected > 0) {
+            $qb->innerJoin('p.cursos', 'cursoFiltro')
+                ->andWhere('cursoFiltro.id = :cursoSelected')
+                ->andWhere('cursoFiltro.instituto = :instituto')
+                ->setParameter('cursoSelected', $cursoSelected);
         }
 
         // Ordenamiento por nombre o apellido

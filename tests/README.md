@@ -58,3 +58,11 @@ Prueba manual: en una institución habilitada, abrir `/ayuda`, aceptar las condi
 de prueba y preguntar «cómo registrar un pago». Comprobar fuentes y respuesta; después
 probar una pregunta ajena al sistema y roles sin acceso a cobranza. Ninguna prueba
 externa se ejecuta automáticamente para evitar consumir cuota gratuita en cada corrida.
+
+## Filtros de profesores
+
+`docker compose exec -T app php tests/regression_profesores_filtros.php` usa tablas
+temporales MySQL que ocultan las tablas reales solo en la conexión del test.
+Verifica combinación de nombre y curso, orden, inclusión de docentes sin curso y
+rechazo de cursos ajenos incluso con una asociación cruzada. No modifica datos reales.
+No hay filtro activo/inactivo: ese estado no existe en la entidad Profesor.

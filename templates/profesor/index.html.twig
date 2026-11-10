@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}{{ Term('profesor') }} index{% endblock %}
+{% block title %}{{ Term('profesores') }}{% endblock %}
 
 {% block stylesheets %}
     {{ parent() }}
@@ -41,21 +41,6 @@
         .profesor-search .btn-outline-secondary:hover {
             background: #f1f6f5;
             color: #3f4a50;
-        }
-
-        .profesor-reset-btn {
-            border-radius: 10px;
-            font-weight: 600;
-            height: 40px;
-            border-color: #d9e4e2;
-            color: #556067;
-            background: #fff;
-        }
-
-        .profesor-reset-btn:hover {
-            background: #f1f6f5;
-            color: #3f4a50;
-            border-color: #cfdcda;
         }
 
         .profesor-panel {
@@ -183,19 +168,33 @@
 
 {% block body %}
 <div class="container-fluid pagina profesor-page">
+    {% set parametrosBusqueda = {'cursoSelected': cursoSelected, 'sort': sort, 'order': order, 'limit': app.request.query.get('limit', 10)} %}
     <div class="row profesor-toolbar ui-filter-card">
         <div class="col-md-6">
             <form method="get" action="{{ path('app_profesor_index') }}" class="profesor-search">
+                <input type="hidden" name="cursoSelected" value="{{ cursoSelected }}">
+                <input type="hidden" name="sort" value="{{ sort }}">
+                <input type="hidden" name="order" value="{{ order }}">
+                <input type="hidden" name="limit" value="{{ parametrosBusqueda.limit }}">
                 <div class="input-group">
-                    <input name="busqueda" type="text" class="form-control" placeholder="Buscar por nombre y apellido" value="{{ busqueda ? busqueda : '' }}" aria-label="Buscar {{ term('profesor') }}">
-                    <button class="btn btn-outline-secondary" type="submit" id="button-addon2"><i class="bi bi-search"></i></button>
+                    <input id="profesor-busqueda" name="busqueda" type="search" class="form-control" placeholder="Buscar por nombre y apellido" value="{{ busqueda }}" aria-label="Buscar {{ term('profesor') }}">
+                    <button class="btn btn-outline-secondary" type="submit" aria-label="Buscar {{ term('profesores') }}"><i class="bi bi-search" aria-hidden="true"></i></button>
+                    <a class="btn btn-outline-secondary d-inline-flex align-items-center gap-1" href="{{ path('app_profesor_index', parametrosBusqueda) }}" aria-label="Limpiar búsqueda"><i class="bi bi-x-lg" aria-hidden="true"></i> Limpiar</a>
                 </div>
             </form>
         </div>
         <div class="col-md-6 d-flex justify-content-md-end align-items-center mt-2 mt-md-0">
-            <a class="btn btn-outline-secondary profesor-reset-btn" href="{{ path('app_profesor_index') }}">
-                <i class="bi bi-arrow-clockwise me-1"></i> Ver todos
-            </a>
+            <form method="get" action="{{ path('app_profesor_index') }}" class="d-flex flex-wrap gap-2">
+                <input type="hidden" name="busqueda" value="{{ busqueda }}">
+                <input type="hidden" name="sort" value="{{ sort }}">
+                <input type="hidden" name="order" value="{{ order }}">
+                <input type="hidden" name="limit" value="{{ parametrosBusqueda.limit }}">
+                <select name="cursoSelected" id="profesor-filtro-curso" class="form-select w-auto" aria-label="Filtrar por {{ term('cursos') }}">
+                    <option value="0">Todos los {{ term('cursos') }}</option>
+                    {% for curso in cursos %}<option value="{{ curso.id }}" {{ cursoSelected == curso.id ? 'selected' : '' }}>{{ curso.nombre }}</option>{% endfor %}
+                </select>
+                <button type="submit" class="btn btn-outline-primary"><i class="bi bi-funnel" aria-hidden="true"></i> Filtrar</button>
+            </form>
         </div>
     </div>
 
@@ -205,13 +204,13 @@
         <thead>
             <tr>
                 <th>
-                    <a href="{{ path('app_profesor_index', {'sort': 'apellido', 'order': sort == 'apellido' ? (order == 'asc' ? 'desc' : 'asc') : 'asc', 'busqueda': busqueda}) }}" class="profesor-sort-link">
+                    <a href="{{ path('app_profesor_index', parametrosBusqueda|merge({'sort': 'apellido', 'order': sort == 'apellido' ? (order == 'asc' ? 'desc' : 'asc') : 'asc', 'busqueda': busqueda})) }}" class="profesor-sort-link">
                         Apellido
                         <i class="bi bi-arrow-{{ sort == 'apellido' ? (order == 'asc' ? 'up' : 'down') : 'up-down' }}"></i>
                     </a>
                 </th>
                 <th>
-                    <a href="{{ path('app_profesor_index', {'sort': 'nombre', 'order': sort == 'nombre' ? (order == 'asc' ? 'desc' : 'asc') : 'asc', 'busqueda': busqueda}) }}" class="profesor-sort-link">
+                    <a href="{{ path('app_profesor_index', parametrosBusqueda|merge({'sort': 'nombre', 'order': sort == 'nombre' ? (order == 'asc' ? 'desc' : 'asc') : 'asc', 'busqueda': busqueda})) }}" class="profesor-sort-link">
                         Nombre
                         <i class="bi bi-arrow-{{ sort == 'nombre' ? (order == 'asc' ? 'up' : 'down') : 'up-down' }}"></i>
                     </a>
